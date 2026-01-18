@@ -63,7 +63,7 @@ describe('broadcast', () => {
 
       it('returns false in SSR environment (no window)', () => {
         const originalWindow = globalThis.window;
-        // @ts-ignore
+        // @ts-expect-error - Intentionally deleting window to simulate SSR
         delete globalThis.window;
 
         const sync = new BroadcastSync();

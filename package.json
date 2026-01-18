@@ -8,12 +8,20 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
     "clean": "turbo clean && rm -rf node_modules",
     "dev:bingo": "turbo dev --filter=@beak-gaming/bingo",
     "dev:trivia": "turbo dev --filter=@beak-gaming/trivia",
     "dev:hub": "turbo dev --filter=@beak-gaming/platform-hub"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.1.3",
+    "@typescript-eslint/eslint-plugin": "^8.33.0",
+    "@typescript-eslint/parser": "^8.33.0",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
   },

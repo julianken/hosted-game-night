@@ -10,7 +10,8 @@
     "./tailwind.preset": "./tailwind.preset.js"
   },
   "scripts": {
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5"

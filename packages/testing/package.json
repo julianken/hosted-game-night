@@ -10,7 +10,8 @@
     "./helpers": "./src/helpers/index.ts"
   },
   "scripts": {
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "vitest": "^4.0.0"

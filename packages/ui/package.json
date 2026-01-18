@@ -9,6 +9,7 @@
   },
   "scripts": {
     "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run"
   },
@@ -17,6 +18,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "typescript": "^5"
   }
 }

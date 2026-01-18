@@ -85,32 +85,42 @@ export function useGame() {
     gameStore.toggleAudio();
   }, [gameStore]);
 
-  // Auto-call timeout management (using setTimeout instead of setInterval to prevent overlapping calls)
+  // Auto-call timeout management (self-scheduling to prevent race conditions)
   useEffect(() => {
-    if (status !== 'playing' || !autoCallEnabled || remainingBalls.length === 0) {
+    if (status !== 'playing' || !autoCallEnabled) {
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
-      const state = useGameStore.getState();
-      if (
-        state.status === 'playing' &&
-        state.autoCallEnabled &&
-        state.remainingBalls.length > 0
-      ) {
-        const ball = state.callBall();
-        if (ball && state.audioEnabled) {
-          try {
-            await useAudioStore.getState().playBallCall(ball);
-          } catch {
-            // Audio failed, continue game
+    let timeoutId: NodeJS.Timeout;
+
+    const scheduleNextCall = () => {
+      timeoutId = setTimeout(async () => {
+        const state = useGameStore.getState();
+        if (
+          state.status === 'playing' &&
+          state.autoCallEnabled &&
+          state.remainingBalls.length > 0
+        ) {
+          const ball = state.callBall();
+          if (ball && state.audioEnabled) {
+            try {
+              await useAudioStore.getState().playBallCall(ball);
+            } catch {
+              // Audio failed, continue game
+            }
+          }
+          // Schedule next call only if game is still active
+          if (state.remainingBalls.length > 1) {
+            scheduleNextCall();
           }
         }
-      }
-    }, autoCallSpeed * 1000);
+      }, autoCallSpeed * 1000);
+    };
+
+    scheduleNextCall();
 
     return () => clearTimeout(timeoutId);
-  }, [status, autoCallEnabled, autoCallSpeed, remainingBalls.length]);
+  }, [status, autoCallEnabled, autoCallSpeed]);
 
   // Computed values
   const recentBalls = getRecentBalls(gameStore, 5);

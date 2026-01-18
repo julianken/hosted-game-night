@@ -195,7 +195,7 @@ describe('audio-store', () => {
     it('does nothing in SSR environment', async () => {
       // Simulate SSR by removing window and Audio
       const originalWindow = globalThis.window;
-      // @ts-ignore
+      // @ts-expect-error - Intentionally deleting window to simulate SSR
       delete globalThis.window;
 
       await useAudioStore.getState().playBallCall(mockBall);

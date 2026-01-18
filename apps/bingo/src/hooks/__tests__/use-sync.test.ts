@@ -18,6 +18,7 @@ class MockBroadcastChannel {
 
   constructor(name: string) {
     this.name = name;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastChannelInstance = this;
   }
 
