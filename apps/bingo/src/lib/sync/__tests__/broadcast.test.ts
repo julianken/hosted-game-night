@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { BroadcastSync, createMessageRouter } from '../broadcast';
+import { BroadcastSync, createMessageRouter, createBingoBroadcastSync } from '../broadcast';
 import { GameState, BingoBall, BingoPattern } from '@/types';
+
+const TEST_CHANNEL = 'test-channel';
+const TEST_SESSION_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 // Mock BroadcastChannel
 class MockBroadcastChannel {
@@ -45,19 +48,19 @@ describe('broadcast', () => {
   describe('BroadcastSync', () => {
     describe('initialize', () => {
       it('returns true when BroadcastChannel is available', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         expect(sync.initialize()).toBe(true);
       });
 
       it('returns true on subsequent calls (idempotent)', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         expect(sync.initialize()).toBe(true);
       });
 
       it('returns false when BroadcastChannel is not available', () => {
         vi.stubGlobal('BroadcastChannel', undefined);
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         expect(sync.initialize()).toBe(false);
       });
 
@@ -66,7 +69,7 @@ describe('broadcast', () => {
         // @ts-expect-error - Intentionally deleting window to simulate SSR
         delete globalThis.window;
 
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         expect(sync.initialize()).toBe(false);
 
         globalThis.window = originalWindow;
@@ -78,25 +81,25 @@ describe('broadcast', () => {
             throw new Error('Not supported');
           }
         });
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         expect(sync.initialize()).toBe(false);
       });
     });
 
     describe('connected', () => {
       it('returns false before initialization', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         expect(sync.connected).toBe(false);
       });
 
       it('returns true after initialization', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         expect(sync.connected).toBe(true);
       });
 
       it('returns false after close', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.close();
         expect(sync.connected).toBe(false);
@@ -105,7 +108,7 @@ describe('broadcast', () => {
 
     describe('subscribe', () => {
       it('registers a message handler', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const handler = vi.fn();
@@ -119,7 +122,7 @@ describe('broadcast', () => {
       });
 
       it('returns unsubscribe function', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const handler = vi.fn();
@@ -135,7 +138,7 @@ describe('broadcast', () => {
       });
 
       it('handles multiple subscribers', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const handler1 = vi.fn();
@@ -151,7 +154,7 @@ describe('broadcast', () => {
       });
 
       it('handles handler errors gracefully', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const errorHandler = vi.fn(() => {
@@ -198,7 +201,7 @@ describe('broadcast', () => {
       };
 
       it('broadcastState sends GAME_STATE_UPDATE message', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.broadcastState(mockState);
 
@@ -212,7 +215,7 @@ describe('broadcast', () => {
       });
 
       it('broadcastBallCalled sends BALL_CALLED message', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.broadcastBallCalled(mockBall);
 
@@ -226,7 +229,7 @@ describe('broadcast', () => {
       });
 
       it('broadcastReset sends GAME_RESET message', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.broadcastReset();
 
@@ -240,7 +243,7 @@ describe('broadcast', () => {
       });
 
       it('broadcastPatternChanged sends PATTERN_CHANGED message', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.broadcastPatternChanged(mockPattern);
 
@@ -254,7 +257,7 @@ describe('broadcast', () => {
       });
 
       it('requestSync sends REQUEST_SYNC message', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.requestSync();
 
@@ -268,13 +271,13 @@ describe('broadcast', () => {
       });
 
       it('does not send when not initialized', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.broadcastState(mockState);
         expect(MockBroadcastChannel.instances).toHaveLength(0);
       });
 
       it('handles postMessage errors gracefully', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const instance = MockBroadcastChannel.instances[0];
@@ -289,7 +292,7 @@ describe('broadcast', () => {
 
     describe('close', () => {
       it('closes the channel', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         const instance = MockBroadcastChannel.instances[0];
 
@@ -299,7 +302,7 @@ describe('broadcast', () => {
       });
 
       it('clears handlers', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
 
         const handler = vi.fn();
@@ -315,12 +318,64 @@ describe('broadcast', () => {
       });
 
       it('allows re-initialization after close', () => {
-        const sync = new BroadcastSync();
+        const sync = new BroadcastSync(TEST_CHANNEL);
         sync.initialize();
         sync.close();
         expect(sync.initialize()).toBe(true);
         expect(sync.connected).toBe(true);
       });
+    });
+  });
+
+  describe('createBingoBroadcastSync', () => {
+    it('creates a BroadcastSync instance with session-scoped channel name', () => {
+      const sync = createBingoBroadcastSync(TEST_SESSION_ID);
+      expect(sync).toBeInstanceOf(BroadcastSync);
+    });
+
+    it('creates instances with different channel names for different sessions', () => {
+      const sync1 = createBingoBroadcastSync('session-1');
+      const sync2 = createBingoBroadcastSync('session-2');
+
+      sync1.initialize();
+      sync2.initialize();
+
+      // Should have created two different channels
+      expect(MockBroadcastChannel.instances).toHaveLength(2);
+      expect(MockBroadcastChannel.instances[0].name).not.toBe(
+        MockBroadcastChannel.instances[1].name
+      );
+    });
+
+    it('isolates messages between different sessions', () => {
+      const sync1 = createBingoBroadcastSync('session-1');
+      const sync2 = createBingoBroadcastSync('session-2');
+
+      sync1.initialize();
+      sync2.initialize();
+
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+
+      sync1.subscribe(handler1);
+      sync2.subscribe(handler2);
+
+      // Send message from sync1's channel
+      sync1.broadcastReset();
+
+      // Only handler1's channel should receive it (but not handler1 itself since same instance)
+      // Create another instance on same channel to verify isolation
+      const sync1b = createBingoBroadcastSync('session-1');
+      sync1b.initialize();
+      const handler1b = vi.fn();
+      sync1b.subscribe(handler1b);
+
+      sync1.broadcastReset();
+
+      // handler1b should receive the message (same channel)
+      expect(handler1b).toHaveBeenCalled();
+      // handler2 should not receive it (different channel)
+      expect(handler2).not.toHaveBeenCalled();
     });
   });
 

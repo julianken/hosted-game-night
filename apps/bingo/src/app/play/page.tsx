@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
+import { generateSessionId } from '@/lib/sync/session';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
@@ -14,15 +15,18 @@ import { Button } from '@/components/ui/Button';
 export default function PlayPage() {
   const game = useGameKeyboard();
 
-  // Initialize sync as presenter role
-  const { isConnected } = useSync({ role: 'presenter' });
+  // Generate a unique session ID for this presenter window
+  const [sessionId] = useState(() => generateSessionId());
 
-  // Open display window
+  // Initialize sync as presenter role with session-scoped channel
+  const { isConnected } = useSync({ role: 'presenter', sessionId });
+
+  // Open display window with session ID in URL
   const openDisplay = useCallback(() => {
-    const displayUrl = `${window.location.origin}/display`;
+    const displayUrl = `${window.location.origin}/display?session=${sessionId}`;
     const displayWindow = window.open(
       displayUrl,
-      'bingo-display',
+      `bingo-display-${sessionId}`,
       'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
     );
 
@@ -30,7 +34,7 @@ export default function PlayPage() {
     if (displayWindow) {
       displayWindow.focus();
     }
-  }, []);
+  }, [sessionId]);
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-6">

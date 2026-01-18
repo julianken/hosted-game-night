@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSyncStore, SyncRole } from '@/stores/sync-store';
 import { useGameStore } from '@/stores/game-store';
-import { broadcastSync, createMessageRouter } from '@/lib/sync/broadcast';
+import { createBingoBroadcastSync, createMessageRouter, BroadcastSync } from '@/lib/sync/broadcast';
 import { GameState, BingoBall, BingoPattern } from '@/types';
 
 interface UseSyncOptions {
   role: SyncRole;
+  sessionId: string;
 }
 
 /**
@@ -16,11 +17,19 @@ interface UseSyncOptions {
  * Presenter: Broadcasts state changes to audience windows.
  * Audience: Receives and applies state updates from presenter.
  */
-export function useSync({ role }: UseSyncOptions) {
+export function useSync({ role, sessionId }: UseSyncOptions) {
   const { setRole, setConnected, updateLastSync, setConnectionError, reset } =
     useSyncStore();
   const gameStore = useGameStore();
   const isInitializedRef = useRef(false);
+
+  // Create a session-scoped BroadcastSync instance
+  const broadcastSyncRef = useRef<BroadcastSync | null>(null);
+  const broadcastSync = useMemo(() => {
+    const instance = createBingoBroadcastSync(sessionId);
+    broadcastSyncRef.current = instance;
+    return instance;
+  }, [sessionId]);
 
   // Get current game state for broadcasting
   const getCurrentState = useCallback((): GameState => {
@@ -43,7 +52,7 @@ export function useSync({ role }: UseSyncOptions) {
     if (role !== 'presenter') return;
     const state = getCurrentState();
     broadcastSync.broadcastState(state);
-  }, [role, getCurrentState]);
+  }, [role, getCurrentState, broadcastSync]);
 
   // Handle incoming messages
   const handleStateUpdate = useCallback(
@@ -124,6 +133,7 @@ export function useSync({ role }: UseSyncOptions) {
     };
   }, [
     role,
+    broadcastSync,
     setRole,
     setConnected,
     setConnectionError,
@@ -158,7 +168,7 @@ export function useSync({ role }: UseSyncOptions) {
     });
 
     return unsubscribe;
-  }, [role]);
+  }, [role, broadcastSync]);
 
   return {
     isConnected: useSyncStore((state) => state.isConnected),

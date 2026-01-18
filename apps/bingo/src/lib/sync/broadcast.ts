@@ -1,6 +1,5 @@
 import { GameState, BingoBall, BingoPattern, SyncMessage, SyncMessageType } from '@/types';
-
-const CHANNEL_NAME = 'beak-bingo-sync';
+import { getChannelName } from './session';
 
 export type MessageHandler = (message: SyncMessage) => void;
 
@@ -12,6 +11,11 @@ export class BroadcastSync {
   private channel: BroadcastChannel | null = null;
   private handlers: Set<MessageHandler> = new Set();
   private isInitialized = false;
+  private channelName: string;
+
+  constructor(channelName: string) {
+    this.channelName = channelName;
+  }
 
   /**
    * Initialize the broadcast channel.
@@ -29,7 +33,7 @@ export class BroadcastSync {
     }
 
     try {
-      this.channel = new BroadcastChannel(CHANNEL_NAME);
+      this.channel = new BroadcastChannel(this.channelName);
       this.channel.onmessage = (event: MessageEvent<SyncMessage>) => {
         this.notifyHandlers(event.data);
       };
@@ -146,8 +150,14 @@ export class BroadcastSync {
   }
 }
 
-// Singleton instance for the app
-export const broadcastSync = new BroadcastSync();
+/**
+ * Factory function to create a session-scoped BroadcastSync instance.
+ * Each session ID creates an isolated broadcast channel.
+ */
+export function createBingoBroadcastSync(sessionId: string): BroadcastSync {
+  const channelName = getChannelName(sessionId);
+  return new BroadcastSync(channelName);
+}
 
 /**
  * Create a message handler that routes messages by type.

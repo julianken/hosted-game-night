@@ -3,8 +3,11 @@ import { renderHook, act } from '@testing-library/react';
 import { useSync } from '../use-sync';
 import { useSyncStore } from '@/stores/sync-store';
 import { useGameStore } from '@/stores/game-store';
-import { broadcastSync, createMessageRouter } from '@/lib/sync/broadcast';
+import { createMessageRouter } from '@/lib/sync/broadcast';
 import { SyncMessage, BingoPattern, BingoBall, GameState } from '@/types';
+
+// Test session ID for all tests
+const TEST_SESSION_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 // Store the last created BroadcastChannel instance
 let lastChannelInstance: MockBroadcastChannel | null = null;
@@ -48,8 +51,6 @@ describe('use-sync', () => {
       audioEnabled: true,
     });
 
-    // Reset broadcastSync
-    broadcastSync.close();
   });
 
   afterEach(() => {
@@ -58,20 +59,20 @@ describe('use-sync', () => {
 
   describe('presenter role', () => {
     it('initializes as presenter', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(useSyncStore.getState().role).toBe('presenter');
       expect(result.current.isConnected).toBe(true);
     });
 
     it('provides broadcastState function', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(typeof result.current.broadcastState).toBe('function');
     });
 
     it('provides requestSync function', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(typeof result.current.requestSync).toBe('function');
     });
@@ -79,7 +80,7 @@ describe('use-sync', () => {
 
   describe('audience role', () => {
     it('initializes as audience', () => {
-      const { result } = renderHook(() => useSync({ role: 'audience' }));
+      const { result } = renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
       expect(useSyncStore.getState().role).toBe('audience');
       expect(result.current.isConnected).toBe(true);
@@ -87,7 +88,7 @@ describe('use-sync', () => {
 
     it('requests sync on initialization', () => {
       // The hook should request sync when audience
-      renderHook(() => useSync({ role: 'audience' }));
+      renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
       // Should have called postMessage with REQUEST_SYNC
       // (we verify via store side effects since we mock BroadcastChannel)
@@ -97,19 +98,19 @@ describe('use-sync', () => {
 
   describe('connection status', () => {
     it('returns isConnected from store', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(result.current.isConnected).toBe(true);
     });
 
     it('returns connectionError from store', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(result.current.connectionError).toBeNull();
     });
 
     it('returns lastSyncTimestamp from store', () => {
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(result.current.lastSyncTimestamp).toBeNull();
     });
@@ -117,7 +118,7 @@ describe('use-sync', () => {
 
   describe('cleanup', () => {
     it('resets sync store on unmount', () => {
-      const { unmount } = renderHook(() => useSync({ role: 'presenter' }));
+      const { unmount } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(useSyncStore.getState().isConnected).toBe(true);
 
@@ -133,7 +134,7 @@ describe('use-sync', () => {
       // Simulate BroadcastChannel not being available
       vi.stubGlobal('BroadcastChannel', undefined);
 
-      const { result } = renderHook(() => useSync({ role: 'presenter' }));
+      const { result } = renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
       expect(result.current.connectionError).not.toBeNull();
       expect(result.current.isConnected).toBe(false);
@@ -156,7 +157,7 @@ describe('use-sync', () => {
 
     describe('audience receives messages', () => {
       it('handles BALL_CALLED message and updates lastSync', () => {
-        renderHook(() => useSync({ role: 'audience' }));
+        renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
         expect(useSyncStore.getState().lastSyncTimestamp).toBeNull();
 
@@ -187,7 +188,7 @@ describe('use-sync', () => {
           audioEnabled: true,
         });
 
-        renderHook(() => useSync({ role: 'audience' }));
+        renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
         // Simulate receiving a GAME_RESET message
         act(() => {
@@ -204,7 +205,7 @@ describe('use-sync', () => {
       });
 
       it('handles PATTERN_CHANGED message and sets pattern', () => {
-        renderHook(() => useSync({ role: 'audience' }));
+        renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
         expect(useGameStore.getState().pattern).toBeNull();
 
@@ -233,7 +234,7 @@ describe('use-sync', () => {
           audioEnabled: false,
         };
 
-        renderHook(() => useSync({ role: 'audience' }));
+        renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
         // Simulate receiving a GAME_STATE_UPDATE message
         act(() => {
@@ -269,7 +270,7 @@ describe('use-sync', () => {
           audioEnabled: true,
         });
 
-        renderHook(() => useSync({ role: 'presenter' }));
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
         // Simulate receiving a REQUEST_SYNC message
         act(() => {
@@ -287,7 +288,7 @@ describe('use-sync', () => {
       });
 
       it('ignores BALL_CALLED when presenter role', () => {
-        renderHook(() => useSync({ role: 'presenter' }));
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
         const initialTimestamp = useSyncStore.getState().lastSyncTimestamp;
 
@@ -312,7 +313,7 @@ describe('use-sync', () => {
           postMessage = postMessageSpy;
         });
 
-        renderHook(() => useSync({ role: 'presenter' }));
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
         // Clear any initial broadcasts
         postMessageSpy.mockClear();
