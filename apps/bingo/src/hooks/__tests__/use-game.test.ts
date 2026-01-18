@@ -49,7 +49,12 @@ describe('use-game', () => {
       enabled: true,
       volume: 0.8,
       isPlaying: false,
-      currentVoice: 'default',
+      voicePack: 'standard',
+      useFallbackTTS: true,
+      preloadProgress: 0,
+      preloadError: null,
+      manifest: null,
+      preloadedAudio: new Map(),
     });
   });
 

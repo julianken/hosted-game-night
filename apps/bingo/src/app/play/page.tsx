@@ -11,6 +11,8 @@ import { ControlPanel } from '@/components/presenter/ControlPanel';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@/components/ui/Slider';
 import { Button } from '@/components/ui/Button';
+import { VoiceSelector } from '@/components/ui/VoiceSelector';
+import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
@@ -20,6 +22,10 @@ export default function PlayPage() {
 
   // Initialize sync as presenter role with session-scoped channel
   const { isConnected } = useSync({ role: 'presenter', sessionId });
+
+  // Audio preloading and controls
+  const { preloadProgress } = useAudioPreload();
+  const { voicePack, setVoicePack } = useAudio();
 
   // Open display window with session ID in URL
   const openDisplay = useCallback(() => {
@@ -170,6 +176,13 @@ export default function PlayPage() {
               <p className="text-sm text-muted-foreground">
                 Press M to toggle audio
               </p>
+
+              {/* Voice pack selector */}
+              <VoiceSelector
+                selectedVoice={voicePack}
+                onSelect={setVoicePack}
+                preloadProgress={preloadProgress}
+              />
             </div>
 
             {/* Keyboard shortcuts reference */}

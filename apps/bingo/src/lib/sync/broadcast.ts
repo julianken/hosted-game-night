@@ -1,4 +1,4 @@
-import { GameState, BingoBall, BingoPattern, SyncMessage, SyncMessageType } from '@/types';
+import { GameState, BingoBall, BingoPattern, SyncMessage, SyncMessageType, AudioSettingsPayload } from '@/types';
 import { getChannelName } from './session';
 
 export type MessageHandler = (message: SyncMessage) => void;
@@ -93,6 +93,14 @@ export class BroadcastSync {
   }
 
   /**
+   * Broadcast audio settings change.
+   * Used when the presenter changes voice pack or audio settings.
+   */
+  broadcastAudioSettings(settings: AudioSettingsPayload): void {
+    this.send('AUDIO_SETTINGS_CHANGED', settings);
+  }
+
+  /**
    * Close the broadcast channel and clean up.
    */
   close(): void {
@@ -116,7 +124,7 @@ export class BroadcastSync {
    */
   private send(
     type: SyncMessageType,
-    payload: GameState | BingoBall | BingoPattern | null
+    payload: GameState | BingoBall | BingoPattern | AudioSettingsPayload | null
   ): void {
     if (!this.channel) {
       // TODO: Add proper logger
@@ -168,6 +176,7 @@ export function createMessageRouter(handlers: Partial<{
   onReset: () => void;
   onPatternChanged: (pattern: BingoPattern) => void;
   onSyncRequest: () => void;
+  onAudioSettingsChanged: (settings: AudioSettingsPayload) => void;
 }>): MessageHandler {
   return (message: SyncMessage) => {
     switch (message.type) {
@@ -185,6 +194,9 @@ export function createMessageRouter(handlers: Partial<{
         break;
       case 'REQUEST_SYNC':
         handlers.onSyncRequest?.();
+        break;
+      case 'AUDIO_SETTINGS_CHANGED':
+        handlers.onAudioSettingsChanged?.(message.payload as AudioSettingsPayload);
         break;
     }
   };

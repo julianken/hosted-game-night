@@ -111,26 +111,52 @@ export interface AuthResponse {
   error: string | null;
 }
 
+// Voice pack types
+export type VoicePackId = 'standard' | 'standard-hall' | 'british' | 'british-hall';
+
+export interface VoicePackMetadata {
+  id: VoicePackId;
+  name: string;
+  description: string;
+  basePath: string;
+  filePattern: string;
+  slangMappings?: Record<string, string | null>;
+}
+
+export interface VoiceManifest {
+  voicePacks: Record<VoicePackId, VoicePackMetadata>;
+  defaultPack: VoicePackId;
+}
+
+// Audio types
+export interface AudioState {
+  audioEnabled: boolean;
+  voicePack: VoicePackId;
+  volume: number; // 0-1
+  isPlaying: boolean;
+  preloadProgress: number; // 0-100
+  preloadError: string | null;
+}
+
 // BroadcastChannel message types for window sync
 export type SyncMessageType =
   | 'GAME_STATE_UPDATE'
   | 'BALL_CALLED'
   | 'GAME_RESET'
   | 'PATTERN_CHANGED'
-  | 'REQUEST_SYNC';
+  | 'REQUEST_SYNC'
+  | 'AUDIO_SETTINGS_CHANGED';
+
+export interface AudioSettingsPayload {
+  voicePack: VoicePackId;
+  volume: number;
+  enabled: boolean;
+}
 
 export interface SyncMessage {
   type: SyncMessageType;
-  payload: GameState | BingoBall | BingoPattern | null;
+  payload: GameState | BingoBall | BingoPattern | AudioSettingsPayload | null;
   timestamp: number;
-}
-
-// Audio types
-export interface AudioState {
-  enabled: boolean;
-  volume: number; // 0-1
-  isPlaying: boolean;
-  currentVoice: string;
 }
 
 // Ball deck types

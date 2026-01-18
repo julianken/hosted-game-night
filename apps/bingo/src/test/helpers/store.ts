@@ -1,6 +1,6 @@
 import { useGameStore } from '@/stores/game-store';
 import { useSyncStore } from '@/stores/sync-store';
-import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE } from '@/stores/audio-store';
+import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE_PACK } from '@/stores/audio-store';
 import { createInitialState } from '@/lib/game';
 
 /**
@@ -26,7 +26,12 @@ export function resetAudioStore(): void {
     enabled: true,
     volume: DEFAULT_VOLUME,
     isPlaying: false,
-    currentVoice: DEFAULT_VOICE,
+    voicePack: DEFAULT_VOICE_PACK,
+    useFallbackTTS: true,
+    preloadProgress: 0,
+    preloadError: null,
+    manifest: null,
+    preloadedAudio: new Map(),
   });
 }
 

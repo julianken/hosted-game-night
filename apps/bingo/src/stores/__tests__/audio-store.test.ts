@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE, VOICE_OPTIONS } from '../audio-store';
-import { BingoBall } from '@/types';
+import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE_PACK, VOICE_PACK_OPTIONS } from '../audio-store';
+import { BingoBall, VoicePackId } from '@/types';
 
 describe('audio-store', () => {
   beforeEach(() => {
@@ -9,7 +9,12 @@ describe('audio-store', () => {
       enabled: true,
       volume: DEFAULT_VOLUME,
       isPlaying: false,
-      currentVoice: DEFAULT_VOICE,
+      voicePack: DEFAULT_VOICE_PACK,
+      useFallbackTTS: true,
+      preloadProgress: 0,
+      preloadError: null,
+      manifest: null,
+      preloadedAudio: new Map(),
     });
   });
 
@@ -30,8 +35,16 @@ describe('audio-store', () => {
       expect(useAudioStore.getState().isPlaying).toBe(false);
     });
 
-    it('has default voice', () => {
-      expect(useAudioStore.getState().currentVoice).toBe(DEFAULT_VOICE);
+    it('has default voice pack', () => {
+      expect(useAudioStore.getState().voicePack).toBe(DEFAULT_VOICE_PACK);
+    });
+
+    it('has fallback TTS enabled', () => {
+      expect(useAudioStore.getState().useFallbackTTS).toBe(true);
+    });
+
+    it('has zero preload progress', () => {
+      expect(useAudioStore.getState().preloadProgress).toBe(0);
     });
   });
 
@@ -86,10 +99,31 @@ describe('audio-store', () => {
     });
   });
 
-  describe('setVoice', () => {
-    it('sets voice', () => {
-      useAudioStore.getState().setVoice('classic');
-      expect(useAudioStore.getState().currentVoice).toBe('classic');
+  describe('setVoicePack', () => {
+    it('sets voice pack', () => {
+      useAudioStore.getState().setVoicePack('british');
+      expect(useAudioStore.getState().voicePack).toBe('british');
+    });
+
+    it('sets all available voice packs', () => {
+      const voicePacks: VoicePackId[] = ['standard', 'standard-hall', 'british', 'british-hall'];
+      for (const pack of voicePacks) {
+        useAudioStore.getState().setVoicePack(pack);
+        expect(useAudioStore.getState().voicePack).toBe(pack);
+      }
+    });
+  });
+
+  describe('setUseFallbackTTS', () => {
+    it('enables fallback TTS', () => {
+      useAudioStore.getState().setUseFallbackTTS(false);
+      useAudioStore.getState().setUseFallbackTTS(true);
+      expect(useAudioStore.getState().useFallbackTTS).toBe(true);
+    });
+
+    it('disables fallback TTS', () => {
+      useAudioStore.getState().setUseFallbackTTS(false);
+      expect(useAudioStore.getState().useFallbackTTS).toBe(false);
     });
   });
 
@@ -97,13 +131,14 @@ describe('audio-store', () => {
     const mockBall: BingoBall = {
       column: 'B',
       number: 5,
-      label: 'B-5',
+      label: 'B5',
     };
 
     it('does nothing when audio is disabled', async () => {
       let playCalled = false;
       class MockAudio {
         volume = 1;
+        currentTime = 0;
         onended: (() => void) | null = null;
         onerror: (() => void) | null = null;
         play = vi.fn(() => {
@@ -123,6 +158,7 @@ describe('audio-store', () => {
       let playCalled = false;
       class MockAudio {
         volume = 1;
+        currentTime = 0;
         onended: (() => void) | null = null;
         onerror: (() => void) | null = null;
         play = vi.fn(() => {
@@ -139,8 +175,48 @@ describe('audio-store', () => {
     });
 
     it('sets isPlaying to true during playback and false after', async () => {
+      // Setup mock manifest with metadata
+      useAudioStore.setState({
+        manifest: {
+          voicePacks: {
+            standard: {
+              id: 'standard',
+              name: 'Standard',
+              description: 'Test',
+              basePath: '/audio/voices/standard',
+              filePattern: '{letter}{number}.mp3',
+            },
+            'standard-hall': {
+              id: 'standard-hall',
+              name: 'Standard Hall',
+              description: 'Test',
+              basePath: '/audio/voices/standard-hall',
+              filePattern: '{letter}{number}.mp3',
+            },
+            british: {
+              id: 'british',
+              name: 'British',
+              description: 'Test',
+              basePath: '/audio/voices/british',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+            'british-hall': {
+              id: 'british-hall',
+              name: 'British Hall',
+              description: 'Test',
+              basePath: '/audio/voices/british-hall',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+          },
+          defaultPack: 'standard',
+        },
+      });
+
       class MockAudio {
         volume = 1;
+        currentTime = 0;
         onended: (() => void) | null = null;
         onerror: (() => void) | null = null;
         play = vi.fn(() => {
@@ -159,8 +235,47 @@ describe('audio-store', () => {
     });
 
     it('handles audio errors gracefully', async () => {
+      useAudioStore.setState({
+        manifest: {
+          voicePacks: {
+            standard: {
+              id: 'standard',
+              name: 'Standard',
+              description: 'Test',
+              basePath: '/audio/voices/standard',
+              filePattern: '{letter}{number}.mp3',
+            },
+            'standard-hall': {
+              id: 'standard-hall',
+              name: 'Standard Hall',
+              description: 'Test',
+              basePath: '/audio/voices/standard-hall',
+              filePattern: '{letter}{number}.mp3',
+            },
+            british: {
+              id: 'british',
+              name: 'British',
+              description: 'Test',
+              basePath: '/audio/voices/british',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+            'british-hall': {
+              id: 'british-hall',
+              name: 'British Hall',
+              description: 'Test',
+              basePath: '/audio/voices/british-hall',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+          },
+          defaultPack: 'standard',
+        },
+      });
+
       class MockAudio {
         volume = 1;
+        currentTime = 0;
         onended: (() => void) | null = null;
         onerror: (() => void) | null = null;
         play = vi.fn(() => {
@@ -179,8 +294,47 @@ describe('audio-store', () => {
     });
 
     it('handles play rejection gracefully', async () => {
+      useAudioStore.setState({
+        manifest: {
+          voicePacks: {
+            standard: {
+              id: 'standard',
+              name: 'Standard',
+              description: 'Test',
+              basePath: '/audio/voices/standard',
+              filePattern: '{letter}{number}.mp3',
+            },
+            'standard-hall': {
+              id: 'standard-hall',
+              name: 'Standard Hall',
+              description: 'Test',
+              basePath: '/audio/voices/standard-hall',
+              filePattern: '{letter}{number}.mp3',
+            },
+            british: {
+              id: 'british',
+              name: 'British',
+              description: 'Test',
+              basePath: '/audio/voices/british',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+            'british-hall': {
+              id: 'british-hall',
+              name: 'British Hall',
+              description: 'Test',
+              basePath: '/audio/voices/british-hall',
+              filePattern: '{slang}.mp3',
+              slangMappings: {},
+            },
+          },
+          defaultPack: 'standard',
+        },
+      });
+
       class MockAudio {
         volume = 1;
+        currentTime = 0;
         onended: (() => void) | null = null;
         onerror: (() => void) | null = null;
         play = vi.fn(() => Promise.reject(new Error('Autoplay blocked')));
@@ -213,20 +367,42 @@ describe('audio-store', () => {
     });
   });
 
+  describe('clearPreloadedAudio', () => {
+    it('clears preloaded audio map', () => {
+      const mockAudio = {
+        pause: vi.fn(),
+        load: vi.fn(),
+        src: 'test.mp3',
+      } as unknown as HTMLAudioElement;
+
+      useAudioStore.setState({
+        preloadedAudio: new Map([['test', mockAudio]]),
+        preloadProgress: 100,
+      });
+
+      useAudioStore.getState().clearPreloadedAudio();
+
+      expect(useAudioStore.getState().preloadedAudio.size).toBe(0);
+      expect(useAudioStore.getState().preloadProgress).toBe(0);
+      expect(mockAudio.pause).toHaveBeenCalled();
+    });
+  });
+
   describe('constants', () => {
     it('DEFAULT_VOLUME is 0.8', () => {
       expect(DEFAULT_VOLUME).toBe(0.8);
     });
 
-    it('DEFAULT_VOICE is "default"', () => {
-      expect(DEFAULT_VOICE).toBe('default');
+    it('DEFAULT_VOICE_PACK is "standard"', () => {
+      expect(DEFAULT_VOICE_PACK).toBe('standard');
     });
 
-    it('VOICE_OPTIONS has 3 options', () => {
-      expect(VOICE_OPTIONS).toHaveLength(3);
-      expect(VOICE_OPTIONS.map((v) => v.id)).toContain('default');
-      expect(VOICE_OPTIONS.map((v) => v.id)).toContain('classic');
-      expect(VOICE_OPTIONS.map((v) => v.id)).toContain('modern');
+    it('VOICE_PACK_OPTIONS has 4 options', () => {
+      expect(VOICE_PACK_OPTIONS).toHaveLength(4);
+      expect(VOICE_PACK_OPTIONS.map((v) => v.id)).toContain('standard');
+      expect(VOICE_PACK_OPTIONS.map((v) => v.id)).toContain('standard-hall');
+      expect(VOICE_PACK_OPTIONS.map((v) => v.id)).toContain('british');
+      expect(VOICE_PACK_OPTIONS.map((v) => v.id)).toContain('british-hall');
     });
   });
 });
