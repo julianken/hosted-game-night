@@ -51,10 +51,7 @@ describe('use-game', () => {
       isPlaying: false,
       voicePack: 'standard',
       useFallbackTTS: true,
-      preloadProgress: 0,
-      preloadError: null,
       manifest: null,
-      preloadedAudio: new Map(),
     });
   });
 

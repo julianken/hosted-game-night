@@ -28,10 +28,7 @@ export function resetAudioStore(): void {
     isPlaying: false,
     voicePack: DEFAULT_VOICE_PACK,
     useFallbackTTS: true,
-    preloadProgress: 0,
-    preloadError: null,
     manifest: null,
-    preloadedAudio: new Map(),
   });
 }
 

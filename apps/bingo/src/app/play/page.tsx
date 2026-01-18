@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/Slider';
 import { Button } from '@/components/ui/Button';
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
+import { OfflineBanner, InstallPrompt } from '@/components/pwa';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
@@ -43,8 +44,10 @@ export default function PlayPage() {
   }, [sessionId]);
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <OfflineBanner />
+      <main className="min-h-screen bg-background p-4 md:p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -224,6 +227,8 @@ export default function PlayPage() {
           </section>
         </div>
       </div>
-    </main>
+      </main>
+      <InstallPrompt />
+    </>
   );
 }

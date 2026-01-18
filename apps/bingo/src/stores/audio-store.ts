@@ -11,12 +11,7 @@ export interface AudioStore {
 
   // Non-persisted state
   isPlaying: boolean;
-  preloadProgress: number; // 0-100
-  preloadError: string | null;
   manifest: VoiceManifest | null;
-
-  // Non-serializable state (excluded from persistence)
-  preloadedAudio: Map<string, HTMLAudioElement>;
 
   // Actions
   setEnabled: (enabled: boolean) => void;
@@ -29,10 +24,8 @@ export interface AudioStore {
   playBallCall: (ball: BingoBall) => Promise<void>;
   stopPlayback: () => void;
 
-  // Preloading
+  // Manifest loading
   loadManifest: () => Promise<void>;
-  preloadVoicePack: (packId: VoicePackId) => Promise<void>;
-  clearPreloadedAudio: () => void;
 }
 
 export const DEFAULT_VOICE_PACK: VoicePackId = 'standard';
@@ -108,16 +101,6 @@ function speakBallCall(ball: BingoBall, volume: number): Promise<void> {
   });
 }
 
-/**
- * Properly dispose of an HTMLAudioElement to prevent memory leaks.
- * Fix #2: Memory leak prevention
- */
-function disposeAudioElement(audio: HTMLAudioElement): void {
-  audio.pause();
-  audio.src = '';
-  audio.load();
-}
-
 export const useAudioStore = create<AudioStore>()(
   persist(
     (set, get) => ({
@@ -129,12 +112,7 @@ export const useAudioStore = create<AudioStore>()(
 
       // Non-persisted state
       isPlaying: false,
-      preloadProgress: 0,
-      preloadError: null,
       manifest: null,
-
-      // Non-serializable state
-      preloadedAudio: new Map(),
 
       // Actions
       setEnabled: (enabled: boolean) => {
@@ -149,17 +127,10 @@ export const useAudioStore = create<AudioStore>()(
         // Clamp volume between 0 and 1
         const clampedVolume = Math.max(0, Math.min(1, volume));
         set({ volume: clampedVolume });
-
-        // Update volume on preloaded audio elements
-        const { preloadedAudio } = get();
-        for (const audio of preloadedAudio.values()) {
-          audio.volume = clampedVolume;
-        }
       },
 
       setVoicePack: (pack: VoicePackId) => {
         set({ voicePack: pack });
-        // Preloading will be triggered by the React hook after state update
       },
 
       setUseFallbackTTS: (useFallback: boolean) => {
@@ -167,8 +138,7 @@ export const useAudioStore = create<AudioStore>()(
       },
 
       playBallCall: async (ball: BingoBall) => {
-        const { enabled, volume, voicePack, isPlaying, useFallbackTTS, manifest, preloadedAudio } =
-          get();
+        const { enabled, volume, voicePack, isPlaying, useFallbackTTS, manifest } = get();
 
         if (!enabled || isPlaying) {
           return;
@@ -179,29 +149,19 @@ export const useAudioStore = create<AudioStore>()(
           return;
         }
 
-        // Fix #4: Set isPlaying BEFORE any async work to prevent race conditions
+        // Set isPlaying BEFORE any async work to prevent race conditions
         set({ isPlaying: true });
 
         try {
-          // Try to play from preloaded audio first
-          const packMetadata = manifest?.voicePacks[voicePack];
-          const audioKey = `${voicePack}-${ball.label}`;
-          const preloadedAudioElement = preloadedAudio.get(audioKey);
-
-          if (preloadedAudioElement) {
-            // Play from preloaded cache
-            preloadedAudioElement.currentTime = 0;
-            preloadedAudioElement.volume = volume;
-
-            await new Promise<void>((resolve) => {
-              preloadedAudioElement.onended = () => resolve();
-              preloadedAudioElement.onerror = () => resolve();
-              preloadedAudioElement.play().catch(() => resolve());
-            });
-            return;
+          // Load manifest if needed
+          if (!manifest) {
+            await get().loadManifest();
           }
 
-          // Not preloaded, try to load and play on-demand
+          const currentManifest = get().manifest;
+          const packMetadata = currentManifest?.voicePacks[voicePack];
+
+          // Try to play audio file (will be served from SW cache if available)
           if (packMetadata && typeof Audio !== 'undefined') {
             const audioPath = getAudioPath(ball, packMetadata);
 
@@ -244,112 +204,13 @@ export const useAudioStore = create<AudioStore>()(
           const manifest: VoiceManifest = await response.json();
           set({ manifest });
         } catch (error) {
-          // Fix #5: Safe error message extraction
           const message = error instanceof Error ? error.message : 'Unknown error loading manifest';
-          set({ preloadError: message });
+          console.error('Failed to load voice manifest:', message);
         }
-      },
-
-      preloadVoicePack: async (packId: VoicePackId) => {
-        const { manifest, volume, clearPreloadedAudio } = get();
-
-        // Load manifest if not already loaded
-        if (!manifest) {
-          await get().loadManifest();
-        }
-
-        const currentManifest = get().manifest;
-        if (!currentManifest) {
-          set({ preloadError: 'Voice pack manifest not available' });
-          return;
-        }
-
-        const packMetadata = currentManifest.voicePacks[packId];
-        if (!packMetadata) {
-          set({ preloadError: `Voice pack "${packId}" not found` });
-          return;
-        }
-
-        // Clear existing preloaded audio (with proper cleanup)
-        clearPreloadedAudio();
-
-        set({ preloadProgress: 0, preloadError: null });
-
-        const newPreloadedAudio = new Map<string, HTMLAudioElement>();
-        const totalBalls = 75;
-        let loadedCount = 0;
-
-        // Generate all 75 ball labels
-        const columns = ['B', 'I', 'N', 'G', 'O'] as const;
-        const balls: BingoBall[] = [];
-        for (const column of columns) {
-          const start = columns.indexOf(column) * 15 + 1;
-          for (let i = 0; i < 15; i++) {
-            const number = start + i;
-            balls.push({
-              column,
-              number,
-              label: `${column}${number}`,
-            });
-          }
-        }
-
-        // Preload all audio files
-        const preloadPromises = balls.map(async (ball) => {
-          const audioPath = getAudioPath(ball, packMetadata);
-          const audioKey = `${packId}-${ball.label}`;
-
-          if (!audioPath) {
-            // No audio path (e.g., missing slang mapping), skip
-            loadedCount++;
-            set({ preloadProgress: Math.round((loadedCount / totalBalls) * 100) });
-            return;
-          }
-
-          try {
-            const audio = new Audio();
-            audio.preload = 'auto';
-            audio.volume = volume;
-
-            await new Promise<void>((resolve, reject) => {
-              audio.oncanplaythrough = () => resolve();
-              audio.onerror = () => reject(new Error(`Failed to load ${audioPath}`));
-              audio.src = audioPath;
-            });
-
-            newPreloadedAudio.set(audioKey, audio);
-          } catch {
-            // Individual file load failure - continue with others
-          }
-
-          loadedCount++;
-          set({ preloadProgress: Math.round((loadedCount / totalBalls) * 100) });
-        });
-
-        try {
-          await Promise.all(preloadPromises);
-          set({ preloadedAudio: newPreloadedAudio, preloadProgress: 100 });
-        } catch (error) {
-          // Fix #5: Safe error message extraction
-          const message = error instanceof Error ? error.message : 'Unknown error preloading audio';
-          set({ preloadError: message });
-        }
-      },
-
-      clearPreloadedAudio: () => {
-        const { preloadedAudio } = get();
-
-        // Fix #2: Properly dispose of audio elements to prevent memory leaks
-        for (const audio of preloadedAudio.values()) {
-          disposeAudioElement(audio);
-        }
-
-        set({ preloadedAudio: new Map(), preloadProgress: 0 });
       },
     }),
     {
       name: 'beak-bingo-audio',
-      // Fix #3: Exclude non-serializable state from persistence
       partialize: (state) => ({
         enabled: state.enabled,
         volume: state.volume,

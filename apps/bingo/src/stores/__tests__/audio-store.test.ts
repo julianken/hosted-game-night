@@ -11,10 +11,7 @@ describe('audio-store', () => {
       isPlaying: false,
       voicePack: DEFAULT_VOICE_PACK,
       useFallbackTTS: true,
-      preloadProgress: 0,
-      preloadError: null,
       manifest: null,
-      preloadedAudio: new Map(),
     });
   });
 
@@ -43,8 +40,8 @@ describe('audio-store', () => {
       expect(useAudioStore.getState().useFallbackTTS).toBe(true);
     });
 
-    it('has zero preload progress', () => {
-      expect(useAudioStore.getState().preloadProgress).toBe(0);
+    it('has null manifest initially', () => {
+      expect(useAudioStore.getState().manifest).toBeNull();
     });
   });
 
@@ -364,27 +361,6 @@ describe('audio-store', () => {
       useAudioStore.setState({ isPlaying: true });
       useAudioStore.getState().stopPlayback();
       expect(useAudioStore.getState().isPlaying).toBe(false);
-    });
-  });
-
-  describe('clearPreloadedAudio', () => {
-    it('clears preloaded audio map', () => {
-      const mockAudio = {
-        pause: vi.fn(),
-        load: vi.fn(),
-        src: 'test.mp3',
-      } as unknown as HTMLAudioElement;
-
-      useAudioStore.setState({
-        preloadedAudio: new Map([['test', mockAudio]]),
-        preloadProgress: 100,
-      });
-
-      useAudioStore.getState().clearPreloadedAudio();
-
-      expect(useAudioStore.getState().preloadedAudio.size).toBe(0);
-      expect(useAudioStore.getState().preloadProgress).toBe(0);
-      expect(mockAudio.pause).toHaveBeenCalled();
     });
   });
 

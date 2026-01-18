@@ -1,46 +1,41 @@
 import { useEffect, useRef } from 'react';
 import { useAudioStore } from '@/stores/audio-store';
+import { useSWCache } from './use-sw-cache';
 
 /**
  * Hook to trigger audio preloading after React mount.
- * Fix #1: Ensures preloading happens after localStorage rehydration.
+ * Uses the Service Worker cache for preloading voice packs.
  *
  * This hook should be called in the presenter component to preload
  * the current voice pack. It automatically handles:
  * - Initial preload after mount
  * - Re-preloading when voice pack changes
- * - Cleanup of audio elements on unmount
  */
 export function useAudioPreload() {
   const voicePack = useAudioStore((s) => s.voicePack);
-  const preloadVoicePack = useAudioStore((s) => s.preloadVoicePack);
-  const clearPreloadedAudio = useAudioStore((s) => s.clearPreloadedAudio);
-  const preloadProgress = useAudioStore((s) => s.preloadProgress);
-  const preloadError = useAudioStore((s) => s.preloadError);
+  const loadManifest = useAudioStore((s) => s.loadManifest);
+  const { preload, preloadProgress, isPreloading, cachedPacks } = useSWCache();
 
-  // Track if this is the first mount to avoid duplicate preloads
-  const hasPreloaded = useRef(false);
+  // Track current pack to detect changes
   const currentPack = useRef(voicePack);
 
   useEffect(() => {
-    // Preload on mount or when voice pack changes
-    if (!hasPreloaded.current || currentPack.current !== voicePack) {
-      hasPreloaded.current = true;
-      currentPack.current = voicePack;
-      preloadVoicePack(voicePack);
-    }
+    // Load the manifest first
+    loadManifest();
+  }, [loadManifest]);
 
-    // Cleanup on unmount
-    return () => {
-      clearPreloadedAudio();
-    };
-  }, [voicePack, preloadVoicePack, clearPreloadedAudio]);
+  useEffect(() => {
+    // Preload when voice pack changes and it's not already cached
+    if (currentPack.current !== voicePack || !cachedPacks.includes(voicePack)) {
+      currentPack.current = voicePack;
+      preload(voicePack);
+    }
+  }, [voicePack, preload, cachedPacks]);
 
   return {
     preloadProgress,
-    preloadError,
-    isPreloading: preloadProgress > 0 && preloadProgress < 100,
-    isPreloaded: preloadProgress === 100,
+    isPreloading,
+    isPreloaded: cachedPacks.includes(voicePack),
   };
 }
 
