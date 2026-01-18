@@ -36,9 +36,12 @@ export function useGame() {
   );
 
   const callBall = useCallback(async () => {
-    const ball = gameStore.callBall();
+    if (audioEnabled) {
+      await audioStore.playRollSound();  // Roll sound plays first
+    }
+    const ball = gameStore.callBall();   // Ball appears after roll completes
     if (ball && audioEnabled) {
-      await audioStore.playBallCall(ball);
+      await audioStore.playBallVoice(ball);  // Voice announcement plays
     }
     return ball;
   }, [gameStore, audioStore, audioEnabled]);
@@ -164,7 +167,7 @@ export function useGame() {
 
 /**
  * Keyboard shortcut hook for game controls.
- * Space=call next, P=pause, R=reset, U=undo, M=mute
+ * Space=roll, P=pause, R=reset, U=undo, M=mute
  */
 export function useGameKeyboard() {
   const game = useGame();

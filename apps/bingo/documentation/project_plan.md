@@ -164,7 +164,20 @@ Card generation and PDF printing moved to post-MVP. Facilities will use physical
 - [ ] Audio format: MP3 (good compression, universal support)
 - [ ] Organize files: `/public/audio/{voice-id}/b-1.mp3`
 
-### 3.2 Audio Player (`lib/audio/player.ts`)
+### 3.2 Ball Reveal Chime
+
+- [ ] Source reveal chime sound effect
+  - Research nostalgic sounds for seniors (service bell, classic game show ding)
+  - Consider: desk bell, Price is Right style ding, or simple attention chime
+  - Purchase from AudioJungle, Epidemic Sound, or similar
+- [ ] Add chime audio files
+  - `/public/audio/sfx/chime/reveal.mp3` - clean version
+  - `/public/audio/sfx/chime/reveal-hall.mp3` - hall reverb variant
+- [ ] Implement `playRevealChime()` in audio store
+- [ ] Update call sequence: roll → ball appears + chime → voice announcement
+- [ ] Add UI toggle to enable/disable reveal chime
+
+### 3.3 Audio Player (`lib/audio/player.ts`)
 
 - [ ] Create audio player class/hook
 - [ ] Implement preloading (cache all 75 files on game start)
@@ -177,7 +190,7 @@ Card generation and PDF printing moved to post-MVP. Facilities will use physical
 - [ ] Implement voice selection (switch between voice sets)
 - [ ] Store audio preference in localStorage
 
-### 3.3 Audio Hook (`hooks/useAudio.ts`)
+### 3.4 Audio Hook (`hooks/useAudio.ts`)
 
 - [ ] Create React hook for audio controls
 - [ ] Expose: play(ball), setVolume, toggleMute, setVoice

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { BingoBall, VoicePackId, VoiceManifest, VoicePackMetadata } from '@/types';
+import { BingoBall, VoicePackId, VoiceManifest, VoicePackMetadata, RollSoundType, RollDuration } from '@/types';
 
 export interface AudioStore {
   // Persisted state
@@ -8,6 +8,8 @@ export interface AudioStore {
   volume: number; // 0-1
   voicePack: VoicePackId;
   useFallbackTTS: boolean;
+  rollSoundType: RollSoundType;
+  rollDuration: RollDuration;
 
   // Non-persisted state
   isPlaying: boolean;
@@ -19,9 +21,12 @@ export interface AudioStore {
   setVolume: (volume: number) => void;
   setVoicePack: (pack: VoicePackId) => void;
   setUseFallbackTTS: (useFallback: boolean) => void;
+  setRollSound: (type: RollSoundType, duration: RollDuration) => void;
 
   // Playback
   playBallCall: (ball: BingoBall) => Promise<void>;
+  playRollSound: () => Promise<void>;
+  playBallVoice: (ball: BingoBall) => Promise<void>;
   stopPlayback: () => void;
 
   // Manifest loading
@@ -30,6 +35,8 @@ export interface AudioStore {
 
 export const DEFAULT_VOICE_PACK: VoicePackId = 'standard';
 export const DEFAULT_VOLUME = 0.8;
+export const DEFAULT_ROLL_SOUND_TYPE: RollSoundType = 'metal-cage';
+export const DEFAULT_ROLL_DURATION: RollDuration = '2s';
 
 // Voice pack display options for UI
 export const VOICE_PACK_OPTIONS: { id: VoicePackId; name: string; description: string }[] = [
@@ -60,6 +67,52 @@ function getAudioPath(
 
   // Standard pack - use letter + number format (e.g., B1.mp3)
   return `${basePath}/${ball.column}${ball.number}.mp3`;
+}
+
+/**
+ * Play the ball rolling sound effect.
+ * Selects clean or hall variant based on voice pack.
+ * Errors are caught to ensure voice announcement still plays.
+ */
+async function playRollingSound(
+  volume: number,
+  voicePack: VoicePackId,
+  rollType: RollSoundType,
+  rollDuration: RollDuration
+): Promise<void> {
+  if (typeof Audio === 'undefined') {
+    return;
+  }
+
+  // Use hall variant if voice pack has hall reverb
+  const isHall = voicePack.endsWith('-hall');
+  const suffix = isHall ? '-hall' : '';
+  const soundFile = `/audio/sfx/${rollType}/${rollDuration}${suffix}.mp3`;
+
+  return new Promise<void>((resolve) => {
+    const audio = new Audio(soundFile);
+    audio.volume = volume;
+
+    const cleanup = () => {
+      audio.src = ''; // Release media resource - prevents memory leak
+    };
+
+    audio.onended = () => {
+      cleanup();
+      resolve();
+    };
+    audio.onerror = () => {
+      cleanup();
+      console.warn('Failed to play rolling sound, continuing to voice');
+      resolve();
+    };
+
+    audio.play().catch(() => {
+      cleanup();
+      console.warn('Failed to start rolling sound, continuing to voice');
+      resolve();
+    });
+  });
 }
 
 /**
@@ -109,6 +162,8 @@ export const useAudioStore = create<AudioStore>()(
       volume: DEFAULT_VOLUME,
       voicePack: DEFAULT_VOICE_PACK,
       useFallbackTTS: true,
+      rollSoundType: DEFAULT_ROLL_SOUND_TYPE,
+      rollDuration: DEFAULT_ROLL_DURATION,
 
       // Non-persisted state
       isPlaying: false,
@@ -137,8 +192,12 @@ export const useAudioStore = create<AudioStore>()(
         set({ useFallbackTTS: useFallback });
       },
 
+      setRollSound: (type: RollSoundType, duration: RollDuration) => {
+        set({ rollSoundType: type, rollDuration: duration });
+      },
+
       playBallCall: async (ball: BingoBall) => {
-        const { enabled, volume, voicePack, isPlaying, useFallbackTTS, manifest } = get();
+        const { enabled, volume, voicePack, isPlaying, useFallbackTTS, manifest, rollSoundType, rollDuration } = get();
 
         if (!enabled || isPlaying) {
           return;
@@ -160,6 +219,14 @@ export const useAudioStore = create<AudioStore>()(
 
           const currentManifest = get().manifest;
           const packMetadata = currentManifest?.voicePacks[voicePack];
+
+          // Play rolling sound first (non-blocking on error)
+          // Uses hall variant automatically if voice pack is hall style
+          try {
+            await playRollingSound(volume, voicePack, rollSoundType, rollDuration);
+          } catch (error) {
+            console.warn('Rolling sound failed:', error);
+          }
 
           // Try to play audio file (will be served from SW cache if available)
           if (packMetadata && typeof Audio !== 'undefined') {
@@ -184,6 +251,50 @@ export const useAudioStore = create<AudioStore>()(
           }
         } finally {
           set({ isPlaying: false });
+        }
+      },
+
+      playRollSound: async () => {
+        const { enabled, volume, voicePack, rollSoundType, rollDuration } = get();
+        if (!enabled || typeof Audio === 'undefined') return;
+        await playRollingSound(volume, voicePack, rollSoundType, rollDuration);
+      },
+
+      playBallVoice: async (ball: BingoBall) => {
+        const { enabled, volume, voicePack, useFallbackTTS, manifest } = get();
+        if (!enabled) return;
+
+        // Check if we're in a browser environment
+        if (typeof window === 'undefined') return;
+
+        // Load manifest if needed
+        if (!manifest) {
+          await get().loadManifest();
+        }
+
+        const currentManifest = get().manifest;
+        const packMetadata = currentManifest?.voicePacks[voicePack];
+
+        // Try to play audio file
+        if (packMetadata && typeof Audio !== 'undefined') {
+          const audioPath = getAudioPath(ball, packMetadata);
+
+          if (audioPath) {
+            const audio = new Audio(audioPath);
+            audio.volume = volume;
+
+            await new Promise<void>((resolve) => {
+              audio.onended = () => resolve();
+              audio.onerror = () => resolve();
+              audio.play().catch(() => resolve());
+            });
+            return;
+          }
+        }
+
+        // Fall back to Web Speech API if enabled
+        if (useFallbackTTS) {
+          await speakBallCall(ball, volume);
         }
       },
 
@@ -216,6 +327,8 @@ export const useAudioStore = create<AudioStore>()(
         volume: state.volume,
         voicePack: state.voicePack,
         useFallbackTTS: state.useFallbackTTS,
+        rollSoundType: state.rollSoundType,
+        rollDuration: state.rollDuration,
       }),
     }
   )
