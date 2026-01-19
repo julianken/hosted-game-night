@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Use vi.hoisted to set env vars BEFORE module imports are evaluated
+// This runs before any imports, unlike regular vi.stubEnv
+vi.hoisted(() => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+});
+
 // Mock @supabase/ssr
 vi.mock('@supabase/ssr', () => ({
   createBrowserClient: vi.fn(() => ({ auth: {}, from: vi.fn() })),
@@ -13,9 +20,6 @@ describe('supabase client', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set environment variables
-    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon-key');
   });
 
   it('creates a browser client with correct environment variables', () => {

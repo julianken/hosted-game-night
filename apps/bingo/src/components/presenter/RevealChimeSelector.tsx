@@ -3,6 +3,7 @@
 import { useId, useState, useCallback } from 'react';
 import { RevealChimeType, REVEAL_CHIME_OPTIONS } from '@/types';
 import { Button } from '@/components/ui/Button';
+import { Slider } from '@beak-gaming/ui';
 import { useAudioStore } from '@/stores/audio-store';
 
 export interface RevealChimeSelectorProps {
@@ -19,8 +20,20 @@ export function RevealChimeSelector({ disabled = false }: RevealChimeSelectorPro
   const [isPlaying, setIsPlaying] = useState(false);
 
   const revealChime = useAudioStore((state) => state.revealChime);
-  const volume = useAudioStore((state) => state.volume);
+  const chimeVolume = useAudioStore((state) => state.chimeVolume);
+  const setChimeVolume = useAudioStore((state) => state.setChimeVolume);
   const setRevealChime = useAudioStore((state) => state.setRevealChime);
+
+  // Convert 0-1 to 0-100 for display
+  const volumePercent = Math.round(chimeVolume * 100);
+
+  // Handle volume slider changes - convert 0-100 back to 0-1
+  const handleVolumeChange = useCallback(
+    (value: number) => {
+      setChimeVolume(value / 100);
+    },
+    [setChimeVolume]
+  );
 
   // Handle chime change
   const handleChimeChange = useCallback(
@@ -40,7 +53,7 @@ export function RevealChimeSelector({ disabled = false }: RevealChimeSelectorPro
       const soundFile = `/audio/sfx/chimes/${revealChime}.mp3`;
 
       const audio = new Audio(soundFile);
-      audio.volume = volume;
+      audio.volume = chimeVolume;
 
       await new Promise<void>((resolve) => {
         audio.onended = () => {
@@ -59,7 +72,7 @@ export function RevealChimeSelector({ disabled = false }: RevealChimeSelectorPro
     } finally {
       setIsPlaying(false);
     }
-  }, [isPlaying, revealChime, volume]);
+  }, [isPlaying, revealChime, chimeVolume]);
 
   const selectClassName = `
     w-full h-[44px] px-4 text-lg
@@ -106,6 +119,20 @@ export function RevealChimeSelector({ disabled = false }: RevealChimeSelectorPro
           ))}
         </select>
       </div>
+
+      {/* Volume Slider - only show when a chime is selected */}
+      {revealChime !== 'none' && (
+        <Slider
+          value={volumePercent}
+          onChange={handleVolumeChange}
+          min={0}
+          max={100}
+          step={5}
+          label="Volume"
+          unit="%"
+          disabled={disabled}
+        />
+      )}
 
       {/* Preview Button - only show when a chime is selected */}
       {revealChime !== 'none' && (

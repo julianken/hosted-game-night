@@ -45,14 +45,18 @@ export function useAudioPreload() {
  */
 export function useAudio() {
   const enabled = useAudioStore((s) => s.enabled);
-  const volume = useAudioStore((s) => s.volume);
+  const voiceVolume = useAudioStore((s) => s.voiceVolume);
+  const rollSoundVolume = useAudioStore((s) => s.rollSoundVolume);
+  const chimeVolume = useAudioStore((s) => s.chimeVolume);
   const voicePack = useAudioStore((s) => s.voicePack);
   const isPlaying = useAudioStore((s) => s.isPlaying);
   const useFallbackTTS = useAudioStore((s) => s.useFallbackTTS);
 
   const setEnabled = useAudioStore((s) => s.setEnabled);
   const toggleEnabled = useAudioStore((s) => s.toggleEnabled);
-  const setVolume = useAudioStore((s) => s.setVolume);
+  const setVoiceVolume = useAudioStore((s) => s.setVoiceVolume);
+  const setRollSoundVolume = useAudioStore((s) => s.setRollSoundVolume);
+  const setChimeVolume = useAudioStore((s) => s.setChimeVolume);
   const setVoicePack = useAudioStore((s) => s.setVoicePack);
   const setUseFallbackTTS = useAudioStore((s) => s.setUseFallbackTTS);
   const playBallCall = useAudioStore((s) => s.playBallCall);
@@ -61,7 +65,9 @@ export function useAudio() {
   return {
     // State
     enabled,
-    volume,
+    voiceVolume,
+    rollSoundVolume,
+    chimeVolume,
     voicePack,
     isPlaying,
     useFallbackTTS,
@@ -69,7 +75,9 @@ export function useAudio() {
     // Actions
     setEnabled,
     toggleEnabled,
-    setVolume,
+    setVoiceVolume,
+    setRollSoundVolume,
+    setChimeVolume,
     setVoicePack,
     setUseFallbackTTS,
     playBallCall,

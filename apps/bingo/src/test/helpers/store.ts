@@ -1,6 +1,6 @@
 import { useGameStore } from '@/stores/game-store';
 import { useSyncStore } from '@/stores/sync-store';
-import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE_PACK } from '@/stores/audio-store';
+import { useAudioStore, DEFAULT_VOICE_VOLUME, DEFAULT_ROLL_SOUND_VOLUME, DEFAULT_CHIME_VOLUME, DEFAULT_VOICE_PACK } from '@/stores/audio-store';
 import { createInitialState } from '@/lib/game';
 
 /**
@@ -24,7 +24,9 @@ export function resetSyncStore(): void {
 export function resetAudioStore(): void {
   useAudioStore.setState({
     enabled: true,
-    volume: DEFAULT_VOLUME,
+    voiceVolume: DEFAULT_VOICE_VOLUME,
+    rollSoundVolume: DEFAULT_ROLL_SOUND_VOLUME,
+    chimeVolume: DEFAULT_CHIME_VOLUME,
     isPlaying: false,
     voicePack: DEFAULT_VOICE_PACK,
     useFallbackTTS: true,

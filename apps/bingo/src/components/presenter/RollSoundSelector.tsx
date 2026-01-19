@@ -3,6 +3,7 @@
 import { useId, useState, useCallback } from 'react';
 import { RollSoundType, RollDuration, ROLL_SOUND_OPTIONS } from '@/types';
 import { Button } from '@/components/ui/Button';
+import { Slider } from '@beak-gaming/ui';
 import { useAudioStore } from '@/stores/audio-store';
 
 export interface RollSoundSelectorProps {
@@ -23,8 +24,20 @@ export function RollSoundSelector({ disabled = false }: RollSoundSelectorProps) 
   const rollSoundType = useAudioStore((state) => state.rollSoundType);
   const rollDuration = useAudioStore((state) => state.rollDuration);
   const voicePack = useAudioStore((state) => state.voicePack);
-  const volume = useAudioStore((state) => state.volume);
+  const rollSoundVolume = useAudioStore((state) => state.rollSoundVolume);
+  const setRollSoundVolume = useAudioStore((state) => state.setRollSoundVolume);
   const setRollSound = useAudioStore((state) => state.setRollSound);
+
+  // Convert 0-1 to 0-100 for display
+  const volumePercent = Math.round(rollSoundVolume * 100);
+
+  // Handle volume slider changes - convert 0-100 back to 0-1
+  const handleVolumeChange = useCallback(
+    (value: number) => {
+      setRollSoundVolume(value / 100);
+    },
+    [setRollSoundVolume]
+  );
 
   // Get available durations for current sound type
   const availableDurations = ROLL_SOUND_OPTIONS[rollSoundType].durations;
@@ -61,7 +74,7 @@ export function RollSoundSelector({ disabled = false }: RollSoundSelectorProps) 
       const soundFile = `/audio/sfx/${rollSoundType}/${rollDuration}${suffix}.mp3`;
 
       const audio = new Audio(soundFile);
-      audio.volume = volume;
+      audio.volume = rollSoundVolume;
 
       await new Promise<void>((resolve) => {
         audio.onended = () => {
@@ -80,7 +93,7 @@ export function RollSoundSelector({ disabled = false }: RollSoundSelectorProps) 
     } finally {
       setIsPlaying(false);
     }
-  }, [isPlaying, rollSoundType, rollDuration, voicePack, volume]);
+  }, [isPlaying, rollSoundType, rollDuration, voicePack, rollSoundVolume]);
 
   const selectClassName = `
     w-full h-[44px] px-4 text-lg
@@ -157,6 +170,18 @@ export function RollSoundSelector({ disabled = false }: RollSoundSelectorProps) 
           </select>
         </div>
       </div>
+
+      {/* Volume Slider */}
+      <Slider
+        value={volumePercent}
+        onChange={handleVolumeChange}
+        min={0}
+        max={100}
+        step={5}
+        label="Volume"
+        unit="%"
+        disabled={disabled}
+      />
 
       {/* Preview Button */}
       <Button

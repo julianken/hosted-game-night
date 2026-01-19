@@ -26,7 +26,9 @@ describe('use-audio', () => {
     // Reset audio store to default state
     useAudioStore.setState({
       enabled: true,
-      volume: 0.8,
+      voiceVolume: 0.7,
+      rollSoundVolume: 0.8,
+      chimeVolume: 0.8,
       voicePack: 'standard',
       useFallbackTTS: true,
       rollSoundType: 'metal-cage',
@@ -183,7 +185,9 @@ describe('use-audio', () => {
     it('returns all audio state', () => {
       useAudioStore.setState({
         enabled: true,
-        volume: 0.75,
+        voiceVolume: 0.75,
+        rollSoundVolume: 0.9,
+        chimeVolume: 0.85,
         voicePack: 'british',
         isPlaying: true,
         useFallbackTTS: false,
@@ -192,7 +196,9 @@ describe('use-audio', () => {
       const { result } = renderHook(() => useAudio());
 
       expect(result.current.enabled).toBe(true);
-      expect(result.current.volume).toBe(0.75);
+      expect(result.current.voiceVolume).toBe(0.75);
+      expect(result.current.rollSoundVolume).toBe(0.9);
+      expect(result.current.chimeVolume).toBe(0.85);
       expect(result.current.voicePack).toBe('british');
       expect(result.current.isPlaying).toBe(true);
       expect(result.current.useFallbackTTS).toBe(false);
@@ -203,7 +209,9 @@ describe('use-audio', () => {
 
       expect(typeof result.current.setEnabled).toBe('function');
       expect(typeof result.current.toggleEnabled).toBe('function');
-      expect(typeof result.current.setVolume).toBe('function');
+      expect(typeof result.current.setVoiceVolume).toBe('function');
+      expect(typeof result.current.setRollSoundVolume).toBe('function');
+      expect(typeof result.current.setChimeVolume).toBe('function');
       expect(typeof result.current.setVoicePack).toBe('function');
       expect(typeof result.current.setUseFallbackTTS).toBe('function');
       expect(typeof result.current.playBallCall).toBe('function');
@@ -238,30 +246,82 @@ describe('use-audio', () => {
       expect(result.current.enabled).toBe(true);
     });
 
-    it('setVolume updates volume', () => {
+    it('setVoiceVolume updates voice volume', () => {
       const { result } = renderHook(() => useAudio());
 
       act(() => {
-        result.current.setVolume(0.5);
+        result.current.setVoiceVolume(0.5);
       });
 
-      expect(result.current.volume).toBe(0.5);
+      expect(result.current.voiceVolume).toBe(0.5);
     });
 
-    it('setVolume clamps volume between 0 and 1', () => {
+    it('setRollSoundVolume updates roll sound volume', () => {
       const { result } = renderHook(() => useAudio());
 
       act(() => {
-        result.current.setVolume(1.5);
+        result.current.setRollSoundVolume(0.6);
       });
 
-      expect(result.current.volume).toBe(1);
+      expect(result.current.rollSoundVolume).toBe(0.6);
+    });
+
+    it('setChimeVolume updates chime volume', () => {
+      const { result } = renderHook(() => useAudio());
 
       act(() => {
-        result.current.setVolume(-0.5);
+        result.current.setChimeVolume(0.5);
       });
 
-      expect(result.current.volume).toBe(0);
+      expect(result.current.chimeVolume).toBe(0.5);
+    });
+
+    it('setVoiceVolume clamps volume between 0 and 1', () => {
+      const { result } = renderHook(() => useAudio());
+
+      act(() => {
+        result.current.setVoiceVolume(1.5);
+      });
+
+      expect(result.current.voiceVolume).toBe(1);
+
+      act(() => {
+        result.current.setVoiceVolume(-0.5);
+      });
+
+      expect(result.current.voiceVolume).toBe(0);
+    });
+
+    it('setRollSoundVolume clamps volume between 0 and 1', () => {
+      const { result } = renderHook(() => useAudio());
+
+      act(() => {
+        result.current.setRollSoundVolume(1.5);
+      });
+
+      expect(result.current.rollSoundVolume).toBe(1);
+
+      act(() => {
+        result.current.setRollSoundVolume(-0.5);
+      });
+
+      expect(result.current.rollSoundVolume).toBe(0);
+    });
+
+    it('setChimeVolume clamps volume between 0 and 1', () => {
+      const { result } = renderHook(() => useAudio());
+
+      act(() => {
+        result.current.setChimeVolume(1.5);
+      });
+
+      expect(result.current.chimeVolume).toBe(1);
+
+      act(() => {
+        result.current.setChimeVolume(-0.5);
+      });
+
+      expect(result.current.chimeVolume).toBe(0);
     });
 
     it('setVoicePack updates voice pack', () => {
