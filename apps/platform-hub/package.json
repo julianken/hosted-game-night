@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start --port 3002",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'No tests yet'",
+    "test:run": "echo 'No tests yet'",
+    "test:coverage": "echo 'No tests yet'"
   },
   "dependencies": {
     "@beak-gaming/ui": "workspace:*",

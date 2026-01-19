@@ -10,10 +10,13 @@
   "scripts": {
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:run": "vitest run"
+    "test": "vitest --passWithNoTests",
+    "test:run": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "@vitest/coverage-v8": "^4.0.17",
+    "typescript": "^5",
+    "vitest": "^4.0.17"
   }
 }

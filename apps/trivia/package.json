@@ -8,8 +8,9 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:run": "vitest run"
+    "test": "vitest --passWithNoTests",
+    "test:run": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@beak-gaming/auth": "workspace:*",

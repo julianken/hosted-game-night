@@ -10,15 +10,20 @@
   "scripts": {
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:run": "vitest run"
+    "test": "vitest --passWithNoTests",
+    "test:run": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "peerDependencies": {
     "react": "^19.0.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@beak-gaming/testing": "workspace:*",
     "@types/react": "^19",
-    "typescript": "^5"
+    "@vitest/coverage-v8": "^4.0.17",
+    "jsdom": "^27.4.0",
+    "typescript": "^5",
+    "vitest": "^4.0.17"
   }
 }

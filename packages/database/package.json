@@ -9,7 +9,10 @@
   },
   "scripts": {
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'No tests yet'",
+    "test:run": "echo 'No tests yet'",
+    "test:coverage": "echo 'No tests yet'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1"

@@ -3,7 +3,12 @@ import { useAudioStore, DEFAULT_VOLUME, DEFAULT_VOICE_PACK, VOICE_PACK_OPTIONS }
 import { BingoBall, VoicePackId } from '@/types';
 
 describe('audio-store', () => {
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
+    // Suppress expected console.warn from audio playback failures
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     // Reset store to initial state
     useAudioStore.setState({
       enabled: true,
@@ -16,6 +21,7 @@ describe('audio-store', () => {
   });
 
   afterEach(() => {
+    consoleWarnSpy.mockRestore();
     vi.unstubAllGlobals();
   });
 

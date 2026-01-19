@@ -25,7 +25,12 @@ describe('use-game', () => {
     cells: [{ row: 0, col: 0 }],
   };
 
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
+    // Suppress expected console.error from loadManifest failures
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     vi.stubGlobal('Audio', MockAudio);
 
     // Reset stores
@@ -56,6 +61,7 @@ describe('use-game', () => {
   });
 
   afterEach(() => {
+    consoleErrorSpy.mockRestore();
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
