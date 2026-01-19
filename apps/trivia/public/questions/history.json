@@ -1,0 +1,152 @@
+[
+  {
+    "text": "In what year did the United States declare independence?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["1774", "1775", "1776", "1777"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "The Declaration of Independence was adopted on July 4, 1776.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Who was the first President of the United States?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Thomas Jefferson", "John Adams", "George Washington", "Benjamin Franklin"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "George Washington served as the first President from 1789 to 1797.",
+    "roundIndex": 0
+  },
+  {
+    "text": "The Titanic sank on its maiden voyage.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "The Titanic sank on April 15, 1912, during its first voyage from Southampton to New York.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Which ancient civilization built the pyramids at Giza?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Romans", "Greeks", "Egyptians", "Persians"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "The Ancient Egyptians built the Great Pyramids around 2560 BCE.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What year did World War I begin?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["1912", "1914", "1916", "1918"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "World War I began on July 28, 1914, following the assassination of Archduke Franz Ferdinand.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Who was the British Prime Minister during most of World War II?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Neville Chamberlain", "Winston Churchill", "Clement Attlee", "Anthony Eden"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Winston Churchill served as Prime Minister from 1940 to 1945, leading Britain through WWII.",
+    "roundIndex": 1
+  },
+  {
+    "text": "The Roman Empire fell in 476 AD.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "The Western Roman Empire fell in 476 AD when Romulus Augustulus was deposed.",
+    "roundIndex": 1
+  },
+  {
+    "text": "Which explorer is credited with discovering America in 1492?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Vasco da Gama", "Christopher Columbus", "Ferdinand Magellan", "Amerigo Vespucci"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Christopher Columbus made his first voyage to the Americas in 1492.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What was the name of the ship that brought the Pilgrims to America in 1620?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Santa Maria", "Mayflower", "Speedwell", "Endeavour"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "The Mayflower transported 102 passengers to Plymouth, Massachusetts.",
+    "roundIndex": 1
+  },
+  {
+    "text": "Who was the last Queen of France before the French Revolution?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Catherine de Medici", "Marie Antoinette", "Marie de Medici", "Anne of Austria"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Marie Antoinette was executed during the French Revolution in 1793.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What year did the Civil War end?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["1863", "1864", "1865", "1866"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "The Civil War ended on April 9, 1865, when General Lee surrendered at Appomattox.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Pearl Harbor was attacked on December 7, 1941.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "Japan attacked Pearl Harbor on December 7, 1941, leading the US to enter WWII.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Who was the first man to walk on the moon?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Buzz Aldrin", "John Glenn", "Neil Armstrong", "Alan Shepard"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Neil Armstrong took the first steps on the moon on July 20, 1969.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Which President issued the Emancipation Proclamation?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["George Washington", "Thomas Jefferson", "Abraham Lincoln", "Ulysses S. Grant"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Abraham Lincoln issued the Emancipation Proclamation on January 1, 1863.",
+    "roundIndex": 2
+  },
+  {
+    "text": "The Cold War ended with the fall of the Soviet Union in 1991.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "The Soviet Union dissolved on December 26, 1991, marking the end of the Cold War.",
+    "roundIndex": 2
+  }
+]

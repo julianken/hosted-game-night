@@ -5,12 +5,18 @@ import { useSearchParams } from 'next/navigation';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSyncStore } from '@/stores/sync-store';
 import { useSync } from '@/hooks/use-sync';
+import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
+import { useApplyTheme } from '@/hooks/use-theme';
+import { useThemeStore } from '@/stores/theme-store';
 import {
   WaitingDisplay,
   AudienceQuestionDisplay,
   AudienceScoreboard,
   GameEndDisplay,
+  PauseOverlay,
+  AudienceQuestion,
+  AudienceTimer,
 } from '@/components/audience';
 
 /**
@@ -90,6 +96,13 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
     sessionId,
   });
 
+  // Fullscreen support
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
+
+  // Apply display theme (synced from presenter)
+  const displayTheme = useThemeStore((state) => state.displayTheme);
+  useApplyTheme(displayTheme);
+
   // Get game state from store (hydrated by sync) - use individual selectors to minimize re-renders
   const status = useGameStore((state) => state.status);
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
@@ -97,6 +110,9 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
   const teams = useGameStore((state) => state.teams);
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
+  const emergencyBlank = useGameStore((state) => state.emergencyBlank);
+  const timer = useGameStore((state) => state.timer);
+  const settings = useGameStore((state) => state.settings);
 
   // Get computed selectors
   const { teamsSortedByScore, displayQuestion } = useGameSelectors();
@@ -129,6 +145,11 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
 
   // Render content based on game state
   const renderContent = () => {
+    // 0. Paused state - show pause overlay
+    if (status === 'paused') {
+      return <PauseOverlay emergencyBlank={emergencyBlank} timer={timer} />;
+    }
+
     // 1. Not connected - waiting for presenter
     if (!isConnected && !displayQuestionIndex && teams.length === 0) {
       return <WaitingDisplay message="Waiting for presenter..." />;
@@ -150,14 +171,17 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
       );
     }
 
-    // 4. Question being displayed
+    // 4. Question being displayed - use enhanced AudienceQuestion with timer
     if (displayQuestionIndex !== null && displayQuestion) {
       return (
-        <AudienceQuestionDisplay
+        <AudienceQuestion
           question={displayQuestion}
           questionNumber={questionInRound ?? 1}
           totalQuestions={questionsPerRound}
           roundNumber={currentRound + 1}
+          totalRounds={totalRounds}
+          timer={timer}
+          timerVisible={settings.timerVisible}
         />
       );
     }
@@ -167,9 +191,18 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
   };
 
   return (
-    <main className="min-h-screen bg-background flex flex-col">
-      {/* Header with sync status */}
-      <header className="bg-muted/10 border-b border-border px-4 py-3">
+    <>
+      {/* Skip link for keyboard navigation */}
+      <a
+        href="#display-content"
+        className="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-medium"
+      >
+        Skip to main content
+      </a>
+
+      <main className="min-h-screen bg-background flex flex-col" role="main" aria-label="Trivia audience display">
+        {/* Header with sync status */}
+        <header className="bg-muted/10 border-b border-border px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
@@ -178,18 +211,44 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
             <p className="text-lg text-muted-foreground">Audience Display</p>
           </div>
 
-          {/* Connection status */}
+          {/* Controls */}
           <div className="flex items-center gap-3">
-            <div
-              className={`
-                w-4 h-4 rounded-full
-                ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}
-              `}
-              title={isConnected ? 'Connected to presenter' : 'Disconnected'}
-            />
-            <span className="text-base text-muted-foreground hidden md:block">
-              {isConnected ? `Synced at ${lastSyncFormatted}` : 'Waiting for presenter...'}
-            </span>
+            {/* Connection status */}
+            <div className="flex items-center gap-2" role="status" aria-live="polite">
+              <div
+                className={`
+                  w-4 h-4 rounded-full motion-reduce:animate-none
+                  ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}
+                `}
+                aria-hidden="true"
+              />
+              <span className="text-base text-muted-foreground hidden md:block">
+                {isConnected ? `Synced at ${lastSyncFormatted}` : 'Waiting for presenter...'}
+              </span>
+              <span className="sr-only">
+                {isConnected ? 'Connected to presenter' : 'Disconnected from presenter'}
+              </span>
+            </div>
+
+            {/* Fullscreen toggle */}
+            <button
+              onClick={toggleFullscreen}
+              className="w-10 h-10 flex items-center justify-center rounded-lg
+                text-muted-foreground hover:text-foreground hover:bg-muted/30
+                transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            >
+              {isFullscreen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </header>
@@ -204,7 +263,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 p-4 md:p-6 lg:p-8">
+      <div id="display-content" className="flex-1 p-4 md:p-6 lg:p-8" role="region" aria-label="Game display area" aria-live="polite">
         <div className="max-w-7xl mx-auto h-full">
           {renderContent()}
         </div>
@@ -217,6 +276,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
         </p>
       </footer>
     </main>
+    </>
   );
 }
 

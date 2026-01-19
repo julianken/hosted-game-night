@@ -24,6 +24,7 @@ export function OpenDisplayButton({ sessionId }: OpenDisplayButtonProps) {
   return (
     <button
       onClick={openDisplay}
+      aria-label="Open audience display window for projector or large screen"
       className="px-4 py-2 rounded-lg text-base font-medium
         bg-secondary hover:bg-secondary/80 text-secondary-foreground
         transition-colors duration-200"

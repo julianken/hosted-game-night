@@ -46,6 +46,13 @@ import {
   amendCorrectAnswers,
   // Display functions
   toggleScoreboard,
+  // Question import/export functions
+  importQuestions,
+  exportQuestionsFromState,
+  clearQuestions,
+  addQuestion,
+  removeQuestion,
+  updateQuestion,
 } from '../engine';
 import type { TriviaGameState, GameSettings } from '@/types';
 import { MAX_TEAMS, DEFAULT_ROUNDS, DEFAULT_TIMER_DURATION, QUESTIONS_PER_ROUND } from '@/types';
@@ -1404,6 +1411,313 @@ describe('Trivia Game Engine', () => {
 
       const result = toggleScoreboard(state);
       expect(result.showScoreboard).toBe(true);
+    });
+  });
+
+  // ==========================================================================
+  // QUESTION IMPORT/EXPORT FUNCTIONS
+  // ==========================================================================
+  describe('importQuestions', () => {
+    const testQuestions = [
+      {
+        id: 'test-q1',
+        text: 'Test question 1',
+        type: 'multiple_choice' as const,
+        options: ['A', 'B', 'C', 'D'],
+        optionTexts: ['Option A', 'Option B', 'Option C', 'Option D'],
+        correctAnswers: ['A'],
+        category: 'history' as const,
+        roundIndex: 0,
+      },
+      {
+        id: 'test-q2',
+        text: 'Test question 2',
+        type: 'true_false' as const,
+        options: ['True', 'False'],
+        optionTexts: ['True', 'False'],
+        correctAnswers: ['True'],
+        category: 'music' as const,
+        roundIndex: 1,
+      },
+    ];
+
+    it('should replace questions in setup mode', () => {
+      let state = createInitialState();
+      const result = importQuestions(state, testQuestions, 'replace');
+
+      expect(result.questions).toEqual(testQuestions);
+      expect(result.questions).toHaveLength(2);
+    });
+
+    it('should append questions in setup mode', () => {
+      let state = createInitialState();
+      const originalLength = state.questions.length;
+      const result = importQuestions(state, testQuestions, 'append');
+
+      expect(result.questions).toHaveLength(originalLength + 2);
+    });
+
+    it('should update totalRounds based on max roundIndex', () => {
+      let state = createInitialState();
+      const questionsWithHighRound = [
+        { ...testQuestions[0], roundIndex: 4 },
+      ];
+      const result = importQuestions(state, questionsWithHighRound, 'replace');
+
+      expect(result.totalRounds).toBe(5); // 0-indexed, so roundIndex 4 = 5 rounds
+    });
+
+    it('should update settings.roundsCount to match totalRounds', () => {
+      let state = createInitialState();
+      const questionsWithHighRound = [
+        { ...testQuestions[0], roundIndex: 3 },
+      ];
+      const result = importQuestions(state, questionsWithHighRound, 'replace');
+
+      expect(result.settings.roundsCount).toBe(4);
+    });
+
+    it('should reset selectedQuestionIndex to 0', () => {
+      let state = createInitialState();
+      state = selectQuestion(state, 5);
+      const result = importQuestions(state, testQuestions, 'replace');
+
+      expect(result.selectedQuestionIndex).toBe(0);
+    });
+
+    it('should reset displayQuestionIndex to null', () => {
+      let state = createInitialState();
+      state = setDisplayQuestion(state, 2);
+      const result = importQuestions(state, testQuestions, 'replace');
+
+      expect(result.displayQuestionIndex).toBeNull();
+    });
+
+    it('should return unchanged if not in setup mode', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = startGame(state);
+      const result = importQuestions(state, testQuestions, 'replace');
+
+      expect(result).toBe(state);
+    });
+
+    it('should return unchanged if questions array is empty', () => {
+      let state = createInitialState();
+      const result = importQuestions(state, [], 'replace');
+
+      expect(result).toBe(state);
+    });
+
+    it('should default to replace mode', () => {
+      let state = createInitialState();
+      const result = importQuestions(state, testQuestions);
+
+      expect(result.questions).toEqual(testQuestions);
+    });
+  });
+
+  describe('exportQuestionsFromState', () => {
+    it('should return a copy of questions array', () => {
+      const state = createInitialState();
+      const result = exportQuestionsFromState(state);
+
+      expect(result).toEqual(state.questions);
+      expect(result).not.toBe(state.questions); // Should be a copy
+    });
+
+    it('should not be affected by mutations to the result', () => {
+      const state = createInitialState();
+      const result = exportQuestionsFromState(state);
+      result.push({
+        id: 'new',
+        text: 'New question',
+        type: 'multiple_choice',
+        options: ['A', 'B', 'C', 'D'],
+        optionTexts: ['A', 'B', 'C', 'D'],
+        correctAnswers: ['A'],
+        category: 'history',
+        roundIndex: 0,
+      });
+
+      expect(state.questions).not.toContain(result[result.length - 1]);
+    });
+  });
+
+  describe('clearQuestions', () => {
+    it('should clear all questions in setup mode', () => {
+      let state = createInitialState();
+      const result = clearQuestions(state);
+
+      expect(result.questions).toEqual([]);
+    });
+
+    it('should reset selectedQuestionIndex to 0', () => {
+      let state = createInitialState();
+      state = selectQuestion(state, 5);
+      const result = clearQuestions(state);
+
+      expect(result.selectedQuestionIndex).toBe(0);
+    });
+
+    it('should reset displayQuestionIndex to null', () => {
+      let state = createInitialState();
+      state = setDisplayQuestion(state, 2);
+      const result = clearQuestions(state);
+
+      expect(result.displayQuestionIndex).toBeNull();
+    });
+
+    it('should return unchanged if not in setup mode', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = startGame(state);
+      const result = clearQuestions(state);
+
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('addQuestion', () => {
+    const newQuestion = {
+      id: 'new-q',
+      text: 'New question',
+      type: 'multiple_choice' as const,
+      options: ['A', 'B', 'C', 'D'],
+      optionTexts: ['A', 'B', 'C', 'D'],
+      correctAnswers: ['A'],
+      category: 'history' as const,
+      roundIndex: 0,
+    };
+
+    it('should add a question in setup mode', () => {
+      let state = createInitialState();
+      const originalLength = state.questions.length;
+      const result = addQuestion(state, newQuestion);
+
+      expect(result.questions).toHaveLength(originalLength + 1);
+      expect(result.questions[result.questions.length - 1]).toEqual(newQuestion);
+    });
+
+    it('should update totalRounds if question has higher roundIndex', () => {
+      let state = createInitialState();
+      const highRoundQuestion = { ...newQuestion, roundIndex: 10 };
+      const result = addQuestion(state, highRoundQuestion);
+
+      expect(result.totalRounds).toBe(11);
+      expect(result.settings.roundsCount).toBe(11);
+    });
+
+    it('should not decrease totalRounds', () => {
+      let state = createInitialState();
+      state = { ...state, totalRounds: 10, settings: { ...state.settings, roundsCount: 10 } };
+      const result = addQuestion(state, newQuestion);
+
+      expect(result.totalRounds).toBe(10);
+    });
+
+    it('should return unchanged if not in setup mode', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = startGame(state);
+      const result = addQuestion(state, newQuestion);
+
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('removeQuestion', () => {
+    it('should remove question at specified index', () => {
+      let state = createInitialState();
+      const originalLength = state.questions.length;
+      const removedId = state.questions[2].id;
+      const result = removeQuestion(state, 2);
+
+      expect(result.questions).toHaveLength(originalLength - 1);
+      expect(result.questions.find(q => q.id === removedId)).toBeUndefined();
+    });
+
+    it('should adjust selectedQuestionIndex if needed', () => {
+      let state = createInitialState();
+      state = selectQuestion(state, state.questions.length - 1);
+      const result = removeQuestion(state, state.questions.length - 1);
+
+      expect(result.selectedQuestionIndex).toBeLessThanOrEqual(result.questions.length - 1);
+    });
+
+    it('should reset displayQuestionIndex to null', () => {
+      let state = createInitialState();
+      state = setDisplayQuestion(state, 2);
+      const result = removeQuestion(state, 0);
+
+      expect(result.displayQuestionIndex).toBeNull();
+    });
+
+    it('should return unchanged for invalid index', () => {
+      let state = createInitialState();
+
+      expect(removeQuestion(state, -1)).toBe(state);
+      expect(removeQuestion(state, state.questions.length)).toBe(state);
+    });
+
+    it('should return unchanged if not in setup mode', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = startGame(state);
+      const result = removeQuestion(state, 0);
+
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('updateQuestion', () => {
+    const updatedQuestion = {
+      id: 'updated-q',
+      text: 'Updated question text',
+      type: 'true_false' as const,
+      options: ['True', 'False'],
+      optionTexts: ['True', 'False'],
+      correctAnswers: ['True'],
+      category: 'music' as const,
+      roundIndex: 5,
+    };
+
+    it('should update question at specified index', () => {
+      let state = createInitialState();
+      const result = updateQuestion(state, 0, updatedQuestion);
+
+      expect(result.questions[0]).toEqual(updatedQuestion);
+    });
+
+    it('should update totalRounds if new question has higher roundIndex', () => {
+      let state = createInitialState();
+      const result = updateQuestion(state, 0, updatedQuestion);
+
+      expect(result.totalRounds).toBeGreaterThanOrEqual(6);
+    });
+
+    it('should not affect other questions', () => {
+      let state = createInitialState();
+      const originalQ1 = { ...state.questions[1] };
+      const result = updateQuestion(state, 0, updatedQuestion);
+
+      expect(result.questions[1]).toEqual(originalQ1);
+    });
+
+    it('should return unchanged for invalid index', () => {
+      let state = createInitialState();
+
+      expect(updateQuestion(state, -1, updatedQuestion)).toBe(state);
+      expect(updateQuestion(state, state.questions.length, updatedQuestion)).toBe(state);
+    });
+
+    it('should return unchanged if not in setup mode', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = startGame(state);
+      const result = updateQuestion(state, 0, updatedQuestion);
+
+      expect(result).toBe(state);
     });
   });
 });

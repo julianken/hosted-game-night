@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Trivia Night** - A presenter-controlled trivia system for retirement communities. Part of the Beak Gaming Platform monorepo.
 
-**Current State:** Skeleton app, ready for feature development.
+**Current State:** Fully functional with team management, rounds, scoring, TTS, themes, and dual-screen sync.
 
 ## Tech Stack
 
@@ -19,6 +19,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Auth | Supabase Auth via @beak-gaming/auth |
 | State Management | Zustand |
 | Dual-Screen Sync | @beak-gaming/sync |
+| PWA | Serwist (Service Worker) |
+
+## Implemented Features
+
+### Game Engine
+- Multi-round trivia with configurable rounds and questions
+- Team management (add, remove, rename teams)
+- Score tracking with manual adjustments
+- Question navigation and display control
+- Round completion and progression
+- Pure function-based state management (`lib/game/engine.ts`)
+
+### Team System
+- Add/remove teams dynamically
+- Rename teams
+- Score adjustment (+1, -1, direct set)
+- Sorted scoreboard display
+- Round winners and overall leaders
+
+### Question Display
+- Presenter question list with navigation
+- Display question toggle (show/hide on audience)
+- Peek answer (presenter only, local state)
+- Answer reveal flow
+
+### Audio/TTS System
+- Text-to-speech for questions and answers
+- Voice selection from available browser voices
+- Configurable rate, pitch, volume
+- Convenience methods: announceQuestion, announceAnswer, announceScores, etc.
+- Web Speech API integration
+
+### Theme System
+- Light/Dark/System mode
+- 10+ color themes
+- Persisted preferences
+- Smooth transitions
+
+### Dual-Screen Sync
+- Presenter view (`/play`): Question list, team manager, scoring, controls
+- Audience view (`/display`): Large question display, scoreboard, waiting screen
+- BroadcastChannel API for same-device sync
+- Emergency pause (blanks audience display)
+
+### PWA Support
+- Service worker with Serwist
+- Offline-capable
+- Cache management
+
+### Fullscreen Mode
+- Fullscreen toggle for audience display
+- Keyboard shortcut support
 
 ## Monorepo Structure
 
@@ -33,13 +85,13 @@ This app uses shared packages from the monorepo:
 ```bash
 # From monorepo root
 pnpm dev:trivia        # Start dev server on port 3001
-pnpm build             # Build all apps
-pnpm test              # Run all tests
 
 # From apps/trivia
 pnpm dev               # Start dev server
 pnpm build             # Build trivia app
-pnpm test              # Run trivia tests
+pnpm test              # Run tests in watch mode
+pnpm test:run          # Run tests once
+pnpm test:coverage     # Run tests with coverage
 ```
 
 ## Project Structure
@@ -47,19 +99,31 @@ pnpm test              # Run trivia tests
 ```
 src/
 ├── app/
-│   ├── api/           # BFF routes (questions, templates)
-│   ├── play/          # Presenter view
-│   ├── display/       # Audience view
-│   └── dashboard/     # Template management
+│   ├── play/          # Presenter view (page.tsx)
+│   ├── display/       # Audience view (page.tsx)
+│   └── layout.tsx     # Root layout with theme provider
 ├── components/
-│   ├── presenter/     # Timer, question display, scoring
-│   ├── audience/      # Large question display
-│   └── ui/            # App-specific components
+│   ├── presenter/     # QuestionDisplay, QuestionList, TeamManager, TeamScoreboard, etc.
+│   ├── audience/      # AudienceQuestionDisplay, AudienceScoreboard, WaitingDisplay, etc.
+│   └── ui/            # KeyboardShortcutsModal
+├── hooks/
+│   ├── use-game.ts    # Game state hook
+│   ├── use-game-keyboard.ts # Keyboard shortcuts
+│   ├── use-sync.ts    # Dual-screen sync hook
+│   ├── use-tts.ts     # Text-to-speech hook
+│   ├── use-theme.ts   # Theme management
+│   └── use-fullscreen.ts
 ├── lib/
-│   └── game/          # Question manager, timer, scoring
-├── stores/            # Zustand stores
-├── hooks/             # Custom hooks
-└── types/             # TypeScript types
+│   └── game/          # engine.ts (pure functions)
+├── stores/
+│   ├── game-store.ts  # Zustand game state
+│   ├── audio-store.ts # Zustand audio/TTS state (persisted)
+│   ├── sync-store.ts  # Zustand sync state
+│   ├── theme-store.ts # Zustand theme state (persisted)
+│   └── settings-store.ts
+├── types/             # TypeScript types
+├── test/              # Test utilities and mocks
+└── sw.ts              # Service worker (Serwist)
 ```
 
 ## Game Mechanics (MVP)
@@ -74,21 +138,41 @@ src/
 
 ## Keyboard Shortcuts
 
-- **Space** = Reveal answer
-- **N** = Next question
-- **P** = Pause/Resume
-- **E** = Emergency pause
-- **R** = Reset game
-- **M** = Mute TTS
+| Key | Action |
+|-----|--------|
+| Arrow Up/Down | Navigate questions |
+| Space | Peek answer (local only, not shown on display) |
+| D | Toggle display question on audience |
+| P | Pause/Resume game |
+| E | Emergency pause (blanks audience display) |
+| R | Reset game |
 
 ## Design Requirements
 
-- **Senior-friendly:** Large fonts, high contrast, simple controls
+- **Senior-friendly:** Large fonts (min 18px), high contrast, large click targets (min 44x44px)
 - **Dual-screen:** Presenter dashboard + audience projection
 - **Accessible:** Keyboard navigation, screen reader support
-- **Offline-capable:** PWA support planned
+- **Offline-capable:** PWA with service worker
 
-## Key Documentation
+## Testing
 
-- `/documentation/project_plan.md` - Detailed project plan with phases and checklists
-- `/documentation/chat_gpt_output_project_idea.md` - Original requirements from ChatGPT
+Tests are located alongside the code in `__tests__` directories:
+- `stores/__tests__/` - Store tests
+- `hooks/__tests__/` - Hook tests
+- `components/**/__tests__/` - Component tests
+
+Run with:
+```bash
+pnpm test             # Watch mode
+pnpm test:run         # Single run
+pnpm test:coverage    # With coverage
+```
+
+## Future Work (TODO)
+
+- [ ] Question timer with auto-reveal
+- [ ] Question import from file (CSV/JSON)
+- [ ] Question categories
+- [ ] User authentication (via @beak-gaming/auth)
+- [ ] Saved game templates
+- [ ] Analytics/history tracking

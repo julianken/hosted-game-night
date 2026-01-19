@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
-/* Senior-friendly high contrast color palette */
+/* Senior-friendly high contrast color palette - Trivia: Purple/Blue theme */
 :root {
   --background: #ffffff;
   --foreground: #1a1a1a;
 
-  /* Primary: Deep blue for good visibility */
-  --primary: #1e40af;
+  /* Primary: Deep purple for Trivia branding */
+  --primary: #6d28d9;
   --primary-foreground: #ffffff;
 
   /* Secondary: Slate gray */
   --secondary: #475569;
   --secondary-foreground: #ffffff;
 
-  /* Accent: Emerald green for success/highlights */
-  --accent: #059669;
+  /* Accent: Indigo for highlights */
+  --accent: #4f46e5;
   --accent-foreground: #ffffff;
 
   /* Feedback colors */
@@ -28,32 +28,52 @@
   --muted-foreground: #4b5563;
 
   /* Team colors for scoring */
-  --team-1: #1e40af;  /* Blue */
+  --team-1: #6d28d9;  /* Purple */
   --team-2: #dc2626;  /* Red */
   --team-3: #059669;  /* Green */
   --team-4: #d97706;  /* Orange */
-  --team-5: #7c3aed;  /* Purple */
+  --team-5: #1e40af;  /* Blue */
   --team-6: #0891b2;  /* Cyan */
 }
 
+/* System dark mode (when no class is set) */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
+  :root:not(.light):not(.dark) {
+    --background: #0f0a1f;
     --foreground: #f1f5f9;
 
-    --primary: #3b82f6;
+    --primary: #8b5cf6;
     --primary-foreground: #ffffff;
 
     --secondary: #64748b;
     --secondary-foreground: #ffffff;
 
-    --accent: #10b981;
+    --accent: #6366f1;
     --accent-foreground: #ffffff;
 
-    --border: #334155;
+    --border: #2e1f4d;
     --muted: #94a3b8;
     --muted-foreground: #cbd5e1;
   }
+}
+
+/* Class-based dark mode */
+:root.dark {
+  --background: #0f0a1f;
+  --foreground: #f1f5f9;
+
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #64748b;
+  --secondary-foreground: #ffffff;
+
+  --accent: #6366f1;
+  --accent-foreground: #ffffff;
+
+  --border: #2e1f4d;
+  --muted: #94a3b8;
+  --muted-foreground: #cbd5e1;
 }
 
 @theme inline {
@@ -121,9 +141,79 @@ body {
   outline-offset: 2px;
 }
 
+/* Enhanced focus styles for better visibility */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(30, 64, 175, 0.2);
+}
+
 /* Large click targets for interactive elements */
 button,
 [role="button"] {
   min-height: var(--size-touch);
   min-width: var(--size-touch);
+}
+
+/* Screen reader only utility (matches Tailwind's sr-only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Allow essential transitions at reduced speed */
+  .motion-reduce\:transition-none {
+    transition: none !important;
+  }
+
+  .motion-reduce\:animate-none {
+    animation: none !important;
+  }
+}
+
+/* Ensure links in skip navigation are visible when focused */
+.skip-link:focus {
+  clip: auto;
+  clip-path: none;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #000000;
+    --muted: #4b5563;
+    --muted-foreground: #1f2937;
+  }
+
+  *:focus-visible {
+    outline-width: 4px;
+    outline-offset: 4px;
+  }
 }

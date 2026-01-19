@@ -9,7 +9,7 @@ interface TeamScoreboardProps {
 export function TeamScoreboard({ teams }: TeamScoreboardProps) {
   if (teams.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8" role="status">
         <p className="text-muted-foreground">No teams yet</p>
       </div>
     );
@@ -36,13 +36,20 @@ export function TeamScoreboard({ teams }: TeamScoreboardProps) {
   });
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Scoreboard</h2>
+    <div className="space-y-4" role="region" aria-label="Team scoreboard">
+      <h2 id="scoreboard-heading" className="text-xl font-semibold">Scoreboard</h2>
 
-      <div className="space-y-2">
+      <div
+        className="space-y-2"
+        role="list"
+        aria-labelledby="scoreboard-heading"
+        aria-live="polite"
+      >
         {rankedTeams.map((team) => (
           <div
             key={team.id}
+            role="listitem"
+            aria-label={`Rank ${team.rank}: ${team.name} with ${team.score} points`}
             className={`
               flex items-center justify-between p-3 rounded-lg
               ${
@@ -59,6 +66,7 @@ export function TeamScoreboard({ teams }: TeamScoreboardProps) {
             <div className="flex items-center gap-3">
               {/* Rank badge */}
               <span
+                aria-hidden="true"
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center
                   text-sm font-bold
@@ -83,7 +91,7 @@ export function TeamScoreboard({ teams }: TeamScoreboardProps) {
             </div>
 
             {/* Score */}
-            <span className="text-xl font-bold text-foreground">
+            <span className="text-xl font-bold text-foreground" aria-label={`${team.score} points`}>
               {team.score}
             </span>
           </div>

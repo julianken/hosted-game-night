@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { StatsDisplay } from '@/components/stats';
 
 export default function Home() {
   return (
@@ -23,6 +24,9 @@ export default function Home() {
           Open Display
         </Link>
       </div>
+
+      {/* Statistics Section */}
+      <StatsDisplay />
     </main>
   );
 }

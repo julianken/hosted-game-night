@@ -46,7 +46,7 @@ export function TeamScoreInput({
 
   if (teams.length === 0) {
     return (
-      <div className="text-center py-6">
+      <div className="text-center py-6" role="status">
         <p className="text-base text-muted-foreground">
           No teams yet. Add teams to start scoring.
         </p>
@@ -55,21 +55,23 @@ export function TeamScoreInput({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="region" aria-label="Team score management">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Team Scores</h2>
-        <span className="text-sm text-muted-foreground">
+        <h2 id="team-scores-heading" className="text-xl font-semibold">Team Scores</h2>
+        <span className="text-sm text-muted-foreground" aria-label={`Current round: ${currentRound + 1}`}>
           Round {currentRound + 1}
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2" role="list" aria-labelledby="team-scores-heading">
         {teams.map((team) => {
           const currentRoundScore = team.roundScores?.[currentRound] ?? 0;
 
           return (
             <div
               key={team.id}
+              role="listitem"
+              aria-label={`${team.name}: ${team.score} points`}
               className="flex flex-col gap-2 p-3 bg-background border border-border rounded-lg"
             >
               {/* Team header row */}
@@ -80,16 +82,17 @@ export function TeamScoreInput({
                 </span>
 
                 {/* Score controls */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" role="group" aria-label={`Score controls for ${team.name}`}>
                   {/* Minus button */}
                   <button
                     onClick={() => onAdjustScore(team.id, -1)}
+                    aria-label={`Subtract 1 point from ${team.name}`}
+                    title="Subtract 1 point"
                     className="w-10 h-10 rounded-lg bg-red-500/10 text-red-600
                       hover:bg-red-500/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
-                    title="Subtract 1 point"
                   >
-                    -
+                    <span aria-hidden="true">-</span>
                   </button>
 
                   {/* Score display (editable) */}
@@ -101,6 +104,7 @@ export function TeamScoreInput({
                       onBlur={handleSaveEdit}
                       onKeyDown={handleKeyDown}
                       autoFocus
+                      aria-label={`Edit score for ${team.name}`}
                       className="w-16 h-10 text-center text-xl font-bold
                         border border-border rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -108,10 +112,11 @@ export function TeamScoreInput({
                   ) : (
                     <button
                       onClick={() => handleStartEdit(team)}
+                      aria-label={`${team.name} score: ${team.score}. Click to edit`}
+                      title="Click to edit total score"
                       className="w-16 h-10 text-center text-xl font-bold
                         bg-muted rounded-lg hover:bg-muted/80
                         transition-colors"
-                      title="Click to edit total score"
                     >
                       {team.score}
                     </button>
@@ -120,12 +125,13 @@ export function TeamScoreInput({
                   {/* Plus button */}
                   <button
                     onClick={() => onAdjustScore(team.id, 1)}
+                    aria-label={`Add 1 point to ${team.name}`}
+                    title="Add 1 point"
                     className="w-10 h-10 rounded-lg bg-green-500/10 text-green-600
                       hover:bg-green-500/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
-                    title="Add 1 point"
                   >
-                    +
+                    <span aria-hidden="true">+</span>
                   </button>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
+import type { GameSettings } from '@/types';
 
 /**
  * Main game hook combining game state, selectors, and actions.
@@ -14,13 +15,16 @@ export function useGame() {
   const {
     sessionId,
     status,
+    statusBeforePause,
     questions,
     selectedQuestionIndex,
     displayQuestionIndex,
     currentRound,
     totalRounds,
     teams,
+    timer,
     showScoreboard,
+    emergencyBlank,
     ttsEnabled,
   } = gameStore;
 
@@ -94,17 +98,48 @@ export function useGame() {
     gameStore.nextRound();
   }, [gameStore]);
 
+  // Pause actions
+  const pauseGame = useCallback(() => {
+    gameStore.pauseGame();
+  }, [gameStore]);
+
+  const resumeGame = useCallback(() => {
+    gameStore.resumeGame();
+  }, [gameStore]);
+
+  const emergencyPause = useCallback(() => {
+    gameStore.emergencyPause();
+  }, [gameStore]);
+
+  // Settings actions
+  const updateSettings = useCallback(
+    (settings: Partial<GameSettings>) => {
+      gameStore.updateSettings(settings);
+    },
+    [gameStore]
+  );
+
+  const loadTeamsFromSetup = useCallback(
+    (names: string[]) => {
+      gameStore.loadTeamsFromSetup(names);
+    },
+    [gameStore]
+  );
+
   return {
     // State
     sessionId,
     status,
+    statusBeforePause,
     questions,
     selectedQuestionIndex,
     displayQuestionIndex,
     currentRound,
     totalRounds,
     teams,
+    timer,
     showScoreboard,
+    emergencyBlank,
     ttsEnabled,
 
     // Computed (selectors)
@@ -122,6 +157,10 @@ export function useGame() {
     roundWinners: selectors.roundWinners,
     overallLeaders: selectors.overallLeaders,
     teamsSortedByScore: selectors.teamsSortedByScore,
+    // Pause selectors
+    isPaused: selectors.isPaused,
+    canPause: selectors.canPause,
+    canResume: selectors.canResume,
 
     // Actions
     startGame,
@@ -136,5 +175,12 @@ export function useGame() {
     setTeamScore,
     completeRound,
     nextRound,
+    // Pause actions
+    pauseGame,
+    resumeGame,
+    emergencyPause,
+    // Settings actions
+    updateSettings,
+    loadTeamsFromSetup,
   };
 }

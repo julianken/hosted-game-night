@@ -1,0 +1,152 @@
+[
+  {
+    "text": "What is the capital of Australia?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Sydney", "Melbourne", "Canberra", "Perth"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Canberra was chosen as the capital in 1908 as a compromise between Sydney and Melbourne.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What is the chemical symbol for gold?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Go", "Gd", "Au", "Ag"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Au comes from the Latin word 'aurum' meaning gold.",
+    "roundIndex": 0
+  },
+  {
+    "text": "How many sides does a hexagon have?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["5", "6", "7", "8"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Hex- comes from the Greek word for six.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Mount Everest is located in the Himalayas.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "Mount Everest sits on the border between Nepal and Tibet in the Himalayan mountain range.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What is the largest planet in our solar system?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Saturn", "Jupiter", "Neptune", "Uranus"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Jupiter is so large that all other planets in our solar system could fit inside it.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What year did World War II end?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["1943", "1944", "1945", "1946"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "World War II ended in 1945 with the surrender of Japan on September 2nd.",
+    "roundIndex": 1
+  },
+  {
+    "text": "The Great Wall of China is visible from space with the naked eye.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["False"],
+    "category": "history",
+    "explanation": "This is a common misconception. The wall is too narrow to be seen from space without aid.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What is the largest organ in the human body?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Heart", "Liver", "Skin", "Lungs"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "The skin covers about 20 square feet in adults and weighs about 8 pounds.",
+    "roundIndex": 1
+  },
+  {
+    "text": "Who painted the Mona Lisa?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Michelangelo", "Raphael", "Leonardo da Vinci", "Botticelli"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Leonardo da Vinci painted the Mona Lisa between 1503 and 1519.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What is the boiling point of water at sea level in Fahrenheit?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["100", "180", "212", "220"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Water boils at 212 degrees Fahrenheit (100 degrees Celsius) at sea level.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What is the smallest country in the world by area?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Monaco", "Vatican City", "San Marino", "Liechtenstein"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Vatican City is only 0.17 square miles, making it the smallest country.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Diamonds are made of carbon.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "Diamonds are formed from carbon atoms under extreme pressure and temperature.",
+    "roundIndex": 2
+  },
+  {
+    "text": "What is the longest river in the world?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Amazon", "Nile", "Mississippi", "Yangtze"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "The Nile River is approximately 4,130 miles long.",
+    "roundIndex": 2
+  },
+  {
+    "text": "What element does 'O' represent on the periodic table?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Gold", "Osmium", "Oxygen", "Iron"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "O is the chemical symbol for Oxygen.",
+    "roundIndex": 2
+  },
+  {
+    "text": "A group of lions is called a pride.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "history",
+    "explanation": "A group of lions is indeed called a pride, typically consisting of related females and their cubs.",
+    "roundIndex": 2
+  }
+]

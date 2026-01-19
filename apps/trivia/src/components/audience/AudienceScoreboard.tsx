@@ -33,9 +33,13 @@ export function AudienceScoreboard({
   const isLastRound = currentRound >= totalRounds - 1;
 
   return (
-    <div className="flex flex-col items-center h-full min-h-[60vh] gap-8 animate-in fade-in duration-500">
+    <section
+      className="flex flex-col items-center h-full min-h-[60vh] gap-8 animate-in fade-in duration-500 motion-reduce:animate-none"
+      role="region"
+      aria-label={isLastRound ? 'Final standings' : `Round ${currentRound + 1} standings`}
+    >
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" aria-live="polite">
         <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
           {isLastRound ? 'Final Round Complete!' : `Round ${currentRound + 1} Complete!`}
         </h2>
@@ -46,36 +50,42 @@ export function AudienceScoreboard({
 
       {/* Scoreboard */}
       <div className="w-full max-w-4xl px-4">
-        <div className="bg-muted/10 rounded-2xl border border-border overflow-hidden">
+        <table
+          className="w-full bg-muted/10 rounded-2xl border border-border overflow-hidden"
+          role="table"
+          aria-label="Team standings"
+        >
           {/* Column headers */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-muted/20 border-b border-border text-xl font-semibold text-muted-foreground">
-            <div className="col-span-2 text-center">Rank</div>
-            <div className="col-span-7">Team</div>
-            <div className="col-span-3 text-right">Score</div>
-          </div>
+          <thead>
+            <tr className="bg-muted/20 border-b border-border text-xl font-semibold text-muted-foreground">
+              <th scope="col" className="px-6 py-4 text-center w-1/6">Rank</th>
+              <th scope="col" className="px-6 py-4 text-left w-1/2">Team</th>
+              <th scope="col" className="px-6 py-4 text-right w-1/3">Score</th>
+            </tr>
+          </thead>
 
           {/* Team rows */}
-          <div className="divide-y divide-border">
+          <tbody className="divide-y divide-border">
             {teams.length === 0 ? (
-              <div className="px-6 py-8 text-center text-2xl text-muted-foreground">
-                No teams yet
-              </div>
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center text-2xl text-muted-foreground">
+                  No teams yet
+                </td>
+              </tr>
             ) : (
               teams.map((team, index) => (
-                <div
+                <tr
                   key={team.id}
-                  className={`
-                    grid grid-cols-12 gap-4 px-6 py-4 items-center
-                    ${index < 3 ? 'bg-muted/5' : ''}
-                  `}
+                  className={index < 3 ? 'bg-muted/5' : ''}
                 >
                   {/* Rank */}
-                  <div className="col-span-2 flex justify-center">
+                  <td className="px-6 py-4 text-center">
                     {index < 3 ? (
                       <span
+                        aria-label={`${medalLabels[index]} place`}
                         className={`
                           ${medalColors[index]}
-                          w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center
+                          inline-flex w-12 h-12 lg:w-14 lg:h-14 items-center justify-center
                           rounded-full text-xl lg:text-2xl font-bold
                         `}
                       >
@@ -86,10 +96,10 @@ export function AudienceScoreboard({
                         {index + 1}
                       </span>
                     )}
-                  </div>
+                  </td>
 
                   {/* Team name */}
-                  <div className="col-span-7">
+                  <td className="px-6 py-4">
                     <span
                       className={`
                         text-2xl lg:text-3xl font-medium
@@ -98,11 +108,12 @@ export function AudienceScoreboard({
                     >
                       {team.name}
                     </span>
-                  </div>
+                  </td>
 
                   {/* Score */}
-                  <div className="col-span-3 text-right">
+                  <td className="px-6 py-4 text-right">
                     <span
+                      aria-label={`${team.score} points`}
                       className={`
                         text-3xl lg:text-4xl font-bold
                         ${index < 3 ? 'text-primary' : 'text-foreground'}
@@ -110,22 +121,22 @@ export function AudienceScoreboard({
                     >
                       {team.score}
                     </span>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))
             )}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
       {/* Next round indicator */}
       {!isLastRound && (
-        <div className="text-center mt-4">
-          <p className="text-xl text-muted animate-pulse">
+        <div className="text-center mt-4" role="status" aria-live="polite">
+          <p className="text-xl text-muted animate-pulse motion-reduce:animate-none">
             Next round starting soon...
           </p>
         </div>
       )}
-    </div>
+    </section>
   );
 }

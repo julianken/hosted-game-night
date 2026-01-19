@@ -14,6 +14,14 @@ import {
   setTeamScore as setTeamScoreEngine,
   completeRound as completeRoundEngine,
   nextRound as nextRoundEngine,
+  tickTimer as tickTimerEngine,
+  startTimer as startTimerEngine,
+  stopTimer as stopTimerEngine,
+  resetTimer as resetTimerEngine,
+  pauseGame as pauseGameEngine,
+  resumeGame as resumeGameEngine,
+  emergencyPause as emergencyPauseEngine,
+  updateSettings as updateSettingsEngine,
   getSelectedQuestion,
   getDisplayQuestion,
   getProgress,
@@ -28,6 +36,7 @@ import {
   getOverallLeaders,
   getTeamsSortedByScore,
 } from '@/lib/game/engine';
+import type { GameSettings } from '@/types';
 
 export interface GameStore extends TriviaGameState {
   // Actions
@@ -43,6 +52,21 @@ export interface GameStore extends TriviaGameState {
   setTeamScore: (teamId: string, score: number) => void;
   completeRound: () => void;
   nextRound: () => void;
+
+  // Timer actions
+  tickTimer: () => void;
+  startTimer: () => void;
+  stopTimer: () => void;
+  resetTimer: (duration?: number) => void;
+
+  // Pause actions
+  pauseGame: () => void;
+  resumeGame: () => void;
+  emergencyPause: () => void;
+
+  // Settings actions
+  updateSettings: (settings: Partial<import('@/types').GameSettings>) => void;
+  loadTeamsFromSetup: (names: string[]) => void;
 
   // Hydration for sync
   _hydrate: (state: Partial<TriviaGameState>) => void;
@@ -101,8 +125,74 @@ export const useGameStore = create<GameStore>()((set) => ({
     set((state) => nextRoundEngine(state));
   },
 
+  // Timer actions
+  tickTimer: () => {
+    set((state) => tickTimerEngine(state));
+  },
+
+  startTimer: () => {
+    set((state) => startTimerEngine(state));
+  },
+
+  stopTimer: () => {
+    set((state) => stopTimerEngine(state));
+  },
+
+  resetTimer: (duration?: number) => {
+    set((state) => resetTimerEngine(state, duration));
+  },
+
+  // Pause actions
+  pauseGame: () => {
+    set((state) => pauseGameEngine(state));
+  },
+
+  resumeGame: () => {
+    set((state) => resumeGameEngine(state));
+  },
+
+  emergencyPause: () => {
+    set((state) => emergencyPauseEngine(state));
+  },
+
   _hydrate: (newState: Partial<TriviaGameState>) => {
     set((state) => ({ ...state, ...newState }));
+  },
+
+  // Settings actions
+  updateSettings: (settings: Partial<GameSettings>) => {
+    set((state) => updateSettingsEngine(state, settings));
+  },
+
+  loadTeamsFromSetup: (names: string[]) => {
+    set((state) => {
+      // Only allow loading teams during setup
+      if (state.status !== 'setup') return state;
+
+      // Clear existing teams and add new ones
+      // Extract only TriviaGameState properties (not store actions)
+      let newState: TriviaGameState = {
+        sessionId: state.sessionId,
+        status: state.status,
+        statusBeforePause: state.statusBeforePause,
+        teams: [],
+        questions: state.questions,
+        selectedQuestionIndex: state.selectedQuestionIndex,
+        displayQuestionIndex: state.displayQuestionIndex,
+        currentRound: state.currentRound,
+        totalRounds: state.totalRounds,
+        settings: state.settings,
+        timer: state.timer,
+        teamAnswers: state.teamAnswers,
+        showScoreboard: state.showScoreboard,
+        emergencyBlank: state.emergencyBlank,
+        ttsEnabled: state.ttsEnabled,
+      };
+      for (const name of names) {
+        newState = addTeamEngine(newState, name);
+      }
+      return newState;
+    });
   },
 }));
 
@@ -124,5 +214,28 @@ export function useGameSelectors() {
     roundWinners: getRoundWinners(state, state.currentRound),
     overallLeaders: getOverallLeaders(state),
     teamsSortedByScore: getTeamsSortedByScore(state),
+    // Pause selectors
+    isPaused: state.status === 'paused',
+    canPause: state.status === 'playing' || state.status === 'between_rounds',
+    canResume: state.status === 'paused',
   };
+}
+
+// Timer-specific selector for optimized re-renders
+export function useTimerState() {
+  return useGameStore((state) => ({
+    remaining: state.timer.remaining,
+    duration: state.timer.duration,
+    isRunning: state.timer.isRunning,
+  }));
+}
+
+// Timer actions for components
+export function useTimerActions() {
+  return useGameStore((state) => ({
+    startTimer: state.startTimer,
+    stopTimer: state.stopTimer,
+    resetTimer: state.resetTimer,
+    tickTimer: state.tickTimer,
+  }));
 }

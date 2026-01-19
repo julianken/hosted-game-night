@@ -1,0 +1,152 @@
+[
+  {
+    "text": "Which band performed the hit song 'Bohemian Rhapsody'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["The Beatles", "Led Zeppelin", "Queen", "Pink Floyd"],
+    "correctAnswers": ["C"],
+    "category": "music",
+    "explanation": "Queen released 'Bohemian Rhapsody' in 1975, with Freddie Mercury on lead vocals.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What year was the first iPhone released?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["2005", "2006", "2007", "2008"],
+    "correctAnswers": ["C"],
+    "category": "history",
+    "explanation": "Steve Jobs unveiled the first iPhone on January 9, 2007.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Michael Jackson was known as the 'King of Pop'.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "music",
+    "explanation": "Michael Jackson earned the title through his unprecedented success in music, dance, and entertainment.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Who played Jack in the 1997 film 'Titanic'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Brad Pitt", "Tom Cruise", "Leonardo DiCaprio", "Johnny Depp"],
+    "correctAnswers": ["C"],
+    "category": "movies",
+    "explanation": "Leonardo DiCaprio played Jack Dawson opposite Kate Winslet's Rose.",
+    "roundIndex": 0
+  },
+  {
+    "text": "What is the name of the coffee shop in the TV show 'Friends'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Central Park", "Central Perk", "Coffee Central", "The Brew House"],
+    "correctAnswers": ["B"],
+    "category": "tv",
+    "explanation": "Central Perk was the main hangout spot for the six friends throughout the series.",
+    "roundIndex": 0
+  },
+  {
+    "text": "Which artist painted 'The Starry Night'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Claude Monet", "Vincent van Gogh", "Pablo Picasso", "Salvador Dali"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Van Gogh painted 'The Starry Night' in 1889 while at an asylum in Saint-Remy-de-Provence.",
+    "roundIndex": 1
+  },
+  {
+    "text": "The TV series 'Breaking Bad' is set in New Mexico.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "tv",
+    "explanation": "Breaking Bad was set and filmed in Albuquerque, New Mexico.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What was the first Disney animated feature film?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Pinocchio", "Snow White and the Seven Dwarfs", "Fantasia", "Dumbo"],
+    "correctAnswers": ["B"],
+    "category": "movies",
+    "explanation": "Snow White and the Seven Dwarfs was released in 1937 as Disney's first animated feature.",
+    "roundIndex": 1
+  },
+  {
+    "text": "Who sang the theme song for the James Bond film 'Goldfinger'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Adele", "Shirley Bassey", "Carly Simon", "Nancy Sinatra"],
+    "correctAnswers": ["B"],
+    "category": "music",
+    "explanation": "Shirley Bassey performed the iconic 'Goldfinger' theme in 1964.",
+    "roundIndex": 1
+  },
+  {
+    "text": "What is the name of Harry Potter's pet owl?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Errol", "Hedwig", "Pigwidgeon", "Scabbers"],
+    "correctAnswers": ["B"],
+    "category": "movies",
+    "explanation": "Hedwig was Harry's loyal snowy owl, given to him by Hagrid.",
+    "roundIndex": 1
+  },
+  {
+    "text": "Which actor played the Joker in 'The Dark Knight' (2008)?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Jack Nicholson", "Jared Leto", "Heath Ledger", "Joaquin Phoenix"],
+    "correctAnswers": ["C"],
+    "category": "movies",
+    "explanation": "Heath Ledger won a posthumous Academy Award for his portrayal of the Joker.",
+    "roundIndex": 2
+  },
+  {
+    "text": "The band ABBA was from Sweden.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "music",
+    "explanation": "ABBA was formed in Stockholm, Sweden in 1972.",
+    "roundIndex": 2
+  },
+  {
+    "text": "What is the highest-grossing film of all time (not adjusted for inflation)?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Titanic", "Avatar", "Avengers: Endgame", "Star Wars: The Force Awakens"],
+    "correctAnswers": ["B"],
+    "category": "movies",
+    "explanation": "Avatar (2009) holds the record at over $2.9 billion worldwide.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Who wrote the novel 'To Kill a Mockingbird'?",
+    "type": "multiple_choice",
+    "options": ["A", "B", "C", "D"],
+    "optionTexts": ["Mark Twain", "Harper Lee", "F. Scott Fitzgerald", "Ernest Hemingway"],
+    "correctAnswers": ["B"],
+    "category": "history",
+    "explanation": "Harper Lee published 'To Kill a Mockingbird' in 1960.",
+    "roundIndex": 2
+  },
+  {
+    "text": "Elvis Presley had a twin brother who died at birth.",
+    "type": "true_false",
+    "options": ["True", "False"],
+    "optionTexts": ["True", "False"],
+    "correctAnswers": ["True"],
+    "category": "music",
+    "explanation": "Elvis's twin brother, Jesse Garon Presley, was stillborn on January 8, 1935.",
+    "roundIndex": 2
+  }
+]

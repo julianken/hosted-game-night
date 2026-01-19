@@ -167,6 +167,93 @@ describe('useGameStore', () => {
     });
   });
 
+  describe('pauseGame', () => {
+    it('should pause the game when playing', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().pauseGame();
+
+      expect(useGameStore.getState().status).toBe('paused');
+      expect(useGameStore.getState().statusBeforePause).toBe('playing');
+    });
+
+    it('should pause the game when between_rounds', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().completeRound();
+      useGameStore.getState().pauseGame();
+
+      expect(useGameStore.getState().status).toBe('paused');
+      expect(useGameStore.getState().statusBeforePause).toBe('between_rounds');
+    });
+
+    it('should not pause when in setup', () => {
+      useGameStore.getState().pauseGame();
+
+      expect(useGameStore.getState().status).toBe('setup');
+    });
+  });
+
+  describe('resumeGame', () => {
+    it('should resume to previous status', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().pauseGame();
+      useGameStore.getState().resumeGame();
+
+      expect(useGameStore.getState().status).toBe('playing');
+      expect(useGameStore.getState().statusBeforePause).toBeNull();
+    });
+
+    it('should resume to between_rounds', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().completeRound();
+      useGameStore.getState().pauseGame();
+      useGameStore.getState().resumeGame();
+
+      expect(useGameStore.getState().status).toBe('between_rounds');
+    });
+
+    it('should clear emergency blank on resume', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().emergencyPause();
+      useGameStore.getState().resumeGame();
+
+      expect(useGameStore.getState().emergencyBlank).toBe(false);
+    });
+  });
+
+  describe('emergencyPause', () => {
+    it('should pause and set emergency blank', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().emergencyPause();
+
+      expect(useGameStore.getState().status).toBe('paused');
+      expect(useGameStore.getState().emergencyBlank).toBe(true);
+    });
+
+    it('should set emergency blank even if already paused', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().pauseGame();
+
+      // Normal pause doesn't set emergencyBlank
+      expect(useGameStore.getState().emergencyBlank).toBe(false);
+
+      // Emergency pause sets it
+      useGameStore.getState().emergencyPause();
+      expect(useGameStore.getState().status).toBe('paused');
+      expect(useGameStore.getState().emergencyBlank).toBe(true);
+
+      // Resume clears emergencyBlank
+      useGameStore.getState().resumeGame();
+      expect(useGameStore.getState().emergencyBlank).toBe(false);
+    });
+  });
+
   describe('_hydrate', () => {
     it('should merge partial state', () => {
       const originalState = useGameStore.getState();
@@ -226,5 +313,63 @@ describe('useGameSelectors', () => {
 
     expect(result.current.canStart).toBe(false);
     expect(result.current.isGameOver).toBe(false);
+  });
+
+  describe('pause selectors', () => {
+    it('should return isPaused as false when not paused', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.isPaused).toBe(false);
+    });
+
+    it('should return isPaused as true when paused', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().pauseGame();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.isPaused).toBe(true);
+    });
+
+    it('should return canPause as true when playing', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.canPause).toBe(true);
+    });
+
+    it('should return canPause as true when between_rounds', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().completeRound();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.canPause).toBe(true);
+    });
+
+    it('should return canPause as false when in setup', () => {
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.canPause).toBe(false);
+    });
+
+    it('should return canResume as true when paused', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().pauseGame();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.canResume).toBe(true);
+    });
+
+    it('should return canResume as false when not paused', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+
+      const { result } = renderHook(() => useGameSelectors());
+      expect(result.current.canResume).toBe(false);
+    });
   });
 });
