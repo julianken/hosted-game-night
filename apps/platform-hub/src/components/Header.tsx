@@ -1,0 +1,83 @@
+'use client';
+
+import { HTMLAttributes, forwardRef } from 'react';
+
+export interface HeaderProps extends HTMLAttributes<HTMLElement> {
+  /** Optional logo URL */
+  logoUrl?: string;
+}
+
+/**
+ * Header - Platform header with branding.
+ * Simple, clean header designed for senior users.
+ */
+export const Header = forwardRef<HTMLElement, HeaderProps>(
+  ({ logoUrl, className = '', ...props }, ref) => {
+    return (
+      <header
+        ref={ref}
+        className={`
+          w-full py-6 px-8
+          border-b border-border
+          bg-background/80 backdrop-blur-sm
+          ${className}
+        `.trim()}
+        role="banner"
+        {...props}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo and Brand */}
+          <a
+            href="/"
+            className="flex items-center gap-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 rounded-lg p-2 -m-2"
+            aria-label="Beak Gaming Platform - Home"
+          >
+            {/* Beak Logo - Simple bird icon */}
+            <div className="w-12 h-12 flex items-center justify-center bg-primary rounded-xl text-primary-foreground">
+              <svg
+                className="w-8 h-8"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-foreground">
+                Beak Gaming
+              </span>
+              <span className="hidden sm:block text-base text-muted-foreground">
+                Fun for Everyone
+              </span>
+            </div>
+          </a>
+
+          {/* Navigation placeholder - Auth links will go here later */}
+          <nav aria-label="Main navigation">
+            <ul className="flex items-center gap-4">
+              <li>
+                <a
+                  href="/"
+                  className="
+                    inline-flex items-center justify-center
+                    min-h-[44px] px-6 py-2
+                    text-lg font-medium text-foreground
+                    hover:text-primary
+                    focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
+                    rounded-lg
+                    transition-colors duration-150
+                  "
+                >
+                  Games
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+    );
+  }
+);
+
+Header.displayName = 'Header';

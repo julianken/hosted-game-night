@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
   transpilePackages: [
@@ -8,4 +9,9 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+// Bundle analyzer is enabled via ANALYZE=true environment variable
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withAnalyzer(nextConfig);
