@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSyncStore } from '@/stores/sync-store';
 import { useSync } from '@/hooks/use-sync';
+import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
 import {
   LargeCurrentBall,
@@ -12,8 +13,17 @@ import {
   PatternDisplay,
   BallsCalledCounter,
 } from '@/components/audience';
+import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
+
+/**
+ * Display-specific keyboard shortcuts (view-only mode)
+ */
+const displayShortcuts = [
+  { key: 'F', label: 'F', description: 'Toggle fullscreen' },
+  { key: '?', label: '?', description: 'Show this help' },
+];
 
 /**
  * Invalid Session Error Component
@@ -21,14 +31,15 @@ import { useThemeStore } from '@/stores/theme-store';
  */
 function InvalidSessionError() {
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-      <div className="max-w-lg text-center space-y-6">
-        <div className="w-24 h-24 mx-auto rounded-full bg-error/20 flex items-center justify-center">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8" role="main">
+      <div className="max-w-lg text-center space-y-6" role="alert">
+        <div className="w-24 h-24 mx-auto rounded-full bg-error/20 flex items-center justify-center" aria-hidden="true">
           <svg
             className="w-12 h-12 text-error"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -57,9 +68,19 @@ function InvalidSessionError() {
  */
 function DisplayLoading() {
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center">
-      <div className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin" />
-      <p className="mt-6 text-2xl text-muted-foreground">Loading display...</p>
+    <main
+      className="min-h-screen bg-background flex flex-col items-center justify-center"
+      role="main"
+      aria-busy="true"
+      aria-label="Loading audience display"
+    >
+      <div
+        className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin motion-reduce:animate-none"
+        aria-hidden="true"
+      />
+      <p className="mt-6 text-2xl text-muted-foreground" role="status" aria-live="polite">
+        Loading display...
+      </p>
     </main>
   );
 }
@@ -124,7 +145,15 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
     : 'Never';
 
   return (
-    <main className="min-h-screen bg-background flex flex-col">
+    <>
+      {/* Skip link for keyboard navigation */}
+      <a
+        href="#main-display"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none focus:ring-4 focus:ring-primary/50"
+      >
+        Skip to main display
+      </a>
+    <main className="min-h-screen bg-background flex flex-col" role="main">
       {/* Header with sync status */}
       <header className="bg-muted/10 border-b border-border px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -136,13 +165,19 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
           </div>
 
           {/* Connection status */}
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3"
+            role="status"
+            aria-live="polite"
+            aria-label={isConnected ? `Connected to presenter, synced at ${lastSyncFormatted}` : 'Waiting for presenter'}
+          >
             <div
               className={`
                 w-4 h-4 rounded-full
+                motion-reduce:animate-none
                 ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}
               `}
-              title={isConnected ? 'Connected to presenter' : 'Disconnected'}
+              aria-hidden="true"
             />
             <span className="text-base text-muted-foreground hidden md:block">
               {isConnected ? `Synced at ${lastSyncFormatted}` : 'Waiting for presenter...'}
@@ -153,7 +188,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
 
       {/* Error display */}
       {connectionError && (
-        <div className="bg-error/10 border-b border-error px-4 py-3">
+        <div className="bg-error/10 border-b border-error px-4 py-3" role="alert">
           <p className="text-center text-error font-medium">
             Connection Error: {connectionError}
           </p>
@@ -161,12 +196,19 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 p-4 md:p-6 lg:p-8">
+      <div id="main-display" className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto h-full">
           {/* Waiting state */}
           {!isConnected && !currentBall && (
-            <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
-              <div className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin" />
+            <div
+              className="flex flex-col items-center justify-center h-full gap-6 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
               <p className="text-3xl md:text-4xl text-muted-foreground">
                 Waiting for presenter...
               </p>
@@ -180,7 +222,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
           {(isConnected || currentBall || calledBalls.length > 0) && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
               {/* Left section: Bingo Board */}
-              <section className="lg:col-span-5 xl:col-span-4">
+              <section className="lg:col-span-5 xl:col-span-4" aria-label="Bingo board">
                 <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
                   <h2 className="text-xl md:text-2xl font-semibold mb-4 text-center">
                     Called Numbers
@@ -190,10 +232,12 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
               </section>
 
               {/* Center section: Current Ball + Counter */}
-              <section className="lg:col-span-4 xl:col-span-5 flex flex-col items-center gap-8">
+              <section className="lg:col-span-4 xl:col-span-5 flex flex-col items-center gap-8" aria-label="Current ball and game status">
                 {/* Game status indicator */}
                 {status !== 'idle' && (
                   <div
+                    role="status"
+                    aria-live="polite"
                     className={`
                       px-6 py-2 rounded-full text-xl font-semibold
                       ${status === 'playing' ? 'bg-success/20 text-success' : ''}
@@ -220,7 +264,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
               </section>
 
               {/* Right section: Pattern Display */}
-              <section className="lg:col-span-3 xl:col-span-3">
+              <section className="lg:col-span-3 xl:col-span-3" aria-label="Winning pattern">
                 <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
                   <PatternDisplay pattern={pattern} />
                 </div>
@@ -237,6 +281,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
         </p>
       </footer>
     </main>
+    </>
   );
 }
 
