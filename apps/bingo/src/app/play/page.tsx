@@ -12,7 +12,12 @@ import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@/components/ui/Slider';
 import { Button } from '@/components/ui/Button';
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
+import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
+import { RevealChimeSelector } from '@/components/presenter/RevealChimeSelector';
+import { ThemeSelector } from '@/components/presenter/ThemeSelector';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
+import { useApplyTheme } from '@/hooks/use-theme';
+import { useThemeStore } from '@/stores/theme-store';
 import { OfflineBanner, InstallPrompt } from '@/components/pwa';
 
 export default function PlayPage() {
@@ -27,6 +32,10 @@ export default function PlayPage() {
   // Audio preloading and controls
   const { preloadProgress } = useAudioPreload();
   const { voicePack, setVoicePack } = useAudio();
+
+  // Apply presenter theme
+  const presenterTheme = useThemeStore((state) => state.presenterTheme);
+  useApplyTheme(presenterTheme);
 
   // Open display window with session ID in URL
   const openDisplay = useCallback(() => {
@@ -186,6 +195,15 @@ export default function PlayPage() {
                 onSelect={setVoicePack}
                 preloadProgress={preloadProgress}
               />
+
+              {/* Roll sound selector */}
+              <RollSoundSelector />
+
+              {/* Reveal chime selector */}
+              <RevealChimeSelector />
+
+              {/* Theme selector */}
+              <ThemeSelector />
             </div>
 
             {/* Keyboard shortcuts reference */}
@@ -193,7 +211,7 @@ export default function PlayPage() {
               <h2 className="text-xl font-semibold mb-3">Keyboard Shortcuts</h2>
               <ul className="space-y-2 text-base">
                 <li className="flex justify-between">
-                  <span className="text-muted-foreground">Call ball</span>
+                  <span className="text-muted-foreground">Roll</span>
                   <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
                     Space
                   </kbd>

@@ -281,10 +281,10 @@ describe('use-sync', () => {
           });
         });
 
-        // Should have broadcast the state
+        // Should have broadcast the state (followed by display theme)
         expect(postMessageSpy).toHaveBeenCalled();
-        const lastCall = postMessageSpy.mock.calls[postMessageSpy.mock.calls.length - 1][0];
-        expect(lastCall.type).toBe('GAME_STATE_UPDATE');
+        const calls = postMessageSpy.mock.calls.map(call => call[0]);
+        expect(calls.some(call => call.type === 'GAME_STATE_UPDATE')).toBe(true);
       });
 
       it('ignores BALL_CALLED when presenter role', () => {

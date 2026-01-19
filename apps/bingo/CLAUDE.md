@@ -71,7 +71,7 @@ src/
 
 - **Senior-friendly:** Large fonts (min 18px body), high contrast, large click targets (min 44x44px)
 - **Audience display:** Optimized for projector/large TV, readable from back of room
-- **Keyboard shortcuts:** Space=call next, P=pause, R=reset, U=undo, M=mute
+- **Keyboard shortcuts:** Space=roll, P=pause, R=reset, U=undo, M=mute
 
 ## Key Documentation
 

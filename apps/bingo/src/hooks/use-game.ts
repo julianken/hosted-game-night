@@ -41,6 +41,7 @@ export function useGame() {
     }
     const ball = gameStore.callBall();   // Ball appears after roll completes
     if (ball && audioEnabled) {
+      await audioStore.playRevealChime();  // Reveal chime plays when ball is shown
       await audioStore.playBallVoice(ball);  // Voice announcement plays
     }
     return ball;
@@ -104,14 +105,18 @@ export function useGame() {
           state.autoCallEnabled &&
           state.remainingBalls.length > 0
         ) {
-          const ball = state.callBall();
-          if (ball && state.audioEnabled) {
-            try {
-              await useAudioStore.getState().playBallCall(ball);
-            } catch {
-              // Audio failed, continue game
-            }
+          const audioStore = useAudioStore.getState();
+
+          // Use same audio sequence as manual call
+          if (state.audioEnabled) {
+            await audioStore.playRollSound();  // Roll sound plays first
           }
+          const ball = state.callBall();       // Ball appears after roll completes
+          if (ball && state.audioEnabled) {
+            await audioStore.playRevealChime();  // Reveal chime plays
+            await audioStore.playBallVoice(ball);  // Voice announcement plays
+          }
+
           // Schedule next call only if game is still active
           if (state.remainingBalls.length > 1) {
             scheduleNextCall();

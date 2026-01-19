@@ -1,7 +1,32 @@
-@import "@beak-gaming/theme/globals.css";
+@import "tailwindcss";
 
-/* Trivia-specific color extensions */
+/* Senior-friendly high contrast color palette */
 :root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+
+  /* Primary: Deep blue for good visibility */
+  --primary: #1e40af;
+  --primary-foreground: #ffffff;
+
+  /* Secondary: Slate gray */
+  --secondary: #475569;
+  --secondary-foreground: #ffffff;
+
+  /* Accent: Emerald green for success/highlights */
+  --accent: #059669;
+  --accent-foreground: #ffffff;
+
+  /* Feedback colors */
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --error: #dc2626;
+
+  /* Borders and muted elements */
+  --border: #d1d5db;
+  --muted: #6b7280;
+  --muted-foreground: #4b5563;
+
   /* Team colors for scoring */
   --team-1: #1e40af;  /* Blue */
   --team-2: #dc2626;  /* Red */
@@ -11,11 +36,94 @@
   --team-6: #0891b2;  /* Cyan */
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+
+    --secondary: #64748b;
+    --secondary-foreground: #ffffff;
+
+    --accent: #10b981;
+    --accent-foreground: #ffffff;
+
+    --border: #334155;
+    --muted: #94a3b8;
+    --muted-foreground: #cbd5e1;
+  }
+}
+
 @theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  /* Team colors */
   --color-team-1: var(--team-1);
   --color-team-2: var(--team-2);
   --color-team-3: var(--team-3);
   --color-team-4: var(--team-4);
   --color-team-5: var(--team-5);
   --color-team-6: var(--team-6);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Senior-friendly font sizes (minimum 18px for body text) */
+  --text-base: 1.125rem;       /* 18px - new base */
+  --text-lg: 1.25rem;          /* 20px */
+  --text-xl: 1.5rem;           /* 24px */
+  --text-2xl: 1.875rem;        /* 30px */
+  --text-3xl: 2.25rem;         /* 36px */
+  --text-4xl: 3rem;            /* 48px */
+  --text-5xl: 3.75rem;         /* 60px */
+  --text-6xl: 4.5rem;          /* 72px */
+  --text-7xl: 6rem;            /* 96px */
+  --text-8xl: 8rem;            /* 128px */
+
+  /* Touch target sizes (minimum 44px for accessibility) */
+  --size-touch: 2.75rem;       /* 44px minimum touch target */
+  --size-touch-lg: 3.5rem;     /* 56px large touch target */
+  --size-touch-xl: 4rem;       /* 64px extra large touch target */
+
+  /* Spacing scale */
+  --spacing-touch: 2.75rem;    /* 44px - for touch target spacing */
+}
+
+/* Base styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Large click targets for interactive elements */
+button,
+[role="button"] {
+  min-height: var(--size-touch);
+  min-width: var(--size-touch);
 }

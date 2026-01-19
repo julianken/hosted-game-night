@@ -56,7 +56,7 @@ export function ControlPanel({
             disabled={!canCall}
             className="w-full"
           >
-            Call Ball
+            Roll
             <span className="ml-2 text-base opacity-75">[Space]</span>
           </Button>
         )}

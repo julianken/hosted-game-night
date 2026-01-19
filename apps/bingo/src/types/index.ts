@@ -138,6 +138,9 @@ export interface AudioState {
   preloadError: string | null;
 }
 
+// Theme mode types
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 // BroadcastChannel message types for window sync
 export type SyncMessageType =
   | 'GAME_STATE_UPDATE'
@@ -145,7 +148,8 @@ export type SyncMessageType =
   | 'GAME_RESET'
   | 'PATTERN_CHANGED'
   | 'REQUEST_SYNC'
-  | 'AUDIO_SETTINGS_CHANGED';
+  | 'AUDIO_SETTINGS_CHANGED'
+  | 'DISPLAY_THEME_CHANGED';
 
 export interface AudioSettingsPayload {
   voicePack: VoicePackId;
@@ -153,9 +157,13 @@ export interface AudioSettingsPayload {
   enabled: boolean;
 }
 
+export interface ThemePayload {
+  theme: ThemeMode;
+}
+
 export interface SyncMessage {
   type: SyncMessageType;
-  payload: GameState | BingoBall | BingoPattern | AudioSettingsPayload | null;
+  payload: GameState | BingoBall | BingoPattern | AudioSettingsPayload | ThemePayload | null;
   timestamp: number;
 }
 
@@ -181,3 +189,31 @@ export const COLUMN_RANGES: Record<BingoColumn, [number, number]> = {
 } as const;
 
 export const COLUMNS: BingoColumn[] = ['B', 'I', 'N', 'G', 'O'];
+
+// Roll sound types
+export type RollSoundType = 'metal-cage' | 'plastic-cage' | 'plastic-swirl' | 'lottery-balls';
+export type RollDuration = '2s' | '4s' | '6s' | '8s';
+
+export interface RollSoundConfig {
+  type: RollSoundType;
+  duration: RollDuration;
+}
+
+export const ROLL_SOUND_OPTIONS: Record<RollSoundType, {
+  name: string;
+  durations: RollDuration[];
+}> = {
+  'metal-cage': { name: 'Metal Cage', durations: ['2s', '4s', '6s', '8s'] },
+  'plastic-cage': { name: 'Plastic Cage', durations: ['2s', '4s'] },
+  'plastic-swirl': { name: 'Plastic Swirl', durations: ['2s', '4s', '6s', '8s'] },
+  'lottery-balls': { name: 'Lottery Balls', durations: ['2s', '4s', '6s', '8s'] },
+};
+
+// Reveal chime types (sound that plays when ball number is revealed)
+export type RevealChimeType = 'none' | 'positive-notification' | 'gold-coin-prize';
+
+export const REVEAL_CHIME_OPTIONS: Record<RevealChimeType, { name: string }> = {
+  'none': { name: 'None' },
+  'positive-notification': { name: 'Positive Notification' },
+  'gold-coin-prize': { name: 'Gold Coin Prize' },
+};

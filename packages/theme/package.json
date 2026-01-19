@@ -13,6 +13,9 @@
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "tailwindcss": "^4"
+  },
   "devDependencies": {
     "typescript": "^5"
   }

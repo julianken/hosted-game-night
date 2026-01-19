@@ -1,88 +1,86 @@
-// Question types
-export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer' | 'image';
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+export const MAX_TEAMS = 20;
+export const DEFAULT_TEAM_PREFIX = 'Table';
+export const DEFAULT_ROUNDS = 3;
+export const QUESTIONS_PER_ROUND = 5;
+
+// =============================================================================
+// CORE TYPES
+// =============================================================================
+
+export type QuestionType = 'multiple_choice' | 'true_false';
+
+export type QuestionCategory = 'music' | 'movies' | 'tv' | 'history';
+
+export type GameStatus = 'setup' | 'playing' | 'between_rounds' | 'ended';
+
+// =============================================================================
+// QUESTION
+// =============================================================================
 
 export interface Question {
   id: string;
   text: string;
   type: QuestionType;
-  correctAnswer: string;
-  wrongAnswers?: string[];  // For multiple choice
-  category?: string;
-  difficulty?: 'easy' | 'medium';
-  imageUrl?: string;
-  audioUrl?: string;
+  correctAnswers: string[]; // Array to support multiple correct answers
+  options: string[]; // ['A', 'B', 'C', 'D'] for MC; ['True', 'False'] for T/F
+  optionTexts: string[]; // Human-readable option text for each option
+  category: QuestionCategory;
+  explanation?: string; // Optional: shown on answer reveal
+  roundIndex: number; // 0-based round index
 }
 
-// Team
+// =============================================================================
+// TEAM
+// =============================================================================
+
 export interface Team {
   id: string;
-  name: string;
-  score: number;
-  color?: string;
+  name: string; // "Table 1" or custom name
+  score: number; // Total score (computed from roundScores sum)
+  tableNumber: number; // 1-20
+  roundScores: number[]; // Per-round scores, total computed from sum
 }
 
-// Game state
-export type GameStatus = 'idle' | 'playing' | 'paused' | 'showing_answer' | 'ended';
+// =============================================================================
+// GAME STATE
+// =============================================================================
 
 export interface TriviaGameState {
+  // Session
+  sessionId: string;
   status: GameStatus;
-  currentRound: number;
-  totalRounds: number;
-  currentQuestionIndex: number;
-  questionsPerRound: number;
-  currentQuestion: Question | null;
-  teams: Team[];
-  timerSeconds: number;
-  timerRunning: boolean;
-  showAnswer: boolean;
-  audioEnabled: boolean;
+
+  // Questions
+  questions: Question[]; // All questions for the game
+  selectedQuestionIndex: number; // Which question presenter is viewing (0-based)
+  displayQuestionIndex: number | null; // Which question shown on audience (null = none)
+
+  // Rounds
+  currentRound: number; // 0-based current round index
+  totalRounds: number; // Total number of rounds (default 3)
+
+  // Teams
+  teams: Team[]; // Max 20
+
+  // Display settings
+  showScoreboard: boolean; // Manual toggle
+
+  // Audio
+  ttsEnabled: boolean; // Off by default
 }
 
-// Sync message types
-export type TriviaSyncMessageType =
-  | 'STATE_UPDATE'
-  | 'REQUEST_SYNC'
-  | 'TIMER_TICK'
-  | 'ANSWER_REVEALED'
-  | 'SCORE_UPDATED';
+// =============================================================================
+// SYNC MESSAGES
+// =============================================================================
 
-export interface TriviaSyncMessage {
-  type: TriviaSyncMessageType;
+export type SyncMessageType = 'STATE_UPDATE' | 'REQUEST_SYNC';
+
+export interface SyncMessage {
+  type: SyncMessageType;
   payload: TriviaGameState | null;
   timestamp: number;
-}
-
-// Question bank
-export interface QuestionSet {
-  id: string;
-  name: string;
-  questions: Question[];
-  category?: string;
-  createdAt: string;
-}
-
-// API types
-export interface CreateQuestionRequest {
-  text: string;
-  type: QuestionType;
-  correctAnswer: string;
-  wrongAnswers?: string[];
-  category?: string;
-  difficulty?: 'easy' | 'medium';
-  imageUrl?: string;
-}
-
-// Template types
-export interface TriviaTemplate {
-  id: string;
-  userId: string;
-  name: string;
-  rounds: number;
-  questionsPerRound: number;
-  timerSeconds: number;
-  audioEnabled: boolean;
-  questionSetIds?: string[];
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
 }

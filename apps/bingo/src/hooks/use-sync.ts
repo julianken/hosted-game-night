@@ -4,7 +4,8 @@ import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSyncStore, SyncRole } from '@/stores/sync-store';
 import { useGameStore } from '@/stores/game-store';
 import { createBingoBroadcastSync, createMessageRouter, BroadcastSync } from '@/lib/sync/broadcast';
-import { GameState, BingoBall, BingoPattern } from '@/types';
+import { GameState, BingoBall, BingoPattern, ThemeMode } from '@/types';
+import { useThemeStore } from '@/stores/theme-store';
 
 interface UseSyncOptions {
   role: SyncRole;
@@ -93,7 +94,20 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     if (role !== 'presenter') return;
     // Audience requested sync, broadcast current state
     broadcastState();
-  }, [role, broadcastState]);
+    // Also broadcast current display theme
+    const { displayTheme } = useThemeStore.getState();
+    broadcastSync.broadcastDisplayTheme(displayTheme);
+  }, [role, broadcastState, broadcastSync]);
+
+  // Handle display theme change from presenter (audience only)
+  const handleDisplayThemeChanged = useCallback(
+    (theme: ThemeMode) => {
+      if (role !== 'audience') return;
+      useThemeStore.getState().setDisplayTheme(theme);
+      updateLastSync();
+    },
+    [role, updateLastSync]
+  );
 
   // Initialize broadcast channel
   useEffect(() => {
@@ -116,6 +130,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       onReset: handleReset,
       onPatternChanged: handlePatternChanged,
       onSyncRequest: handleSyncRequest,
+      onDisplayThemeChanged: handleDisplayThemeChanged,
     });
 
     const unsubscribe = broadcastSync.subscribe(router);
@@ -143,6 +158,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     handleReset,
     handlePatternChanged,
     handleSyncRequest,
+    handleDisplayThemeChanged,
   ]);
 
   // Subscribe to game state changes (presenter only)
@@ -164,6 +180,21 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
           autoCallSpeed: state.autoCallSpeed,
           audioEnabled: state.audioEnabled,
         });
+      }
+    });
+
+    return unsubscribe;
+  }, [role, broadcastSync]);
+
+  // Subscribe to display theme changes (presenter only)
+  useEffect(() => {
+    if (role !== 'presenter') return;
+
+    // Subscribe to theme store changes
+    const unsubscribe = useThemeStore.subscribe((state, prevState) => {
+      // Broadcast on display theme change
+      if (state.displayTheme !== prevState.displayTheme) {
+        broadcastSync.broadcastDisplayTheme(state.displayTheme);
       }
     });
 

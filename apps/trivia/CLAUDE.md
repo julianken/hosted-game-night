@@ -62,13 +62,24 @@ src/
 └── types/             # TypeScript types
 ```
 
-## Game Mechanics
+## Game Mechanics (MVP)
 
-- **Format:** 4-6 rounds, 5 questions per round
-- **Question Types:** Multiple choice, True/False, Short answer, Image-based
-- **Timing:** 20-40 seconds per question (configurable)
-- **Scoring:** Manual presenter-controlled (+1/-1 per team)
-- **Teams:** Table-based (Table 1, 2, 3, etc.)
+- **Format:** 2-6 rounds (configurable), 3-10 questions per round
+- **Question Types:** Multiple choice, True/False (MVP only)
+- **Timing:** 30 seconds default (configurable), optional auto-start
+- **Scoring:** Hybrid - presenter records team answers, auto-scored
+- **Correct Answers:** Can be amended on-the-fly with automatic re-scoring
+- **Teams:** Up to 20 teams, default "Table N" naming (renameable)
+- **Emergency Pause:** Blanks audience display for emergencies
+
+## Keyboard Shortcuts
+
+- **Space** = Reveal answer
+- **N** = Next question
+- **P** = Pause/Resume
+- **E** = Emergency pause
+- **R** = Reset game
+- **M** = Mute TTS
 
 ## Design Requirements
 
@@ -79,4 +90,5 @@ src/
 
 ## Key Documentation
 
+- `/documentation/project_plan.md` - Detailed project plan with phases and checklists
 - `/documentation/chat_gpt_output_project_idea.md` - Original requirements from ChatGPT

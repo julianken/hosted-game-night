@@ -131,7 +131,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-semibold mb-2">Keyboard Shortcuts</h3>
               <p className="text-lg text-muted-foreground">
-                Space to call, P to pause, U to undo. Quick controls for the game host.
+                Space to roll, P to pause, U to undo. Quick controls for the game host.
               </p>
             </div>
           </div>

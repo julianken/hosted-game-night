@@ -12,6 +12,8 @@ import {
   PatternDisplay,
   BallsCalledCounter,
 } from '@/components/audience';
+import { useApplyTheme } from '@/hooks/use-theme';
+import { useThemeStore } from '@/stores/theme-store';
 
 /**
  * Invalid Session Error Component
@@ -89,6 +91,10 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
     role: 'audience',
     sessionId,
   });
+
+  // Apply display theme
+  const displayTheme = useThemeStore((state) => state.displayTheme);
+  useApplyTheme(displayTheme);
 
   // Get game state from store (hydrated by sync)
   const currentBall = useGameStore((state) => state.currentBall);

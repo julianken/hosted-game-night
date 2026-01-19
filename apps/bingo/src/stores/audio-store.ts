@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { BingoBall, VoicePackId, VoiceManifest, VoicePackMetadata, RollSoundType, RollDuration } from '@/types';
+import { BingoBall, VoicePackId, VoiceManifest, VoicePackMetadata, RollSoundType, RollDuration, RevealChimeType, ROLL_SOUND_OPTIONS } from '@/types';
 
 export interface AudioStore {
   // Persisted state
@@ -10,6 +10,7 @@ export interface AudioStore {
   useFallbackTTS: boolean;
   rollSoundType: RollSoundType;
   rollDuration: RollDuration;
+  revealChime: RevealChimeType;
 
   // Non-persisted state
   isPlaying: boolean;
@@ -22,11 +23,13 @@ export interface AudioStore {
   setVoicePack: (pack: VoicePackId) => void;
   setUseFallbackTTS: (useFallback: boolean) => void;
   setRollSound: (type: RollSoundType, duration: RollDuration) => void;
+  setRevealChime: (chime: RevealChimeType) => void;
 
   // Playback
   playBallCall: (ball: BingoBall) => Promise<void>;
   playRollSound: () => Promise<void>;
   playBallVoice: (ball: BingoBall) => Promise<void>;
+  playRevealChime: () => Promise<void>;
   stopPlayback: () => void;
 
   // Manifest loading
@@ -37,6 +40,7 @@ export const DEFAULT_VOICE_PACK: VoicePackId = 'standard';
 export const DEFAULT_VOLUME = 0.8;
 export const DEFAULT_ROLL_SOUND_TYPE: RollSoundType = 'metal-cage';
 export const DEFAULT_ROLL_DURATION: RollDuration = '2s';
+export const DEFAULT_REVEAL_CHIME: RevealChimeType = 'none';
 
 // Voice pack display options for UI
 export const VOICE_PACK_OPTIONS: { id: VoicePackId; name: string; description: string }[] = [
@@ -94,6 +98,8 @@ async function playRollingSound(
     audio.volume = volume;
 
     const cleanup = () => {
+      audio.onended = null;
+      audio.onerror = null;
       audio.src = ''; // Release media resource - prevents memory leak
     };
 
@@ -164,6 +170,7 @@ export const useAudioStore = create<AudioStore>()(
       useFallbackTTS: true,
       rollSoundType: DEFAULT_ROLL_SOUND_TYPE,
       rollDuration: DEFAULT_ROLL_DURATION,
+      revealChime: DEFAULT_REVEAL_CHIME,
 
       // Non-persisted state
       isPlaying: false,
@@ -194,6 +201,10 @@ export const useAudioStore = create<AudioStore>()(
 
       setRollSound: (type: RollSoundType, duration: RollDuration) => {
         set({ rollSoundType: type, rollDuration: duration });
+      },
+
+      setRevealChime: (chime: RevealChimeType) => {
+        set({ revealChime: chime });
       },
 
       playBallCall: async (ball: BingoBall) => {
@@ -298,6 +309,39 @@ export const useAudioStore = create<AudioStore>()(
         }
       },
 
+      playRevealChime: async () => {
+        const { enabled, volume, revealChime } = get();
+        if (!enabled || revealChime === 'none' || typeof Audio === 'undefined') return;
+
+        const soundFile = `/audio/sfx/chimes/${revealChime}.mp3`;
+
+        return new Promise<void>((resolve) => {
+          const audio = new Audio(soundFile);
+          audio.volume = volume;
+
+          const cleanup = () => {
+            audio.onended = null;
+            audio.onerror = null;
+            audio.src = ''; // Release media resource
+          };
+
+          audio.onended = () => {
+            cleanup();
+            resolve();
+          };
+          audio.onerror = () => {
+            cleanup();
+            console.warn('Failed to play reveal chime');
+            resolve();
+          };
+
+          audio.play().catch(() => {
+            cleanup();
+            resolve();
+          });
+        });
+      },
+
       stopPlayback: () => {
         // Stop any TTS in progress
         if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -329,7 +373,19 @@ export const useAudioStore = create<AudioStore>()(
         useFallbackTTS: state.useFallbackTTS,
         rollSoundType: state.rollSoundType,
         rollDuration: state.rollDuration,
+        revealChime: state.revealChime,
       }),
+      merge: (persistedState, currentState) => {
+        const merged = { ...currentState, ...(persistedState as object) };
+        // Validate rollDuration against valid durations for the sound type
+        const rollSoundType = merged.rollSoundType as RollSoundType;
+        const rollDuration = merged.rollDuration as RollDuration;
+        const validDurations = ROLL_SOUND_OPTIONS[rollSoundType].durations;
+        if (!validDurations.includes(rollDuration)) {
+          merged.rollDuration = validDurations[0];
+        }
+        return merged as AudioStore;
+      },
     }
   )
 );

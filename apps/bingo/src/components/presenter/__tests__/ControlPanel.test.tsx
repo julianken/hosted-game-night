@@ -26,14 +26,14 @@ describe('ControlPanel', () => {
 
     it('does not show Call Ball button', () => {
       render(<ControlPanel {...defaultProps} status="idle" />);
-      expect(screen.queryByRole('button', { name: /Call Ball/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Roll/i })).not.toBeInTheDocument();
     });
   });
 
   describe('when status is playing', () => {
     it('shows Call Ball button', () => {
       render(<ControlPanel {...defaultProps} status="playing" canCall={true} />);
-      expect(screen.getByRole('button', { name: /Call Ball/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Roll/i })).toBeInTheDocument();
     });
 
     it('does not show Start Game button', () => {
@@ -45,7 +45,7 @@ describe('ControlPanel', () => {
   describe('when status is paused', () => {
     it('shows Call Ball button', () => {
       render(<ControlPanel {...defaultProps} status="paused" />);
-      expect(screen.getByRole('button', { name: /Call Ball/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Roll/i })).toBeInTheDocument();
     });
   });
 
@@ -94,7 +94,7 @@ describe('ControlPanel', () => {
     it('calls onCallBall when Call Ball clicked', () => {
       const handleCallBall = vi.fn();
       render(<ControlPanel {...defaultProps} status="playing" canCall={true} onCallBall={handleCallBall} />);
-      fireEvent.click(screen.getByRole('button', { name: /Call Ball/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Roll/i }));
       expect(handleCallBall).toHaveBeenCalledTimes(1);
     });
 

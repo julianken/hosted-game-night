@@ -36,7 +36,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --background: #0f172a;
     --foreground: #f1f5f9;
 
@@ -53,6 +53,25 @@
     --muted: #94a3b8;
     --muted-foreground: #cbd5e1;
   }
+}
+
+/* Class-based dark mode */
+:root.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #64748b;
+  --secondary-foreground: #ffffff;
+
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+
+  --border: #334155;
+  --muted: #94a3b8;
+  --muted-foreground: #cbd5e1;
 }
 
 @theme inline {

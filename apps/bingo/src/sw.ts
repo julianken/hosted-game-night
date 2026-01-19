@@ -54,6 +54,40 @@ const serwist = new Serwist({
         ],
       }),
     },
+    // Default roll sound - precache for instant first-play
+    {
+      matcher: ({ url }) =>
+        url.pathname === '/audio/sfx/metal-cage/2s.mp3' ||
+        url.pathname === '/audio/sfx/metal-cage/2s-hall.mp3',
+      handler: new CacheFirst({
+        cacheName: 'bingo-sfx-default-v1',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 5,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          }),
+          new CacheableResponsePlugin({
+            statuses: [0, 200],
+          }),
+        ],
+      }),
+    },
+    // Other roll sounds - cache on demand when selected
+    {
+      matcher: ({ url }) => /\/audio\/sfx\/.*\.mp3$/.test(url.pathname),
+      handler: new CacheFirst({
+        cacheName: 'bingo-sfx-v1',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 30,
+            maxAgeSeconds: 30 * 24 * 60 * 60,
+          }),
+          new CacheableResponsePlugin({
+            statuses: [0, 200],
+          }),
+        ],
+      }),
+    },
   ],
 });
 

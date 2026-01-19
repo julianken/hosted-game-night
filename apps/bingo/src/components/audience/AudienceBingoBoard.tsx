@@ -10,7 +10,7 @@ export interface AudienceBingoBoardProps {
 const columnHeaderColors: Record<BingoColumn, string> = {
   B: 'bg-ball-b text-white',
   I: 'bg-ball-i text-white',
-  N: 'bg-ball-n text-foreground border-2 border-foreground',
+  N: 'bg-ball-n text-gray-900 border-2 border-black dark:border-gray-400',
   G: 'bg-ball-g text-white',
   O: 'bg-ball-o text-white',
 };

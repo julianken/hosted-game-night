@@ -1,0 +1,124 @@
+'use client';
+
+import { useId, useState, useCallback } from 'react';
+import { RevealChimeType, REVEAL_CHIME_OPTIONS } from '@/types';
+import { Button } from '@/components/ui/Button';
+import { useAudioStore } from '@/stores/audio-store';
+
+export interface RevealChimeSelectorProps {
+  disabled?: boolean;
+}
+
+const REVEAL_CHIME_TYPES = Object.entries(REVEAL_CHIME_OPTIONS).map(([id, config]) => ({
+  id: id as RevealChimeType,
+  name: config.name,
+}));
+
+export function RevealChimeSelector({ disabled = false }: RevealChimeSelectorProps) {
+  const selectId = useId();
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const revealChime = useAudioStore((state) => state.revealChime);
+  const volume = useAudioStore((state) => state.volume);
+  const setRevealChime = useAudioStore((state) => state.setRevealChime);
+
+  // Handle chime change
+  const handleChimeChange = useCallback(
+    (newChime: RevealChimeType) => {
+      setRevealChime(newChime);
+    },
+    [setRevealChime]
+  );
+
+  // Play preview of current selection
+  const playPreview = useCallback(async () => {
+    if (isPlaying || revealChime === 'none' || typeof Audio === 'undefined') return;
+
+    setIsPlaying(true);
+
+    try {
+      const soundFile = `/audio/sfx/chimes/${revealChime}.mp3`;
+
+      const audio = new Audio(soundFile);
+      audio.volume = volume;
+
+      await new Promise<void>((resolve) => {
+        audio.onended = () => {
+          audio.src = '';
+          resolve();
+        };
+        audio.onerror = () => {
+          audio.src = '';
+          resolve();
+        };
+        audio.play().catch(() => {
+          audio.src = '';
+          resolve();
+        });
+      });
+    } finally {
+      setIsPlaying(false);
+    }
+  }, [isPlaying, revealChime, volume]);
+
+  const selectClassName = `
+    w-full h-[44px] px-4 text-lg
+    bg-background border-2 border-border rounded-lg
+    cursor-pointer appearance-none
+    focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary
+    disabled:opacity-50 disabled:cursor-not-allowed
+    ${disabled ? '' : 'hover:border-primary/50'}
+  `;
+
+  const selectStyle = {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    backgroundSize: '20px',
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Reveal Chime</h3>
+
+      <div className="space-y-2">
+        <label
+          htmlFor={selectId}
+          className={`
+            block text-base font-medium
+            ${disabled ? 'opacity-50' : ''}
+          `}
+        >
+          Sound
+        </label>
+        <select
+          id={selectId}
+          value={revealChime}
+          onChange={(e) => handleChimeChange(e.target.value as RevealChimeType)}
+          disabled={disabled}
+          className={selectClassName}
+          style={selectStyle}
+        >
+          {REVEAL_CHIME_TYPES.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Preview Button - only show when a chime is selected */}
+      {revealChime !== 'none' && (
+        <Button
+          onClick={playPreview}
+          disabled={disabled || isPlaying}
+          variant="secondary"
+          size="sm"
+          loading={isPlaying}
+        >
+          {isPlaying ? 'Playing...' : 'Preview Chime'}
+        </Button>
+      )}
+    </div>
+  );
+}
