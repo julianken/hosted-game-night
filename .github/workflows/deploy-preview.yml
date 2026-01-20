@@ -1,3 +1,17 @@
+# Deploy Preview Workflow
+#
+# CURRENTLY DISABLED: This workflow requires the following GitHub secrets to be configured:
+#   - VERCEL_TOKEN: Vercel authentication token
+#   - VERCEL_ORG_ID: Vercel organization ID
+#   - VERCEL_PROJECT_ID_BINGO: Project ID for Bingo app
+#   - VERCEL_PROJECT_ID_TRIVIA: Project ID for Trivia app
+#   - VERCEL_PROJECT_ID_PLATFORM_HUB: Project ID for Platform Hub app
+#   - TURBO_TOKEN: Turborepo Remote Cache token
+#
+# To enable this workflow:
+#   1. Configure all required secrets in GitHub repository settings
+#   2. Change 'if: false' to 'if: true' (or remove the condition) in the deploy-preview job below
+#
 name: Deploy Preview
 
 on:
@@ -15,6 +29,7 @@ env:
 
 jobs:
   deploy-preview:
+    if: false  # Disabled - Vercel secrets not configured yet
     name: Deploy Preview
     runs-on: ubuntu-latest
     timeout-minutes: 15

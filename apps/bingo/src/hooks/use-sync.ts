@@ -114,9 +114,6 @@ interface UseSyncOptions {
  * Audience: Receives and applies state updates from presenter.
  */
 export function useSync({ role, sessionId }: UseSyncOptions) {
-  const { setRole, setConnected, updateLastSync, setConnectionError, reset } =
-    useSyncStore();
-  const gameStore = useGameStore();
   const isInitializedRef = useRef(false);
 
   // Create a session-scoped BroadcastSync instance
@@ -151,10 +148,10 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   const handleStateUpdate = useCallback(
     (state: GameState) => {
       if (role !== 'audience') return;
-      gameStore._hydrate(state);
-      updateLastSync();
+      useGameStore.getState()._hydrate(state);
+      useSyncStore.getState().updateLastSync();
     },
-    [role, gameStore, updateLastSync]
+    [role]
   );
 
   const handleBallCalled = useCallback(
@@ -163,24 +160,24 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       if (role !== 'audience') return;
       // Ball called events are handled via state updates
       // This handler can be used for additional UI effects
-      updateLastSync();
+      useSyncStore.getState().updateLastSync();
     },
-    [role, updateLastSync]
+    [role]
   );
 
   const handleReset = useCallback(() => {
     if (role !== 'audience') return;
-    gameStore.resetGame();
-    updateLastSync();
-  }, [role, gameStore, updateLastSync]);
+    useGameStore.getState().resetGame();
+    useSyncStore.getState().updateLastSync();
+  }, [role]);
 
   const handlePatternChanged = useCallback(
     (pattern: BingoPattern) => {
       if (role !== 'audience') return;
-      gameStore.setPattern(pattern);
-      updateLastSync();
+      useGameStore.getState().setPattern(pattern);
+      useSyncStore.getState().updateLastSync();
     },
-    [role, gameStore, updateLastSync]
+    [role]
   );
 
   const handleSyncRequest = useCallback(() => {
@@ -197,9 +194,9 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     (theme: ThemeMode) => {
       if (role !== 'audience') return;
       useThemeStore.getState().setDisplayTheme(theme);
-      updateLastSync();
+      useSyncStore.getState().updateLastSync();
     },
-    [role, updateLastSync]
+    [role]
   );
 
   // Initialize broadcast channel
@@ -208,12 +205,12 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
     const success = broadcastSync.initialize();
     if (!success) {
-      setConnectionError('Failed to initialize sync channel');
+      useSyncStore.getState().setConnectionError('Failed to initialize sync channel');
       return;
     }
 
-    setRole(role);
-    setConnected(true);
+    useSyncStore.getState().setRole(role);
+    useSyncStore.getState().setConnected(true);
     isInitializedRef.current = true;
 
     // Subscribe to messages
@@ -236,23 +233,19 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     return () => {
       unsubscribe();
       broadcastSync.close();
-      reset();
+      useSyncStore.getState().reset();
       isInitializedRef.current = false;
     };
   }, [
     role,
     broadcastSync,
-    setRole,
-    setConnected,
-    setConnectionError,
-    reset,
     handleStateUpdate,
     handleBallCalled,
     handleReset,
     handlePatternChanged,
     handleSyncRequest,
     handleDisplayThemeChanged,
-  ]);
+  ]); // Zustand actions accessed via getState() - no subscription, no re-renders
 
   // Subscribe to game state changes (presenter only)
   useEffect(() => {

@@ -226,32 +226,6 @@ export {
   TIMER_DURATION_MIN,
   TIMER_DURATION_MAX,
 
-  // Game Sessions (Local/In-Memory)
-  generateSessionId,
-  createLocalSession,
-  getLocalSession,
-  updateLocalSession,
-  deleteLocalSession,
-  getLocalSessionsByUser,
-  getActiveLocalSessions,
-  clearLocalSessions,
-  startSession,
-  pauseSession,
-  resumeSession,
-  completeSession,
-  cancelSession,
-  updateSessionMetadata,
-  getBingoMetadata,
-  getTriviaMetadata,
-  getSessionDuration,
-  formatSessionDuration,
-  logSession,
-  getSessionHistory,
-  type GameType,
-  type SessionStatus,
-  type BingoSessionMetadata,
-  type TriviaSessionMetadata,
-
   // Persistent Game Sessions (Database-backed)
   createGameSession,
   getGameSessionByRoomCode,
@@ -337,3 +311,21 @@ export {
   MAX_ATTEMPTS,
   LOCKOUT_DURATION_MS,
 } from './pin-security';
+
+// =============================================================================
+// HMAC Token Security
+// =============================================================================
+
+export {
+  signToken,
+  verifyAndDecodeToken,
+} from './hmac-tokens';
+
+// =============================================================================
+// API Route Factories
+// =============================================================================
+
+export {
+  createSessionRoutes,
+  type SessionRouteConfig,
+} from './api';
