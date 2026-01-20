@@ -5,9 +5,7 @@
   "buildCommand": "turbo build",
   "env": {
     "TURBO_TEAM": "beak-gaming",
-    "TURBO_REMOTE_ONLY": "true",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://iivxpjhmnalsuvpdzgza.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_LvRIpm-i3o17HecBwfQckg_wTVe8WPM"
+    "TURBO_REMOTE_ONLY": "true"
   },
   "headers": [
     {
