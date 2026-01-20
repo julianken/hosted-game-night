@@ -6,6 +6,7 @@ import { useSync } from '@/hooks/use-sync';
 import { generateSessionId } from '@/lib/sync/session';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
+import { useGameStore } from '@/stores/game-store';
 import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
 import { QuestionList } from '@/components/presenter/QuestionList';
 import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
@@ -52,7 +53,8 @@ export default function PlayPage() {
   // Sync settings store values to game store when in setup mode
   useEffect(() => {
     if (game.status === 'setup') {
-      game.updateSettings({
+      // Access store directly to avoid dependency on game object
+      useGameStore.getState().updateSettings({
         roundsCount,
         questionsPerRound,
         timerDuration,
@@ -62,7 +64,6 @@ export default function PlayPage() {
       });
     }
   }, [
-    game,
     game.status,
     roundsCount,
     questionsPerRound,
