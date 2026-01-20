@@ -7,6 +7,7 @@ import { generateSessionId } from '@/lib/sync/session';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
+import { useGameStore } from '@/stores/game-store';
 import { QuestionList } from '@/components/presenter/QuestionList';
 import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
 import { TeamScoreInput } from '@/components/presenter/TeamScoreInput';
@@ -50,10 +51,13 @@ export default function PlayPage() {
   } = useSettingsStore();
 
   // Sync settings store values to game store when in setup mode
-  // Use selective subscription to prevent infinite re-renders (game object changes on every render)
+  // Use Zustand selectors directly to avoid infinite loop from useGame's whole-store subscription
+  const gameStatus = useGameStore((state) => state.status);
+  const updateGameSettings = useGameStore((state) => state.updateSettings);
+
   useEffect(() => {
-    if (game.status === 'setup') {
-      game.updateSettings({
+    if (gameStatus === 'setup') {
+      updateGameSettings({
         roundsCount,
         questionsPerRound,
         timerDuration,
@@ -63,8 +67,8 @@ export default function PlayPage() {
       });
     }
   }, [
-    game.status,
-    game.updateSettings,
+    gameStatus,
+    updateGameSettings,
     roundsCount,
     questionsPerRound,
     timerDuration,

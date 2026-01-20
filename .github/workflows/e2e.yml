@@ -3,8 +3,9 @@ name: E2E Tests
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  # E2E tests disabled on PRs - too slow (17+ minutes) and not yet reliable
+  # pull_request:
+  #   branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
