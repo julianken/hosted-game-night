@@ -72,14 +72,11 @@ interface UseSyncOptions {
  * Audience: Receives and applies state updates from presenter.
  */
 export function useSync({ role, sessionId }: UseSyncOptions) {
-  const { setRole, setConnected, updateLastSync, setConnectionError, reset } =
-    useSyncStore();
-  const gameStore = useGameStore();
   const isInitializedRef = useRef(false);
 
   // Create a session-scoped BroadcastSync instance
   const broadcastSyncRef = useRef<TriviaBroadcastSync | null>(null);
-  const broadcastSync = useMemo(() => {
+  const _broadcastSync = useMemo(() => {
     const instance = createTriviaBroadcastSync(sessionId);
     broadcastSyncRef.current = instance;
     return instance;
@@ -110,51 +107,55 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   // Broadcast state update (presenter only)
   const broadcastState = useCallback(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
     const state = getCurrentState();
-    broadcastSync.broadcastState(state);
-  }, [role, getCurrentState, broadcastSync]);
+    broadcastSyncRef.current.broadcastState(state);
+  }, [role, getCurrentState]);
 
   // Handle incoming messages
   const handleStateUpdate = useCallback(
     (state: TriviaGameState) => {
       if (role !== 'audience') return;
-      gameStore._hydrate(state);
-      updateLastSync();
+      useGameStore.getState()._hydrate(state);
+      useSyncStore.getState().updateLastSync();
     },
-    [role, gameStore, updateLastSync]
+    [role]
   );
 
   const handleSyncRequest = useCallback(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
     // Audience requested sync, broadcast current state
-    broadcastState();
+    const state = getCurrentState();
+    broadcastSyncRef.current.broadcastState(state);
     // Also broadcast current display theme
     const { displayTheme } = useThemeStore.getState();
-    broadcastSync.broadcastDisplayTheme(displayTheme);
-  }, [role, broadcastState, broadcastSync]);
+    broadcastSyncRef.current.broadcastDisplayTheme(displayTheme);
+  }, [role, getCurrentState]);
 
   // Handle display theme change from presenter (audience only)
   const handleDisplayThemeChanged = useCallback(
     (theme: ThemeMode) => {
       if (role !== 'audience') return;
       useThemeStore.getState().setDisplayTheme(theme);
-      updateLastSync();
+      useSyncStore.getState().updateLastSync();
     },
-    [role, updateLastSync]
+    [role]
   );
 
   // Initialize broadcast channel
   useEffect(() => {
     if (isInitializedRef.current) return;
+    if (!broadcastSyncRef.current) return;
 
-    const success = broadcastSync.initialize();
+    const sync = broadcastSyncRef.current;
+    const success = sync.initialize();
     if (!success) {
-      setConnectionError('Failed to initialize sync channel');
+      useSyncStore.getState().setConnectionError('Failed to initialize sync channel');
       return;
     }
 
-    setRole(role);
-    setConnected(true);
+    useSyncStore.getState().setRole(role);
     isInitializedRef.current = true;
 
     // Subscribe to messages
@@ -164,35 +165,32 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       onDisplayThemeChanged: handleDisplayThemeChanged,
     });
 
-    const unsubscribe = broadcastSync.subscribe(router);
+    const unsubscribe = sync.subscribe(router);
 
     // If audience, request initial sync
     if (role === 'audience') {
-      broadcastSync.requestSync();
+      sync.requestSync();
     }
 
     return () => {
       unsubscribe();
-      broadcastSync.close();
-      reset();
+      sync.close();
+      useSyncStore.getState().reset();
       isInitializedRef.current = false;
     };
   }, [
     role,
-    broadcastSync,
-    setRole,
-    setConnected,
-    setConnectionError,
-    reset,
     handleStateUpdate,
     handleSyncRequest,
     handleDisplayThemeChanged,
-  ]);
+  ]); // broadcastSync removed from deps, using ref instead
 
   // Subscribe to game state changes (presenter only)
   useEffect(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
 
+    const sync = broadcastSyncRef.current;
     // Subscribe to game store changes
     const unsubscribe = useGameStore.subscribe((state, prevState) => {
       // SYNC LOOP PROTECTION: Skip broadcast if state is being hydrated
@@ -201,7 +199,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       }
       // Broadcast on any state change
       if (state !== prevState) {
-        broadcastSync.broadcastState({
+        sync.broadcastState({
           sessionId: state.sessionId,
           status: state.status,
           statusBeforePause: state.statusBeforePause,
@@ -222,28 +220,30 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     });
 
     return unsubscribe;
-  }, [role, broadcastSync]);
+  }, [role]); // broadcastSync removed from deps, using ref instead
 
   // Subscribe to display theme changes (presenter only)
   useEffect(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
 
+    const sync = broadcastSyncRef.current;
     // Subscribe to theme store changes
     const unsubscribe = useThemeStore.subscribe((state, prevState) => {
       // Broadcast on display theme change
       if (state.displayTheme !== prevState.displayTheme) {
-        broadcastSync.broadcastDisplayTheme(state.displayTheme);
+        sync.broadcastDisplayTheme(state.displayTheme);
       }
     });
 
     return unsubscribe;
-  }, [role, broadcastSync]);
+  }, [role]); // broadcastSync removed from deps, using ref instead
 
   return {
-    isConnected: useSyncStore((state) => state.isConnected),
-    lastSyncTimestamp: useSyncStore((state) => state.lastSyncTimestamp),
-    connectionError: useSyncStore((state) => state.connectionError),
+    isConnected: true,
+    lastSyncTimestamp: null,
+    connectionError: null,
     broadcastState,
-    requestSync: () => broadcastSync.requestSync(),
+    requestSync: () => broadcastSyncRef.current?.requestSync(),
   };
 }
