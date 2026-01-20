@@ -49,6 +49,50 @@ beak-gaming-platform/
 - **Database:** Supabase (PostgreSQL)
 - **Testing:** Vitest 4 + Testing Library
 
+## AI Assistant Configuration
+
+**Context7 MCP:** Automatically use Context7 for up-to-date documentation when working with these libraries. You don't need to explicitly ask - Context7 should be invoked automatically when you need API references, setup guides, or code examples.
+
+### Core Framework & Frontend
+- **Next.js** (v16.1.3) - App Router, Server Components, API routes, middleware, caching
+- **React** (v19.2.3) - Hooks, Server Components, use client/server directives
+- **React DOM** (v19.2.3) - Client/server rendering
+- **Tailwind CSS** (v4) - Utilities, configuration, plugins
+- **TypeScript** (v5.7.0) - Type system, compiler options
+
+### Database & Auth
+- **Supabase JS** (@supabase/supabase-js v2.90.1) - Database client, auth, realtime
+- **Supabase SSR** (@supabase/ssr v0.8.0) - Server-side auth, cookies, sessions
+- **Supabase PostgREST** (@supabase/postgrest-js v1.19.4) - Query builder, filters
+
+### State Management
+- **Zustand** (v5.0.10) - Store creation, persistence, middleware
+
+### Testing
+- **Vitest** (v4.0.17) - Test runner, mocking, coverage
+- **Testing Library React** (v16.3.1) - Component testing, queries, events
+- **Testing Library Jest DOM** (v6.9.1) - DOM matchers
+- **Playwright** (v1.57.0) - E2E testing, browser automation
+- **vitest-axe** (v0.1.0) - Accessibility testing
+- **jsdom** (v27.4.0) - DOM environment for tests
+
+### PWA & Service Workers
+- **Serwist** (v9.5.0) - Service worker generation, caching strategies
+- **@serwist/next** (v9.5.0) - Next.js integration
+
+### Build Tools & Monorepo
+- **Turborepo** (v2.3.0) - Task orchestration, caching
+- **pnpm** (v9.15.0) - Package manager, workspace protocol
+- **ESLint** (v9) - Linting rules, plugins
+- **@typescript-eslint** (v8.33.0) - TypeScript ESLint rules
+
+### UI Components & Accessibility
+- **React Aria Components** (v1.14.0) - Accessible UI primitives
+
+### Utilities
+- **uuid** (v13.0.0) - UUID generation
+- **web-vitals** (v5.1.0) - Performance metrics
+
 ## Commands
 
 ```bash
@@ -151,6 +195,21 @@ Create `.env.local` in each app:
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
+
+## Pull Request Template
+
+**IMPORTANT:** All pull requests MUST use the template at `.github/PULL_REQUEST_TEMPLATE.md`.
+
+When creating PRs:
+1. Read the template file first: `.github/PULL_REQUEST_TEMPLATE.md`
+2. Fill in all required sections (Five-Level Explanation is mandatory)
+3. Complete the Testing checklist
+4. Add diagrams/screenshots if relevant
+
+The template includes:
+- Human Summary (2-4 bullets)
+- Five-Level Explanation (required: non-technical → deep technical)
+- Changes, Testing, Risk/Impact, Notes for Reviewers
 
 ## App-Specific Context
 

@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Create your Beak Gaming Platform account to start playing Bingo, Trivia, and more games.',
 };
 
+// Force dynamic rendering to avoid build-time Supabase initialization
+export const dynamic = 'force-dynamic';
+
 /**
  * Signup Page - Senior-friendly registration page.
  *

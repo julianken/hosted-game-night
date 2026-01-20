@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Reset your Beak Gaming Platform password to regain access to your account.',
 };
 
+// Force dynamic rendering to avoid build-time Supabase initialization
+export const dynamic = 'force-dynamic';
+
 /**
  * Forgot Password Page - Senior-friendly password reset page.
  *

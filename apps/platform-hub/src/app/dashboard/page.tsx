@@ -5,6 +5,9 @@ import {
   UserPreferences,
 } from '@/components/dashboard';
 
+// Force dynamic rendering to avoid build-time Supabase initialization
+export const dynamic = 'force-dynamic';
+
 /**
  * Bingo icon - Grid pattern representing bingo card
  */

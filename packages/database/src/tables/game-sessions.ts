@@ -1,9 +1,32 @@
 /**
  * Game session tracking utilities
  *
- * Note: This module provides a flexible game session tracking system
- * that works without requiring a specific database table.
- * Sessions can be stored in memory, localStorage, or a future sessions table.
+ * @deprecated This in-memory session module will be removed in v0.2.0.
+ *
+ * ## Migration Path
+ *
+ * Please migrate to the new persistent sessions system:
+ * - **Database operations**: Use `persistent-sessions.ts` for database-backed sessions
+ * - **Client-side state**: Use `@beak-gaming/sync/session-store` for BroadcastChannel sync
+ *
+ * ## Why Deprecated?
+ *
+ * This module was designed for in-memory, non-persistent sessions that don't survive
+ * browser refreshes. The new persistent-sessions module provides:
+ * - URL-based room codes (e.g., SWAN-42) for easy sharing
+ * - Database persistence with automatic sync
+ * - PIN protection for presenter controls
+ * - HMAC-signed tokens for security
+ * - Rejoinable sessions after disconnect/refresh
+ *
+ * ## Backwards Compatibility
+ *
+ * This file remains for one release cycle (until v0.2.0) to allow gradual migration.
+ * No new features will be added to this module.
+ *
+ * @see packages/database/src/tables/persistent-sessions.ts
+ * @see packages/sync/src/session-store.ts
+ * @see docs/features/persistent-sessions-refined.md
  */
 
 import type { TypedSupabaseClient } from '../client';
