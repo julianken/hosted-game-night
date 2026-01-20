@@ -283,7 +283,6 @@ export {
   type OptimisticMutationOptions,
 } from './hooks';
 
-// =============================================================================
 // Session Tokens
 // =============================================================================
 
@@ -300,3 +299,16 @@ export {
   // Types
   type SessionToken,
 } from './session-token';
+
+// =============================================================================
+// PIN Security
+// =============================================================================
+
+export {
+  createPinHash,
+  verifyPin,
+  isValidPin,
+  isLockedOut,
+  MAX_ATTEMPTS,
+  LOCKOUT_DURATION_MS,
+} from './pin-security';
