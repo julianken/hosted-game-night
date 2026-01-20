@@ -130,6 +130,7 @@ export interface GameSession {
   game_state: Record<string, unknown>;
   user_id: string | null;
   last_sync_at: string;
+  sequence_number: number;
   expires_at: string;
   created_at: string;
   updated_at: string;
@@ -142,8 +143,10 @@ export interface GameSessionInsert {
   template_id?: string | null;
   pin_hash: string;
   pin_salt: string;
+  status?: 'active' | 'paused' | 'completed' | 'expired';
   game_state?: Record<string, unknown>;
   user_id?: string | null;
+  expires_at?: string;
 }
 
 export interface GameSessionUpdate {
