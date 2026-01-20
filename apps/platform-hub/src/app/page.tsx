@@ -1,5 +1,8 @@
 import { GameCard } from '@/components';
 
+// Force dynamic rendering since we use AuthProvider
+export const dynamic = 'force-dynamic';
+
 /**
  * Bingo icon - Grid pattern representing bingo card
  */

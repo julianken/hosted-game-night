@@ -146,7 +146,7 @@ describe('SyncStatusIndicator', () => {
     it('should format "just now" for recent saves (< 5 seconds)', () => {
       const justNow = new Date('2024-01-20T11:59:58Z');
       render(<SyncStatusIndicator status="saved" lastSavedAt={justNow} />);
-      expect(screen.getByText('Saved just now ago')).toBeInTheDocument();
+      expect(screen.getByText('Saved just now')).toBeInTheDocument();
     });
 
     it('should format seconds (5-59 seconds)', () => {

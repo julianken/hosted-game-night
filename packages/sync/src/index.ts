@@ -23,7 +23,7 @@ export {
 // Store
 export { createSyncStore, type UseSyncStore } from './store';
 
-// Hook
+// Hooks
 export { useSync } from './use-sync';
 
 // Session link utilities
@@ -86,3 +86,15 @@ export {
   isValidRoomCode,
   parseRoomCode,
 } from './room-code';
+
+// Auto-sync hook
+export type { AutoSyncConfig, UseAutoSyncReturn } from './use-auto-sync';
+export { useAutoSync } from './use-auto-sync';
+
+// Session recovery hook
+export type {
+  SessionToken,
+  SessionRecoveryHookOptions,
+  SessionRecoveryState,
+} from './use-session-recovery';
+export { useSessionRecovery } from './use-session-recovery';

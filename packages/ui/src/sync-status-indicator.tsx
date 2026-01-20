@@ -147,10 +147,14 @@ export function SyncStatusIndicator({
               />
             </svg>
           ),
-          text: relativeTime ? `Saved ${relativeTime} ago` : 'Saved',
+          text: relativeTime
+            ? relativeTime === 'just now'
+              ? 'Saved just now'
+              : `Saved ${relativeTime} ago`
+            : 'Saved',
           color: 'text-green-600 dark:text-green-400',
           bgColor: 'bg-green-50 dark:bg-green-950',
-          ariaLabel: `Game state saved ${relativeTime ? `${relativeTime} ago` : 'successfully'}`,
+          ariaLabel: `Game state saved ${relativeTime ? (relativeTime === 'just now' ? 'just now' : `${relativeTime} ago`) : 'successfully'}`,
         };
       }
 

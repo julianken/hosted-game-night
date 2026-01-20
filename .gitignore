@@ -43,3 +43,5 @@ pnpm-debug.log*
 # Misc
 .vercel
 .worktrees
+.env*.local
+.env.vercel
