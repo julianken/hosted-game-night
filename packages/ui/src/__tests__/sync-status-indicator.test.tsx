@@ -146,7 +146,7 @@ describe('SyncStatusIndicator', () => {
     it('should format "just now" for recent saves (< 5 seconds)', () => {
       const justNow = new Date('2024-01-20T11:59:58Z');
       render(<SyncStatusIndicator status="saved" lastSavedAt={justNow} />);
-      expect(screen.getByText('Saved just now ago')).toBeInTheDocument();
+      expect(screen.getByText('Saved just now')).toBeInTheDocument();
     });
 
     it('should format seconds (5-59 seconds)', () => {
@@ -288,10 +288,10 @@ describe('SyncStatusIndicator', () => {
   });
 
   describe('visual design', () => {
-    it('should be small and unobtrusive (text-sm)', () => {
+    it('should use senior-friendly text size (text-lg, 18px minimum)', () => {
       const { container } = render(<SyncStatusIndicator status="saved" />);
       const statusElement = container.querySelector('[role="status"]');
-      expect(statusElement?.className).toContain('text-sm');
+      expect(statusElement?.className).toContain('text-lg');
     });
 
     it('should have appropriate padding', () => {
