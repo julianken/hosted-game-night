@@ -337,3 +337,12 @@ export {
   MAX_ATTEMPTS,
   LOCKOUT_DURATION_MS,
 } from './pin-security';
+
+// =============================================================================
+// HMAC Token Security
+// =============================================================================
+
+export {
+  signToken,
+  verifyAndDecodeToken,
+} from './hmac-tokens';
