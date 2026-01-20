@@ -77,11 +77,8 @@ export default function PlayPage() {
       const serialized = serializeBingoState(state);
       const response = await fetch(`/api/sessions/${roomCode}/state`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionToken}`,
-        },
-        body: JSON.stringify({ state: serialized }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionToken, state: serialized }),
       });
       if (!response.ok) throw new Error('Failed to sync state');
     },
