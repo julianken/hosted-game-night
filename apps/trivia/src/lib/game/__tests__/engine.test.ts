@@ -111,7 +111,13 @@ describe('Trivia Game Engine', () => {
     it('should initialize team scores to 0', () => {
       let state = createInitialState();
       state = addTeam(state, 'Team A');
-      state.teams[0].score = 100; // Set initial score
+      // Use spread operators to create new state without mutation
+      state = {
+        ...state,
+        teams: state.teams.map((team, i) =>
+          i === 0 ? { ...team, score: 100 } : team
+        ),
+      };
       const result = startGame(state);
 
       expect(result.teams[0].score).toBe(0);
