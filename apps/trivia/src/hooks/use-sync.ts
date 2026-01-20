@@ -180,14 +180,10 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   }, [
     role,
     broadcastSync,
-    setRole,
-    setConnected,
-    setConnectionError,
-    reset,
     handleStateUpdate,
     handleSyncRequest,
     handleDisplayThemeChanged,
-  ]);
+  ]); // Zustand actions (setRole, setConnected, setConnectionError, reset) are stable and excluded
 
   // Subscribe to game state changes (presenter only)
   useEffect(() => {
