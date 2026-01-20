@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+// Force dynamic rendering since we use AuthProvider in layout
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
   return (
     <div
