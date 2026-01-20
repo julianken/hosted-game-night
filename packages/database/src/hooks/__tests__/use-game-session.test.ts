@@ -47,6 +47,7 @@ function createMockSession(overrides: Partial<GameSession> = {}): GameSession {
     game_state: {},
     user_id: null,
     last_sync_at: '2024-01-01T00:00:00.000Z',
+    sequence_number: 0,
     expires_at: '2024-01-02T00:00:00.000Z',
     created_at: '2024-01-01T00:00:00.000Z',
     updated_at: '2024-01-01T00:00:00.000Z',
