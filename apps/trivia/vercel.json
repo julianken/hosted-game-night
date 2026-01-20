@@ -2,11 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": "nextjs",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm turbo build --filter=@beak-gaming/trivia...",
-  "outputDirectory": ".next",
+  "buildCommand": "turbo build",
   "env": {
-    "TURBO_TEAM": "@beak-gaming",
+    "TURBO_TEAM": "beak-gaming",
     "TURBO_REMOTE_ONLY": "true"
   },
   "headers": [
