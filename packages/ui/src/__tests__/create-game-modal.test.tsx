@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateGameModal } from '../create-game-modal';
 
@@ -162,15 +162,18 @@ describe('CreateGameModal', () => {
 
       // Click into the PIN input and then tab out to trigger blur validation
       const pinInput = screen.getByLabelText(/Enter your PIN/i);
-      await user.click(pinInput);
-      await user.tab();
 
-      await waitFor(
-        () => {
-          expect(screen.getByText(/PIN is required/i)).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
+      // Wrap user interactions in act() to ensure state updates complete
+      await act(async () => {
+        await user.click(pinInput);
+        await user.tab();
+      });
+
+      // Wait for validation error with default timeout
+      await waitFor(() => {
+        expect(screen.getByText(/PIN is required/i)).toBeInTheDocument();
+      });
+
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
 
@@ -435,7 +438,7 @@ describe('CreateGameModal', () => {
       expect(screen.getByRole('button', { name: /Creating game session/i })).toBeDisabled();
     });
 
-    it('should show loading text on submit button', () => {
+    it('should show loading text on submit button', async () => {
       render(
         <CreateGameModal
           isOpen={true}
@@ -445,8 +448,10 @@ describe('CreateGameModal', () => {
         />
       );
 
-      // Button component shows "Loading..." when loading prop is true
-      expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
+      // Wait for component to render with loading state
+      await waitFor(() => {
+        expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
+      });
     });
 
     it('should not show loading text when not loading', () => {

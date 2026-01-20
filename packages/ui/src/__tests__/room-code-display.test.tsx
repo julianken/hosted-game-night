@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RoomCodeDisplay } from '../room-code-display';
 
 // Mock navigator.clipboard
-const mockClipboard = {
-  writeText: vi.fn(),
-};
+const mockWriteText = vi.fn().mockResolvedValue(undefined);
 
-Object.assign(navigator, {
-  clipboard: mockClipboard,
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: mockWriteText,
+  },
+  writable: true,
+  configurable: true,
 });
 
 // Mock window.location
@@ -18,12 +20,12 @@ window.location = { origin: 'http://localhost:3000' } as any;
 
 describe('RoomCodeDisplay', () => {
   beforeEach(() => {
-    mockClipboard.writeText.mockClear();
-    mockClipboard.writeText.mockResolvedValue(undefined);
-    vi.useFakeTimers();
+    mockWriteText.mockClear();
+    mockWriteText.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
     vi.useRealTimers();
   });
 
@@ -76,8 +78,12 @@ describe('RoomCodeDisplay', () => {
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
       await user.click(copyButton);
 
-      expect(mockClipboard.writeText).toHaveBeenCalledTimes(1);
-      expect(mockClipboard.writeText).toHaveBeenCalledWith(
+      // Wait for clipboard operation to complete
+      await waitFor(() => {
+        expect(mockWriteText).toHaveBeenCalledTimes(1);
+      });
+
+      expect(mockWriteText).toHaveBeenCalledWith(
         'http://localhost:3000/display?room=SWAN-42'
       );
     });
@@ -108,6 +114,7 @@ describe('RoomCodeDisplay', () => {
     });
 
     it('should reset "Copied!" state after 2 seconds', async () => {
+      vi.useFakeTimers();
       const user = userEvent.setup({ delay: null });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
@@ -118,13 +125,19 @@ describe('RoomCodeDisplay', () => {
         expect(screen.getByText('Copied!')).toBeInTheDocument();
       });
 
-      // Fast-forward 2 seconds
-      vi.advanceTimersByTime(2000);
+      // Fast-forward 2 seconds WITH act() wrapper
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+        await Promise.resolve(); // Flush microtasks
+      });
 
+      // Check that state has reset
       await waitFor(() => {
         expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
         expect(screen.getByText('Copy Link')).toBeInTheDocument();
       });
+
+      vi.useRealTimers();
     });
 
     it('should use custom onCopyLink handler when provided', async () => {
@@ -135,8 +148,11 @@ describe('RoomCodeDisplay', () => {
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
       await user.click(copyButton);
 
-      expect(mockCopyLink).toHaveBeenCalledTimes(1);
-      expect(mockClipboard.writeText).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockCopyLink).toHaveBeenCalledTimes(1);
+      });
+
+      expect(mockWriteText).not.toHaveBeenCalled();
     });
 
     it('should still show "Copied!" feedback with custom handler', async () => {
@@ -154,7 +170,7 @@ describe('RoomCodeDisplay', () => {
 
     it('should handle clipboard error gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockClipboard.writeText.mockRejectedValueOnce(new Error('Clipboard access denied'));
+      mockWriteText.mockRejectedValueOnce(new Error('Clipboard access denied'));
 
       const user = userEvent.setup({ delay: null });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
