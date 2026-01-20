@@ -172,7 +172,19 @@ describe('createSessionRoutes', () => {
       });
 
       vi.mocked(pinSecurity.isValidPin).mockReturnValue(true);
-      vi.mocked(mockClient.rpc).mockResolvedValue({ data: null, error: { message: 'RPC failed' } });
+      vi.mocked(mockClient.rpc).mockResolvedValue({
+        data: null,
+        error: {
+          message: 'RPC failed',
+          details: '',
+          hint: '',
+          code: '500',
+          name: 'PostgrestError'
+        },
+        count: null,
+        status: 500,
+        statusText: 'Internal Server Error'
+      });
 
       const request = new NextRequest('http://localhost/api/sessions', {
         method: 'POST',
