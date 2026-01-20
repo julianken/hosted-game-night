@@ -78,3 +78,11 @@ export {
   clearRecentSessions,
   removeFromRecentSessions,
 } from './session-store';
+
+// Room code generator
+export {
+  BIRD_WORDS,
+  generateRoomCode,
+  isValidRoomCode,
+  parseRoomCode,
+} from './room-code';

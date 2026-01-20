@@ -282,3 +282,21 @@ export {
   type UpdateVariables,
   type OptimisticMutationOptions,
 } from './hooks';
+
+// =============================================================================
+// Session Tokens
+// =============================================================================
+
+export {
+  // Functions
+  createSessionToken,
+  encodeSessionToken,
+  decodeSessionToken,
+  isTokenExpired,
+
+  // Constants
+  TOKEN_DURATION_MS,
+
+  // Types
+  type SessionToken,
+} from './session-token';

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BroadcastSync, createBroadcastSync, createDebugBroadcastSync, createSyncDebugger } from '../broadcast';
-import { SyncMessage, BroadcastError } from '../types';
+import { SyncMessage } from '../types';
 import { mockBroadcastChannel, MockBroadcastChannel } from '@beak-gaming/testing/mocks';
 
 describe('BroadcastSync', () => {
