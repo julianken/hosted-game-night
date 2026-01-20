@@ -4,23 +4,59 @@ import { DEFAULT_TEAM_PREFIX, MAX_TEAMS, DEFAULT_ROUNDS, QUESTIONS_PER_ROUND, DE
 import { SAMPLE_QUESTIONS } from './sample-questions';
 
 // =============================================================================
+// DEEP FREEZE UTILITY
+// =============================================================================
+
+/**
+ * Deeply freezes an object to prevent mutations in development.
+ * Only runs in non-production environments to avoid performance impact.
+ *
+ * @param obj - The object to freeze
+ * @returns The frozen object
+ */
+function deepFreeze<T>(obj: T): T {
+  // Skip freezing in production for performance
+  if (process.env.NODE_ENV === 'production') {
+    return obj;
+  }
+
+  // Handle null, undefined, and primitives
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Freeze the object itself
+  Object.freeze(obj);
+
+  // Recursively freeze all properties
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+    const value = (obj as any)[prop];
+    if (value !== null && typeof value === 'object') {
+      deepFreeze(value);
+    }
+  });
+
+  return obj;
+}
+
+// =============================================================================
 // INITIAL STATE
 // =============================================================================
 
 export function createDefaultSettings(): GameSettings {
-  return {
+  return deepFreeze({
     roundsCount: DEFAULT_ROUNDS,
     questionsPerRound: QUESTIONS_PER_ROUND,
     timerDuration: DEFAULT_TIMER_DURATION,
     timerAutoStart: false,
     timerVisible: true,
     ttsEnabled: false,
-  };
+  });
 }
 
 export function createInitialState(): TriviaGameState {
   const settings = createDefaultSettings();
-  return {
+  return deepFreeze({
     sessionId: uuidv4(),
     status: 'setup',
     statusBeforePause: null,
@@ -40,7 +76,7 @@ export function createInitialState(): TriviaGameState {
     showScoreboard: true,
     emergencyBlank: false,
     ttsEnabled: false,
-  };
+  });
 }
 
 // =============================================================================
@@ -54,7 +90,7 @@ export function startGame(state: TriviaGameState): TriviaGameState {
   // Find first question of round 0
   const firstQuestionIndex = state.questions.findIndex(q => q.roundIndex === 0);
 
-  return {
+  return deepFreeze({
     ...state,
     status: 'playing',
     statusBeforePause: null,
@@ -73,11 +109,11 @@ export function startGame(state: TriviaGameState): TriviaGameState {
       isRunning: state.settings.timerAutoStart,
     },
     emergencyBlank: false,
-  };
+  });
 }
 
 export function endGame(state: TriviaGameState): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     status: 'ended',
     statusBeforePause: null,
@@ -87,12 +123,12 @@ export function endGame(state: TriviaGameState): TriviaGameState {
       isRunning: false,
     },
     emergencyBlank: false,
-  };
+  });
 }
 
 export function resetGame(state: TriviaGameState): TriviaGameState {
   const initial = createInitialState();
-  return {
+  return deepFreeze({
     ...initial,
     sessionId: state.sessionId, // Keep same session
     settings: state.settings, // Keep settings
@@ -108,7 +144,7 @@ export function resetGame(state: TriviaGameState): TriviaGameState {
       roundScores: [], // Reset per-round scores
     })),
     teamAnswers: [],
-  };
+  });
 }
 
 // =============================================================================
@@ -121,10 +157,10 @@ export function selectQuestion(
 ): TriviaGameState {
   if (index < 0 || index >= state.questions.length) return state;
 
-  return {
+  return deepFreeze({
     ...state,
     selectedQuestionIndex: index,
-  };
+  });
 }
 
 export function setDisplayQuestion(
@@ -135,10 +171,10 @@ export function setDisplayQuestion(
     return state;
   }
 
-  return {
+  return deepFreeze({
     ...state,
     displayQuestionIndex: index,
-  };
+  });
 }
 
 // =============================================================================
@@ -160,20 +196,20 @@ export function addTeam(
     roundScores: [],
   };
 
-  return {
+  return deepFreeze({
     ...state,
     teams: [...state.teams, newTeam],
-  };
+  });
 }
 
 export function removeTeam(
   state: TriviaGameState,
   teamId: string
 ): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     teams: state.teams.filter((t) => t.id !== teamId),
-  };
+  });
 }
 
 export function renameTeam(
@@ -181,10 +217,10 @@ export function renameTeam(
   teamId: string,
   name: string
 ): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     teams: state.teams.map((t) => (t.id === teamId ? { ...t, name } : t)),
-  };
+  });
 }
 
 // =============================================================================
@@ -198,7 +234,7 @@ export function adjustTeamScore(
 ): TriviaGameState {
   const { currentRound, totalRounds } = state;
 
-  return {
+  return deepFreeze({
     ...state,
     teams: state.teams.map((t) => {
       if (t.id !== teamId) return t;
@@ -217,7 +253,7 @@ export function adjustTeamScore(
 
       return { ...t, roundScores, score };
     }),
-  };
+  });
 }
 
 export function setTeamScore(
@@ -227,7 +263,7 @@ export function setTeamScore(
 ): TriviaGameState {
   const { currentRound, totalRounds } = state;
 
-  return {
+  return deepFreeze({
     ...state,
     teams: state.teams.map((t) => {
       if (t.id !== teamId) return t;
@@ -247,7 +283,7 @@ export function setTeamScore(
 
       return { ...t, roundScores, score: Math.max(0, score) };
     }),
-  };
+  });
 }
 
 // Set score specifically for a round
@@ -259,7 +295,7 @@ export function setTeamRoundScore(
 ): TriviaGameState {
   const { totalRounds } = state;
 
-  return {
+  return deepFreeze({
     ...state,
     teams: state.teams.map((t) => {
       if (t.id !== teamId) return t;
@@ -278,7 +314,7 @@ export function setTeamRoundScore(
 
       return { ...t, roundScores, score: totalScore };
     }),
-  };
+  });
 }
 
 // =============================================================================
@@ -372,11 +408,11 @@ export function isLastRound(state: TriviaGameState): boolean {
 export function completeRound(state: TriviaGameState): TriviaGameState {
   if (state.status !== 'playing') return state;
 
-  return {
+  return deepFreeze({
     ...state,
     status: 'between_rounds',
     displayQuestionIndex: null,
-  };
+  });
 }
 
 /**
@@ -389,23 +425,23 @@ export function nextRound(state: TriviaGameState): TriviaGameState {
 
   // If this was the last round, end the game
   if (nextRoundIndex >= state.totalRounds) {
-    return {
+    return deepFreeze({
       ...state,
       status: 'ended',
       displayQuestionIndex: null,
-    };
+    });
   }
 
   // Find first question of the next round
   const nextRoundFirstQuestion = state.questions.findIndex(q => q.roundIndex === nextRoundIndex);
 
-  return {
+  return deepFreeze({
     ...state,
     status: 'playing',
     currentRound: nextRoundIndex,
     selectedQuestionIndex: nextRoundFirstQuestion >= 0 ? nextRoundFirstQuestion : 0,
     displayQuestionIndex: null,
-  };
+  });
 }
 
 /**
@@ -453,14 +489,14 @@ export function tickTimer(state: TriviaGameState): TriviaGameState {
 
   const newRemaining = Math.max(0, state.timer.remaining - 1);
 
-  return {
+  return deepFreeze({
     ...state,
     timer: {
       ...state.timer,
       remaining: newRemaining,
       isRunning: newRemaining > 0,
     },
-  };
+  });
 }
 
 /**
@@ -469,14 +505,14 @@ export function tickTimer(state: TriviaGameState): TriviaGameState {
 export function resetTimer(state: TriviaGameState, duration?: number): TriviaGameState {
   const newDuration = duration ?? state.settings.timerDuration;
 
-  return {
+  return deepFreeze({
     ...state,
     timer: {
       duration: newDuration,
       remaining: newDuration,
       isRunning: false,
     },
-  };
+  });
 }
 
 /**
@@ -485,39 +521,39 @@ export function resetTimer(state: TriviaGameState, duration?: number): TriviaGam
 export function startTimer(state: TriviaGameState): TriviaGameState {
   if (state.timer.remaining <= 0) return state;
 
-  return {
+  return deepFreeze({
     ...state,
     timer: {
       ...state.timer,
       isRunning: true,
     },
-  };
+  });
 }
 
 /**
  * Stop the timer without resetting
  */
 export function stopTimer(state: TriviaGameState): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     timer: {
       ...state.timer,
       isRunning: false,
     },
-  };
+  });
 }
 
 /**
  * Toggle whether timer auto-starts on new question
  */
 export function toggleTimerAutoStart(state: TriviaGameState): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     settings: {
       ...state.settings,
       timerAutoStart: !state.settings.timerAutoStart,
     },
-  };
+  });
 }
 
 // =============================================================================
@@ -533,7 +569,7 @@ export function pauseGame(state: TriviaGameState): TriviaGameState {
     return state;
   }
 
-  return {
+  return deepFreeze({
     ...state,
     status: 'paused',
     statusBeforePause: state.status,
@@ -541,7 +577,7 @@ export function pauseGame(state: TriviaGameState): TriviaGameState {
       ...state.timer,
       isRunning: false,
     },
-  };
+  });
 }
 
 /**
@@ -551,12 +587,12 @@ export function resumeGame(state: TriviaGameState): TriviaGameState {
   if (state.status !== 'paused') return state;
   if (!state.statusBeforePause) return state;
 
-  return {
+  return deepFreeze({
     ...state,
     status: state.statusBeforePause,
     statusBeforePause: null,
     emergencyBlank: false,
-  };
+  });
 }
 
 /**
@@ -572,7 +608,7 @@ export function emergencyPause(state: TriviaGameState): TriviaGameState {
     ? state.statusBeforePause
     : state.status;
 
-  return {
+  return deepFreeze({
     ...state,
     status: 'paused',
     statusBeforePause,
@@ -581,7 +617,7 @@ export function emergencyPause(state: TriviaGameState): TriviaGameState {
       isRunning: false,
     },
     emergencyBlank: true,
-  };
+  });
 }
 
 // =============================================================================
@@ -603,7 +639,7 @@ export function updateSettings(
     ...settings,
   };
 
-  return {
+  return deepFreeze({
     ...state,
     settings: newSettings,
     totalRounds: newSettings.roundsCount,
@@ -612,7 +648,7 @@ export function updateSettings(
       remaining: newSettings.timerDuration,
       isRunning: false,
     },
-  };
+  });
 }
 
 // =============================================================================
@@ -647,10 +683,10 @@ export function recordTeamAnswer(
     pointsAwarded,
   };
 
-  return {
+  return deepFreeze({
     ...state,
     teamAnswers: [...filteredAnswers, newAnswer],
-  };
+  });
 }
 
 /**
@@ -724,12 +760,12 @@ export function amendCorrectAnswers(
     return { ...team, roundScores, score };
   });
 
-  return {
+  return deepFreeze({
     ...state,
     questions: updatedQuestions,
     teamAnswers: updatedTeamAnswers,
     teams: updatedTeams,
-  };
+  });
 }
 
 // =============================================================================
@@ -740,10 +776,10 @@ export function amendCorrectAnswers(
  * Toggle scoreboard visibility for audience display
  */
 export function toggleScoreboard(state: TriviaGameState): TriviaGameState {
-  return {
+  return deepFreeze({
     ...state,
     showScoreboard: !state.showScoreboard,
-  };
+  });
 }
 
 // =============================================================================
@@ -778,7 +814,7 @@ export function importQuestions(
   const maxRoundIndex = Math.max(...newQuestions.map(q => q.roundIndex));
   const totalRounds = maxRoundIndex + 1;
 
-  return {
+  return deepFreeze({
     ...state,
     questions: newQuestions,
     totalRounds,
@@ -788,7 +824,7 @@ export function importQuestions(
       ...state.settings,
       roundsCount: totalRounds,
     },
-  };
+  });
 }
 
 /**
@@ -806,12 +842,12 @@ export function exportQuestionsFromState(state: TriviaGameState): Question[] {
 export function clearQuestions(state: TriviaGameState): TriviaGameState {
   if (state.status !== 'setup') return state;
 
-  return {
+  return deepFreeze({
     ...state,
     questions: [],
     selectedQuestionIndex: 0,
     displayQuestionIndex: null,
-  };
+  });
 }
 
 /**
@@ -830,7 +866,7 @@ export function addQuestion(
   const maxRoundIndex = Math.max(...newQuestions.map(q => q.roundIndex));
   const totalRounds = Math.max(state.totalRounds, maxRoundIndex + 1);
 
-  return {
+  return deepFreeze({
     ...state,
     questions: newQuestions,
     totalRounds,
@@ -838,7 +874,7 @@ export function addQuestion(
       ...state.settings,
       roundsCount: totalRounds,
     },
-  };
+  });
 }
 
 /**
@@ -860,12 +896,12 @@ export function removeQuestion(
     selectedQuestionIndex = Math.max(0, newQuestions.length - 1);
   }
 
-  return {
+  return deepFreeze({
     ...state,
     questions: newQuestions,
     selectedQuestionIndex,
     displayQuestionIndex: null,
-  };
+  });
 }
 
 /**
@@ -888,7 +924,7 @@ export function updateQuestion(
   const maxRoundIndex = Math.max(...newQuestions.map(q => q.roundIndex));
   const totalRounds = Math.max(state.totalRounds, maxRoundIndex + 1);
 
-  return {
+  return deepFreeze({
     ...state,
     questions: newQuestions,
     totalRounds,
@@ -896,5 +932,5 @@ export function updateQuestion(
       ...state.settings,
       roundsCount: totalRounds,
     },
-  };
+  });
 }

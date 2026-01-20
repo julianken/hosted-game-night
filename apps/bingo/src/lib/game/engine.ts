@@ -17,12 +17,48 @@ export const MIN_AUTO_CALL_SPEED = 5;
  */
 export const MAX_AUTO_CALL_SPEED = 30;
 
+// ============ Deep Freeze Utility ============
+
+/**
+ * Deeply freezes an object to prevent mutations in development.
+ * Only runs in non-production environments to avoid performance impact.
+ *
+ * @param obj - The object to freeze
+ * @returns The frozen object
+ */
+function deepFreeze<T>(obj: T): T {
+  // Skip freezing in production for performance
+  if (process.env.NODE_ENV === 'production') {
+    return obj;
+  }
+
+  // Handle null, undefined, and primitives
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Freeze the object itself
+  Object.freeze(obj);
+
+  // Recursively freeze all properties
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+    const value = (obj as any)[prop];
+    if (value !== null && typeof value === 'object') {
+      deepFreeze(value);
+    }
+  });
+
+  return obj;
+}
+
+// ============ State Creation and Mutation Functions ============
+
 /**
  * Create an initial game state.
  */
 export function createInitialState(): GameState {
   const deck = createDeck();
-  return {
+  return deepFreeze({
     status: 'idle',
     calledBalls: [],
     currentBall: null,
@@ -32,7 +68,7 @@ export function createInitialState(): GameState {
     autoCallEnabled: false,
     autoCallSpeed: DEFAULT_AUTO_CALL_SPEED,
     audioEnabled: true,
-  };
+  });
 }
 
 /**
@@ -43,11 +79,11 @@ export function startGame(
   pattern?: BingoPattern
 ): GameState {
   const newStatus = transition(state.status, 'START_GAME');
-  return {
+  return deepFreeze({
     ...state,
     status: newStatus,
     pattern: pattern ?? state.pattern,
-  };
+  });
 }
 
 /**
@@ -74,13 +110,13 @@ export function callNextBall(state: GameState): GameState {
     return state;
   }
 
-  return {
+  return deepFreeze({
     ...state,
     currentBall: result.ball,
     previousBall: state.currentBall,
     calledBalls: result.deck.drawn,
     remainingBalls: result.deck.remaining,
-  };
+  });
 }
 
 /**
@@ -112,13 +148,13 @@ export function undoLastCall(state: GameState): GameState {
     ? newCalledBalls[newCalledBalls.length - 2]
     : null;
 
-  return {
+  return deepFreeze({
     ...state,
     currentBall: newCurrentBall,
     previousBall: newPreviousBall,
     calledBalls: newCalledBalls,
     remainingBalls: result.deck.remaining,
-  };
+  });
 }
 
 /**
@@ -126,10 +162,10 @@ export function undoLastCall(state: GameState): GameState {
  */
 export function pauseGame(state: GameState): GameState {
   const newStatus = transition(state.status, 'PAUSE_GAME');
-  return {
+  return deepFreeze({
     ...state,
     status: newStatus,
-  };
+  });
 }
 
 /**
@@ -137,10 +173,10 @@ export function pauseGame(state: GameState): GameState {
  */
 export function resumeGame(state: GameState): GameState {
   const newStatus = transition(state.status, 'RESUME_GAME');
-  return {
+  return deepFreeze({
     ...state,
     status: newStatus,
-  };
+  });
 }
 
 /**
@@ -148,11 +184,11 @@ export function resumeGame(state: GameState): GameState {
  */
 export function endGame(state: GameState): GameState {
   const newStatus = transition(state.status, 'END_GAME');
-  return {
+  return deepFreeze({
     ...state,
     status: newStatus,
     autoCallEnabled: false,
-  };
+  });
 }
 
 /**
@@ -160,7 +196,7 @@ export function endGame(state: GameState): GameState {
  */
 export function resetGame(state: GameState): GameState {
   const deck = createDeck();
-  return {
+  return deepFreeze({
     ...state,
     status: 'idle',
     calledBalls: [],
@@ -168,7 +204,7 @@ export function resetGame(state: GameState): GameState {
     previousBall: null,
     remainingBalls: deck.remaining,
     autoCallEnabled: false,
-  };
+  });
 }
 
 /**
@@ -178,10 +214,10 @@ export function setPattern(
   state: GameState,
   pattern: BingoPattern
 ): GameState {
-  return {
+  return deepFreeze({
     ...state,
     pattern,
-  };
+  });
 }
 
 /**
@@ -191,10 +227,10 @@ export function setAutoCallEnabled(
   state: GameState,
   enabled: boolean
 ): GameState {
-  return {
+  return deepFreeze({
     ...state,
     autoCallEnabled: enabled,
-  };
+  });
 }
 
 /**
@@ -208,10 +244,10 @@ export function setAutoCallSpeed(
     MIN_AUTO_CALL_SPEED,
     Math.min(MAX_AUTO_CALL_SPEED, speed)
   );
-  return {
+  return deepFreeze({
     ...state,
     autoCallSpeed: clampedSpeed,
-  };
+  });
 }
 
 /**
@@ -221,10 +257,10 @@ export function setAudioEnabled(
   state: GameState,
   enabled: boolean
 ): GameState {
-  return {
+  return deepFreeze({
     ...state,
     audioEnabled: enabled,
-  };
+  });
 }
 
 // ============ Selectors (pure functions for derived state) ============
