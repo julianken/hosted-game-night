@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Create a `.env.local` file in the `apps/bingo` directory with the following variables:
+
+### Required Variables
+
+- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `SESSION_TOKEN_SECRET` - Secret key for HMAC-signing session tokens
+  - Generate with: `openssl rand -base64 32`
+  - Used for cryptographic security of session management
+
+### Optional Variables
+
+- `SUPABASE_SERVICE_ROLE_KEY` - For admin operations (optional)
+
+Example:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SESSION_TOKEN_SECRET=vGOwoWTO69KP5QXIcNYjyHGonXJZh3nFH3oq3XOCSwY=
+```
+
 ## Getting Started
 
 First, run the development server:
