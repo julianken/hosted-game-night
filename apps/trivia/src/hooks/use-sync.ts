@@ -76,7 +76,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
   // Create a session-scoped BroadcastSync instance
   const broadcastSyncRef = useRef<TriviaBroadcastSync | null>(null);
-  const broadcastSync = useMemo(() => {
+  const _broadcastSync = useMemo(() => {
     const instance = createTriviaBroadcastSync(sessionId);
     broadcastSyncRef.current = instance;
     return instance;
