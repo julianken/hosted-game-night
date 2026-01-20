@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createSessionRoutes } from '../session-routes';
 import type { TypedSupabaseClient } from '../../client';
 import type { GameSession } from '../../types';
