@@ -5,10 +5,6 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm turbo build --filter=@beak-gaming/trivia...",
   "outputDirectory": ".next",
-  "env": {
-    "TURBO_TEAM": "@beak-gaming",
-    "TURBO_REMOTE_ONLY": "true"
-  },
   "headers": [
     {
       "source": "/sw.js",
