@@ -50,6 +50,7 @@ export default function PlayPage() {
   } = useSettingsStore();
 
   // Sync settings store values to game store when in setup mode
+  // Use selective subscription to prevent infinite re-renders (game object changes on every render)
   useEffect(() => {
     if (game.status === 'setup') {
       game.updateSettings({
@@ -62,8 +63,8 @@ export default function PlayPage() {
       });
     }
   }, [
-    game,
     game.status,
+    game.updateSettings,
     roundsCount,
     questionsPerRound,
     timerDuration,
