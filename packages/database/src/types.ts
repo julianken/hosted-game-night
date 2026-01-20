@@ -113,6 +113,48 @@ export interface TriviaTemplateUpdate {
 }
 
 // =============================================================================
+// Game Session Types (Persistent Sessions)
+// =============================================================================
+
+export interface GameSession {
+  id: string;
+  room_code: string;
+  session_id: string;
+  game_type: 'bingo' | 'trivia';
+  template_id: string | null;
+  pin_hash: string;
+  pin_salt: string;
+  failed_pin_attempts: number;
+  last_failed_attempt_at: string | null;
+  status: 'active' | 'paused' | 'completed' | 'expired';
+  game_state: Record<string, unknown>;
+  user_id: string | null;
+  last_sync_at: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GameSessionInsert {
+  room_code: string;
+  session_id: string;
+  game_type: 'bingo' | 'trivia';
+  template_id?: string | null;
+  pin_hash: string;
+  pin_salt: string;
+  game_state?: Record<string, unknown>;
+  user_id?: string | null;
+}
+
+export interface GameSessionUpdate {
+  status?: 'active' | 'paused' | 'completed' | 'expired';
+  game_state?: Record<string, unknown>;
+  failed_pin_attempts?: number;
+  last_failed_attempt_at?: string;
+  last_sync_at?: string;
+}
+
+// =============================================================================
 // Database Schema Type (for Supabase client)
 // =============================================================================
 
@@ -133,6 +175,11 @@ export interface Database {
         Row: TriviaTemplate;
         Insert: TriviaTemplateInsert;
         Update: TriviaTemplateUpdate;
+      };
+      game_sessions: {
+        Row: GameSession;
+        Insert: GameSessionInsert;
+        Update: GameSessionUpdate;
       };
     };
     Views: Record<string, never>;
@@ -181,5 +228,16 @@ export function isTriviaTemplate(obj: unknown): obj is TriviaTemplate {
     'user_id' in obj &&
     'questions' in obj &&
     'rounds_count' in obj
+  );
+}
+
+export function isGameSession(obj: unknown): obj is GameSession {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'room_code' in obj &&
+    'session_id' in obj &&
+    'game_type' in obj
   );
 }
