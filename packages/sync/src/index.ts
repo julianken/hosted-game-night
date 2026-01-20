@@ -87,6 +87,10 @@ export {
   parseRoomCode,
 } from './room-code';
 
+// Auto-sync hook
+export type { AutoSyncConfig, UseAutoSyncReturn } from './use-auto-sync';
+export { useAutoSync } from './use-auto-sync';
+
 // Session recovery hook
 export type {
   SessionToken,
