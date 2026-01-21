@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
@@ -54,6 +54,10 @@ export default function PlayPage() {
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
 
+  // PIN state
+  const [currentPin, setCurrentPin] = useState<string | null>(null);
+  const pinGeneratedRef = useRef(false);
+
   // Session ID calculation: prioritize Supabase session, fallback to offline session
   const sessionId = roomCode || offlineSessionId || '';
 
@@ -74,6 +78,14 @@ export default function PlayPage() {
       // If localStorage is unavailable, use an in-memory session ID
       const fallbackId = generateShortSessionId();
       setOfflineSessionId(fallbackId);
+    }
+  }, []);
+
+  // Load stored PIN on mount
+  useEffect(() => {
+    const stored = getStoredPin();
+    if (stored) {
+      setCurrentPin(stored);
     }
   }, []);
 
@@ -225,6 +237,36 @@ export default function PlayPage() {
     }
   }, [isOfflineMode, offlineSessionId, gameState]);
 
+  // Generate or retrieve PIN when modal opens
+  useEffect(() => {
+    if (showCreateModal && !pinGeneratedRef.current) {
+      // Check if we have a stored PIN first
+      let pin = currentPin;
+
+      if (!pin) {
+        // No PIN in state, try to load from storage
+        pin = getStoredPin();
+      }
+
+      if (!pin) {
+        // Generate new PIN if none exists
+        pin = generateSecurePin();
+        pinGeneratedRef.current = true;
+      }
+
+      // Store the PIN
+      setCurrentPin(pin);
+      storePin(pin);
+    }
+  }, [showCreateModal, currentPin]);
+
+  // Reset PIN generation flag when modal closes
+  useEffect(() => {
+    if (!showCreateModal) {
+      pinGeneratedRef.current = false;
+    }
+  }, [showCreateModal]);
+
   // Session handlers
   const handlePlayOffline = useCallback(() => {
     const newSessionId = generateShortSessionId();
@@ -271,6 +313,10 @@ export default function PlayPage() {
       setOfflineSessionId(null);
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : 'Failed to create session');
+      // Clear stored PIN on error so user can try with a new PIN
+      clearStoredPin();
+      setCurrentPin(null);
+      pinGeneratedRef.current = false;
     } finally {
       setIsCreatingSession(false);
     }
