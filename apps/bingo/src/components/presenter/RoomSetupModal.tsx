@@ -11,6 +11,7 @@ export interface RoomSetupModalProps {
   onCreateRoom: () => void;
   onJoinRoom: (roomCode: string, pin: string) => void;
   onPlayOffline: () => void;
+  error?: string | null;
 }
 
 export function RoomSetupModal({
@@ -19,6 +20,7 @@ export function RoomSetupModal({
   onCreateRoom,
   onJoinRoom,
   onPlayOffline,
+  error,
 }: RoomSetupModalProps) {
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [joinPin, setJoinPin] = useState('');
@@ -93,6 +95,36 @@ export function RoomSetupModal({
       showFooter={false}
     >
       <div className="flex flex-col gap-6">
+        {/* Error message display */}
+        {error && (
+          <div
+            className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg"
+            role="alert"
+            aria-live="polite"
+          >
+            <div className="flex items-start gap-3">
+              <svg
+                className="flex-shrink-0 w-6 h-6 text-destructive mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h4 className="font-semibold text-destructive mb-1">Error</h4>
+                <p className="text-base text-destructive/90">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Create New Game Option */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">

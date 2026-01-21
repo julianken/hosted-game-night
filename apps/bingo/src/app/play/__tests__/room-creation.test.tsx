@@ -11,6 +11,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState, useEffect } from 'react';
 import PlayPage from '../page';
 import {
   generateSecurePin,
@@ -92,15 +93,35 @@ vi.mock('@/hooks/use-sync', () => ({
 }));
 
 vi.mock('@beak-gaming/sync', () => ({
-  useSessionRecovery: () => ({
-    isRecovering: false,
-    isRecovered: false,
-    error: null,
-    roomCode: null,
-    recover: mockRecoverSession,
-    clearToken: mockClearToken,
-    storeToken: mockStoreToken,
-  }),
+  useSessionRecovery: () => {
+    // Create a proper React hook that simulates the recovery lifecycle
+    const [isRecovering, setIsRecovering] = useState(true);
+    const [isRecovered, setIsRecovered] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [roomCode, setRoomCode] = useState<string | null>(null);
+
+    // Simulate recovery completing on mount
+    useEffect(() => {
+      // Simulate async recovery that finds no session
+      const timer = setTimeout(() => {
+        setIsRecovering(false);
+        // No session found, so isRecovered stays false
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }, []);
+
+    return {
+      isRecovering,
+      isRecovered,
+      error,
+      roomCode,
+      requiresPin: false,
+      recover: mockRecoverSession,
+      clearToken: mockClearToken,
+      storeToken: mockStoreToken,
+    };
+  },
   useAutoSync: () => ({
     isSyncing: false,
     lastSyncTime: null,
