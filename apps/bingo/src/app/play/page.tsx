@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
@@ -22,6 +22,12 @@ import { useThemeStore } from '@/stores/theme-store';
 import { OfflineBanner, InstallPrompt } from '@/components/pwa';
 import { serializeBingoState, deserializeBingoState } from '@/lib/session/serializer';
 import { useGameStore } from '@/stores/game-store';
+import {
+  generateSecurePin,
+  getStoredPin,
+  storePin,
+  clearStoredPin
+} from '@/lib/session/secure-generation';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
@@ -36,6 +42,10 @@ export default function PlayPage() {
   const [isJoiningSession, setIsJoiningSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
+  // PIN state
+  const [currentPin, setCurrentPin] = useState<string | null>(null);
+  const pinGeneratedRef = useRef(false);
+
   // Generate a unique session ID for this presenter window (for BroadcastChannel)
   const [sessionId] = useState(() => generateSessionId());
 
@@ -49,6 +59,14 @@ export default function PlayPage() {
   // Apply presenter theme
   const presenterTheme = useThemeStore((state) => state.presenterTheme);
   useApplyTheme(presenterTheme);
+
+  // Load stored PIN on mount
+  useEffect(() => {
+    const stored = getStoredPin();
+    if (stored) {
+      setCurrentPin(stored);
+    }
+  }, []);
 
   // Session recovery on mount
   const { isRecovering, error: recoveryError, recover, clearToken, storeToken } = useSessionRecovery({
@@ -100,28 +118,64 @@ export default function PlayPage() {
     }
   );
 
+  // Generate or retrieve PIN when modal opens
+  useEffect(() => {
+    if (showCreateModal && !pinGeneratedRef.current) {
+      // Check if we have a stored PIN first
+      let pin = currentPin;
+
+      if (!pin) {
+        // No PIN in state, try to load from storage
+        pin = getStoredPin();
+      }
+
+      if (!pin) {
+        // Generate new PIN if none exists
+        pin = generateSecurePin();
+        pinGeneratedRef.current = true;
+      }
+
+      // Store the PIN
+      setCurrentPin(pin);
+      storePin(pin);
+    }
+  }, [showCreateModal, currentPin]);
+
+  // Reset PIN generation flag when modal closes
+  useEffect(() => {
+    if (!showCreateModal) {
+      pinGeneratedRef.current = false;
+    }
+  }, [showCreateModal]);
+
   // Session handlers
   const handleCreateSession = useCallback(async (pin: string) => {
     setIsCreatingSession(true);
     setSessionError(null);
-    try {
-      const initialState = serializeBingoState(gameState);
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin, initialState }),
-      });
-      if (!response.ok) throw new Error('Failed to create session');
-      const data = await response.json();
-      setRoomCode(data.data.session.roomCode);
-      setSessionToken(data.data.sessionToken);
-      storeToken(data.data.sessionToken);
-      setShowCreateModal(false);
-    } catch (error) {
-      setSessionError(error instanceof Error ? error.message : 'Failed to create session');
-    } finally {
+
+    const initialState = serializeBingoState(gameState);
+    const response = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, initialState }),
+    });
+
+    if (!response.ok) {
+      // Clear PIN on error so a new one is generated on retry
+      clearStoredPin();
+      setCurrentPin(null);
+      pinGeneratedRef.current = false;
       setIsCreatingSession(false);
+      setSessionError('Failed to create session');
+      return;
     }
+
+    const data = await response.json();
+    setRoomCode(data.data.session.roomCode);
+    setSessionToken(data.data.sessionToken);
+    storeToken(data.data.sessionToken);
+    setShowCreateModal(false);
+    setIsCreatingSession(false);
   }, [gameState, storeToken]);
 
   const handleJoinSession = useCallback(async (roomCode: string, pin: string) => {
