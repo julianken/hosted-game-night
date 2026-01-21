@@ -131,10 +131,14 @@ function AudienceDisplay({
 
     let isMounted = true;
     let timeoutId: NodeJS.Timeout;
+    let isFirstFetch = true;
 
     const fetchSessionId = async () => {
       try {
-        setIsResolvingRoomCode(true);
+        if (isFirstFetch) {
+          setIsResolvingRoomCode(true);
+          isFirstFetch = false;
+        }
         const response = await fetch(`/api/sessions/room/${roomCode}`);
 
         if (!response.ok) {
@@ -154,9 +158,10 @@ function AudienceDisplay({
       } catch (error) {
         // Graceful failure - log but don't show error to user
         console.warn('Error fetching session ID:', error);
+        setIsResolvingRoomCode(false);
       } finally {
-        // Schedule next poll
-        if (isMounted) {
+        // Schedule next poll - stop after session ID is resolved
+        if (isMounted && !dbSessionId) {
           timeoutId = setTimeout(fetchSessionId, 5000);
         }
       }
@@ -169,7 +174,7 @@ function AudienceDisplay({
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [roomCode]);
+  }, [roomCode, dbSessionId]);
 
   // Determine which session ID to use
   const effectiveSessionId = dbSessionId || sessionId;
