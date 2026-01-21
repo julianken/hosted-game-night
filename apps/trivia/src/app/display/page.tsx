@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSyncStore } from '@/stores/sync-store';
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
+import { isValidRoomCode } from '@beak-gaming/sync';
+import { RoomCodeDisplay } from '@beak-gaming/ui';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import {
@@ -19,18 +21,19 @@ import {
 
 /**
  * Invalid Session Error Component
- * Displayed when the session ID is missing or invalid.
+ * Displayed when the session ID or room code is missing or invalid.
  */
-function InvalidSessionError() {
+function InvalidSessionError({ type }: { type: 'room' | 'session' }) {
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-      <div className="max-w-lg text-center space-y-6">
-        <div className="w-24 h-24 mx-auto rounded-full bg-error/20 flex items-center justify-center">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8" role="main">
+      <div className="max-w-lg text-center space-y-6" role="alert">
+        <div className="w-24 h-24 mx-auto rounded-full bg-error/20 flex items-center justify-center" aria-hidden="true">
           <svg
             className="w-12 h-12 text-error"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -59,9 +62,19 @@ function InvalidSessionError() {
  */
 function DisplayLoading() {
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center">
-      <div className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin" />
-      <p className="mt-6 text-2xl text-muted-foreground">Loading display...</p>
+    <main
+      className="min-h-screen bg-background flex flex-col items-center justify-center"
+      role="main"
+      aria-busy="true"
+      aria-label="Loading audience display"
+    >
+      <div
+        className="w-32 h-32 rounded-full border-8 border-muted/30 border-t-primary animate-spin motion-reduce:animate-none"
+        aria-hidden="true"
+      />
+      <p className="mt-6 text-2xl text-muted-foreground" role="status" aria-live="polite">
+        Loading display...
+      </p>
     </main>
   );
 }
@@ -71,27 +84,97 @@ function DisplayLoading() {
  * Inner component that uses useSearchParams (requires Suspense boundary).
  */
 function DisplayContent() {
-  // Parse session ID from URL
+  // Parse room code or session ID from URL
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session');
+  const roomCode = searchParams.get('room');
+  const sessionId = searchParams.get('session'); // backward compatibility
 
-  // Validate session ID
-  if (!sessionId || !isValidSessionId(sessionId)) {
-    return <InvalidSessionError />;
+  // Validate room code first (preferred), then fall back to session ID
+  if (roomCode) {
+    if (!isValidRoomCode(roomCode)) {
+      return <InvalidSessionError type="room" />;
+    }
+    return <AudienceDisplay roomCode={roomCode} />;
   }
 
-  return <AudienceDisplay sessionId={sessionId} />;
+  // Fall back to session ID for backward compatibility
+  if (sessionId) {
+    if (!isValidSessionId(sessionId)) {
+      return <InvalidSessionError type="session" />;
+    }
+    return <AudienceDisplay sessionId={sessionId} />;
+  }
+
+  // No room code or session ID provided
+  return <InvalidSessionError type="room" />;
 }
 
 /**
  * Audience Display Component
- * Renders the game display once we have a valid session.
+ * Renders the game display once we have a valid session or room code.
  */
-function AudienceDisplay({ sessionId }: { sessionId: string }) {
+function AudienceDisplay({
+  roomCode,
+  sessionId,
+}: {
+  roomCode?: string;
+  sessionId?: string;
+}) {
+  // State for database polling
+  const [dbSessionId, setDbSessionId] = useState<string | null>(sessionId || null);
+  const [dbError, setDbError] = useState<string | null>(null);
+
+  // Poll database for session ID when using room code
+  useEffect(() => {
+    if (!roomCode) return;
+
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const fetchSessionId = async () => {
+      try {
+        const response = await fetch(`/api/sessions/room/${roomCode}`);
+
+        if (!response.ok) {
+          // Graceful failure - don't set error on 404, just keep polling
+          if (response.status !== 404) {
+            console.warn(`Failed to fetch session for room ${roomCode}:`, response.statusText);
+          }
+          return;
+        }
+
+        const data = await response.json();
+        if (isMounted && data.sessionId) {
+          setDbSessionId(data.sessionId);
+          setDbError(null);
+        }
+      } catch (error) {
+        // Graceful failure - log but don't show error to user
+        console.warn('Error fetching session ID:', error);
+      } finally {
+        // Schedule next poll
+        if (isMounted) {
+          timeoutId = setTimeout(fetchSessionId, 5000);
+        }
+      }
+    };
+
+    // Start polling
+    fetchSessionId();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [roomCode]);
+
+  // Determine which session ID to use
+  const effectiveSessionId = dbSessionId || sessionId;
+
   // Initialize sync as audience role with session-scoped channel
   const { isConnected, connectionError, requestSync } = useSync({
     role: 'audience',
-    sessionId,
+    sessionId: effectiveSessionId || '',
   });
 
   // Fullscreen support
@@ -252,10 +335,10 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
       </header>
 
       {/* Error display */}
-      {connectionError && (
-        <div className="bg-error/10 border-b border-error px-4 py-3">
+      {(connectionError || dbError) && (
+        <div className="bg-error/10 border-b border-error px-4 py-3" role="alert">
           <p className="text-center text-error font-medium">
-            Connection Error: {connectionError}
+            {connectionError ? `Connection Error: ${connectionError}` : `Database Error: ${dbError}`}
           </p>
         </div>
       )}
@@ -263,6 +346,16 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
       {/* Main content */}
       <div id="display-content" className="flex-1 p-4 md:p-6 lg:p-8" role="region" aria-label="Game display area" aria-live="polite">
         <div className="max-w-7xl mx-auto h-full">
+          {/* Room Code Display - only shown when using room code */}
+          {roomCode && (
+            <div className="mb-6">
+              <RoomCodeDisplay
+                roomCode={roomCode}
+                showSyncStatus={false}
+                className="max-w-md mx-auto"
+              />
+            </div>
+          )}
           {renderContent()}
         </div>
       </div>
@@ -285,7 +378,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
  * Syncs state from presenter window via BroadcastChannel.
  * Designed to be readable from the back of the room (30+ feet).
  *
- * Requires a valid session ID in the URL query parameter.
+ * Requires a valid session ID or room code in the URL query parameter.
  * Navigate via the "Open Display" button in the presenter view.
  */
 export default function DisplayPage() {
