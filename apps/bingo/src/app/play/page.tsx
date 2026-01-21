@@ -5,6 +5,16 @@ import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
 import { generateSessionId } from '@/lib/sync/session';
+import {
+  generateSecurePin,
+  generateShortSessionId,
+  getStoredPin,
+  storePin,
+  clearStoredPin,
+  getStoredOfflineSessionId,
+  storeOfflineSessionId,
+  clearStoredOfflineSessionId,
+} from '@/lib/session/secure-generation';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
@@ -40,8 +50,32 @@ export default function PlayPage() {
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
 
-  // Generate a unique session ID for this presenter window (for BroadcastChannel)
-  const [sessionId] = useState(() => generateSessionId());
+  // Offline mode state
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
+
+  // Session ID calculation: prioritize Supabase session, fallback to offline session
+  const sessionId = roomCode || offlineSessionId || '';
+
+  // Initialize offline session ID from localStorage or generate new one
+  useEffect(() => {
+    try {
+      const storedOfflineId = getStoredOfflineSessionId();
+      if (storedOfflineId) {
+        setOfflineSessionId(storedOfflineId);
+      } else {
+        // Generate new offline session ID and store it
+        const newOfflineId = generateShortSessionId();
+        storeOfflineSessionId(newOfflineId);
+        setOfflineSessionId(newOfflineId);
+      }
+    } catch (error) {
+      console.error('Failed to initialize offline session ID:', error);
+      // If localStorage is unavailable, use an in-memory session ID
+      const fallbackId = generateShortSessionId();
+      setOfflineSessionId(fallbackId);
+    }
+  }, []);
 
   // Initialize sync as presenter role with session-scoped channel
   const { isConnected } = useSync({ role: 'presenter', sessionId });
@@ -54,7 +88,7 @@ export default function PlayPage() {
   const presenterTheme = useThemeStore((state) => state.presenterTheme);
   useApplyTheme(presenterTheme);
 
-  // Session recovery on mount
+  // Session recovery on mount (skip in offline mode)
   const {
     isRecovering,
     isRecovered,
@@ -77,7 +111,7 @@ export default function PlayPage() {
       const partialState = deserializeBingoState(state);
       useGameStore.setState(partialState);
     },
-    enabled: true,
+    enabled: !isOfflineMode,
   });
 
   // Track when recovery completes
@@ -97,15 +131,16 @@ export default function PlayPage() {
   // Determine if modal should be shown
   const shouldShowModal =
     showCreateModal ||
-    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode) ||
+    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
     (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
 
-  // Auto-sync game state to database
+  // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
   const { isSyncing, lastSyncTime } = useAutoSync(
     gameState,
     async (state) => {
-      if (!roomCode || !sessionToken) return;
+      // Skip API calls in offline mode
+      if (isOfflineMode || !roomCode || !sessionToken) return;
       const serialized = serializeBingoState(state);
       const response = await fetch(`/api/sessions/${roomCode}/state`, {
         method: 'PATCH',
@@ -116,7 +151,7 @@ export default function PlayPage() {
     },
     {
       debounceMs: 2000,
-      enabled: !!roomCode && !!sessionToken,
+      enabled: !isOfflineMode && !!roomCode && !!sessionToken,
       isCriticalChange: (prev, next) => {
         if (prev?.calledBalls?.length !== next?.calledBalls?.length) {
           return 'BALL_CALLED';
@@ -132,7 +167,87 @@ export default function PlayPage() {
     }
   );
 
+  // Offline session recovery on mount
+  useEffect(() => {
+    // Try to recover offline session from localStorage
+    const recoverOfflineSession = () => {
+      try {
+        // Check all offline session keys
+        const keys = Object.keys(localStorage).filter(key =>
+          key.startsWith('bingo_offline_session_')
+        );
+
+        if (keys.length > 0) {
+          // Get the most recent session (last in array)
+          const lastKey = keys[keys.length - 1];
+          const sessionId = lastKey.replace('bingo_offline_session_', '');
+
+          // Validate session ID format (6 uppercase alphanumeric characters)
+          if (typeof sessionId === 'string' && /^[A-Z0-9]{6}$/.test(sessionId)) {
+            const stored = localStorage.getItem(lastKey);
+            if (stored) {
+              const data = JSON.parse(stored);
+              if (data.isOffline && data.sessionId === sessionId) {
+                setOfflineSessionId(sessionId);
+                setIsOfflineMode(true);
+                // Hydrate game state if available
+                if (data.gameState) {
+                  const partialState = deserializeBingoState(data.gameState);
+                  useGameStore.setState(partialState);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to recover offline session:', error);
+      }
+    };
+
+    recoverOfflineSession();
+  }, []);
+
+  // Save offline session state to localStorage
+  useEffect(() => {
+    if (isOfflineMode && offlineSessionId) {
+      try {
+        const sessionKey = `bingo_offline_session_${offlineSessionId}`;
+        const sessionData = {
+          sessionId: offlineSessionId,
+          isOffline: true,
+          gameState: serializeBingoState(gameState),
+          lastUpdated: new Date().toISOString(),
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+      } catch (error) {
+        console.error('Failed to save offline session:', error);
+      }
+    }
+  }, [isOfflineMode, offlineSessionId, gameState]);
+
   // Session handlers
+  const handlePlayOffline = useCallback(() => {
+    const newSessionId = generateShortSessionId();
+    setOfflineSessionId(newSessionId);
+    setIsOfflineMode(true);
+    setRoomCode(null);
+    setSessionToken(null);
+
+    // Initialize offline session in localStorage
+    try {
+      const sessionKey = `bingo_offline_session_${newSessionId}`;
+      const sessionData = {
+        sessionId: newSessionId,
+        isOffline: true,
+        gameState: serializeBingoState(gameState),
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    } catch (error) {
+      console.error('Failed to create offline session:', error);
+    }
+  }, [gameState]);
+
   const handleCreateSession = useCallback(async (pin: string) => {
     setIsCreatingSession(true);
     setSessionError(null);
@@ -148,7 +263,12 @@ export default function PlayPage() {
       setRoomCode(data.data.session.roomCode);
       setSessionToken(data.data.sessionToken);
       storeToken(data.data.sessionToken);
+      // Store the PIN for session recovery
+      storePin(pin);
       setShowCreateModal(false);
+      // Clear offline mode
+      setIsOfflineMode(false);
+      setOfflineSessionId(null);
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : 'Failed to create session');
     } finally {
@@ -170,6 +290,8 @@ export default function PlayPage() {
       setRoomCode(roomCode);
       setSessionToken(data.token);
       storeToken(data.token);
+      // Store the PIN for session recovery
+      storePin(pin);
       setShowJoinModal(false);
       // Trigger recovery to load game state
       await recover();
@@ -180,24 +302,35 @@ export default function PlayPage() {
     }
   }, [recover, storeToken]);
 
-  // Open display window with room code in URL
+  // Open display window with room code or offline session ID in URL
   const openDisplay = useCallback(() => {
-    if (!roomCode) {
+    if (isOfflineMode && offlineSessionId) {
+      // Offline mode: use session ID
+      const displayUrl = `${window.location.origin}/display?offline=${offlineSessionId}`;
+      const displayWindow = window.open(
+        displayUrl,
+        `bingo-display-offline-${offlineSessionId}`,
+        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
+      );
+      if (displayWindow) {
+        displayWindow.focus();
+      }
+    } else if (roomCode) {
+      // Online mode: use room code
+      const displayUrl = `${window.location.origin}/display?room=${roomCode}`;
+      const displayWindow = window.open(
+        displayUrl,
+        `bingo-display-${roomCode}`,
+        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
+      );
+      if (displayWindow) {
+        displayWindow.focus();
+      }
+    } else {
+      // No session: show create modal
       setShowCreateModal(true);
-      return;
     }
-    const displayUrl = `${window.location.origin}/display?room=${roomCode}`;
-    const displayWindow = window.open(
-      displayUrl,
-      `bingo-display-${roomCode}`,
-      'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
-    );
-
-    // Focus the display window if it already exists
-    if (displayWindow) {
-      displayWindow.focus();
-    }
-  }, [roomCode]);
+  }, [roomCode, isOfflineMode, offlineSessionId]);
 
   return (
     <>
@@ -228,6 +361,17 @@ export default function PlayPage() {
                 {isConnected ? 'Sync Active' : 'Sync Ready'}
               </span>
             </div>
+
+            {/* Play Offline button - only show if no session active */}
+            {!roomCode && !isOfflineMode && (
+              <Button
+                onClick={handlePlayOffline}
+                variant="secondary"
+                size="md"
+              >
+                Play Offline
+              </Button>
+            )}
 
             {/* Open Display button */}
             <Button
@@ -401,13 +545,25 @@ export default function PlayPage() {
       </div>
       </main>
 
-      {/* Room code display */}
-      {roomCode && (
+      {/* Room code or offline session display */}
+      {roomCode && !isOfflineMode && (
         <div className="fixed bottom-4 left-4 z-40">
           <RoomCodeDisplay
             roomCode={roomCode}
             showSyncStatus={false}
           />
+        </div>
+      )}
+
+      {/* Offline session display */}
+      {isOfflineMode && offlineSessionId && (
+        <div className="fixed bottom-4 left-4 z-40">
+          <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+            <div className="text-sm text-muted-foreground mb-1">Offline Session</div>
+            <div className="text-2xl font-mono font-bold tracking-wider">
+              {offlineSessionId}
+            </div>
+          </div>
         </div>
       )}
 
