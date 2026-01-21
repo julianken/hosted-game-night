@@ -74,7 +74,8 @@ export function Modal({ isOpen, onClose, title, children, className = '' }: Moda
     <dialog
       ref={dialogRef}
       className={`
-        fixed inset-0 z-50
+        fixed z-50
+        m-auto
         bg-white dark:bg-gray-900
         rounded-xl shadow-2xl
         w-full max-w-md
