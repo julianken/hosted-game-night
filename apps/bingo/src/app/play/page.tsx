@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
@@ -36,6 +36,10 @@ export default function PlayPage() {
   const [isJoiningSession, setIsJoiningSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
+  // Recovery state tracking
+  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
+
   // Generate a unique session ID for this presenter window (for BroadcastChannel)
   const [sessionId] = useState(() => generateSessionId());
 
@@ -51,7 +55,15 @@ export default function PlayPage() {
   useApplyTheme(presenterTheme);
 
   // Session recovery on mount
-  const { isRecovering, error: recoveryError, recover, clearToken, storeToken } = useSessionRecovery({
+  const {
+    isRecovering,
+    isRecovered,
+    error: recoveryError,
+    roomCode: recoveredRoomCode,
+    recover,
+    clearToken,
+    storeToken
+  } = useSessionRecovery({
     gameType: 'bingo',
     fetchGameState: async (roomCode: string, token: string) => {
       const response = await fetch(`/api/sessions/${roomCode}`, {
@@ -67,6 +79,26 @@ export default function PlayPage() {
     },
     enabled: true,
   });
+
+  // Track when recovery completes
+  useEffect(() => {
+    if (!isRecovering) {
+      setRecoveryAttempted(true);
+    }
+  }, [isRecovering]);
+
+  // Sync recovered room code to local state
+  useEffect(() => {
+    if (isRecovered && recoveredRoomCode) {
+      setRoomCode(recoveredRoomCode);
+    }
+  }, [isRecovered, recoveredRoomCode]);
+
+  // Determine if modal should be shown
+  const shouldShowModal =
+    showCreateModal ||
+    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode) ||
+    (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database
   const gameState = useGameStore();
@@ -381,14 +413,15 @@ export default function PlayPage() {
 
       {/* Session modals */}
       <CreateGameModal
-        isOpen={showCreateModal}
+        isOpen={shouldShowModal}
         onClose={() => {
           setShowCreateModal(false);
           setSessionError(null);
+          setDismissedRecoveryError(true);
         }}
         onSubmit={handleCreateSession}
         isLoading={isCreatingSession}
-        error={sessionError ?? undefined}
+        error={dismissedRecoveryError ? sessionError ?? undefined : recoveryError ?? sessionError ?? undefined}
       />
 
       {/* Note: JoinGameModal is not yet updated to support room code input */}
