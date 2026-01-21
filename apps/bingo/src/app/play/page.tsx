@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
@@ -9,6 +9,7 @@ import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/Ba
 import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
 import { ControlPanel } from '@/components/presenter/ControlPanel';
+import { PinDisplay } from '@/components/presenter/PinDisplay';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider, CreateGameModal, JoinGameModal, RoomCodeDisplay } from '@beak-gaming/ui';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +30,7 @@ export default function PlayPage() {
   // Session state
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [storedPin, setStoredPin] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinRoomCode, setJoinRoomCode] = useState<string>('');
@@ -41,6 +43,43 @@ export default function PlayPage() {
 
   // Initialize sync as presenter role with session-scoped channel
   const { isConnected } = useSync({ role: 'presenter', sessionId });
+
+  // PIN storage utilities
+  const PIN_STORAGE_KEY = 'bingo_session_pin';
+
+  const storePin = useCallback((pin: string) => {
+    try {
+      localStorage.setItem(PIN_STORAGE_KEY, pin);
+      setStoredPin(pin);
+    } catch (err) {
+      console.error('Failed to store PIN:', err);
+    }
+  }, []);
+
+  const loadStoredPin = useCallback(() => {
+    try {
+      const pin = localStorage.getItem(PIN_STORAGE_KEY);
+      setStoredPin(pin);
+      return pin;
+    } catch (err) {
+      console.error('Failed to load stored PIN:', err);
+      return null;
+    }
+  }, []);
+
+  const clearStoredPin = useCallback(() => {
+    try {
+      localStorage.removeItem(PIN_STORAGE_KEY);
+      setStoredPin(null);
+    } catch (err) {
+      console.error('Failed to clear stored PIN:', err);
+    }
+  }, []);
+
+  // Load stored PIN on mount
+  useEffect(() => {
+    loadStoredPin();
+  }, [loadStoredPin]);
 
   // Audio preloading and controls
   const { preloadProgress } = useAudioPreload();
@@ -116,13 +155,14 @@ export default function PlayPage() {
       setRoomCode(data.data.session.roomCode);
       setSessionToken(data.data.sessionToken);
       storeToken(data.data.sessionToken);
+      storePin(pin); // Store PIN for display
       setShowCreateModal(false);
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : 'Failed to create session');
     } finally {
       setIsCreatingSession(false);
     }
-  }, [gameState, storeToken]);
+  }, [gameState, storeToken, storePin]);
 
   const handleJoinSession = useCallback(async (roomCode: string, pin: string) => {
     setIsJoiningSession(true);
@@ -138,6 +178,7 @@ export default function PlayPage() {
       setRoomCode(roomCode);
       setSessionToken(data.token);
       storeToken(data.token);
+      storePin(pin); // Store PIN for display
       setShowJoinModal(false);
       // Trigger recovery to load game state
       await recover();
@@ -146,7 +187,7 @@ export default function PlayPage() {
     } finally {
       setIsJoiningSession(false);
     }
-  }, [recover, storeToken]);
+  }, [recover, storeToken, storePin]);
 
   // Open display window with room code in URL
   const openDisplay = useCallback(() => {
@@ -268,6 +309,14 @@ export default function PlayPage() {
 
           {/* Right column: Settings */}
           <section className="md:col-span-1 lg:col-span-4 lg:order-3 space-y-4 md:space-y-6">
+            {/* PIN Display - show when session exists */}
+            {roomCode && (
+              <PinDisplay
+                pin={storedPin}
+                offlineSessionId={!navigator.onLine ? sessionId : null}
+              />
+            )}
+
             {/* Pattern Selection */}
             <div className="bg-background border border-border rounded-xl p-3 md:p-4 shadow-sm space-y-3 md:space-y-4">
               <PatternSelector

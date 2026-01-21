@@ -42,13 +42,15 @@ describe('PinDisplay', () => {
       expect(screen.getByText('Share this PIN with players to join your game')).toBeInTheDocument();
     });
 
-    it('copies PIN to clipboard when button clicked', () => {
+    it('copies PIN to clipboard when button clicked', async () => {
       render(<PinDisplay pin="5678" />);
 
       const button = screen.getByRole('button', { name: /copy pin to clipboard/i });
       fireEvent.click(button);
 
-      expect(clipboardWriteTextSpy).toHaveBeenCalledWith('5678');
+      await waitFor(() => {
+        expect(clipboardWriteTextSpy).toHaveBeenCalledWith('5678');
+      });
     });
 
     it('shows success feedback after copying', async () => {
@@ -213,8 +215,7 @@ describe('PinDisplay', () => {
   });
 
   describe('Multiple clicks', () => {
-    it('handles rapid consecutive clicks', () => {
-      vi.useFakeTimers();
+    it('handles rapid consecutive clicks', async () => {
       render(<PinDisplay pin="1234" />);
 
       const button = screen.getByRole('button', { name: /copy pin to clipboard/i });
@@ -225,10 +226,10 @@ describe('PinDisplay', () => {
       fireEvent.click(button);
 
       // Should have called clipboard API for each click
-      expect(clipboardWriteTextSpy).toHaveBeenCalledTimes(3);
-      expect(clipboardWriteTextSpy).toHaveBeenCalledWith('1234');
-
-      vi.useRealTimers();
+      await waitFor(() => {
+        expect(clipboardWriteTextSpy).toHaveBeenCalledTimes(3);
+        expect(clipboardWriteTextSpy).toHaveBeenCalledWith('1234');
+      });
     });
   });
 });
