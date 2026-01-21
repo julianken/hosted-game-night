@@ -25,6 +25,7 @@ export function RoomSetupModal({
   const [pinError, setPinError] = useState('');
 
   // Reset state when modal closes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isOpen) {
       setJoinPin('');
@@ -32,6 +33,7 @@ export function RoomSetupModal({
       setPinError('');
     }
   }, [isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleJoinSubmit = (e: FormEvent) => {
     e.preventDefault();
