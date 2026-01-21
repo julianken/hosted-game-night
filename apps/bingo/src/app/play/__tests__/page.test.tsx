@@ -1,3 +1,12 @@
+/**
+ * PlayPage Integration Tests
+ *
+ * This file tests the offline mode and session ID strategy features.
+ *
+ * TODO: Add back modal timing and recovery error handling tests from PR #123
+ * (These tests verify shouldShowModal logic with recoveryAttempted, isRecovered,
+ * dismissedRecoveryError state tracking)
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
@@ -12,6 +21,10 @@ import {
   storeOfflineSessionId,
   clearStoredOfflineSessionId,
 } from '@/lib/session/secure-generation';
+
+// Mock HTMLDialogElement methods (not supported in jsdom)
+HTMLDialogElement.prototype.showModal = vi.fn();
+HTMLDialogElement.prototype.close = vi.fn();
 
 // Mock dependencies
 vi.mock('@/hooks/use-game', () => ({
@@ -52,7 +65,9 @@ vi.mock('@/hooks/use-sync', () => ({
 vi.mock('@beak-gaming/sync', () => ({
   useSessionRecovery: () => ({
     isRecovering: false,
+    isRecovered: false,
     error: null,
+    roomCode: null,
     recover: vi.fn(),
     clearToken: vi.fn(),
     storeToken: vi.fn(),
