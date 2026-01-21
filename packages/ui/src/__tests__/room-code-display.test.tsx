@@ -95,7 +95,7 @@ describe('RoomCodeDisplay', () => {
     });
 
     it('should show "Copied!" feedback after copying', async () => {
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -107,7 +107,7 @@ describe('RoomCodeDisplay', () => {
     });
 
     it('should show checkmark icon when copied', async () => {
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -122,7 +122,7 @@ describe('RoomCodeDisplay', () => {
     // TODO: Depends on clipboard spy working (see test above)
     it.skip('should reset "Copied!" state after 2 seconds', async () => {
       vi.useFakeTimers();
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -149,7 +149,7 @@ describe('RoomCodeDisplay', () => {
 
     it('should use custom onCopyLink handler when provided', async () => {
       const mockCopyLink = vi.fn();
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" onCopyLink={mockCopyLink} />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -164,7 +164,7 @@ describe('RoomCodeDisplay', () => {
 
     it('should still show "Copied!" feedback with custom handler', async () => {
       const mockCopyLink = vi.fn();
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" onCopyLink={mockCopyLink} />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -179,7 +179,7 @@ describe('RoomCodeDisplay', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockWriteText.mockRejectedValueOnce(new Error('Clipboard access denied'));
 
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });
@@ -199,7 +199,7 @@ describe('RoomCodeDisplay', () => {
   describe('QR code functionality', () => {
     it('should call onShowQR when QR button is clicked', async () => {
       const mockShowQR = vi.fn();
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" onShowQR={mockShowQR} />);
 
       const qrButton = screen.getByRole('button', { name: /Show QR code/i });
@@ -398,7 +398,7 @@ describe('RoomCodeDisplay', () => {
     });
 
     it('should update aria-label when copied', async () => {
-      const user = userEvent.setup({ delay: null });
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<RoomCodeDisplay roomCode="SWAN-42" />);
 
       const copyButton = screen.getByRole('button', { name: /Copy audience display link/i });

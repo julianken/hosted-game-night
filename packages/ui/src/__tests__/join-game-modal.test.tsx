@@ -86,7 +86,7 @@ describe('JoinGameModal', () => {
 
   describe('PIN input validation', () => {
     it('should accept numeric input', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -96,7 +96,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should not accept non-numeric input', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -106,7 +106,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should limit input to 6 characters', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -119,7 +119,7 @@ describe('JoinGameModal', () => {
     // The button is disabled when PIN is empty (disabled={isLoading || !pin})
     // so validation for empty PIN cannot be triggered via button click.
     it.skip('should show error for empty PIN on submit', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /Join as Presenter/i });
@@ -132,7 +132,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should show error for PIN less than 4 digits on submit', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -149,7 +149,7 @@ describe('JoinGameModal', () => {
 
     // Test removed: Depends on being able to click disabled button
     it.skip('should clear error when user starts typing', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       // Trigger error
@@ -171,7 +171,7 @@ describe('JoinGameModal', () => {
 
   describe('form submission', () => {
     it('should call onSubmit with valid PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -187,7 +187,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should call onSubmit when Enter key is pressed', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -199,7 +199,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should not submit when Enter is pressed with empty PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -210,7 +210,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should not submit when Enter is pressed during loading', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} isLoading={true} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -220,7 +220,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should not call onClose after submission', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -238,7 +238,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should accept 6-digit PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -288,7 +288,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should enable Join button when PIN has value', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -314,7 +314,7 @@ describe('JoinGameModal', () => {
 
     // Test removed: Cannot click disabled button
     it.skip('should display local validation error', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /Join as Presenter/i });
@@ -326,7 +326,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should prioritize server error over local error', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <JoinGameModal
           {...defaultProps}
@@ -408,7 +408,7 @@ describe('JoinGameModal', () => {
 
   describe('user interactions', () => {
     it('should call onClose when Cancel button is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       await user.click(screen.getByRole('button', { name: /Cancel/i }));
@@ -417,7 +417,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should allow clearing the PIN input', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -463,7 +463,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should mark error input as invalid', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <JoinGameModal
           {...defaultProps}
@@ -488,7 +488,7 @@ describe('JoinGameModal', () => {
 
   describe('keyboard navigation', () => {
     it('should submit on Enter key press', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -509,7 +509,7 @@ describe('JoinGameModal', () => {
     });
 
     it('should allow tabbing between fields', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);
@@ -527,7 +527,7 @@ describe('JoinGameModal', () => {
       const submitError = new Error('Network failure');
       mockOnSubmit.mockRejectedValueOnce(submitError);
 
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(<JoinGameModal {...defaultProps} />);
 
       const pinInput = screen.getByLabelText(/Presenter PIN/i);

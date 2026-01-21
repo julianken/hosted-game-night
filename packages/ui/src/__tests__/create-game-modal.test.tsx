@@ -107,7 +107,7 @@ describe('CreateGameModal', () => {
 
   describe('PIN validation', () => {
     it('should accept valid 4-digit PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -129,7 +129,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should accept valid 6-digit PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -151,7 +151,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should show error for empty PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -178,7 +178,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should show error for PIN less than 4 digits', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -197,7 +197,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should enforce max length of 6 digits on input', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -217,7 +217,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should show error for non-numeric PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -236,7 +236,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should clear PIN error when user starts typing', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -264,7 +264,7 @@ describe('CreateGameModal', () => {
 
   describe('PIN confirmation validation', () => {
     it('should show error when confirm PIN is empty', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -286,7 +286,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should show error when PINs do not match', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -308,7 +308,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should not submit when PINs do not match', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -331,7 +331,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should clear confirm error when user starts typing', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -361,7 +361,7 @@ describe('CreateGameModal', () => {
 
   describe('form submission', () => {
     it('should call onSubmit with validated PIN', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -384,7 +384,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should not call onClose after successful submission', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -514,7 +514,7 @@ describe('CreateGameModal', () => {
 
   describe('form reset', () => {
     it('should reset form when modal closes and reopens', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       const { rerender } = render(
         <CreateGameModal
           isOpen={true}
@@ -555,7 +555,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should clear validation errors when modal closes', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       const { rerender } = render(
         <CreateGameModal
           isOpen={true}
@@ -597,7 +597,7 @@ describe('CreateGameModal', () => {
 
   describe('user interactions', () => {
     it('should call onClose when Cancel button is clicked', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
@@ -612,7 +612,7 @@ describe('CreateGameModal', () => {
     });
 
     it('should submit form when Enter is pressed in confirm field', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null, advanceTimers: vi.advanceTimersByTime });
       render(
         <CreateGameModal
           isOpen={true}
