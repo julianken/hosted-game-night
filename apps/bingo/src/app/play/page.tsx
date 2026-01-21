@@ -46,6 +46,7 @@ export default function PlayPage() {
 
   // Recovery state tracking
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  const [recoveryErrorMessage, setRecoveryErrorMessage] = useState<string | null>(null);
   const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
 
   // Offline mode state
@@ -124,12 +125,23 @@ export default function PlayPage() {
     enabled: !isOfflineMode,
   });
 
-  // Track when recovery completes
+  // Track when recovery completes and capture errors
   useEffect(() => {
     if (!isRecovering) {
       setRecoveryAttempted(true);
+
+      // Capture recovery error if present
+      if (recoveryError) {
+        setRecoveryErrorMessage(
+          typeof recoveryError === 'string'
+            ? recoveryError
+            : (recoveryError as Error).message || 'Failed to recover session'
+        );
+      } else {
+        setRecoveryErrorMessage(null);
+      }
     }
-  }, [isRecovering]);
+  }, [isRecovering, recoveryError]);
 
   // Sync recovered room code to local state
   useEffect(() => {
@@ -139,10 +151,14 @@ export default function PlayPage() {
   }, [isRecovered, recoveredRoomCode]);
 
   // Determine if modal should be shown
+  // Show modal if:
+  // 1. Explicitly requested via showCreateModal state
+  // 2. No active session (roomCode or offline mode) after recovery completes
+  // 3. Recovery failed with an error that hasn't been dismissed
   const shouldShowModal =
     showCreateModal ||
-    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
-    (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
+    (!roomCode && !isOfflineMode && recoveryAttempted) ||
+    (recoveryErrorMessage !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
@@ -680,11 +696,13 @@ export default function PlayPage() {
         onClose={() => {
           setShowCreateModal(false);
           setSessionError(null);
+          setRecoveryErrorMessage(null);
           setDismissedRecoveryError(true);
         }}
         onCreateRoom={handleModalCreateRoom}
         onJoinRoom={handleModalJoinRoom}
         onPlayOffline={handleModalPlayOffline}
+        error={sessionError || recoveryErrorMessage}
       />
 
       <InstallPrompt />
