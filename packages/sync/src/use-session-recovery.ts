@@ -302,7 +302,7 @@ export function useSessionRecovery(
     if (enabled) {
       void recover();
     }
-  }, [enabled]); // Only run on mount (recover is stable)
+  }, [enabled, recover]);
 
   return {
     isRecovering,

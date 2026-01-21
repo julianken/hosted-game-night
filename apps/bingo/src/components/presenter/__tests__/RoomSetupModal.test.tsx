@@ -56,7 +56,7 @@ describe('RoomSetupModal', () => {
           screen.getByText('Start a new bingo session and share with players')
         ).toBeInTheDocument();
         expect(
-          screen.getByText('Enter a 4-digit PIN to join a game in progress')
+          screen.getByText('Enter room code and PIN to join a game in progress')
         ).toBeInTheDocument();
         expect(
           screen.getByText('Play without internet connection or room sharing')
@@ -249,7 +249,7 @@ describe('RoomSetupModal', () => {
       expect(joinButton).toBeDisabled();
     });
 
-    it('enables Join Game button when PIN is complete', async () => {
+    it('enables Join Game button when room code and PIN are complete', async () => {
       render(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
@@ -262,14 +262,17 @@ describe('RoomSetupModal', () => {
         screen.getByRole('button', { name: /Show form to join existing game/i })
       );
 
-      const input = await screen.findByLabelText('Room PIN');
-      fireEvent.change(input, { target: { value: '1234' } });
+      const roomCodeInput = await screen.findByLabelText('Room Code');
+      const pinInput = await screen.findByLabelText('Room PIN');
+
+      fireEvent.change(roomCodeInput, { target: { value: 'SWAN-42' } });
+      fireEvent.change(pinInput, { target: { value: '1234' } });
 
       const joinButton = screen.getByRole('button', { name: /Join Game/i });
       expect(joinButton).not.toBeDisabled();
     });
 
-    it('calls onJoinRoom with PIN when form is submitted', async () => {
+    it('calls onJoinRoom with room code and PIN when form is submitted', async () => {
       const handleJoinRoom = vi.fn();
       render(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
       await waitFor(() => {
@@ -283,13 +286,16 @@ describe('RoomSetupModal', () => {
         screen.getByRole('button', { name: /Show form to join existing game/i })
       );
 
-      const input = await screen.findByLabelText('Room PIN');
-      fireEvent.change(input, { target: { value: '1234' } });
+      const roomCodeInput = await screen.findByLabelText('Room Code');
+      const pinInput = await screen.findByLabelText('Room PIN');
+
+      fireEvent.change(roomCodeInput, { target: { value: 'swan-42' } });
+      fireEvent.change(pinInput, { target: { value: '1234' } });
 
       const joinButton = screen.getByRole('button', { name: /Join Game/i });
       fireEvent.click(joinButton);
 
-      expect(handleJoinRoom).toHaveBeenCalledWith('1234');
+      expect(handleJoinRoom).toHaveBeenCalledWith('SWAN-42', '1234');
     });
 
     it('shows error when submitting invalid PIN', async () => {
@@ -305,11 +311,14 @@ describe('RoomSetupModal', () => {
         screen.getByRole('button', { name: /Show form to join existing game/i })
       );
 
-      const input = await screen.findByLabelText('Room PIN');
-      fireEvent.change(input, { target: { value: '123' } });
+      const roomCodeInput = await screen.findByLabelText('Room Code');
+      const pinInput = await screen.findByLabelText('Room PIN');
+
+      fireEvent.change(roomCodeInput, { target: { value: 'SWAN-42' } });
+      fireEvent.change(pinInput, { target: { value: '123' } });
 
       // Force the button to be enabled for this test
-      const form = input.closest('form');
+      const form = pinInput.closest('form');
       if (form) {
         fireEvent.submit(form);
       }
@@ -468,15 +477,18 @@ describe('RoomSetupModal', () => {
         screen.getByRole('button', { name: /Show form to join existing game/i })
       );
 
-      const input = await screen.findByLabelText('Room PIN');
-      fireEvent.change(input, { target: { value: '1234' } });
+      const roomCodeInput = await screen.findByLabelText('Room Code');
+      const pinInput = await screen.findByLabelText('Room PIN');
 
-      const form = input.closest('form');
+      fireEvent.change(roomCodeInput, { target: { value: 'SWAN-42' } });
+      fireEvent.change(pinInput, { target: { value: '1234' } });
+
+      const form = pinInput.closest('form');
       if (form) {
         fireEvent.submit(form);
       }
 
-      expect(handleJoinRoom).toHaveBeenCalledWith('1234');
+      expect(handleJoinRoom).toHaveBeenCalledWith('SWAN-42', '1234');
     });
   });
 
