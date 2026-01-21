@@ -251,7 +251,7 @@ export function RoomSetupModal({
                 aria-describedby="room-code-help"
               />
               <p id="room-code-help" className="text-base text-muted-foreground sr-only">
-                Enter the room code displayed on the host's screen
+                Enter the room code displayed on the host&apos;s screen
               </p>
               <Input
                 type="text"
