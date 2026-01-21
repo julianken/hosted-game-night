@@ -13,7 +13,12 @@ const nextConfig: NextConfig = {
   // Required for Next.js 16 + Serwist: Serwist adds webpack config,
   // but Turbopack is the default. This silences the warning.
   // SW is disabled in dev mode anyway.
-  turbopack: {},
+  turbopack: {
+    resolveAlias: {
+      '@beak-gaming/database/api': '../../packages/database/src/api/index.ts',
+      '@beak-gaming/database/tables': '../../packages/database/src/tables/index.ts',
+    },
+  },
 };
 
 const withSerwist = withSerwistInit({

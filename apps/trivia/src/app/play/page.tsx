@@ -12,7 +12,7 @@ import {
   clearStoredPin,
   getStoredOfflineSessionId,
   storeOfflineSessionId,
-  clearStoredOfflineSessionId,
+  clearStoredOfflineSessionId as _clearStoredOfflineSessionId,
 } from '@/lib/session/secure-generation';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
@@ -22,7 +22,7 @@ import { QuestionList } from '@/components/presenter/QuestionList';
 import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
 import { TeamScoreInput } from '@/components/presenter/TeamScoreInput';
 import { TeamManager } from '@/components/presenter/TeamManager';
-import { OpenDisplayButton } from '@/components/presenter/OpenDisplayButton';
+import { OpenDisplayButton as _OpenDisplayButton } from '@/components/presenter/OpenDisplayButton';
 import { RoundSummary } from '@/components/presenter/RoundSummary';
 import { ThemeSelector } from '@/components/presenter/ThemeSelector';
 import { SettingsPanel } from '@/components/presenter/SettingsPanel';
@@ -142,7 +142,7 @@ export default function PlayPage() {
 
   // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
-  const { isSyncing, lastSyncTime } = useAutoSync(
+  const { isSyncing: _isSyncing, lastSyncTime: _lastSyncTime } = useAutoSync(
     gameState,
     async (state) => {
       // Skip API calls in offline mode
