@@ -17,8 +17,13 @@ export const dynamic = 'force-dynamic';
  * - Large, clear layout
  * - LoginForm component with validation
  * - Easy navigation to signup and password reset
+ * - OAuth redirect support (preserves authorization_id parameter)
  */
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { redirect?: string; authorization_id?: string };
+}) {
   return (
     <main className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -68,7 +73,10 @@ export default function LoginPage() {
 
         {/* Form card */}
         <div className="bg-background border-2 border-border rounded-2xl p-8 shadow-sm">
-          <LoginForm redirectTo="/" />
+          <LoginForm
+            redirectTo={searchParams.redirect || '/'}
+            authorizationId={searchParams.authorization_id}
+          />
         </div>
 
         {/* Help text */}

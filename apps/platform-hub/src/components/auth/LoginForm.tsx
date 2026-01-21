@@ -1,20 +1,54 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
+import { useAuth } from '@beak-gaming/auth';
 
 export interface LoginFormProps {
-  /** Callback when form is submitted successfully */
-  onSubmit?: (email: string, password: string) => Promise<{ error: string | null }>;
   /** Optional redirect URL after successful login */
   redirectTo?: string;
+  /** Optional authorization_id for OAuth flows */
+  authorizationId?: string;
 }
 
 interface FormErrors {
   email?: string;
   password?: string;
-  general?: string;
+}
+
+/**
+ * Validates that a redirect path is safe (prevents open redirect vulnerabilities)
+ */
+function isValidRedirect(path: string): boolean {
+  // Must start with / (internal path)
+  if (!path.startsWith('/')) return false;
+
+  // Must not be a protocol-relative URL (//evil.com)
+  if (path.startsWith('//')) return false;
+
+  return true;
+}
+
+/**
+ * Builds a redirect URL with optional authorization_id query parameter
+ */
+function buildRedirectUrl(redirectTo: string | undefined, authorizationId: string | undefined): string {
+  const redirect = redirectTo || '/dashboard';
+
+  // Validate redirect path (security: prevent open redirects)
+  if (!isValidRedirect(redirect)) {
+    console.warn('Invalid redirect path detected, using default dashboard');
+    return '/dashboard';
+  }
+
+  // Build redirect URL with authorization_id if present
+  if (authorizationId) {
+    return `${redirect}?authorization_id=${encodeURIComponent(authorizationId)}`;
+  }
+
+  return redirect;
 }
 
 /**
@@ -26,11 +60,13 @@ interface FormErrors {
  * - Loading states during submission
  * - Links to signup and password reset
  */
-export function LoginForm({ onSubmit, redirectTo }: LoginFormProps) {
+export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
+  const router = useRouter();
+  const { signIn, isLoading, error: authError } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = (): boolean => {
@@ -62,35 +98,21 @@ export function LoginForm({ onSubmit, redirectTo }: LoginFormProps) {
       return;
     }
 
-    setIsLoading(true);
+    // Call signIn from useAuth hook
+    const { error } = await signIn(email, password);
 
-    try {
-      if (onSubmit) {
-        const result = await onSubmit(email, password);
-        if (result.error) {
-          setErrors({ general: result.error });
-        } else if (redirectTo) {
-          window.location.href = redirectTo;
-        }
-      } else {
-        // Placeholder behavior when no onSubmit handler
-        // Simulate a delay to show loading state
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setErrors({
-          general: 'Login is not yet connected. This form will work once Supabase authentication is configured.'
-        });
-      }
-    } catch {
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
-    } finally {
-      setIsLoading(false);
+    if (!error) {
+      // Success - redirect with preserved authorization_id if present
+      const redirectUrl = buildRedirectUrl(redirectTo, authorizationId);
+      router.push(redirectUrl);
     }
+    // Error handling is automatic via authError state
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      {/* General error message */}
-      {errors.general && (
+      {/* General error message from useAuth */}
+      {authError && (
         <div
           role="alert"
           className="p-4 rounded-lg bg-error/10 border-2 border-error text-error text-lg"
@@ -104,7 +126,7 @@ export function LoginForm({ onSubmit, redirectTo }: LoginFormProps) {
             >
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            <span>{errors.general}</span>
+            <span>{authError.message}</span>
           </div>
         </div>
       )}
@@ -243,3 +265,6 @@ export function LoginForm({ onSubmit, redirectTo }: LoginFormProps) {
 }
 
 LoginForm.displayName = 'LoginForm';
+
+// Export utility functions for testing
+export { isValidRedirect, buildRedirectUrl };
