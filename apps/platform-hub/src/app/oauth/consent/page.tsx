@@ -13,6 +13,29 @@ export interface ConsentPageProps {
 }
 
 /**
+ * Type guard to validate authorization details response
+ * Ensures runtime type safety for Supabase SDK response
+ */
+function isValidAuthorizationDetails(data: unknown): data is AuthorizationDetails {
+  if (!data || typeof data !== 'object') return false;
+
+  const d = data as Record<string, unknown>;
+
+  return (
+    typeof d.client === 'object' &&
+    d.client !== null &&
+    typeof (d.client as Record<string, unknown>).id === 'string' &&
+    typeof (d.client as Record<string, unknown>).name === 'string' &&
+    Array.isArray(d.scopes) &&
+    d.scopes.every((s) => typeof s === 'string') &&
+    typeof d.user === 'object' &&
+    d.user !== null &&
+    typeof (d.user as Record<string, unknown>).id === 'string' &&
+    typeof (d.user as Record<string, unknown>).email === 'string'
+  );
+}
+
+/**
  * OAuth Consent Page
  *
  * Handles the OAuth 2.1 authorization consent flow:
@@ -76,8 +99,10 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
           } else {
             setError(`Unable to load authorization details: ${errorMessage}`);
           }
+        } else if (data && isValidAuthorizationDetails(data)) {
+          setDetails(data);
         } else if (data) {
-          setDetails(data as unknown as AuthorizationDetails);
+          setError('Invalid authorization details structure received from server.');
         } else {
           setError('No authorization details received. Please try again.');
         }
