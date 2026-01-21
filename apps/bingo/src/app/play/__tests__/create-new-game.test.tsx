@@ -238,4 +238,24 @@ describe('PlayPage - Create New Game with Active Game', () => {
     const button = screen.getByRole('button', { name: /create new game/i });
     expect(button).toBeInTheDocument();
   });
+
+  it('does not clear session or show modal when user cancels confirmation', () => {
+    mockConfirm.mockReturnValue(false); // User clicks "Cancel"
+
+    render(<PlayPage />);
+    const createButton = screen.getByRole('button', { name: /create new game/i });
+    fireEvent.click(createButton);
+
+    // Should show confirmation
+    expect(mockConfirm).toHaveBeenCalledWith(
+      'This will end the current game and create a new one. Are you sure?'
+    );
+
+    // Should NOT clear token or reset game
+    expect(mockClearToken).not.toHaveBeenCalled();
+    expect(mockResetGame).not.toHaveBeenCalled();
+
+    // Should NOT show modal (modal would only be visible if isOpen=true)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
 });

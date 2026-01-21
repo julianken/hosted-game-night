@@ -161,6 +161,8 @@ export default function PlayPage() {
     }
 
     // Clear all session data
+    // clearToken() removes persisted token from localStorage (prevents recovery on refresh)
+    // Local state must be cleared separately for immediate effect in current session
     clearToken();
     setRoomCode(null);
     setSessionToken(null);
