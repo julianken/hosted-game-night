@@ -26,6 +26,7 @@ import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
 import { RevealChimeSelector } from '@/components/presenter/RevealChimeSelector';
 import { ThemeSelector } from '@/components/presenter/ThemeSelector';
+import { PinDisplay } from '@/components/presenter/PinDisplay';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
@@ -591,25 +592,33 @@ export default function PlayPage() {
       </div>
       </main>
 
-      {/* Room code or offline session display */}
+      {/* Room code and PIN display */}
       {roomCode && !isOfflineMode && (
-        <div className="fixed bottom-4 left-4 z-40">
+        <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-3">
           <RoomCodeDisplay
             roomCode={roomCode}
             showSyncStatus={false}
+          />
+          <PinDisplay
+            pin={currentPin}
+            offlineSessionId={null}
           />
         </div>
       )}
 
       {/* Offline session display */}
       {isOfflineMode && offlineSessionId && (
-        <div className="fixed bottom-4 left-4 z-40">
+        <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-3">
           <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
             <div className="text-sm text-muted-foreground mb-1">Offline Session</div>
             <div className="text-2xl font-mono font-bold tracking-wider">
               {offlineSessionId}
             </div>
           </div>
+          <PinDisplay
+            pin={null}
+            offlineSessionId={offlineSessionId}
+          />
         </div>
       )}
 
