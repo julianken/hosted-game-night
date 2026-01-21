@@ -4,11 +4,19 @@ A unified gaming platform for retirement communities, featuring Bingo, Trivia, a
 
 ## Current Status
 
-| App | Status | Description |
-|-----|--------|-------------|
-| **Bingo** | Functional | 75-ball bingo with audio, patterns, themes, dual-screen sync, PWA |
-| **Trivia** | Functional | Team trivia with rounds, scoring, TTS, themes, dual-screen sync, PWA |
-| **Platform Hub** | Scaffolded | Game selection UI (auth planned) |
+| App/Package | Status | Completion | Description |
+|-------------|--------|------------|-------------|
+| **[Bingo](./apps/bingo/README.md)** | ✅ Production Ready | 85% | 75-ball bingo with audio, patterns, themes, dual-screen sync, PWA |
+| **[Trivia](./apps/trivia/README.md)** | ✅ Production Ready | 95% | Team trivia with rounds, scoring, TTS, themes, dual-screen sync, PWA |
+| **[Platform Hub](./apps/platform-hub/README.md)** | 🚧 Scaffolded | 10% | Game selection UI (auth planned) |
+| **[@beak-gaming/sync](./packages/sync/README.md)** | ✅ Complete | 100% | BroadcastChannel dual-screen synchronization |
+| **[@beak-gaming/ui](./packages/ui/README.md)** | ✅ Complete | 100% | Button, Toggle, Slider, Card, Modal, Toast components |
+| **[@beak-gaming/theme](./packages/theme/README.md)** | ✅ Complete | 100% | Design tokens, 10+ themes, senior-friendly typography |
+| **[@beak-gaming/database](./packages/database/README.md)** | ✅ Complete | 98% | Type-safe Supabase client wrappers (150+ exports) |
+| **[@beak-gaming/auth](./packages/auth/README.md)** | ✅ Complete | 95% | Supabase authentication wrappers (40+ exports) |
+| **[@beak-gaming/types](./packages/types/README.md)** | ✅ Complete | 100% | Shared TypeScript type definitions (40+ exports) |
+| **[@beak-gaming/game-engine](./packages/game-engine/README.md)** | ⚠️ Partial | 40% | Abstract game state machine |
+| **[@beak-gaming/testing](./packages/testing/README.md)** | ✅ Complete | 100% | BroadcastChannel and Audio mocks for tests |
 
 ## Features
 
@@ -55,19 +63,24 @@ A unified gaming platform for retirement communities, featuring Bingo, Trivia, a
 ```
 beak-gaming-platform/
 ├── apps/
-│   ├── bingo/           # Beak Bingo (port 3000)
-│   ├── trivia/          # Trivia Night (port 3001)
-│   └── platform-hub/    # Central hub (port 3002)
+│   ├── bingo/           # Beak Bingo (port 3000) - See README: apps/bingo/README.md
+│   ├── trivia/          # Trivia Night (port 3001) - See README: apps/trivia/README.md
+│   └── platform-hub/    # Central hub (port 3002) - See README: apps/platform-hub/README.md
 ├── packages/
-│   ├── sync/            # Dual-screen synchronization
-│   ├── ui/              # Shared UI components
-│   ├── theme/           # Senior-friendly design tokens
-│   ├── auth/            # Supabase authentication
-│   ├── game-engine/     # Abstract game state machine
-│   ├── database/        # Database utilities
-│   └── testing/         # Shared test utilities
+│   ├── sync/            # Dual-screen synchronization - See README: packages/sync/README.md
+│   ├── ui/              # Shared UI components - See README: packages/ui/README.md
+│   ├── theme/           # Senior-friendly design tokens - See README: packages/theme/README.md
+│   ├── auth/            # Supabase authentication - See README: packages/auth/README.md
+│   ├── game-engine/     # Abstract game state machine - See README: packages/game-engine/README.md
+│   ├── database/        # Database utilities - See README: packages/database/README.md
+│   ├── types/           # Shared TypeScript types - See README: packages/types/README.md
+│   └── testing/         # Shared test utilities - See README: packages/testing/README.md
 └── supabase/            # Database migrations
 ```
+
+**Quick Links:**
+- **Apps:** [Bingo](./apps/bingo/README.md) • [Trivia](./apps/trivia/README.md) • [Platform Hub](./apps/platform-hub/README.md)
+- **Packages:** [sync](./packages/sync/README.md) • [ui](./packages/ui/README.md) • [theme](./packages/theme/README.md) • [database](./packages/database/README.md) • [auth](./packages/auth/README.md) • [types](./packages/types/README.md) • [game-engine](./packages/game-engine/README.md) • [testing](./packages/testing/README.md)
 
 ## Getting Started
 
@@ -441,6 +454,38 @@ Add to your CI workflow to catch performance regressions:
 - **Dual-screen:** Presenter controls + audience display synced via BroadcastChannel
 - **Offline-capable:** PWA support for spotty wifi environments
 - **Accessible:** Keyboard navigation, screen reader support
+
+## Documentation
+
+### App Documentation
+
+Each app has comprehensive documentation in its directory:
+
+| App | README | AI Context (CLAUDE.md) |
+|-----|--------|------------------------|
+| **Bingo** | [apps/bingo/README.md](./apps/bingo/README.md) | [apps/bingo/CLAUDE.md](./apps/bingo/CLAUDE.md) |
+| **Trivia** | [apps/trivia/README.md](./apps/trivia/README.md) | [apps/trivia/CLAUDE.md](./apps/trivia/CLAUDE.md) |
+| **Platform Hub** | [apps/platform-hub/README.md](./apps/platform-hub/README.md) | [apps/platform-hub/CLAUDE.md](./apps/platform-hub/CLAUDE.md) |
+
+### Package Documentation
+
+Each shared package has API documentation:
+
+| Package | README | Description |
+|---------|--------|-------------|
+| **[@beak-gaming/sync](./packages/sync/README.md)** | [README](./packages/sync/README.md) | BroadcastChannel dual-screen synchronization |
+| **[@beak-gaming/ui](./packages/ui/README.md)** | [README](./packages/ui/README.md) | 6 senior-friendly UI components |
+| **[@beak-gaming/theme](./packages/theme/README.md)** | [README](./packages/theme/README.md) | Design tokens and CSS variables |
+| **[@beak-gaming/database](./packages/database/README.md)** | [README](./packages/database/README.md) | Type-safe Supabase utilities (150+ exports) |
+| **[@beak-gaming/auth](./packages/auth/README.md)** | [README](./packages/auth/README.md) | Authentication wrappers (40+ exports) |
+| **[@beak-gaming/types](./packages/types/README.md)** | [README](./packages/types/README.md) | Shared TypeScript types (40+ exports) |
+| **[@beak-gaming/game-engine](./packages/game-engine/README.md)** | [README](./packages/game-engine/README.md) | Abstract game state machine |
+| **[@beak-gaming/testing](./packages/testing/README.md)** | [README](./packages/testing/README.md) | Test utilities and mocks |
+
+### Other Documentation
+
+- **[CLAUDE.md](./CLAUDE.md)** - AI assistant guidance and monorepo overview
+- **[.github/PULL_REQUEST_TEMPLATE.md](./.github/PULL_REQUEST_TEMPLATE.md)** - Pull request template (required for all PRs)
 
 ## Contributing
 
