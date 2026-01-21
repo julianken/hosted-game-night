@@ -1,9 +1,19 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game-keyboard';
 import { useSync } from '@/hooks/use-sync';
-import { generateSessionId } from '@/lib/sync/session';
+import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
+import {
+  generateSecurePin,
+  generateShortSessionId,
+  getStoredPin,
+  storePin,
+  clearStoredPin,
+  getStoredOfflineSessionId,
+  storeOfflineSessionId,
+  clearStoredOfflineSessionId,
+} from '@/lib/session/secure-generation';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { useGameStore } from '@/stores/game-store';
@@ -17,15 +27,65 @@ import { RoundSummary } from '@/components/presenter/RoundSummary';
 import { ThemeSelector } from '@/components/presenter/ThemeSelector';
 import { SettingsPanel } from '@/components/presenter/SettingsPanel';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
+import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
+import { Button } from '@beak-gaming/ui';
+import { serializeTriviaState, deserializeTriviaState } from '@/lib/state/serializer';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
 
-  // Generate a unique session ID for this presenter window
-  const [sessionId] = useState(() => generateSessionId());
+  // Session state
+  const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
+  // Recovery state tracking
+  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
+
+  // Offline mode state
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
+
+  // PIN state
+  const [currentPin, setCurrentPin] = useState<string | null>(null);
+  const pinGeneratedRef = useRef(false);
+
+  // Session ID calculation: prioritize Supabase session, fallback to offline session
+  const sessionId = roomCode || offlineSessionId || '';
 
   // Round summary overlay control
   const [showRoundSummary, setShowRoundSummary] = useState(false);
+
+  // Initialize offline session ID from localStorage or generate new one
+  useEffect(() => {
+    try {
+      const storedOfflineId = getStoredOfflineSessionId();
+      if (storedOfflineId) {
+        setOfflineSessionId(storedOfflineId);
+      } else {
+        // Generate new offline session ID and store it
+        const newOfflineId = generateShortSessionId();
+        storeOfflineSessionId(newOfflineId);
+        setOfflineSessionId(newOfflineId);
+      }
+    } catch (error) {
+      console.error('Failed to initialize offline session ID:', error);
+      // If localStorage is unavailable, use an in-memory session ID
+      const fallbackId = generateShortSessionId();
+      setOfflineSessionId(fallbackId);
+    }
+  }, []);
+
+  // Load stored PIN on mount
+  useEffect(() => {
+    const stored = getStoredPin();
+    if (stored) {
+      setCurrentPin(stored);
+    }
+  }, []);
 
   // Initialize sync as presenter role with session-scoped channel
   const { isConnected } = useSync({ role: 'presenter', sessionId });
@@ -33,6 +93,173 @@ export default function PlayPage() {
   // Apply presenter theme
   const presenterTheme = useThemeStore((state) => state.presenterTheme);
   useApplyTheme(presenterTheme);
+
+  // Session recovery on mount (skip in offline mode)
+  const {
+    isRecovering,
+    isRecovered,
+    error: recoveryError,
+    roomCode: recoveredRoomCode,
+    recover,
+    clearToken,
+    storeToken
+  } = useSessionRecovery({
+    gameType: 'trivia',
+    fetchGameState: async (roomCode: string, token: string) => {
+      const response = await fetch(`/api/sessions/${roomCode}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw response;
+      const data = await response.json();
+      return data.gameState;
+    },
+    hydrateStore: (state: unknown) => {
+      const partialState = deserializeTriviaState(state);
+      useGameStore.setState(partialState);
+    },
+    enabled: !isOfflineMode,
+  });
+
+  // Track when recovery completes
+  useEffect(() => {
+    if (!isRecovering) {
+      setRecoveryAttempted(true);
+    }
+  }, [isRecovering]);
+
+  // Sync recovered room code to local state
+  useEffect(() => {
+    if (isRecovered && recoveredRoomCode) {
+      setRoomCode(recoveredRoomCode);
+    }
+  }, [isRecovered, recoveredRoomCode]);
+
+  // Determine if modal should be shown
+  const shouldShowModal =
+    showCreateModal ||
+    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
+    (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
+
+  // Auto-sync game state to database (only in online mode)
+  const gameState = useGameStore();
+  const { isSyncing, lastSyncTime } = useAutoSync(
+    gameState,
+    async (state) => {
+      // Skip API calls in offline mode
+      if (isOfflineMode || !roomCode || !sessionToken) return;
+      const serialized = serializeTriviaState(state);
+      const response = await fetch(`/api/sessions/${roomCode}/state`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionToken, state: serialized }),
+      });
+      if (!response.ok) throw new Error('Failed to sync state');
+    },
+    {
+      debounceMs: 2000,
+      enabled: !isOfflineMode && !!roomCode && !!sessionToken,
+      isCriticalChange: (prev, next) => {
+        if (prev?.status !== next?.status) {
+          return 'STATUS_CHANGED';
+        }
+        if (prev?.displayQuestionIndex !== next?.displayQuestionIndex) {
+          return 'QUESTION_CHANGED';
+        }
+        if (prev?.currentRound !== next?.currentRound) {
+          return 'ROUND_CHANGED';
+        }
+        return null;
+      },
+    }
+  );
+
+  // Offline session recovery on mount
+  useEffect(() => {
+    // Try to recover offline session from localStorage
+    const recoverOfflineSession = () => {
+      try {
+        // Check all offline session keys
+        const keys = Object.keys(localStorage).filter(key =>
+          key.startsWith('trivia_offline_session_')
+        );
+
+        if (keys.length > 0) {
+          // Get the most recent session (last in array)
+          const lastKey = keys[keys.length - 1];
+          const sessionId = lastKey.replace('trivia_offline_session_', '');
+
+          // Validate session ID format (6 uppercase alphanumeric characters)
+          if (typeof sessionId === 'string' && /^[A-Z0-9]{6}$/.test(sessionId)) {
+            const stored = localStorage.getItem(lastKey);
+            if (stored) {
+              const data = JSON.parse(stored);
+              if (data.isOffline && data.sessionId === sessionId) {
+                setOfflineSessionId(sessionId);
+                setIsOfflineMode(true);
+                // Hydrate game state if available
+                if (data.gameState) {
+                  const partialState = deserializeTriviaState(data.gameState);
+                  useGameStore.setState(partialState);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to recover offline session:', error);
+      }
+    };
+
+    recoverOfflineSession();
+  }, []);
+
+  // Save offline session state to localStorage
+  useEffect(() => {
+    if (isOfflineMode && offlineSessionId) {
+      try {
+        const sessionKey = `trivia_offline_session_${offlineSessionId}`;
+        const sessionData = {
+          sessionId: offlineSessionId,
+          isOffline: true,
+          gameState: serializeTriviaState(gameState),
+          lastUpdated: new Date().toISOString(),
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+      } catch (error) {
+        console.error('Failed to save offline session:', error);
+      }
+    }
+  }, [isOfflineMode, offlineSessionId, gameState]);
+
+  // Generate or retrieve PIN when modal opens
+  useEffect(() => {
+    if (showCreateModal && !pinGeneratedRef.current) {
+      // Check if we have a stored PIN first
+      let pin = currentPin;
+
+      if (!pin) {
+        // No PIN in state, try to load from storage
+        pin = getStoredPin();
+      }
+
+      if (!pin) {
+        // Generate new PIN if none exists
+        pin = generateSecurePin();
+        pinGeneratedRef.current = true;
+      }
+
+      // Store the PIN
+      setCurrentPin(pin);
+      storePin(pin);
+    }
+  }, [showCreateModal, currentPin]);
+
+  // Reset PIN generation flag when modal closes
+  useEffect(() => {
+    if (!showCreateModal) {
+      pinGeneratedRef.current = false;
+    }
+  }, [showCreateModal]);
 
   // Settings panel state
   const [showSettings, setShowSettings] = useState(false);
@@ -115,6 +342,162 @@ export default function PlayPage() {
 
   const statusDisplay = getStatusDisplay();
 
+  // Session handlers
+  const handlePlayOffline = useCallback(() => {
+    const newSessionId = generateShortSessionId();
+    setOfflineSessionId(newSessionId);
+    setIsOfflineMode(true);
+    setRoomCode(null);
+    setSessionToken(null);
+
+    // Initialize offline session in localStorage
+    try {
+      const sessionKey = `trivia_offline_session_${newSessionId}`;
+      const sessionData = {
+        sessionId: newSessionId,
+        isOffline: true,
+        gameState: serializeTriviaState(gameState),
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    } catch (error) {
+      console.error('Failed to create offline session:', error);
+    }
+  }, [gameState]);
+
+  const handleCreateSession = useCallback(async (pin: string) => {
+    setIsCreatingSession(true);
+    setSessionError(null);
+    try {
+      const initialState = serializeTriviaState(gameState);
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin, initialState }),
+      });
+      if (!response.ok) throw new Error('Failed to create session');
+      const data = await response.json();
+      setRoomCode(data.data.session.roomCode);
+      setSessionToken(data.data.sessionToken);
+      storeToken(data.data.sessionToken);
+      // Store the PIN for session recovery
+      storePin(pin);
+      setShowCreateModal(false);
+      // Clear offline mode
+      setIsOfflineMode(false);
+      setOfflineSessionId(null);
+    } catch (error) {
+      setSessionError(error instanceof Error ? error.message : 'Failed to create session');
+      // Clear stored PIN on error so user can try with a new PIN
+      clearStoredPin();
+      setCurrentPin(null);
+      pinGeneratedRef.current = false;
+    } finally {
+      setIsCreatingSession(false);
+    }
+  }, [gameState, storeToken]);
+
+  const handleJoinSession = useCallback(async (roomCode: string, pin: string) => {
+    setIsCreatingSession(true);
+    setSessionError(null);
+    try {
+      const response = await fetch(`/api/sessions/${roomCode}/verify-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      if (!response.ok) throw new Error('Invalid PIN');
+      const data = await response.json();
+      setRoomCode(roomCode);
+      setSessionToken(data.token);
+      storeToken(data.token);
+      // Store the PIN for session recovery
+      storePin(pin);
+      setCurrentPin(pin);
+      setShowCreateModal(false);
+      // Trigger recovery to load game state
+      await recover();
+    } catch (error) {
+      setSessionError(error instanceof Error ? error.message : 'Failed to join session');
+    } finally {
+      setIsCreatingSession(false);
+    }
+  }, [recover, storeToken]);
+
+  // Create new game handler - clears all session data and shows room setup modal
+  const handleCreateNewGame = useCallback(() => {
+    // Show confirmation if game is active
+    if (game.status !== 'setup' && game.status !== 'ended') {
+      const confirmed = window.confirm(
+        'This will end the current game and create a new one. Are you sure?'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    // Clear all session data
+    clearToken();
+    setRoomCode(null);
+    setSessionToken(null);
+
+    // Reset game state to initial
+    game.resetGame();
+
+    // Show modal for new room setup
+    setShowCreateModal(true);
+  }, [game, clearToken]);
+
+  // Room Setup Modal handlers
+  const handleModalCreateRoom = useCallback(() => {
+    // Use the current PIN or generate a new one
+    const pin = currentPin || generateSecurePin();
+    if (!currentPin) {
+      setCurrentPin(pin);
+      storePin(pin);
+    }
+    handleCreateSession(pin);
+  }, [currentPin, handleCreateSession]);
+
+  const handleModalJoinRoom = useCallback((roomCode: string, pin: string) => {
+    handleJoinSession(roomCode, pin);
+  }, [handleJoinSession]);
+
+  const handleModalPlayOffline = useCallback(() => {
+    handlePlayOffline();
+    setShowCreateModal(false);
+  }, [handlePlayOffline]);
+
+  // Open display window with room code or offline session ID in URL
+  const openDisplay = useCallback(() => {
+    if (isOfflineMode && offlineSessionId) {
+      // Offline mode: use session ID
+      const displayUrl = `${window.location.origin}/display?offline=${offlineSessionId}`;
+      const displayWindow = window.open(
+        displayUrl,
+        `trivia-display-offline-${offlineSessionId}`,
+        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
+      );
+      if (displayWindow) {
+        displayWindow.focus();
+      }
+    } else if (roomCode) {
+      // Online mode: use room code
+      const displayUrl = `${window.location.origin}/display?room=${roomCode}`;
+      const displayWindow = window.open(
+        displayUrl,
+        `trivia-display-${roomCode}`,
+        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
+      );
+      if (displayWindow) {
+        displayWindow.focus();
+      }
+    } else {
+      // No session: show create modal
+      setShowCreateModal(true);
+    }
+  }, [roomCode, isOfflineMode, offlineSessionId]);
+
   // Handle next round action
   const handleNextRound = () => {
     game.nextRound();
@@ -175,6 +558,26 @@ export default function PlayPage() {
               </span>
             </div>
 
+            {/* Play Offline button - only show if no session active */}
+            {!roomCode && !isOfflineMode && (
+              <Button
+                onClick={handlePlayOffline}
+                variant="secondary"
+                size="md"
+              >
+                Play Offline
+              </Button>
+            )}
+
+            {/* Open Display button */}
+            <Button
+              onClick={openDisplay}
+              variant="secondary"
+              size="md"
+            >
+              Open Display
+            </Button>
+
             {/* Fullscreen toggle - hidden on small mobile */}
             <button
               onClick={game.toggleFullscreen}
@@ -227,11 +630,39 @@ export default function PlayPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
-
-            {/* Open Display button */}
-            <OpenDisplayButton sessionId={sessionId} />
           </div>
         </header>
+
+        {/* Room code and PIN display - shown below header */}
+        {(roomCode || (isOfflineMode && offlineSessionId)) && (
+          <div className="mb-4 flex flex-wrap items-center gap-4">
+            {roomCode && !isOfflineMode && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Room:</span>
+                <span className="font-mono font-semibold text-foreground">{roomCode}</span>
+                {currentPin && (
+                  <>
+                    <span className="text-sm text-muted-foreground ml-2">PIN:</span>
+                    <span className="font-mono font-semibold text-foreground">{currentPin}</span>
+                  </>
+                )}
+              </div>
+            )}
+            {isOfflineMode && offlineSessionId && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Offline Session:</span>
+                <span className="font-mono font-semibold text-foreground">{offlineSessionId}</span>
+              </div>
+            )}
+            <Button
+              onClick={handleCreateNewGame}
+              variant="secondary"
+              size="md"
+            >
+              Create New Game
+            </Button>
+          </div>
+        )}
 
         {/* Main content grid - Mobile first: stack vertically, then responsive columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
@@ -648,6 +1079,20 @@ export default function PlayPage() {
     <KeyboardShortcutsModal
       isOpen={game.showHelp}
       onClose={() => game.setShowHelp(false)}
+    />
+
+    {/* Session modals */}
+    <RoomSetupModal
+      isOpen={shouldShowModal}
+      onClose={() => {
+        setShowCreateModal(false);
+        setSessionError(null);
+        setDismissedRecoveryError(true);
+      }}
+      onCreateRoom={handleModalCreateRoom}
+      onJoinRoom={handleModalJoinRoom}
+      onPlayOffline={handleModalPlayOffline}
+      error={sessionError}
     />
     </>
   );
