@@ -1,10 +1,20 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
 import { useSessionRecovery, useAutoSync } from '@beak-gaming/sync';
 import { generateSessionId } from '@/lib/sync/session';
+import {
+  generateSecurePin,
+  generateShortSessionId,
+  getStoredPin,
+  storePin,
+  clearStoredPin,
+  getStoredOfflineSessionId,
+  storeOfflineSessionId,
+  clearStoredOfflineSessionId,
+} from '@/lib/session/secure-generation';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
@@ -35,9 +45,30 @@ export default function PlayPage() {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [isJoiningSession, setIsJoiningSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
 
-  // Generate a unique session ID for this presenter window (for BroadcastChannel)
-  const [sessionId] = useState(() => generateSessionId());
+  // Session ID calculation: prioritize Supabase session, fallback to offline session
+  const sessionId = roomCode || offlineSessionId || '';
+
+  // Initialize offline session ID from localStorage or generate new one
+  useEffect(() => {
+    try {
+      const storedOfflineId = getStoredOfflineSessionId();
+      if (storedOfflineId) {
+        setOfflineSessionId(storedOfflineId);
+      } else {
+        // Generate new offline session ID and store it
+        const newOfflineId = generateShortSessionId();
+        storeOfflineSessionId(newOfflineId);
+        setOfflineSessionId(newOfflineId);
+      }
+    } catch (error) {
+      console.error('Failed to initialize offline session ID:', error);
+      // If localStorage is unavailable, use an in-memory session ID
+      const fallbackId = generateShortSessionId();
+      setOfflineSessionId(fallbackId);
+    }
+  }, []);
 
   // Initialize sync as presenter role with session-scoped channel
   const { isConnected } = useSync({ role: 'presenter', sessionId });
@@ -116,6 +147,8 @@ export default function PlayPage() {
       setRoomCode(data.data.session.roomCode);
       setSessionToken(data.data.sessionToken);
       storeToken(data.data.sessionToken);
+      // Store the PIN for session recovery
+      storePin(pin);
       setShowCreateModal(false);
     } catch (error) {
       setSessionError(error instanceof Error ? error.message : 'Failed to create session');
@@ -138,6 +171,8 @@ export default function PlayPage() {
       setRoomCode(roomCode);
       setSessionToken(data.token);
       storeToken(data.token);
+      // Store the PIN for session recovery
+      storePin(pin);
       setShowJoinModal(false);
       // Trigger recovery to load game state
       await recover();
