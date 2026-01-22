@@ -215,6 +215,30 @@ BEA-TMP-5 (UI Components) ┘
 - Zero merge conflicts
 - Efficient use of worktrees and parallel agents
 
+### Critical Database Issue Discovered & Fixed
+
+**Issue**: After all PRs merged, post-merge validation revealed the `trivia_templates` table was **MISSING** from Supabase database, despite migration file existing in the repo.
+
+**Impact**: Production-blocking - all Phase 2 code would fail at runtime without this table.
+
+**Root Cause**: Migration file `supabase/migrations/20260119000003_create_trivia_templates.sql` existed but was never applied to the database.
+
+**Resolution**:
+1. Discovered missing table during validation when asked "did you check to make sure they are in supabase?"
+2. Located migration file with full schema (RLS policies, constraints, indexes)
+3. Applied migration using Supabase MCP: `apply_migration` tool
+4. Verified table creation:
+   - ✅ RLS enabled with 4 policies (select, insert, update, delete)
+   - ✅ Foreign key to profiles(user_id) on delete cascade
+   - ✅ JSONB questions column with array validation
+   - ✅ Integer constraints (rounds_count 1-20, questions_per_round 1-50, timer_duration 5-300)
+   - ✅ Indexes on user_id and is_default
+   - ✅ Table ready for production use
+
+**Lesson**: Always verify database state matches code, not just migration file existence.
+
+**Database Ready**: 2026-01-22 (same day as code merge)
+
 ---
 
 **Phase 2 Template Management MVP: DELIVERED** 🚀
