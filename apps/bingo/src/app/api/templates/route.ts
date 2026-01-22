@@ -8,11 +8,11 @@ import { createClient } from '@/lib/supabase/server';
 import {
   listAllBingoTemplates,
   createBingoTemplate,
-  isDatabaseError,
   AUTO_CALL_INTERVAL_MIN,
   AUTO_CALL_INTERVAL_MAX,
-  type BingoTemplateInsert,
-} from '@beak-gaming/database';
+} from '@beak-gaming/database/tables';
+import { isDatabaseError } from '@beak-gaming/database/errors';
+import type { BingoTemplateInsert } from '@beak-gaming/database/types';
 
 /**
  * GET /api/templates

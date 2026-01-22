@@ -66,7 +66,9 @@ describe('GET /api/templates/[id]', () => {
       },
     });
 
-    mockGet.mockResolvedValue(null);
+    const notFoundError = { message: 'bingo_templates with id \'template-1\' not found', statusCode: 404 };
+    mockGet.mockRejectedValue(notFoundError);
+    (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const request = new NextRequest('http://localhost/api/templates/template-1');
     const response = await GET(request, {
@@ -75,7 +77,7 @@ describe('GET /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toBe('Template not found');
+    expect(data.error).toContain('not found');
   });
 
   it('returns template successfully', async () => {
@@ -181,7 +183,9 @@ describe('PATCH /api/templates/[id]', () => {
       },
     });
 
-    mockUpdate.mockResolvedValue(null);
+    const notFoundError = { message: 'bingo_templates with id \'template-1\' not found', statusCode: 404 };
+    mockUpdate.mockRejectedValue(notFoundError);
+    (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const request = new NextRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
@@ -194,7 +198,7 @@ describe('PATCH /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toBe('Template not found or access denied');
+    expect(data.error).toContain('not found');
   });
 
   it('updates template successfully', async () => {

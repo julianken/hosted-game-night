@@ -9,11 +9,11 @@ import {
   getBingoTemplate,
   updateBingoTemplate,
   deleteBingoTemplate,
-  isDatabaseError,
   AUTO_CALL_INTERVAL_MIN,
   AUTO_CALL_INTERVAL_MAX,
-  type BingoTemplateUpdate,
-} from '@beak-gaming/database';
+} from '@beak-gaming/database/tables';
+import { isDatabaseError } from '@beak-gaming/database/errors';
+import type { BingoTemplateUpdate } from '@beak-gaming/database/types';
 
 type RouteParams = {
   params: Promise<{
@@ -41,15 +41,9 @@ export async function GET(
     }
 
     const { id } = await params;
-    const template = await getBingoTemplate(supabase, id);
 
-    // RLS will prevent access to other users' templates
-    if (!template) {
-      return NextResponse.json(
-        { error: 'Template not found' },
-        { status: 404 }
-      );
-    }
+    // getBingoTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
+    const template = await getBingoTemplate(supabase, id);
 
     return NextResponse.json({ template });
   } catch (error) {
@@ -111,15 +105,8 @@ export async function PATCH(
     if (body.auto_call_interval !== undefined) updateData.auto_call_interval = body.auto_call_interval;
     if (body.is_default !== undefined) updateData.is_default = body.is_default;
 
-    // RLS will prevent updating other users' templates
+    // updateBingoTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
     const template = await updateBingoTemplate(supabase, id, updateData);
-
-    if (!template) {
-      return NextResponse.json(
-        { error: 'Template not found or access denied' },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json({ template });
   } catch (error) {
