@@ -20,6 +20,7 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: {
       getSession: vi.fn(),
       oauth: {
+        getAuthorizationDetails: vi.fn(),
         approveAuthorization: vi.fn(),
       },
     },
@@ -98,8 +99,12 @@ describe('POST /api/oauth/approve', () => {
             error: null,
           }),
           oauth: {
+            getAuthorizationDetails: vi.fn().mockResolvedValue({
+              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
+              error: null,
+            }),
             approveAuthorization: vi.fn().mockResolvedValue({
-              data: { redirect_to: 'https://client.example.com/callback' },
+              data: { redirect_url: 'https://client.example.com/callback' },
               error: null,
             }),
           },
@@ -141,7 +146,7 @@ describe('POST /api/oauth/approve', () => {
       const data = await response.json();
 
       expect(response.status).toBe(401);
-      expect(data.error).toBe('Unauthorized');
+      expect(data.error).toBe('Unauthorized: Please log in to continue');
     });
 
     it('should return 401 if session error occurs', async () => {
@@ -166,7 +171,7 @@ describe('POST /api/oauth/approve', () => {
       const data = await response.json();
 
       expect(response.status).toBe(401);
-      expect(data.error).toBe('Unauthorized');
+      expect(data.error).toBe('Unauthorized: Please log in to continue');
     });
   });
 
@@ -181,6 +186,10 @@ describe('POST /api/oauth/approve', () => {
             error: null,
           }),
           oauth: {
+            getAuthorizationDetails: vi.fn().mockResolvedValue({
+              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
+              error: null,
+            }),
             approveAuthorization: vi.fn().mockResolvedValue({
               data: { redirect_url: 'https://client.example.com/callback?code=abc123' },
               error: null,
@@ -199,7 +208,7 @@ describe('POST /api/oauth/approve', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.redirect_to).toBe('https://client.example.com/callback?code=abc123');
+      expect(data.redirect_url).toBe('https://client.example.com/callback?code=abc123');
       expect(mockSupabase.auth.oauth.approveAuthorization).toHaveBeenCalledWith('auth-123');
     });
 
@@ -213,6 +222,10 @@ describe('POST /api/oauth/approve', () => {
             error: null,
           }),
           oauth: {
+            getAuthorizationDetails: vi.fn().mockResolvedValue({
+              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
+              error: null,
+            }),
             approveAuthorization: vi.fn().mockResolvedValue({
               data: null,
               error: { message: 'Authorization not found' },
@@ -244,6 +257,10 @@ describe('POST /api/oauth/approve', () => {
             error: null,
           }),
           oauth: {
+            getAuthorizationDetails: vi.fn().mockResolvedValue({
+              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
+              error: null,
+            }),
             approveAuthorization: vi.fn().mockResolvedValue({
               data: {},
               error: null,
