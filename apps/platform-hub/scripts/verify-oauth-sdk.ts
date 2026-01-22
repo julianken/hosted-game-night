@@ -154,7 +154,7 @@ async function testMethods() {
 
     const versionOk = major > 2 || (major === 2 && minor >= 45);
     console.log('  - Version check:', versionOk ? '✅ Compatible' : '⚠️  May need upgrade');
-  } catch (_e) {
+  } catch {
     console.log('📦 Package version check skipped (could not read package.json)');
   }
 
