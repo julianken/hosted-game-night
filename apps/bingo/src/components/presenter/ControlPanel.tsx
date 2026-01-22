@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { GameStatus } from '@/types';
+import { SaveTemplateModal } from './SaveTemplateModal';
 
 export interface ControlPanelProps {
   status: GameStatus;
@@ -32,10 +34,13 @@ export function ControlPanel({
   onReset,
   onUndo,
 }: ControlPanelProps) {
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+
   return (
-    <div className="flex flex-col gap-4" role="group" aria-label="Game controls">
-      {/* Main action button */}
-      <div className="flex flex-col gap-2" role="group" aria-label="Primary actions">
+    <>
+      <div className="flex flex-col gap-4" role="group" aria-label="Game controls">
+        {/* Main action button */}
+        <div className="flex flex-col gap-2" role="group" aria-label="Primary actions">
         {status === 'idle' && (
           <Button
             variant="primary"
@@ -94,6 +99,17 @@ export function ControlPanel({
         </Button>
       </div>
 
+      {/* Save as Template button */}
+      <Button
+        variant="secondary"
+        size="md"
+        onClick={() => setShowSaveTemplateModal(true)}
+        className="w-full"
+        aria-label="Save current settings as a template"
+      >
+        Save as Template
+      </Button>
+
       {/* Status indicator */}
       <div className="flex items-center justify-center gap-2 py-2" role="status" aria-live="polite" aria-label={`Game status: ${status}`}>
         <span
@@ -109,5 +125,12 @@ export function ControlPanel({
         <span className="text-lg font-medium capitalize">{status}</span>
       </div>
     </div>
+
+    {/* Save Template Modal */}
+    <SaveTemplateModal
+      isOpen={showSaveTemplateModal}
+      onClose={() => setShowSaveTemplateModal(false)}
+    />
+  </>
   );
 }

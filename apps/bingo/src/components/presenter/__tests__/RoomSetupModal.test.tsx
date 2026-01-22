@@ -1,6 +1,57 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RoomSetupModal } from '../RoomSetupModal';
+import { ToastProvider } from '@/components/ui/Toast';
+import type { ReactElement } from 'react';
+
+// Mock stores
+const mockSetPattern = vi.fn();
+const mockToggleAutoCall = vi.fn();
+const mockSetAutoCallSpeed = vi.fn();
+const mockSetVoicePack = vi.fn();
+
+vi.mock('@/stores/game-store', () => ({
+  useGameStore: vi.fn((selector) => {
+    const store = {
+      setPattern: mockSetPattern,
+      toggleAutoCall: mockToggleAutoCall,
+      setAutoCallSpeed: mockSetAutoCallSpeed,
+      autoCallEnabled: false,
+    };
+    return selector ? selector(store) : store;
+  }),
+}));
+
+vi.mock('@/stores/audio-store', () => ({
+  useAudioStore: vi.fn((selector) => {
+    const store = {
+      setVoicePack: mockSetVoicePack,
+    };
+    return selector ? selector(store) : store;
+  }),
+}));
+
+// Mock pattern registry
+vi.mock('@/lib/game/patterns', () => ({
+  patternRegistry: {
+    get: vi.fn((id: string) => {
+      if (id === 'standard') {
+        return {
+          id: 'standard',
+          name: 'Standard',
+          category: 'classic',
+          cells: [],
+        };
+      }
+      return null;
+    }),
+  },
+}));
+
+// Helper to render with providers
+function renderWithProviders(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 describe('RoomSetupModal', () => {
   const defaultProps = {
@@ -13,35 +64,41 @@ describe('RoomSetupModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock fetch for TemplateSelector
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ templates: [] }),
+    });
   });
 
   afterEach(() => {
     // Clean up portals and body styles
     document.body.style.overflow = '';
+    vi.restoreAllMocks();
   });
 
   describe('rendering', () => {
     it('renders when isOpen is true', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
     });
 
     it('does not render when isOpen is false', () => {
-      render(<RoomSetupModal {...defaultProps} isOpen={false} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} isOpen={false} />);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('renders title', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
     });
 
     it('renders all three option headings', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getAllByText('Create New Game')).toHaveLength(2); // heading + button
         expect(screen.getByText('Join Existing Game')).toBeInTheDocument();
@@ -50,7 +107,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('renders all option descriptions', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByText('Start a new bingo session and share with players')
@@ -65,7 +122,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('renders icons for each option', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         // Check for icon containers by their class and aria-hidden
         const dialog = screen.getByRole('dialog');
@@ -78,7 +135,7 @@ describe('RoomSetupModal', () => {
   describe('closing behavior', () => {
     it('calls onClose when X button is clicked', async () => {
       const handleClose = vi.fn();
-      render(<RoomSetupModal {...defaultProps} onClose={handleClose} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} onClose={handleClose} />);
       await waitFor(() => {
         expect(screen.getByLabelText('Close modal')).toBeInTheDocument();
       });
@@ -88,7 +145,7 @@ describe('RoomSetupModal', () => {
 
     it('calls onClose when Escape key is pressed', async () => {
       const handleClose = vi.fn();
-      render(<RoomSetupModal {...defaultProps} onClose={handleClose} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} onClose={handleClose} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -99,7 +156,7 @@ describe('RoomSetupModal', () => {
 
   describe('Create New Game option', () => {
     it('renders Create New Game button', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Create a new game room/i })
@@ -109,7 +166,7 @@ describe('RoomSetupModal', () => {
 
     it('calls onCreateRoom when Create New Game button is clicked', async () => {
       const handleCreateRoom = vi.fn();
-      render(
+      renderWithProviders(
         <RoomSetupModal {...defaultProps} onCreateRoom={handleCreateRoom} />
       );
       await waitFor(() => {
@@ -126,7 +183,7 @@ describe('RoomSetupModal', () => {
 
   describe('Join Existing Game option', () => {
     it('renders Join with PIN button initially', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -135,7 +192,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('shows join form when Join with PIN button is clicked', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -150,7 +207,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('hides join form when Cancel button is clicked', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -173,7 +230,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('accepts 4-digit PIN input', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -192,7 +249,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('limits PIN input to 4 digits', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -211,7 +268,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('only allows numeric input for PIN', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -230,7 +287,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('disables Join Game button when PIN is incomplete', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -250,7 +307,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('enables Join Game button when room code and PIN are complete', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -274,7 +331,7 @@ describe('RoomSetupModal', () => {
 
     it('calls onJoinRoom with room code and PIN when form is submitted', async () => {
       const handleJoinRoom = vi.fn();
-      render(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -299,7 +356,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('shows error when submitting invalid PIN', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -329,7 +386,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('resets form when modal is closed and reopened', async () => {
-      const { rerender } = render(<RoomSetupModal {...defaultProps} />);
+      const { rerender } = renderWithProviders(<RoomSetupModal {...defaultProps} />);
 
       await waitFor(() => {
         expect(
@@ -346,10 +403,10 @@ describe('RoomSetupModal', () => {
       fireEvent.change(input, { target: { value: '1234' } });
 
       // Close modal
-      rerender(<RoomSetupModal {...defaultProps} isOpen={false} />);
+      rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={false} /></ToastProvider>);
 
       // Reopen modal
-      rerender(<RoomSetupModal {...defaultProps} isOpen={true} />);
+      rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={true} /></ToastProvider>);
 
       await waitFor(() => {
         expect(
@@ -364,7 +421,7 @@ describe('RoomSetupModal', () => {
 
   describe('Play Offline option', () => {
     it('renders Play Offline button', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', {
@@ -376,7 +433,7 @@ describe('RoomSetupModal', () => {
 
     it('calls onPlayOffline when Play Offline button is clicked', async () => {
       const handlePlayOffline = vi.fn();
-      render(
+      renderWithProviders(
         <RoomSetupModal {...defaultProps} onPlayOffline={handlePlayOffline} />
       );
       await waitFor(() => {
@@ -397,21 +454,21 @@ describe('RoomSetupModal', () => {
 
   describe('accessibility', () => {
     it('has role="dialog"', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
     });
 
     it('has aria-modal="true"', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
       });
     });
 
     it('all action buttons have accessible labels', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Create a new game room/i })
@@ -428,7 +485,7 @@ describe('RoomSetupModal', () => {
     });
 
     it('PIN input has accessible label and description', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -448,7 +505,7 @@ describe('RoomSetupModal', () => {
 
   describe('keyboard navigation', () => {
     it('supports Tab key navigation between buttons', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -465,7 +522,7 @@ describe('RoomSetupModal', () => {
 
     it('form can be submitted with Enter key', async () => {
       const handleJoinRoom = vi.fn();
-      render(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
       await waitFor(() => {
         expect(
           screen.getByRole('button', { name: /Show form to join existing game/i })
@@ -494,7 +551,7 @@ describe('RoomSetupModal', () => {
 
   describe('touch target sizing', () => {
     it('all buttons meet minimum 44x44px touch target', async () => {
-      render(<RoomSetupModal {...defaultProps} />);
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -509,6 +566,121 @@ describe('RoomSetupModal', () => {
         // Note: In jsdom, CSS custom properties may not compute correctly,
         // so we check that minHeight and minWidth are set
         expect(button.className).toMatch(/min-h-\[44px\]|min-h-\[56px\]|min-h-\[64px\]/);
+      });
+    });
+  });
+
+  describe('template integration', () => {
+    it('renders TemplateSelector component', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ templates: [] }),
+      });
+
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Load Template')).toBeInTheDocument();
+      });
+    });
+
+    it('auto-loads default template when modal opens', async () => {
+      const mockTemplate = {
+        id: 'test-template-1',
+        name: 'Test Template',
+        pattern_id: 'standard',
+        voice_pack: 'classic',
+        auto_call_enabled: true,
+        auto_call_interval: 3000,
+        is_default: true,
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ templates: [mockTemplate] }),
+      });
+
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/templates');
+      });
+    });
+
+    it('does not auto-load default template twice', async () => {
+      const mockTemplate = {
+        id: 'test-template-1',
+        name: 'Test Template',
+        pattern_id: 'standard',
+        voice_pack: 'classic',
+        auto_call_enabled: true,
+        auto_call_interval: 3000,
+        is_default: true,
+      };
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ templates: [mockTemplate] }),
+      });
+
+      const { rerender } = renderWithProviders(<RoomSetupModal {...defaultProps} />);
+
+      // Wait for initial mount - TemplateSelector calls fetch once, RoomSetupModal auto-loads once
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalled();
+      });
+
+      const initialCallCount = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+
+      // Close and reopen modal
+      rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={false} /></ToastProvider>);
+      rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={true} /></ToastProvider>);
+
+      // Wait for reopen - TemplateSelector will call fetch again
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledTimes(initialCallCount + 1);
+      });
+
+      // Should have auto-loaded default template only once (not on reopen)
+      // Initial: TemplateSelector (1) + Auto-load (1) = 2 calls
+      // Reopen: TemplateSelector (1) = 1 call
+      // Total: 3 calls
+      expect(global.fetch).toHaveBeenCalledTimes(initialCallCount + 1);
+    });
+
+    it('handles template fetch error gracefully', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Network error')
+      );
+
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      renderWithProviders(<RoomSetupModal {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Error loading default template:',
+          expect.any(Error)
+        );
+      });
+
+      // Modal should still render normally
+      expect(screen.getByText('Room Setup')).toBeInTheDocument();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('disables TemplateSelector when isLoading is true', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ templates: [] }),
+      });
+
+      renderWithProviders(<RoomSetupModal {...defaultProps} isLoading={true} />);
+
+      await waitFor(() => {
+        const select = screen.getByLabelText('Load Template');
+        expect(select).toBeDisabled();
       });
     });
   });

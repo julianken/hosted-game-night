@@ -4,6 +4,11 @@ import { useState, FormEvent, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { TemplateSelector } from './TemplateSelector';
+import { useGameStore } from '@/stores/game-store';
+import { useAudioStore } from '@/stores/audio-store';
+import { patternRegistry } from '@/lib/game/patterns';
+import type { VoicePackId } from '@/types';
 
 export interface RoomSetupModalProps {
   isOpen: boolean;
@@ -29,6 +34,56 @@ export function RoomSetupModal({
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [roomCodeError, setRoomCodeError] = useState('');
   const [pinError, setPinError] = useState('');
+  const [hasLoadedDefaultTemplate, setHasLoadedDefaultTemplate] = useState(false);
+
+  // Get store actions for auto-loading default template
+  const setPattern = useGameStore((state) => state.setPattern);
+  const setAutoCallEnabled = useGameStore((state) => state.toggleAutoCall);
+  const setAutoCallSpeed = useGameStore((state) => state.setAutoCallSpeed);
+  const gameStore = useGameStore();
+  const setVoicePack = useAudioStore((state) => state.setVoicePack);
+
+  // Auto-load default template when modal opens
+  useEffect(() => {
+    if (isOpen && !hasLoadedDefaultTemplate) {
+      const loadDefaultTemplate = async () => {
+        try {
+          const response = await fetch('/api/templates');
+          if (!response.ok) {
+            return; // Silently fail - not critical
+          }
+
+          const data = await response.json();
+          const defaultTemplate = data.templates?.find((t: { is_default: boolean }) => t.is_default);
+
+          if (defaultTemplate) {
+            // Load pattern
+            const pattern = patternRegistry.get(defaultTemplate.pattern_id);
+            if (pattern) {
+              setPattern(pattern);
+            }
+
+            // Load auto-call settings
+            const currentAutoCall = gameStore.autoCallEnabled;
+            if (defaultTemplate.auto_call_enabled !== currentAutoCall) {
+              setAutoCallEnabled();
+            }
+            setAutoCallSpeed(defaultTemplate.auto_call_interval);
+
+            // Load voice pack
+            setVoicePack(defaultTemplate.voice_pack as VoicePackId);
+
+            setHasLoadedDefaultTemplate(true);
+          }
+        } catch (err) {
+          console.error('Error loading default template:', err);
+          // Silently fail - not critical to modal functionality
+        }
+      };
+
+      loadDefaultTemplate();
+    }
+  }, [isOpen, hasLoadedDefaultTemplate, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, gameStore.autoCallEnabled]);
 
   // Reset state when modal closes
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -106,6 +161,12 @@ export function RoomSetupModal({
       showFooter={false}
     >
       <div className="flex flex-col gap-6">
+        {/* Template Selector */}
+        <TemplateSelector disabled={isLoading} />
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
         {/* Error message display */}
         {error && (
           <div

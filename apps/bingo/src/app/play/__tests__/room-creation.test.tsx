@@ -13,6 +13,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, useEffect } from 'react';
 import PlayPage from '../page';
+import { ToastProvider } from '@/components/ui/Toast';
 import {
   generateSecurePin,
   generateShortSessionId,
@@ -161,6 +162,15 @@ vi.mock('@/lib/session/serializer', () => ({
   deserializeBingoState: vi.fn((state) => state),
 }));
 
+// Helper to render PlayPage with required providers
+function renderPlayPage() {
+  return render(
+    <ToastProvider>
+      <PlayPage />
+    </ToastProvider>
+  );
+}
+
 describe('Room Creation Flow', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -190,7 +200,7 @@ describe('Room Creation Flow', () => {
         }),
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       // Modal should be shown initially (no session)
       await waitFor(() => {
@@ -225,7 +235,7 @@ describe('Room Creation Flow', () => {
         status: 500,
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -255,7 +265,7 @@ describe('Room Creation Flow', () => {
         }),
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -279,7 +289,7 @@ describe('Room Creation Flow', () => {
     it('should create offline session without API calls', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -301,7 +311,7 @@ describe('Room Creation Flow', () => {
     it('should generate and store offline session ID', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -325,7 +335,7 @@ describe('Room Creation Flow', () => {
     it('should store offline session data in localStorage', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -362,7 +372,7 @@ describe('Room Creation Flow', () => {
     it('should validate room code and PIN before joining', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -395,7 +405,7 @@ describe('Room Creation Flow', () => {
         json: async () => ({ token: mockToken }),
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -435,7 +445,7 @@ describe('Room Creation Flow', () => {
     it('should reject invalid PIN format', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -468,7 +478,7 @@ describe('Room Creation Flow', () => {
         status: 401,
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -499,7 +509,7 @@ describe('Room Creation Flow', () => {
       const mockPin = '5678';
       storePin(mockPin);
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       // Verify PIN was loaded
       const storedPin = getStoredPin();
@@ -511,7 +521,7 @@ describe('Room Creation Flow', () => {
       const mockPin = '1234';
       storePin(mockPin);
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       // Find and click Create New Game button (in bottom-left corner)
       const createNewButton = screen.getByRole('button', { name: /create new game/i });
@@ -537,7 +547,7 @@ describe('Room Creation Flow', () => {
       // Mock confirm dialog to accept
       const mockConfirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       const createNewButton = screen.getByRole('button', { name: /create new game/i });
       await user.click(createNewButton);
@@ -566,7 +576,7 @@ describe('Room Creation Flow', () => {
         }),
       });
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
@@ -596,7 +606,7 @@ describe('Room Creation Flow', () => {
     it('should open display window with session ID in offline mode', async () => {
       const user = userEvent.setup();
 
-      render(<PlayPage />);
+      renderPlayPage();
 
       await waitFor(() => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
