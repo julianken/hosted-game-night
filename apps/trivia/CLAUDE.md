@@ -168,11 +168,14 @@ pnpm test:run         # Single run
 pnpm test:coverage    # With coverage
 ```
 
+## Completed Features
+
+- ✅ Question import from file (CSV/JSON) - Full parser with drag-drop UI
+- ✅ Question categories - 7 predefined categories with filtering UI
+- ✅ Saved game templates - Complete CRUD API + template selector UI
+- ✅ User authentication - OAuth 2.1 with middleware protection
+
 ## Future Work (TODO)
 
 - [ ] Question timer with auto-reveal
-- [ ] Question import from file (CSV/JSON)
-- [ ] Question categories
-- [ ] User authentication (via @beak-gaming/auth)
-- [ ] Saved game templates
 - [ ] Analytics/history tracking

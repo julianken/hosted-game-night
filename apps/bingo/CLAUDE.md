@@ -30,13 +30,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - State machine for game status transitions (`lib/game/state-machine.ts`)
 - Ball deck with Fisher-Yates shuffle (`lib/game/ball-deck.ts`)
 
-### Patterns (15+ patterns)
-- **Lines:** Horizontal, Vertical, Diagonal, Any Line
-- **Corners:** Four Corners
-- **Frames:** Outside Frame, Inside Frame
-- **Shapes:** X Pattern, Diamond, Heart, Plus
-- **Letters:** T, L, Z
-- **Other:** Blackout, Postage Stamp
+### Patterns (29 patterns across 7 categories)
+- **Lines (12):** 5 rows, 5 columns, 2 diagonals
+- **Corners (1):** Four Corners
+- **Frames (2):** Large Frame, Small Frame
+- **Shapes (4):** X Pattern, Diamond, Heart, Cross
+- **Letters (2):** T, L
+- **Coverage (5):** 4 postage stamps (corners), Blackout
+- **Combinations (3):** Corners + Row/Column/Diagonal
 
 ### Audio System
 - Voice packs: Standard, Standard (Hall), British Slang, British Slang (Hall)

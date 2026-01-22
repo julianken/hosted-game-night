@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Beak Gaming Platform Hub** - The central entry point for the Beak Gaming Platform. Provides game selection, authentication, and user dashboard.
 
-**Current State:** Scaffolded with basic game selection UI. Authentication and dashboard not yet implemented.
+**Current State:** OAuth 2.1 server complete (3,479 lines). Game selector UI complete. User dashboard and profile management not yet implemented.
 
 ## Purpose
 
@@ -25,7 +25,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Implemented Features
 
+### OAuth 2.1 Server (Complete)
+- Token endpoint (authorization_code + refresh_token grants)
+- PKCE validation (required)
+- Refresh token rotation with reuse detection
+- CSRF protection (cryptographically secure)
+- Rate limiting (10 req/min per IP)
+- Audit logging for OAuth events
+- OAuth consent page with full UI
+
+### Frontend
 - Game selection home page with cards for Bingo and Trivia
+- Complete auth form UI components (Login, Signup, Password Reset)
+- Dashboard UI scaffolding
 - Header and Footer components
 - Responsive layout
 
@@ -64,20 +76,25 @@ src/
 
 - `/` - Game selector (Bingo, Trivia)
 
+## Current Routes
+
+- `/` - Game selector (Bingo, Trivia)
+- `/oauth/consent` - OAuth consent page
+- `/api/oauth/token` - Token endpoint (OAuth 2.1)
+- `/api/oauth/approve` - Consent approval
+- `/api/oauth/deny` - Consent denial
+- `/api/oauth/csrf` - CSRF token generation
+
 ## Planned Routes (TODO)
 
-- `/auth/login` - Login page
-- `/auth/register` - Registration page
-- `/auth/reset-password` - Password reset
-- `/dashboard` - User dashboard (protected)
+- `/dashboard` - User dashboard with real data (protected)
 - `/dashboard/templates` - Saved game templates
 - `/dashboard/settings` - User settings
 
 ## Future Work (TODO)
 
-- [ ] User authentication with Supabase Auth
-- [ ] User profile management
-- [ ] Saved game templates
+- [ ] User profile management (real data integration)
+- [ ] Template management UI
 - [ ] Facility branding/logo management
-- [ ] Admin dashboard
+- [ ] Admin dashboard (RBAC tables exist, no UI)
 - [ ] Cross-game session history

@@ -32,12 +32,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |-------------|--------|-------|
 | `apps/bingo` | **✅ Production Ready (85%)** | Full 75-ball bingo with 29 patterns, audio, themes, dual-screen, PWA. Missing: auth integration, templates |
 | `apps/trivia` | **✅ Production Ready (95%)** | Full trivia with 20 questions, rounds, scoring, TTS, themes, dual-screen, PWA. Missing: auth integration, question import |
-| `apps/platform-hub` | **⚠️ Scaffolded (10%)** | Game selector UI complete. Missing: all API routes, auth backend, profile/template management |
+| `apps/platform-hub` | **⚠️ Backend Complete (45%)** | OAuth 2.1 server complete (3,479 lines). Game selector UI complete. Missing: user dashboard, profile/template management UI |
 | `packages/sync` | **✅ Complete (100%)** | BroadcastChannel sync, Zustand store, React hook. Actively used in Bingo/Trivia |
-| `packages/ui` | **✅ Complete (100%)** | Button, Toggle, Slider, Card, Modal, Toast components |
+| `packages/ui` | **⚠️ Partial (88%)** | 15 components (Button, Toggle, Slider, Modal, Input, Skeleton variants, Confetti, etc.). Missing: Card, Toast |
 | `packages/theme` | **✅ Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
 | `packages/game-engine` | **⚠️ Partial (40%)** | Base GameStatus type, transition functions, statistics module |
-| `packages/auth` | **✅ Complete (95%)** | 40+ exports: AuthProvider, hooks (useAuth, useSession, useUser), ProtectedRoute, client wrappers. Not yet integrated in apps |
+| `packages/auth` | **✅ Complete (95%)** | 30 exports: AuthProvider, hooks (useAuth, useSession, useUser), ProtectedRoute, client wrappers. Not integrated in Bingo/Trivia (apps have duplicate OAuth clients) |
 | `packages/database` | **✅ Complete (98%)** | 150+ exports: type-safe client, CRUD, pagination, filters, React hooks, session tokens, PIN security, API factories. Used in Bingo/Trivia |
 | `packages/testing` | **✅ Complete (100%)** | BroadcastChannel and Audio mocks for tests |
 | `packages/types` | **✅ Complete** | Shared TypeScript type definitions |
@@ -53,9 +53,9 @@ beak-gaming-platform/
 │   └── platform-hub/    # Central hub - auth, dashboard, game selector (port 3002)
 ├── packages/
 │   ├── sync/            # Dual-screen synchronization (BroadcastChannel)
-│   ├── ui/              # Shared UI components (Button, Toggle, Slider)
+│   ├── ui/              # Shared UI components (15 components, missing Card/Toast)
 │   ├── theme/           # Senior-friendly design tokens and CSS
-│   ├── auth/            # Supabase authentication wrappers (40+ exports)
+│   ├── auth/            # Supabase authentication wrappers (30 exports)
 │   ├── game-engine/     # Abstract game state machine
 │   ├── database/        # Supabase database utilities (150+ exports)
 │   ├── types/           # Shared TypeScript type definitions

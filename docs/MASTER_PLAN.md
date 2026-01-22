@@ -16,7 +16,7 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 
 | Component | Completion | Status | Notes |
 |-----------|-----------|--------|-------|
-| **Bingo App** | 85% | ✅ Production Ready | Full game engine, 36 patterns, audio, OAuth, templates |
+| **Bingo App** | 85% | ✅ Production Ready | Full game engine, 29 patterns, audio, OAuth, templates |
 | **Trivia App** | 95% | ✅ Production Ready | Full game engine, 20 questions, TTS, OAuth, templates, CSV import |
 | **Platform Hub** | 45% | 🚧 Active Development | OAuth server + CSRF + token rotation + consent UI complete |
 | **@beak-gaming/auth** | 95% | ✅ Complete | 30+ exports, partially integrated (Platform Hub only) |
@@ -70,7 +70,7 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 ```
 beak-gaming-platform/
 ├── apps/
-│   ├── bingo/              # Port 3000 - 75-ball bingo with 36 patterns
+│   ├── bingo/              # Port 3000 - 75-ball bingo with 29 patterns
 │   ├── platform-hub/       # Port 3002 - OAuth server + game selector
 │   └── trivia/             # Port 3001 - Team trivia with 20 questions + CSV import
 ├── packages/
@@ -267,7 +267,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 ### 3.1 Bingo App (85% Complete)
 
 ✅ **Complete:**
-- Game engine (75-ball, 36 patterns across 7 categories)
+- Game engine (75-ball, 29 patterns across 7 categories)
 - Audio system (4 voice packs, roll sounds, pooling)
 - Dual-screen sync (presenter + audience)
 - Theme system (2 modes: light/dark with system detection)
@@ -358,10 +358,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 | Package | Status | Exports | Test Coverage |
 |---------|--------|---------|---------------|
-| @beak-gaming/auth | ✅ 95% | 30+ (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
-| @beak-gaming/database | ✅ 98% | 150+ (client, CRUD, hooks, filters) | 90%+ |
-| @beak-gaming/sync | ✅ 100% | 88+ (BroadcastSync, hooks, stores, session utils) | 95%+ |
-| @beak-gaming/ui | ✅ 100% | 15 components (Button, Modal, Toggle, Input, Skeleton, Confetti, etc.) | 85%+ |
+| @beak-gaming/auth | ✅ 95% | 30 (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
+| @beak-gaming/database | ✅ 98% | 154 (client, CRUD, hooks, filters) | 90%+ |
+| @beak-gaming/sync | ✅ 100% | 68 (BroadcastSync, hooks, stores, session utils) | 95%+ |
+| @beak-gaming/ui | ⚠️ 67% | 15 components (Button, Modal, Toggle, Input, Skeleton, Confetti, etc.) - Missing Card, Toast | 85%+ |
 | @beak-gaming/theme | ✅ 100% | 2 theme modes + design tokens | N/A |
 | @beak-gaming/game-engine | ⚠️ 60-70% | GameStatus, transitions, statistics (700+ lines) | 90%+ |
 | @beak-gaming/types | ✅ Complete | Shared TypeScript types | N/A |
@@ -369,11 +369,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 | @beak-gaming/testing | ⚠️ 70% | BroadcastChannel, Audio, Supabase mocks (helpers empty) | N/A |
 
 **Key Findings:**
-- `@beak-gaming/auth` **PARTIALLY integrated** (Platform Hub uses AuthProvider, but apps have duplicate OAuth clients)
+- `@beak-gaming/auth` **NOT integrated in Bingo/Trivia** (30 exports available but apps have duplicate OAuth clients)
 - Platform Hub duplicates auth code in `/lib/supabase/*` instead of using package exports
 - `@beak-gaming/game-engine` underutilized (apps don't use shared base types)
 - `@beak-gaming/testing` helpers module is placeholder only
-- UI package missing claimed Card and Toast components
+- `@beak-gaming/ui` missing Card and Toast components (15/17 claimed components = 88%)
 
 ---
 
@@ -957,8 +957,8 @@ cd ../.. && pnpm turbo build --filter=@beak-gaming/bingo...
 
 ---
 
-#### Why 36 Bingo Patterns?
-**Decision:** Implement 36 patterns vs minimal 5-8
+#### Why 29 Bingo Patterns?
+**Decision:** Implement 29 patterns vs minimal 5-8
 
 **Rationale:** Comprehensive pattern coverage across 7 categories (lines, corners, frames, shapes, letters, coverage, combo)
 
@@ -996,11 +996,11 @@ Summary:
 
 ### 11.1 Over-Engineering Anti-Patterns
 
-#### 36 Bingo Patterns (Over-Engineered)
+#### 29 Bingo Patterns (Over-Engineered)
 **Location:** `apps/bingo/src/lib/game/patterns/`
 
 **The Problem:**
-- 36 patterns implemented across 7 categories, but only 8-12 needed for MVP
+- 29 patterns implemented across 7 categories, but only 8-12 needed for MVP
 - Elaborate pattern registry with extensibility hooks that are never used
 - 10+ test files for pattern validation
 - Pattern creation infrastructure but no UI
