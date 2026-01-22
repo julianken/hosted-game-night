@@ -16,14 +16,15 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 
 | Component | Completion | Status | Notes |
 |-----------|-----------|--------|-------|
-| **Bingo App** | 85% | ✅ Production Ready | Full game engine, 29 patterns, audio, OAuth, templates |
-| **Trivia App** | 95% | ✅ Production Ready | Full game engine, 20 questions, TTS, OAuth, templates |
-| **Platform Hub** | 10% | ⚠️ Scaffolded | OAuth server complete, minimal UI |
-| **@beak-gaming/auth** | 95% | ✅ Complete | 40+ exports, not yet integrated in apps |
+| **Bingo App** | 85% | ✅ Production Ready | Full game engine, 36 patterns, audio, OAuth, templates |
+| **Trivia App** | 95% | ✅ Production Ready | Full game engine, 20 questions, TTS, OAuth, templates, CSV import |
+| **Platform Hub** | 45% | 🚧 Active Development | OAuth server + CSRF + token rotation + consent UI complete |
+| **@beak-gaming/auth** | 95% | ✅ Complete | 30+ exports, partially integrated (Platform Hub only) |
 | **@beak-gaming/database** | 98% | ✅ Complete | 150+ exports, type-safe client, CRUD, React hooks |
 | **@beak-gaming/sync** | 100% | ✅ Complete | BroadcastChannel sync, comprehensive tests |
-| **@beak-gaming/ui** | 100% | ✅ Complete | Button, Toggle, Modal, Card, Toast |
-| **@beak-gaming/theme** | 100% | ✅ Complete | 10+ themes, senior-friendly tokens |
+| **@beak-gaming/ui** | 100% | ✅ Complete | Button, Toggle, Slider, Modal, Input, Skeleton variants |
+| **@beak-gaming/theme** | 100% | ✅ Complete | 2 theme modes (light/dark), senior-friendly tokens |
+| **@beak-gaming/testing** | 70% | ⚠️ Partial | Mocks complete, helpers module unimplemented |
 
 ### MVP Definition (Internal Beta Ready)
 
@@ -39,11 +40,9 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 ### Critical Path to Beta
 
 **BLOCKING ISSUES (Must Fix):**
-1. Database security (RLS disabled, FK removed) - **30 minutes**
-2. Remove test-login routes - **15 minutes**
-3. Fix template loading tests (5 failing) - **4 hours**
-
-**Total Critical Work:** ~5 hours before deployment possible
+1. Database security (RLS disabled, FK removed)
+2. Remove test-login routes
+3. Fix template loading tests (5 failing)
 
 ---
 
@@ -71,19 +70,19 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 ```
 beak-gaming-platform/
 ├── apps/
-│   ├── bingo/              # Port 3000 - 75-ball bingo with 29 patterns
+│   ├── bingo/              # Port 3000 - 75-ball bingo with 36 patterns
 │   ├── platform-hub/       # Port 3002 - OAuth server + game selector
-│   └── trivia/             # Port 3001 - Team trivia with 20 questions
+│   └── trivia/             # Port 3001 - Team trivia with 20 questions + CSV import
 ├── packages/
-│   ├── auth/               # Supabase auth wrappers (40+ exports)
+│   ├── auth/               # Supabase auth wrappers (30+ exports)
 │   ├── database/           # Type-safe Supabase client (150+ exports)
 │   ├── error-tracking/     # Error logging utilities
 │   ├── game-engine/        # Base game state machine
 │   ├── sync/               # Dual-screen BroadcastChannel sync
-│   ├── testing/            # Test utilities and mocks
-│   ├── theme/              # Design tokens (senior-friendly)
+│   ├── testing/            # Test utilities and mocks (70% complete)
+│   ├── theme/              # Design tokens (2 theme modes: light/dark)
 │   ├── types/              # Shared TypeScript types
-│   └── ui/                 # Shared components (Button, Modal, etc.)
+│   └── ui/                 # Shared components (Button, Modal, Slider, etc.)
 └── supabase/
     └── migrations/         # 8 database migrations
 ```
@@ -212,7 +211,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 | **Tailwind CSS** | 4.1.18 | Styling (JIT) | ~50 KB (used classes only) |
 | **Serwist** | ^9.5.0 | Service worker (PWA) | 60-80 KB |
 | **jose** | ^6.1.3 | JWT crypto (JWKS) | 50-70 KB |
-| **React Aria Components** | ^1.14.0 | Accessible UI primitives | 30-50 KB |
 | **uuid** | ^13.0.0 | UUID generation | 2-3 KB |
 | **web-vitals** | ^5.1.0 | Performance metrics | 3-5 KB |
 
@@ -269,10 +267,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 ### 3.1 Bingo App (85% Complete)
 
 ✅ **Complete:**
-- Game engine (75-ball, 29 patterns)
+- Game engine (75-ball, 36 patterns across 7 categories)
 - Audio system (4 voice packs, roll sounds, pooling)
 - Dual-screen sync (presenter + audience)
-- Theme system (10+ themes, light/dark/system)
+- Theme system (2 modes: light/dark with system detection)
 - PWA (service worker, offline caching)
 - OAuth client (PKCE, callback, middleware)
 - Template API routes (GET, POST, PATCH, DELETE)
@@ -296,15 +294,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 ✅ **Complete:**
 - Game engine (questions, rounds, scoring, teams)
-- TTS system (Web Speech API, announcements)
+- TTS system (Web Speech API, 6 convenience methods)
 - Dual-screen sync (presenter + audience)
-- Theme system (same as Bingo)
+- Theme system (2 modes: light/dark with system detection)
 - PWA (service worker, offline capable)
 - OAuth client (identical to Bingo)
 - Template API routes (GET, POST, PATCH [id], DELETE [id])
-- CSV question import (custom parser)
+- CSV/JSON question import (custom parser with drag-drop UI)
+- Question validation and preview
+- Answer amendment with auto-re-scoring
 - Room creation (online + offline)
 - PIN security
+- 10 keyboard shortcuts (6 documented + 4 undocumented)
 
 ⚠️ **Partial:**
 - Template selector UI (needs integration testing)
@@ -316,26 +317,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 ---
 
-### 3.3 Platform Hub (10% Complete)
+### 3.3 Platform Hub (45% Complete)
 
 ✅ **Complete:**
-- OAuth server (consent, approve, deny, token endpoints)
-- CSRF protection
-- Rate limiting middleware
-- Audit logging infrastructure
-- Token rotation with reuse detection
-- Game selector UI (basic cards)
+- OAuth 2.1 token endpoint (326 lines, production-ready)
+  - Authorization code grant with PKCE validation
+  - Refresh token grant with automatic rotation
+  - Token reuse detection with full revocation
+  - Comprehensive error handling and logging
+- CSRF protection system (105 lines, cryptographically secure)
+- Token rotation module (355 lines, reuse detection)
+- Rate limiting middleware (10 req/min per IP)
+- Audit logging infrastructure (OAuth operations tracked)
+- Game selector UI with responsive cards
+- Complete auth form UI components (Login, Signup, Password Reset)
+- OAuth consent page with full client-side logic
+- Dashboard UI scaffolding with placeholder data
+- Session management middleware (automatic cookie updates)
+- Environment configuration documented
 
 ⚠️ **Partial:**
-- Home page (hardcoded dev URLs)
-- No user dashboard
-- No profile management
+- Home page (hardcoded dev URLs for localhost)
+- AuthProvider integrated but duplicate auth code in /lib/supabase/
+- Protected routes (middleware exists, not fully wired)
 
 ❌ **Missing:**
-- Profile editing UI
+- Real user data integration (dashboard shows placeholders)
+- Profile editing UI and API routes
 - Template management UI
 - Analytics dashboard
-- Admin panel (RBAC exists, no UI)
+- Admin panel (RBAC tables exist, no UI)
+- Facility branding system
+- Session history tracking
 
 **Test Coverage:** 75-80% for OAuth endpoints
 
@@ -345,27 +358,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 | Package | Status | Exports | Test Coverage |
 |---------|--------|---------|---------------|
-| @beak-gaming/auth | ✅ 95% | 40+ (AuthProvider, hooks, ProtectedRoute) | 85%+ |
+| @beak-gaming/auth | ✅ 95% | 30+ (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
 | @beak-gaming/database | ✅ 98% | 150+ (client, CRUD, hooks, filters) | 90%+ |
-| @beak-gaming/sync | ✅ 100% | BroadcastSync, hooks, stores | 95%+ |
-| @beak-gaming/ui | ✅ 100% | Button, Modal, Toggle, Card, Toast | 85%+ |
-| @beak-gaming/theme | ✅ 100% | Design tokens, CSS variables | N/A |
-| @beak-gaming/game-engine | ⚠️ 40% | GameStatus, transitions, statistics | 90%+ |
+| @beak-gaming/sync | ✅ 100% | 88+ (BroadcastSync, hooks, stores, session utils) | 95%+ |
+| @beak-gaming/ui | ✅ 100% | 15 components (Button, Modal, Toggle, Input, Skeleton, Confetti, etc.) | 85%+ |
+| @beak-gaming/theme | ✅ 100% | 2 theme modes + design tokens | N/A |
+| @beak-gaming/game-engine | ⚠️ 60-70% | GameStatus, transitions, statistics (700+ lines) | 90%+ |
 | @beak-gaming/types | ✅ Complete | Shared TypeScript types | N/A |
-| @beak-gaming/error-tracking | ✅ Complete | ErrorBoundary, logger | 85%+ |
-| @beak-gaming/testing | ✅ 100% | BroadcastChannel mocks, Audio mocks | N/A |
+| @beak-gaming/error-tracking | ✅ Complete | ErrorBoundary, client/server loggers | 85%+ |
+| @beak-gaming/testing | ⚠️ 70% | BroadcastChannel, Audio, Supabase mocks (helpers empty) | N/A |
 
 **Key Findings:**
-- `@beak-gaming/auth` is **NOT integrated** into apps (apps rolled own OAuth clients)
+- `@beak-gaming/auth` **PARTIALLY integrated** (Platform Hub uses AuthProvider, but apps have duplicate OAuth clients)
+- Platform Hub duplicates auth code in `/lib/supabase/*` instead of using package exports
 - `@beak-gaming/game-engine` underutilized (apps don't use shared base types)
+- `@beak-gaming/testing` helpers module is placeholder only
+- UI package missing claimed Card and Toast components
 
 ---
 
 ## 4. REMAINING WORK TO MVP
 
-### 4.1 Critical Path (Must Complete - ~5 hours)
+### 4.1 Critical Path (Must Complete)
 
-#### Task 1: Fix Database Security (30 minutes)
+#### Task 1: Fix Database Security
 **Location:** Supabase console
 **Status:** BLOCKING - Production database compromised
 
@@ -394,7 +410,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 2: Remove Test-Login Routes (15 minutes)
+#### Task 2: Remove Test-Login Routes
 **Location:** `apps/bingo/src/app/api/auth/test-login/`, `apps/bingo/src/app/test-login/`
 **Status:** BLOCKING - Security vulnerability
 
@@ -407,7 +423,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 3: Fix Template Loading Tests (4 hours)
+#### Task 3: Fix Template Loading Tests
 **Location:** `apps/trivia/src/components/presenter/__tests__/SaveTemplateModal.test.tsx`
 **Status:** BLOCKING - 5 tests failing
 
@@ -424,9 +440,9 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-### 4.2 High Priority (Should Complete for Quality - 14-17 hours)
+### 4.2 High Priority (Should Complete for Quality)
 
-#### Task 4: Integrate OAuth Refresh Token Rotation (3-4 hours)
+#### Task 4: Integrate OAuth Refresh Token Rotation
 **Current State:** Token rotation implemented in platform-hub, but apps don't use it
 
 **Actions:**
@@ -438,7 +454,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 5: Extract Duplicate OAuth Clients to @beak-gaming/auth (3-4 hours)
+#### Task 5: Extract Duplicate OAuth Clients to @beak-gaming/auth
 **Current State:** Bingo and Trivia have identical OAuth client implementations (100% duplicate)
 
 **Actions:**
@@ -453,7 +469,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 6: Add Logout Functionality (2-3 hours)
+#### Task 6: Add Logout Functionality
 **Missing:** No logout buttons or API routes
 
 **Actions:**
@@ -466,7 +482,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 7: Add Health Check Endpoints (1 hour)
+#### Task 7: Add Health Check Endpoints
 **Current State:** Only Bingo has `/api/health`
 
 **Actions:**
@@ -477,7 +493,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-#### Task 8: Fix Platform-Hub Hardcoded URLs (1 hour)
+#### Task 8: Fix Platform-Hub Hardcoded URLs
 **Location:** `apps/platform-hub/src/app/page.tsx`
 **Current State:** Dev URLs hardcoded, won't work in production
 
@@ -488,13 +504,13 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ---
 
-### 4.3 Medium Priority (Post-MVP - 19-26 hours)
+### 4.3 Medium Priority (Post-MVP)
 
-- Refactor large page.tsx files (extract hooks) - 6-8 hours
-- Complete Platform-Hub user dashboard - 4-6 hours
-- Add comprehensive error tracking (Sentry integration) - 3-4 hours
-- Fix skipped tests (9 tests) - 4-6 hours
-- Resolve TypeScript warnings (62 `any` types) - 8-12 hours
+- Refactor large page.tsx files (extract hooks to reduce complexity)
+- Complete Platform-Hub user dashboard with real data
+- Add comprehensive error tracking (Sentry integration)
+- Fix skipped tests (9 tests remaining)
+- Resolve TypeScript warnings (62 `any` types flagged)
 
 ---
 
@@ -502,13 +518,13 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ### 5.1 Critical Issues (BLOCKING MVP)
 
-| ID | Issue | Location | Impact | ETA to Fix |
-|----|-------|----------|--------|-----------|
-| **CRIT-1** | RLS disabled on bingo_templates | Supabase database | Security vulnerability | 30 min |
-| **CRIT-2** | FK constraint removed from user_id | Supabase database | Data integrity compromised | 30 min |
-| **CRIT-3** | Test-login routes exposed | `apps/bingo/src/app/*/test-login` | Auth bypass | 15 min |
-| **CRIT-4** | Template loading tests failing | SaveTemplateModal tests | Blocks merge | 4 hours |
-| **CRIT-5** | Math.random() in offline session ID | `apps/bingo/src/lib/sync/offline-session.ts:34` | Predictable session IDs | 30 min |
+| ID | Issue | Location | Impact |
+|----|-------|----------|--------|
+| **CRIT-1** | RLS disabled on bingo_templates | Supabase database | Security vulnerability - anyone can modify templates |
+| **CRIT-2** | FK constraint removed from user_id | Supabase database | Data integrity compromised - orphaned data possible |
+| **CRIT-3** | Test-login routes exposed | `apps/bingo/src/app/*/test-login` | Auth bypass - unauthenticated access |
+| **CRIT-4** | Template loading tests failing | SaveTemplateModal tests | Blocks merge - 5 tests failing |
+| **CRIT-5** | Math.random() in offline session ID | `apps/bingo/src/lib/sync/offline-session.ts:34` | Predictable session IDs - should use crypto.getRandomValues() |
 
 ---
 
@@ -541,8 +557,6 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 **5 Critical:** Must fix before any production deployment
 **5 High:** Should fix before beta testing
 **5 Medium:** Address before public launch
-
-**Total Security Work:** ~8-12 hours to address all critical + high issues
 
 ---
 
@@ -749,13 +763,11 @@ async function safeHandler<T>(
 ### 8.2 MVP Testing Requirements
 
 **Must Add Before Beta:**
-1. OAuth deny route tests (~70 test cases) - 2 hours
-2. Session endpoint tests (~150 test cases) - 3-4 hours
-3. Trivia template [id] tests (~100 test cases) - 2 hours
-4. Fix 9 skipped tests - 4-6 hours
-5. End-to-end OAuth flow (Playwright) - 2-3 hours
-
-**Total Testing Work:** ~15-20 hours for 95% critical path coverage
+1. OAuth deny route tests (~70 test cases)
+2. Session endpoint tests (~150 test cases)
+3. Trivia template [id] tests (~100 test cases)
+4. Fix 9 skipped tests
+5. End-to-end OAuth flow (Playwright)
 
 ---
 
@@ -945,12 +957,12 @@ cd ../.. && pnpm turbo build --filter=@beak-gaming/bingo...
 
 ---
 
-#### Why 29 Bingo Patterns?
-**Decision:** Implement 29 patterns vs minimal 5-8
+#### Why 36 Bingo Patterns?
+**Decision:** Implement 36 patterns vs minimal 5-8
 
-**Rationale:** (Unclear - appears to be over-engineering)
+**Rationale:** Comprehensive pattern coverage across 7 categories (lines, corners, frames, shapes, letters, coverage, combo)
 
-**Status:** 🔄 REVERSE - Remove unused patterns post-MVP. Keep 5-8 essential: lines, corners, frames.
+**Status:** 🔄 RECONSIDER - Many patterns unused in practice. Consider reducing to 8-12 essential patterns: lines, corners, frames, blackout.
 
 ---
 
@@ -984,18 +996,19 @@ Summary:
 
 ### 11.1 Over-Engineering Anti-Patterns
 
-#### 29 Bingo Patterns (193% of Planned)
+#### 36 Bingo Patterns (Over-Engineered)
 **Location:** `apps/bingo/src/lib/game/patterns/`
 
 **The Problem:**
-- Only 5-8 patterns needed for MVP
+- 36 patterns implemented across 7 categories, but only 8-12 needed for MVP
 - Elaborate pattern registry with extensibility hooks that are never used
 - 10+ test files for pattern validation
 - Pattern creation infrastructure but no UI
+- Many patterns rarely used in practice
 
-**Better Approach:** Keep only essential patterns (lines, corners, frames)
+**Better Approach:** Keep only essential patterns (lines, corners, frames, blackout)
 
-**Quick Win:** Remove unused patterns post-MVP. Saves 50+ lines across 4 files.
+**Post-MVP Consideration:** Consolidate to 8-12 most popular patterns. Reduces complexity and maintenance burden.
 
 ---
 
@@ -1082,9 +1095,9 @@ async function playRollSound(volume: number, soundFile: string): Promise<void> {
 
 **The Problem:** Mixed concerns, hard to test, difficult to understand
 
-**Better Approach:** Extract session/recovery/offline hooks
+**Better Approach:** Extract session/recovery/offline hooks into custom hooks
 
-**Post-MVP Refactor:** 6-8 hours, reduces page to <300 lines.
+**Post-MVP Refactor:** Extract to reduce page files to <300 lines each, improving testability and maintainability.
 
 ---
 
@@ -1158,60 +1171,52 @@ mv docs/phase2_status.md docs/archive/2026-01-22/
 
 ### 13.1 MVP Readiness Assessment
 
-**Current Status:** 85-95% complete with **5 hours of critical work** remaining
+**Current Status:** 85-95% complete with critical blockers remaining
 
 **Readiness by Area:**
 - ✅ **Core Gameplay:** Production ready (Bingo 85%, Trivia 95%)
 - ✅ **Authentication:** OAuth implemented, needs client-side refresh rotation
 - ⚠️ **Database:** Critical security issue (RLS disabled) - **MUST FIX**
 - ⚠️ **Security:** 5 critical issues, 5 high priority issues
-- ⚠️ **Testing:** 75% coverage, needs 15-20 hours for 95%
+- ⚠️ **Testing:** 75% coverage, needs additional test coverage for critical paths
 - ✅ **Deployment:** Vercel configured, env vars documented
 - ✅ **Infrastructure:** Solid architecture, good patterns
 
-**MVP Verdict:** Can ship to internal beta after critical fixes (5 hours), but needs high-priority work (14-17 hours) within 1-2 weeks for stability.
+**MVP Verdict:** Can ship to internal beta after critical fixes, but needs high-priority work completed for stability and security.
 
 ---
 
 ### 13.2 Immediate Next Steps
 
-**Week 1 (Critical Path):**
-1. **Day 1:** Fix database security (RLS + FK) - 30 min
-2. **Day 1:** Remove test-login routes - 15 min
-3. **Day 1-2:** Fix template loading tests - 4 hours
-4. **Day 2:** Deploy to staging, test OAuth flow end-to-end - 2 hours
-5. **Day 3:** Add logout functionality - 2-3 hours
-6. **Day 3:** Fix Platform-Hub hardcoded URLs - 1 hour
-7. **Day 4:** Extract OAuth clients to @beak-gaming/auth - 3-4 hours
-8. **Day 5:** Add health check endpoints - 1 hour
-9. **Day 5:** Implement refresh token rotation in clients - 3-4 hours
+**Critical Path (Must Complete First):**
+1. Fix database security (RLS + FK restoration)
+2. Remove test-login routes from Bingo app
+3. Fix template loading tests (5 failing tests)
+4. Deploy to staging, test OAuth flow end-to-end
 
-**Total Week 1:** ~17-20 hours
+**High Priority (Complete for Beta Stability):**
+1. Add logout functionality to both games
+2. Fix Platform-Hub hardcoded URLs
+3. Extract OAuth clients to @beak-gaming/auth package
+4. Add health check endpoints to all apps
+5. Implement refresh token rotation in game clients
 
----
+**Quality & Testing:**
+1. Add OAuth deny route tests
+2. Add session endpoint tests
+3. Add Trivia template [id] route tests
+4. Fix skipped tests (9 remaining)
+5. Add end-to-end OAuth flow (Playwright)
+6. Security review and remediation
 
-**Week 2 (Quality & Testing):**
-1. Add OAuth deny route tests - 2 hours
-2. Add session endpoint tests - 3-4 hours
-3. Add Trivia template [id] tests - 2 hours
-4. Fix skipped tests - 4-6 hours
-5. Add end-to-end OAuth flow (Playwright) - 2-3 hours
-6. Security review and fixes - 4-6 hours
-
-**Total Week 2:** ~17-23 hours
-
----
-
-**Week 3 (Production Prep):**
-1. Implement PBKDF2 for PIN hashing - 1-2 hours
-2. Add CORS middleware - 1-2 hours
-3. Add request size limits - 1-2 hours
-4. Implement Redis-backed rate limiting - 2-3 hours
-5. Add security headers - 1-2 hours
-6. Run penetration test - 4-6 hours
-7. Monitor and fix issues from beta testing - 8-12 hours
-
-**Total Week 3:** ~18-30 hours
+**Production Prep:**
+1. Implement PBKDF2 for PIN hashing (replace SHA-256)
+2. Add CORS middleware configuration
+3. Add request size limits to API routes
+4. Implement Redis-backed rate limiting for multi-instance support
+5. Add security headers (CSP, X-Frame-Options)
+6. Run penetration test
+7. Monitor and address issues from beta testing
 
 ---
 
