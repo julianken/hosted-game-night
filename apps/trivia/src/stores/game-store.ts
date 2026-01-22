@@ -22,6 +22,7 @@ import {
   resumeGame as resumeGameEngine,
   emergencyPause as emergencyPauseEngine,
   updateSettings as updateSettingsEngine,
+  importQuestions as importQuestionsEngine,
   getSelectedQuestion,
   getDisplayQuestion,
   getProgress,
@@ -68,6 +69,9 @@ export interface GameStore extends TriviaGameState {
   // Settings actions
   updateSettings: (settings: Partial<import('@/types').GameSettings>) => void;
   loadTeamsFromSetup: (names: string[]) => void;
+
+  // Question management
+  importQuestions: (questions: import('@/types').Question[], mode?: 'replace' | 'append') => void;
 
   // Hydration for sync
   _hydrate: (state: Partial<TriviaGameState>) => void;
@@ -200,6 +204,10 @@ export const useGameStore = create<GameStore>()((set) => ({
       }
       return newState;
     });
+  },
+
+  importQuestions: (questions: import('@/types').Question[], mode: 'replace' | 'append' = 'replace') => {
+    set((state) => importQuestionsEngine(state, questions, mode));
   },
 }));
 
