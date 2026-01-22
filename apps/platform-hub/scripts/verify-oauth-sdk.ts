@@ -141,6 +141,7 @@ async function testMethods() {
 
   // Check package version
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const packageJson = require('@supabase/supabase-js/package.json');
     console.log('📦 Package Information:\n');
     console.log('  - @supabase/supabase-js version:', packageJson.version);
@@ -152,7 +153,7 @@ async function testMethods() {
 
     const versionOk = major > 2 || (major === 2 && minor >= 45);
     console.log('  - Version check:', versionOk ? '✅ Compatible' : '⚠️  May need upgrade');
-  } catch (e) {
+  } catch {
     console.log('📦 Package version check skipped (could not read package.json)');
   }
 
