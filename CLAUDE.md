@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `apps/trivia` | **✅ Production Ready (95%)** | Full trivia with 20 questions, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth auth, CSV import |
 | `apps/platform-hub` | **⚠️ Backend Complete (45%)** | OAuth 2.1 server complete (3,479 lines). Game selector UI complete. Missing: user dashboard, profile/template management UI |
 | `packages/sync` | **✅ Complete (100%)** | BroadcastChannel sync, Zustand store, React hook. Actively used in Bingo/Trivia |
-| `packages/ui` | **⚠️ Partial (88%)** | 15 components (Button, Toggle, Slider, Modal, Input, Skeleton variants, Confetti, etc.). Missing: Card, Toast |
+| `packages/ui` | **⚠️ Partial (88%)** | 15 components. Missing from package: Card, Toast (Toast duplicated in apps instead) |
 | `packages/theme` | **✅ Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
 | `packages/game-engine` | **⚠️ Partial (40%)** | Base GameStatus type, transition functions, statistics module |
 | `packages/auth` | **✅ Complete (95%)** | 30 exports: AuthProvider, hooks (useAuth, useSession, useUser), ProtectedRoute, client wrappers. Not integrated in Bingo/Trivia (apps have duplicate OAuth clients) |
@@ -53,7 +53,7 @@ beak-gaming-platform/
 │   └── platform-hub/    # Central hub - auth, dashboard, game selector (port 3002)
 ├── packages/
 │   ├── sync/            # Dual-screen synchronization (BroadcastChannel)
-│   ├── ui/              # Shared UI components (15 components, missing Card/Toast)
+│   ├── ui/              # Shared UI components (Button, Modal, Toggle, Input, etc.)
 │   ├── theme/           # Senior-friendly design tokens and CSS
 │   ├── auth/            # Supabase authentication wrappers (30 exports)
 │   ├── game-engine/     # Abstract game state machine

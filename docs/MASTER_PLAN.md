@@ -523,7 +523,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 | **CRIT-1** | RLS disabled on bingo_templates | Supabase database | Security vulnerability - anyone can modify templates |
 | **CRIT-2** | FK constraint removed from user_id | Supabase database | Data integrity compromised - orphaned data possible |
 | **CRIT-3** | Test-login routes exposed | `apps/bingo/src/app/*/test-login` | Auth bypass - unauthenticated access |
-| **CRIT-4** | Template loading tests failing | SaveTemplateModal tests | Blocks merge - 5 tests failing |
+| **CRIT-4** | Template loading tests failing | SaveTemplateModal and other async tests | Blocks merge - multiple test failures in Bingo and Trivia |
 | **CRIT-5** | Math.random() in offline session ID | `apps/bingo/src/lib/sync/offline-session.ts:34` | Predictable session IDs - should use crypto.getRandomValues() |
 
 ---
@@ -549,6 +549,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 | **MED-3** | No request size limits on API routes | DoS vulnerability |
 | **MED-4** | Console logging in production | No audit trail for token events |
 | **MED-5** | Audit log RLS policy references non-existent columns | Admin can't read logs |
+| **MED-6** | Package Button missing aria-busy attribute | Accessibility regression - apps have it, package doesn't |
 
 ---
 
@@ -556,7 +557,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 **5 Critical:** Must fix before any production deployment
 **5 High:** Should fix before beta testing
-**4 Medium:** Address before public launch (MED-1 is not a real issue)
+**5 Medium:** Address before public launch (MED-1 is not a real issue, MED-6 added)
 
 ---
 
