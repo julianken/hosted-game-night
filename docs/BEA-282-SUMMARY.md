@@ -7,7 +7,7 @@
 
 **Branch**: `feat/bea-282-secure-cookies`
 
-**Commit**: `4b52066`
+**Commit**: `7b4159d`
 
 ## Implementation Details
 
@@ -217,7 +217,7 @@ If issues arise after deployment:
 
 ```bash
 # Revert the commit
-git revert 4b52066
+git revert 7b4159d
 
 # Or restore main branch
 git checkout main -- packages/auth apps/platform-hub apps/bingo apps/trivia

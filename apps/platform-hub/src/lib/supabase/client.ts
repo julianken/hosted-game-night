@@ -31,5 +31,14 @@ function validateEnvVariables(): { url: string; anonKey: string } {
 const { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY } = validateEnvVariables()
 
 export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: {
+      // Browser-side cookie options (httpOnly not supported in browsers)
+      // Note: These cookies are managed by JavaScript and cannot be httpOnly
+      // Server-side cookies (via middleware/server.ts) have httpOnly enabled
+      sameSite: 'lax',
+      path: '/',
+      // secure flag is automatically handled by the browser based on protocol
+    },
+  })
 }
