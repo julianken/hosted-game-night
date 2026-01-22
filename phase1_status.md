@@ -8,8 +8,8 @@
 
 | Issue | Title | Status | Branch | PR | Assignee | Notes |
 |-------|-------|--------|--------|-----|----------|-------|
-| BEA-289 | Create Bingo Template API Routes | 🟢 PR Open | phase1/bea-289-bingo-api | [#170](https://github.com/julianken/beak-gaming-platform/pull/170) | Eng Lead | 4 routes, full tests |
-| BEA-290 | Create Bingo Template UI Components | ⚪ Blocked | - | - | - | Blocked by BEA-289 |
+| BEA-289 | Create Bingo Template API Routes | ✅ Merged | phase1/bea-289-bingo-api | [#170](https://github.com/julianken/beak-gaming-platform/pull/170) | Eng Lead | 4 routes, 93.75%/98.14% coverage |
+| BEA-290 | Create Bingo Template UI Components | 🔵 Ready | - | - | Eng Lead | Ready to start |
 | BEA-291 | Integrate Templates into Bingo Room Setup | ⚪ Blocked | - | - | - | Blocked by BEA-290 |
 
 ## Legend
@@ -19,19 +19,20 @@
 - ⚪ Blocked / Not Started
 - 🔴 Blocked on Failure
 
-## PRs Requiring Review
-- [#170 - BEA-289: Create Bingo Template API Routes](https://github.com/julianken/beak-gaming-platform/pull/170) - ✅ Code review complete, fixes applied
-
-## Recent Fixes (Commit 27ca1ac)
-- ✅ Removed dead null checks from GET/PATCH handlers
-- ✅ Fixed test mocking to throw errors (not return null)
-- ✅ Achieved 93.75% and 98.14% coverage (exceeds 90% requirement)
-- ✅ All 23 tests passing locally
-- ⏳ CI running on latest commit
+## Completed Work
+- ✅ **BEA-289** merged at 2026-01-22T04:31:02Z via PR #170
+- ✅ 4 API routes: GET/POST /api/templates, GET/PATCH/DELETE /api/templates/[id]
+- ✅ 23 tests passing with 93.75%/98.14% coverage
+- ✅ All CI checks passing (Build, Test, Vercel deployments)
 
 ## Investigation Reports
-- agent-a512b43 (Code Review): Found 4 critical issues - ALL FIXED
-- agent-a2c76f5 (CI Investigation): Build error resolved, Vercel SUCCESS
+- **agent-a512b43** (Code Review): Found 4 critical issues - ALL FIXED
+  - Dead null checks removed
+  - Test mocking corrected to throw errors
+  - Coverage improved to exceed 90% requirement
+- **agent-a2c76f5** (CI Investigation): Build error resolved, Vercel SUCCESS
+  - Fixed import paths to avoid React hooks in server routes
+  - Vercel bingo deployment restored to SUCCESS
 
 ## Guide Document
 [Template Management MVP - Implementation Guide](https://linear.app/beak-gaming/document/template-management-mvp-implementation-guide-5d27cac98be6)
@@ -42,4 +43,4 @@
 - [BEA-291](https://linear.app/beak-gaming/issue/BEA-291)
 
 ---
-Last updated: 2026-01-22T05:28 UTC
+Last updated: 2026-01-22T05:32 UTC
