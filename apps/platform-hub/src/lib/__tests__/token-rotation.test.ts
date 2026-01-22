@@ -30,13 +30,14 @@ describe('Token Rotation Module', () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = mockSupabaseUrl;
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = mockAnonKey;
     process.env.SUPABASE_SERVICE_ROLE_KEY = mockServiceRoleKey;
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
 
     // Clear mocks
     vi.clearAllMocks();
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
