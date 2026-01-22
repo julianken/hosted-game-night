@@ -1,57 +1,76 @@
 /**
- * OAuth Approval API Route
- *
- * Handles user approval of OAuth authorization requests.
- * Demonstrates integration of audit logging with OAuth flow.
+ * OAuth Authorization Approval API
  *
  * POST /api/oauth/approve
- * Body: { authorization_id: string }
- * Response: { redirect_url: string }
+ *
+ * Validates CSRF token, approves OAuth authorization request, and logs to audit.
+ * Implements CSRF protection to prevent cross-site request forgery attacks.
+ *
+ * Request body:
+ * {
+ *   authorization_id: string;
+ *   csrf_token: string;
+ * }
+ *
+ * Response:
+ * {
+ *   redirect_url: string;  // URL to redirect back to client
+ * }
+ *
+ * Error responses:
+ * - 400: Missing required fields
+ * - 403: Invalid CSRF token
+ * - 500: Server error
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { validateCsrfToken, clearCsrfToken } from '@/lib/csrf';
 import { createClient } from '@/lib/supabase/server';
 import { auditAuthorizationSuccess, auditAuthorizationError } from '@/middleware/audit-middleware';
 
-/**
- * Request body schema
- */
-interface ApproveRequestBody {
+interface ApproveRequest {
   authorization_id: string;
+  csrf_token: string;
 }
 
-/**
- * POST /api/oauth/approve
- *
- * Approves an OAuth authorization request and logs the event to the audit log.
- *
- * Flow:
- * 1. Validate request body
- * 2. Check user authentication
- * 3. Fetch authorization details from Supabase
- * 4. Approve authorization via Supabase OAuth SDK
- * 5. Log success to audit log
- * 6. Return redirect URL
- *
- * @param request - Next.js request object
- * @returns Response with redirect URL or error
- */
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
-    const body = (await request.json()) as ApproveRequestBody;
-    const { authorization_id } = body;
+    const body = await request.json() as Partial<ApproveRequest>;
+    const { authorization_id, csrf_token } = body;
 
-    // Validate authorization_id
-    if (!authorization_id || typeof authorization_id !== 'string') {
+    // Validate required fields
+    if (!authorization_id) {
       return NextResponse.json(
-        { error: 'Missing or invalid authorization_id' },
+        { error: 'Missing authorization_id' },
         { status: 400 }
       );
     }
 
-    // Get authenticated user session
+    if (!csrf_token) {
+      return NextResponse.json(
+        { error: 'Missing csrf_token' },
+        { status: 400 }
+      );
+    }
+
+    // Validate CSRF token
+    const isValidCsrf = await validateCsrfToken(csrf_token);
+
+    if (!isValidCsrf) {
+      return NextResponse.json(
+        { error: 'Invalid or expired CSRF token' },
+        { status: 403 }
+      );
+    }
+
+    // Clear CSRF token after successful validation (token rotation)
+    await clearCsrfToken();
+
+    // Create Supabase client with user session
     const supabase = await createClient();
+
+    // Check if user is authenticated
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
@@ -61,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch authorization details
+    // Fetch authorization details for audit logging
     const { data: authDetails, error: detailsError } = await supabase.auth.oauth.getAuthorizationDetails(
       authorization_id
     );
@@ -87,24 +106,34 @@ export async function POST(request: NextRequest) {
     // Note: scopes may not be available in Supabase SDK response type
     const scopes = (authDetails as any).scopes || [];
 
-    // Approve authorization via Supabase OAuth SDK
-    const { data: approvalData, error: approvalError } = await supabase.auth.oauth.approveAuthorization(
+    // Approve authorization request
+    const { data, error: approveError } = await supabase.auth.oauth.approveAuthorization(
       authorization_id
     );
 
-    if (approvalError || !approvalData?.redirect_url) {
+    if (approveError) {
       // Log error to audit log
       await auditAuthorizationError(
         request,
         client.id,
         authorization_id,
         'approval_failed',
-        approvalError?.message || 'Approval failed',
+        approveError?.message || 'Approval failed',
         session.user.id
       );
 
       return NextResponse.json(
-        { error: approvalError?.message || 'Failed to approve authorization' },
+        { error: approveError.message || 'Failed to approve authorization' },
+        { status: 400 }
+      );
+    }
+
+    // Supabase returns 'redirect_url'
+    const redirectUrl = (data as { redirect_url?: string }).redirect_url;
+
+    if (!redirectUrl) {
+      return NextResponse.json(
+        { error: 'No redirect URL provided by authorization server' },
         { status: 500 }
       );
     }
@@ -119,11 +148,9 @@ export async function POST(request: NextRequest) {
     );
 
     // Return redirect URL
-    return NextResponse.json({
-      redirect_url: approvalData.redirect_url,
-    });
+    return NextResponse.json({ redirect_url: redirectUrl });
   } catch (error) {
-    console.error('Error in OAuth approval:', error);
+    console.error('Unexpected error in approve route:', error);
 
     // Log error (without client_id if not available)
     await auditAuthorizationError(

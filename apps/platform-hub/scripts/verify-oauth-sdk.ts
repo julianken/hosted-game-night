@@ -141,8 +141,9 @@ async function testMethods() {
 
   // Check package version
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const packageJson = require('@supabase/supabase-js/package.json');
+    const pkgJsonPath = resolve(__dirname, '../../../node_modules/@supabase/supabase-js/package.json');
+    const pkgJsonContent = readFileSync(pkgJsonPath, 'utf-8');
+    const packageJson = JSON.parse(pkgJsonContent);
     console.log('📦 Package Information:\n');
     console.log('  - @supabase/supabase-js version:', packageJson.version);
     console.log('  - Required version: >=2.45.0 (OAuth support added)');

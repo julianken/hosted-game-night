@@ -12,6 +12,7 @@ export interface ConsentScreenProps {
   details?: AuthorizationDetails | null;
   onApprove: () => Promise<void>;
   onDeny: () => Promise<void>;
+  csrfToken?: string | null;
 }
 
 /**
@@ -31,6 +32,7 @@ export function ConsentScreen({
   details = null,
   onApprove,
   onDeny,
+  csrfToken = null,
 }: ConsentScreenProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isDenying, setIsDenying] = useState(false);
@@ -55,7 +57,7 @@ export function ConsentScreen({
 
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (loading || isApproving || isDenying) return;
+    if (loading || isApproving || isDenying || !csrfToken) return;
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -169,10 +171,15 @@ export function ConsentScreen({
 
           {/* Action buttons */}
           <div className="pt-6 space-y-4">
+            {/* Hidden CSRF token field for form-based submission */}
+            {csrfToken && (
+              <input type="hidden" name="csrf_token" value={csrfToken} />
+            )}
+
             <Button
               onClick={handleApprove}
               loading={isApproving}
-              disabled={isApproving || isDenying}
+              disabled={isApproving || isDenying || !csrfToken}
               size="lg"
               className="w-full"
               aria-label="Allow access"

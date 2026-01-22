@@ -60,6 +60,7 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
   const [details, setDetails] = useState<AuthorizationDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   const authorizationId = searchParams.authorization_id;
 
@@ -101,6 +102,20 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
           }
         } else if (data && isValidAuthorizationDetails(data)) {
           setDetails(data);
+
+          // Fetch CSRF token after successful authorization details load
+          try {
+            const csrfResponse = await fetch('/api/oauth/csrf');
+            if (csrfResponse.ok) {
+              const { token } = await csrfResponse.json();
+              setCsrfToken(token);
+            } else {
+              setError('Failed to generate security token. Please refresh and try again.');
+            }
+          } catch (csrfErr) {
+            console.error('Error fetching CSRF token:', csrfErr);
+            setError('Failed to initialize security token. Please refresh and try again.');
+          }
         } else if (data) {
           setError('Invalid authorization details structure received from server.');
         } else {
@@ -121,16 +136,36 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
    * Handle user approval of the authorization request
    */
   const handleApprove = async () => {
-    if (!authorizationId) return;
+    if (!authorizationId || !csrfToken) {
+      setError('Missing required security token. Please refresh the page and try again.');
+      return;
+    }
 
     try {
-      const { data, error: approveError } = await supabase.auth.oauth.approveAuthorization(
-        authorizationId
-      );
+      // Send approval request through API route with CSRF token
+      const response = await fetch('/api/oauth/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          authorization_id: authorizationId,
+          csrf_token: csrfToken,
+        }),
+      });
 
-      if (approveError) {
-        setError(`Failed to approve authorization: ${approveError.message}`);
-      } else if (data?.redirect_url) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          setError('Security validation failed. Please refresh the page and try again.');
+        } else {
+          setError(data.error || 'Failed to approve authorization');
+        }
+        return;
+      }
+
+      if (data.redirect_url) {
         // Redirect back to client app with authorization code
         window.location.href = data.redirect_url;
       } else {
@@ -175,6 +210,7 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
       details={details}
       onApprove={handleApprove}
       onDeny={handleDeny}
+      csrfToken={csrfToken}
     />
   );
 }
