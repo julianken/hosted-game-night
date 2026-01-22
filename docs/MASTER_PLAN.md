@@ -72,18 +72,18 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 beak-gaming-platform/
 ├── apps/
 │   ├── bingo/              # Port 3000 - 75-ball bingo with 29 patterns
-│   ├── trivia/             # Port 3001 - Team trivia with 20 questions
-│   └── platform-hub/       # Port 3002 - OAuth server + game selector
+│   ├── platform-hub/       # Port 3002 - OAuth server + game selector
+│   └── trivia/             # Port 3001 - Team trivia with 20 questions
 ├── packages/
 │   ├── auth/               # Supabase auth wrappers (40+ exports)
 │   ├── database/           # Type-safe Supabase client (150+ exports)
-│   ├── sync/               # Dual-screen BroadcastChannel sync
-│   ├── ui/                 # Shared components (Button, Modal, etc.)
-│   ├── theme/              # Design tokens (senior-friendly)
-│   ├── game-engine/        # Base game state machine
-│   ├── types/              # Shared TypeScript types
 │   ├── error-tracking/     # Error logging utilities
-│   └── testing/            # Test utilities and mocks
+│   ├── game-engine/        # Base game state machine
+│   ├── sync/               # Dual-screen BroadcastChannel sync
+│   ├── testing/            # Test utilities and mocks
+│   ├── theme/              # Design tokens (senior-friendly)
+│   ├── types/              # Shared TypeScript types
+│   └── ui/                 # Shared components (Button, Modal, etc.)
 └── supabase/
     └── migrations/         # 8 database migrations
 ```
