@@ -8,7 +8,10 @@ import { validateEnvironment } from '@/lib/env-validation';
 
 // Validate environment variables at startup
 // This will throw and prevent the app from starting if configuration is invalid
-validateEnvironment();
+// Skip validation during build phase (NEXT_PHASE is set by Next.js during builds)
+if (process.env.NEXT_PHASE !== 'phase-production-build') {
+  validateEnvironment();
+}
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
