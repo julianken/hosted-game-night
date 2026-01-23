@@ -16,12 +16,16 @@ vi.mock('@/stores/game-store', () => ({
 }));
 
 // Mock the toast
-vi.mock('@/components/ui/Toast', () => ({
-  useToast: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
-  }),
-}));
+vi.mock('@beak-gaming/ui', async () => {
+  const actual = await vi.importActual('@beak-gaming/ui');
+  return {
+    ...actual,
+    useToast: () => ({
+      success: vi.fn(),
+      error: vi.fn(),
+    }),
+  };
+});
 
 // Mock fetch
 global.fetch = vi.fn();
