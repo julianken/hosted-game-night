@@ -8,7 +8,7 @@
 
 | Issue | Title | Agent | Status | Branch | PR | Checks | Notes |
 |-------|-------|-------|--------|--------|----|----|-------|
-| BEA-313 | Infrastructure: Sharding & CI | Agent-1 | 🟢 Ready for PR | `e2e-wave/BEA-313-infrastructure-sharding-ci` | Pending | - | Core infrastructure complete |
+| BEA-313 | Infrastructure: Sharding & CI | Agent-1 | 🔵 In Review | `e2e-wave/BEA-313-infrastructure-sharding-ci` | [#192](https://github.com/julianken/beak-gaming-platform/pull/192) | ⏳ Pending | Core infrastructure complete, CI tests running |
 | BEA-314 | Auth Flow E2E Tests | Agent-2 | 🔵 Running | `e2e-wave/BEA-314-auth-flow-e2e-tests` | - | - | Urgent priority |
 | BEA-315 | Dashboard & Profile E2E | Agent-3 | 🔵 Running | `e2e-wave/BEA-315-dashboard-profile-e2e` | - | - | Independent |
 
