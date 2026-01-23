@@ -235,9 +235,6 @@ describe('SaveTemplateModal', () => {
   it('shows error when no questions exist', async () => {
     // Use fireEvent for testing
 
-    // Save the original mock implementation
-    const originalMock = vi.mocked(await import('@/stores/game-store')).useGameStore;
-
     // Mock empty questions temporarily
     vi.mocked(vi.mocked(await import('@/stores/game-store')).useGameStore).mockImplementation((selector) => {
       const store = {
