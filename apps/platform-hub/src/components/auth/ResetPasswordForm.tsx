@@ -4,7 +4,6 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
-import { useAuth } from '@beak-gaming/auth';
 
 export interface ResetPasswordFormProps {
   onSuccess?: () => void;
@@ -18,13 +17,13 @@ interface FormErrors {
 
 export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
   const router = useRouter();
-  const { updatePassword, isLoading } = useAuth();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -59,14 +58,32 @@ export function ResetPasswordForm({ onSuccess }: ResetPasswordFormProps) {
       return;
     }
 
-    const { error } = await updatePassword(password);
+    setIsLoading(true);
 
-    if (error) {
-      setErrors({ general: error.message });
-    } else {
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.error || 'Failed to reset password' });
+        setIsLoading(false);
+        return;
+      }
+
       setIsSuccess(true);
       onSuccess?.();
       setTimeout(() => router.push('/login'), 2000);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      setIsLoading(false);
     }
   };
 

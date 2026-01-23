@@ -62,8 +62,14 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // Show error if token is invalid or user is not authenticated
+  // Show error if token check failed or user is not authenticated
+  // Note: Client-side checks provide better UX by showing errors early.
+  // SECURITY: The real protection is server-side in /api/auth/reset-password
+  // which validates AMR (Authentication Methods Reference) claims to ensure
+  // the session was created via password recovery, preventing privilege escalation.
   if (tokenError || !user) {
+    const errorMessage = tokenError || 'This password reset link is invalid or has expired.';
+
     return (
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
@@ -109,7 +115,7 @@ export default function ResetPasswordPage() {
               <div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">Invalid Reset Link</h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  {tokenError || 'This password reset link is invalid or has expired.'}
+                  {errorMessage}
                 </p>
               </div>
               <Link

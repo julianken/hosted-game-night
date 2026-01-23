@@ -24,11 +24,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    if (newPassword && newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+    // Validate new password complexity (matches client-side validation)
+    if (newPassword) {
+      if (newPassword.length < 8) {
+        return NextResponse.json(
+          { error: 'Password must be at least 8 characters' },
+          { status: 400 }
+        );
+      }
+      if (!/[A-Z]/.test(newPassword)) {
+        return NextResponse.json(
+          { error: 'Password must include at least one uppercase letter' },
+          { status: 400 }
+        );
+      }
+      if (!/[a-z]/.test(newPassword)) {
+        return NextResponse.json(
+          { error: 'Password must include at least one lowercase letter' },
+          { status: 400 }
+        );
+      }
+      if (!/[0-9]/.test(newPassword)) {
+        return NextResponse.json(
+          { error: 'Password must include at least one number' },
+          { status: 400 }
+        );
+      }
     }
 
     // If changing password, verify current password
