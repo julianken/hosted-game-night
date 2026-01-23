@@ -7,12 +7,8 @@ const nextConfig: NextConfig = {
     '@beak-gaming/theme',
     '@beak-gaming/auth',
   ],
-  // Configure API route body size limits
-  // This prevents DoS attacks via large request payloads
-  experimental: {
-    // bodyParser config is now a top-level property in Next.js 16
-    // We configure it at the route level via route handlers
-  },
+  // Note: Request body size limits are enforced via middleware.ts
+  // using Content-Length header inspection, not Next.js bodyParser config
 };
 
 // Bundle analyzer is enabled via ANALYZE=true environment variable

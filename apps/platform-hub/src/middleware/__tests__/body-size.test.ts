@@ -220,7 +220,7 @@ describe('Body Size Middleware', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle requests with invalid Content-Length', () => {
+    it('should handle requests with invalid Content-Length', async () => {
       const request = new NextRequest('http://localhost:3002/api/test', {
         method: 'POST',
         headers: {
@@ -228,12 +228,20 @@ describe('Body Size Middleware', () => {
         },
       });
 
-      // Invalid Content-Length should parse as NaN and be rejected
+      // Invalid Content-Length should return 400 Bad Request
       const response = checkBodySize(request);
-      expect(response?.status).toBe(413);
+      expect(response?.status).toBe(400);
+      expect(response).toBeDefined();
+      if (response) {
+        const body = await response.json();
+        expect(body).toMatchObject({
+          error: 'invalid_request',
+          error_description: expect.stringContaining('invalid'),
+        });
+      }
     });
 
-    it('should handle requests with negative Content-Length', () => {
+    it('should handle requests with negative Content-Length', async () => {
       const request = new NextRequest('http://localhost:3002/api/test', {
         method: 'POST',
         headers: {
@@ -241,8 +249,17 @@ describe('Body Size Middleware', () => {
         },
       });
 
-      // Negative content length should be allowed (treated as within limit)
-      expect(isBodySizeWithinLimit(request)).toBe(true);
+      // Negative Content-Length should return 400 Bad Request
+      const response = checkBodySize(request);
+      expect(response?.status).toBe(400);
+      expect(response).toBeDefined();
+      if (response) {
+        const body = await response.json();
+        expect(body).toMatchObject({
+          error: 'invalid_request',
+          error_description: expect.stringContaining('invalid'),
+        });
+      }
     });
 
     it('should handle requests with zero Content-Length', () => {

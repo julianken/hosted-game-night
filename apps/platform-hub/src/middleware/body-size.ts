@@ -48,8 +48,36 @@ export function isBodySizeWithinLimit(request: NextRequest): boolean {
 
   const bodySize = parseInt(contentLength, 10);
 
+  // Reject invalid Content-Length (NaN) or negative values
+  // These indicate malformed requests, not oversized payloads
+  if (isNaN(bodySize) || bodySize < 0) {
+    return false;
+  }
+
   // Check if body size exceeds limit
   return bodySize <= MAX_BODY_SIZE_BYTES;
+}
+
+/**
+ * Create a 400 Bad Request response for invalid Content-Length
+ *
+ * Returns a properly formatted error response for malformed Content-Length headers.
+ *
+ * @returns NextResponse with 400 status
+ */
+export function createInvalidContentLengthResponse(): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'invalid_request',
+      error_description: 'Content-Length header is invalid or negative',
+    },
+    {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 }
 
 /**
@@ -97,14 +125,30 @@ export function createPayloadTooLargeResponse(): NextResponse {
  * ```
  *
  * @param request - Next.js request object
- * @returns NextResponse with 413 if oversized, null if ok
+ * @returns NextResponse with 400/413 if invalid/oversized, null if ok
  */
 export function checkBodySize(
   request: NextRequest
 ): NextResponse | null {
-  if (!isBodySizeWithinLimit(request)) {
+  const contentLength = request.headers.get('content-length');
+
+  // No Content-Length header - allow request
+  if (!contentLength) {
+    return null;
+  }
+
+  const bodySize = parseInt(contentLength, 10);
+
+  // Invalid or negative Content-Length - return 400 Bad Request
+  if (isNaN(bodySize) || bodySize < 0) {
+    return createInvalidContentLengthResponse();
+  }
+
+  // Oversized payload - return 413 Payload Too Large
+  if (bodySize > MAX_BODY_SIZE_BYTES) {
     return createPayloadTooLargeResponse();
   }
+
   return null;
 }
 
