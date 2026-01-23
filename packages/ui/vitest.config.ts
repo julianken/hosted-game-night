@@ -2,24 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [
-    react({
-      // Disable React Strict Mode in tests to prevent double rendering
-      // which causes duplicate DOM elements and test failures
-      jsxRuntime: 'automatic',
-      babel: {
-        plugins: [
-          [
-            '@babel/plugin-transform-react-jsx',
-            {
-              runtime: 'automatic',
-              development: false,
-            },
-          ],
-        ],
-      },
-    }),
-  ],
+  plugins: [react()],
   test: {
     environment: 'jsdom',
     globals: true,
