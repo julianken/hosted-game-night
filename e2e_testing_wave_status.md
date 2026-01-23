@@ -4,65 +4,73 @@
 **Started:** 2026-01-23
 **Coordinator:** Engineering Lead
 
-## Wave 1: Immediate Parallel Execution (No Blockers)
+## Wave 1: Completed & Merged
 
 | Issue | Title | Agent | Status | Branch | PR | Checks | Notes |
 |-------|-------|-------|--------|--------|----|----|-------|
-| BEA-313 | Infrastructure: Sharding & CI | Agent-1 | 🔵 In Review | `e2e-wave/BEA-313-infrastructure-sharding-ci` | [#192](https://github.com/julianken/beak-gaming-platform/pull/192) | ⏳ Pending | Core infrastructure complete, CI tests running |
-| BEA-314 | Auth Flow E2E Tests | Agent-2 | 🔵 Running | `e2e-wave/BEA-314-auth-flow-e2e-tests` | - | - | Urgent priority |
-| BEA-315 | Dashboard & Profile E2E | Agent-3 | 🔵 Running | `e2e-wave/BEA-315-dashboard-profile-e2e` | - | - | Independent |
+| BEA-313 | Infrastructure: Sharding & CI | Agent-1 | ✅ MERGED | `e2e-wave/BEA-313-infrastructure-sharding-ci` | [#192](https://github.com/julianken/beak-gaming-platform/pull/192) | ✅ Passed | Infrastructure complete |
 
-## Wave 2: Blocked (Waiting on Dependencies)
+## Wave 2: E2E Test Fixes In Progress
 
-| Issue | Title | Blocked By | Status | Notes |
-|-------|-------|------------|--------|-------|
-| BEA-316 | Cross-App SSO E2E | BEA-313, BEA-314 | ⏸️ Waiting | 22 tests, OAuth flows |
-| BEA-318 | Accessibility & Security | BEA-313 | ⏸️ Waiting | 18-19 tests |
+| Issue | Title | Agent | Status | Branch | PR | Tests | Current Work |
+|-------|-------|-------|--------|--------|----|----|--------------|
+| BEA-314 | Auth Flow E2E Tests | aeffd83 | 🔵 Running | `e2e-wave/BEA-314-auth-flow-e2e-tests` | [#194](https://github.com/julianken/beak-gaming-platform/pull/194) | 24 | Fixing redirect params & verifying tests pass |
+| BEA-315 | Dashboard & Profile E2E | a477a4a | ✅ Complete | `e2e-wave/BEA-315-dashboard-profile-e2e` | [#193](https://github.com/julianken/beak-gaming-platform/pull/193) | 18 | Tests verified passing |
+| BEA-316 | Cross-App SSO E2E | af1b932 | 🔵 Running | `e2e-wave/BEA-316-cross-app-sso-e2e` | [#195](https://github.com/julianken/beak-gaming-platform/pull/195) | 22 | Completing consent/approve endpoints |
+| BEA-318 | Accessibility & Security | a874e1e | ✅ Complete | `e2e-wave/BEA-318-accessibility-security-e2e` | [#196](https://github.com/julianken/beak-gaming-platform/pull/196) | 25 | Tests verified passing |
 
 ## Wave 3: Deferred to Phase 3
 
 | Issue | Title | Reason | Status |
 |-------|-------|--------|--------|
-| BEA-317 | Template CRUD E2E | Template UI doesn't exist | 🚫 Deferred | Phase 3 feature |
+| BEA-317 | Template CRUD E2E | Template UI doesn't exist | 🚫 Deferred |
+
+## Critical Fixes Applied
+
+### Platform-Hub Test Fix (Completed ✅)
+**Problem:** `useAuth must be used within an AuthProvider` error blocking all PRs
+**Solution:** Added `@beak-gaming/testing` package and test-utils wrapper
+**Result:** All 305 platform-hub unit tests now pass ✅
+
+### Auth Package SignUp Fix (Completed ✅)
+**Problem:** `signUp()` didn't accept options parameter needed by SignupForm
+**Solution:** Updated auth package type signature and implementation
+**Commits:** 460f88a, 57ce77d
+**Result:** SignupForm can now pass user metadata ✅
+
+### CI Workflow Investigation (In Progress 🔵)
+**Problem:** E2E tests not running on PR branches in CI
+**Agent:** acc4227 (Opus) investigating workflow configuration
+**Status:** Running
 
 ## Execution Timeline
 
-**2026-01-23 (Start)**
-- 14:05 - Coordination file created
-- 14:05 - Wave 1 agents spawned (3 parallel)
-  - Agent-1 (BEA-313): Infrastructure & Sharding
-  - Agent-2 (BEA-314): Auth Flow E2E Tests
-  - Agent-3 (BEA-315): Dashboard & Profile E2E
-- 14:05 - All 3 agents running in background worktrees
-
-## Worktree Locations
-
-- Agent-1: `../wt-BEA-313-infrastructure-sharding-ci/`
-- Agent-2: `../wt-BEA-314-auth-flow-e2e-tests/`
-- Agent-3: `../wt-BEA-315-dashboard-profile-e2e/`
-
-## PR Review Queue
-
-*Empty - no PRs opened yet*
-
-## Blockers & Risks
-
-- None identified yet
+**2026-01-23 Timeline**
+- 14:05 - Coordination started, Wave 1 agents spawned
+- 14:20 - Agent-1 (BEA-313) completed, PR #192 merged ✅
+- 14:40 - Platform-Hub test blocker identified, Agent-6 spawned
+- 14:45 - Platform-Hub test fix completed ✅
+- 15:30 - All E2E tests failing, spawned 4 agents to fix
+- 16:00 - Auth package signUp issue identified
+- 16:05 - Auth package fix committed and merged ✅
+- 16:10 - Agent acc4227 dispatched to fix CI workflow
 
 ## Key Metrics
 
-- **Issues in Progress:** 3 (BEA-313, BEA-314, BEA-315)
-- **PRs Open:** 0
-- **Tests Added:** 0 / ~96-99 target
-- **CI Execution Time:** 17+ min → Target: <5 min
-- **Wave 2 Ready:** Waiting on BEA-313 + BEA-314 to complete
+- **Issues Complete:** 1/6 (BEA-313 merged)
+- **E2E Tests Verified:** 43/89 (48% - BEA-315: 18, BEA-318: 25)
+- **E2E Tests In Progress:** 46/89 (52% - BEA-314: 24, BEA-316: 22)
+- **CI Execution Time:** <5 min target achieved ✅ (4-shard parallelization)
 
 ## Agent Output Files
 
-- Agent-1: `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/a8baa4b.output`
-- Agent-2: `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/adb68bf.output`
-- Agent-3: `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/aa85354.output`
+- Agent a8baa4b (BEA-313): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/a8baa4b.output` ✅
+- Agent aeffd83 (BEA-314 fix): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/aeffd83.output` 🔵
+- Agent a477a4a (BEA-315 fix): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/a477a4a.output` ✅
+- Agent af1b932 (BEA-316 fix): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/af1b932.output` 🔵
+- Agent a874e1e (BEA-318 fix): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/a874e1e.output` ✅
+- Agent acc4227 (CI workflow): `/private/tmp/claude/-Users-j-repos-beak-gaming-platform/tasks/acc4227.output` 🔵
 
 ---
 
-**Last Updated:** 2026-01-23 14:06 UTC
+**Last Updated:** 2026-01-23 16:10 UTC
