@@ -64,7 +64,7 @@ async function setupOAuthClients() {
       }
 
       // Create OAuth client
-      const { data, error } = await (supabase.auth.admin as any).createOAuthClient({
+      const { error } = await (supabase.auth.admin as any).createOAuthClient({
         id: client.id,
         name: client.name,
         redirect_uris: client.redirect_uris,
