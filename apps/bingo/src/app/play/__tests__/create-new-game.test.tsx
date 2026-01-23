@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PlayPage from '../page';
+import { ToastProvider } from '@/components/ui/Toast';
 
 // Create mock functions to be shared across tests
 const mockClearToken = vi.fn();
@@ -127,6 +128,11 @@ vi.mock('@/components/pwa', () => ({
   OfflineBanner: () => null,
 }));
 
+// Helper to render PlayPage with required providers
+function renderWithProviders(ui: React.ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
+
 describe('PlayPage - Create New Game Button', () => {
   beforeEach(() => {
     // Set game status to idle for this test suite
@@ -147,13 +153,13 @@ describe('PlayPage - Create New Game Button', () => {
   });
 
   it('renders Create New Game button', () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
     const button = screen.getByRole('button', { name: /create new game/i });
     expect(button).toBeInTheDocument();
   });
 
   it('button has proper accessibility and styling', () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
     const button = screen.getByRole('button', { name: /create new game/i });
 
     // Check button is properly labeled
@@ -170,7 +176,7 @@ describe('PlayPage - Create New Game Button', () => {
   });
 
   it('clicking button clears session token', async () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
@@ -181,7 +187,7 @@ describe('PlayPage - Create New Game Button', () => {
   });
 
   it('clicking button resets game state', async () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
@@ -192,7 +198,7 @@ describe('PlayPage - Create New Game Button', () => {
   });
 
   it('clicking button shows create modal', async () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
@@ -207,7 +213,7 @@ describe('PlayPage - Create New Game Button', () => {
   });
 
   it('does not show confirmation in idle state', () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
@@ -234,7 +240,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
   });
 
   it('button is still visible during active game', () => {
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
     const button = screen.getByRole('button', { name: /create new game/i });
     expect(button).toBeInTheDocument();
   });
@@ -242,7 +248,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
   it('does not clear session or reset game when user cancels confirmation', () => {
     mockConfirm.mockReturnValue(false); // User clicks "Cancel"
 
-    render(<PlayPage />);
+    renderWithProviders(<PlayPage />);
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
 

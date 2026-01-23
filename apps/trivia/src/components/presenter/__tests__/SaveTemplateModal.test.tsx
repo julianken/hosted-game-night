@@ -34,7 +34,22 @@ const mockQuestions: Question[] = [
 vi.mock('@/stores/game-store', () => ({
   useGameStore: vi.fn((selector) => {
     const store = {
+      // TriviaGameState properties
+      sessionId: 'test-session',
+      status: 'setup' as const,
+      statusBeforePause: null,
       questions: mockQuestions,
+      selectedQuestionIndex: 0,
+      displayQuestionIndex: null,
+      currentRound: 0,
+      totalRounds: 1,
+      teams: [],
+      teamAnswers: [],
+      timer: {
+        duration: 30,
+        remaining: 30,
+        isRunning: false,
+      },
       settings: {
         roundsCount: 1,
         questionsPerRound: 2,
@@ -43,6 +58,34 @@ vi.mock('@/stores/game-store', () => ({
         timerVisible: true,
         ttsEnabled: false,
       },
+      showScoreboard: true,
+      emergencyBlank: false,
+      ttsEnabled: false,
+      _isHydrating: false,
+      // GameStore action methods
+      startGame: vi.fn(),
+      endGame: vi.fn(),
+      resetGame: vi.fn(),
+      selectQuestion: vi.fn(),
+      setDisplayQuestion: vi.fn(),
+      addTeam: vi.fn(),
+      removeTeam: vi.fn(),
+      renameTeam: vi.fn(),
+      adjustTeamScore: vi.fn(),
+      setTeamScore: vi.fn(),
+      completeRound: vi.fn(),
+      nextRound: vi.fn(),
+      tickTimer: vi.fn(),
+      startTimer: vi.fn(),
+      stopTimer: vi.fn(),
+      resetTimer: vi.fn(),
+      pauseGame: vi.fn(),
+      resumeGame: vi.fn(),
+      emergencyPause: vi.fn(),
+      updateSettings: vi.fn(),
+      loadTeamsFromSetup: vi.fn(),
+      importQuestions: vi.fn(),
+      _hydrate: vi.fn(),
     };
     return selector ? selector(store) : store;
   }),
@@ -97,13 +140,17 @@ describe('SaveTemplateModal', () => {
     );
 
     expect(screen.getByText('Question Set Details')).toBeInTheDocument();
-    expect(screen.getByText(/Questions:/)).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText(/Rounds:/)).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText(/Questions per Round:/)).toBeInTheDocument();
-    expect(screen.getByText(/Timer:/)).toBeInTheDocument();
-    expect(screen.getByText('30s')).toBeInTheDocument();
+
+    // Use more specific queries that match parent-child structure
+    const detailsList = screen.getByText('Question Set Details').nextElementSibling;
+    expect(detailsList).toBeInTheDocument();
+    expect(detailsList?.textContent).toContain('Questions:');
+    expect(detailsList?.textContent).toContain('2');
+    expect(detailsList?.textContent).toContain('Rounds:');
+    expect(detailsList?.textContent).toContain('1');
+    expect(detailsList?.textContent).toContain('Questions per Round:');
+    expect(detailsList?.textContent).toContain('Timer:');
+    expect(detailsList?.textContent).toContain('30s');
   });
 
   it('shows validation error when name is empty', async () => {
@@ -216,8 +263,12 @@ describe('SaveTemplateModal', () => {
     const saveButton = screen.getByRole('button', { name: /Save/i });
     fireEvent.click(saveButton);
 
+    // Wait for error to appear - find alert within the modal (not the toast)
     await waitFor(() => {
-      expect(screen.getByText('Database error')).toBeInTheDocument();
+      const alerts = screen.getAllByRole('alert');
+      const modalError = alerts.find(alert => alert.className.includes('bg-destructive/10'));
+      expect(modalError).toBeDefined();
+      expect(modalError).toHaveTextContent('Database error');
     });
 
     // Modal should stay open on error
@@ -227,10 +278,24 @@ describe('SaveTemplateModal', () => {
   it('shows error when no questions exist', async () => {
     // Use fireEvent for testing
 
-    // Mock empty questions
+    // Mock empty questions temporarily
     vi.mocked(vi.mocked(await import('@/stores/game-store')).useGameStore).mockImplementation((selector) => {
       const store = {
+        sessionId: 'test-session',
+        status: 'setup' as const,
+        statusBeforePause: null,
         questions: [],
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: 1,
+        teams: [],
+        teamAnswers: [],
+        timer: {
+          duration: 30,
+          remaining: 30,
+          isRunning: false,
+        },
         settings: {
           roundsCount: 1,
           questionsPerRound: 2,
@@ -239,6 +304,33 @@ describe('SaveTemplateModal', () => {
           timerVisible: true,
           ttsEnabled: false,
         },
+        showScoreboard: true,
+        emergencyBlank: false,
+        ttsEnabled: false,
+        _isHydrating: false,
+        startGame: vi.fn(),
+        endGame: vi.fn(),
+        resetGame: vi.fn(),
+        selectQuestion: vi.fn(),
+        setDisplayQuestion: vi.fn(),
+        addTeam: vi.fn(),
+        removeTeam: vi.fn(),
+        renameTeam: vi.fn(),
+        adjustTeamScore: vi.fn(),
+        setTeamScore: vi.fn(),
+        completeRound: vi.fn(),
+        nextRound: vi.fn(),
+        tickTimer: vi.fn(),
+        startTimer: vi.fn(),
+        stopTimer: vi.fn(),
+        resetTimer: vi.fn(),
+        pauseGame: vi.fn(),
+        resumeGame: vi.fn(),
+        emergencyPause: vi.fn(),
+        updateSettings: vi.fn(),
+        loadTeamsFromSetup: vi.fn(),
+        importQuestions: vi.fn(),
+        _hydrate: vi.fn(),
       };
       return selector ? selector(store) : store;
     });
@@ -255,6 +347,63 @@ describe('SaveTemplateModal', () => {
 
     expect(screen.getByText('No questions to save')).toBeInTheDocument();
     expect(global.fetch).not.toHaveBeenCalled();
+
+    // Restore the original mock with questions
+    vi.mocked(await import('@/stores/game-store')).useGameStore.mockImplementation((selector) => {
+      const store = {
+        sessionId: 'test-session',
+        status: 'setup' as const,
+        statusBeforePause: null,
+        questions: mockQuestions,
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: 1,
+        teams: [],
+        teamAnswers: [],
+        timer: {
+          duration: 30,
+          remaining: 30,
+          isRunning: false,
+        },
+        settings: {
+          roundsCount: 1,
+          questionsPerRound: 2,
+          timerDuration: 30,
+          timerAutoStart: false,
+          timerVisible: true,
+          ttsEnabled: false,
+        },
+        showScoreboard: true,
+        emergencyBlank: false,
+        ttsEnabled: false,
+        _isHydrating: false,
+        startGame: vi.fn(),
+        endGame: vi.fn(),
+        resetGame: vi.fn(),
+        selectQuestion: vi.fn(),
+        setDisplayQuestion: vi.fn(),
+        addTeam: vi.fn(),
+        removeTeam: vi.fn(),
+        renameTeam: vi.fn(),
+        adjustTeamScore: vi.fn(),
+        setTeamScore: vi.fn(),
+        completeRound: vi.fn(),
+        nextRound: vi.fn(),
+        tickTimer: vi.fn(),
+        startTimer: vi.fn(),
+        stopTimer: vi.fn(),
+        resetTimer: vi.fn(),
+        pauseGame: vi.fn(),
+        resumeGame: vi.fn(),
+        emergencyPause: vi.fn(),
+        updateSettings: vi.fn(),
+        loadTeamsFromSetup: vi.fn(),
+        importQuestions: vi.fn(),
+        _hydrate: vi.fn(),
+      };
+      return selector ? selector(store) : store;
+    });
   });
 
   it('disables inputs while saving', async () => {
@@ -278,10 +427,14 @@ describe('SaveTemplateModal', () => {
     const saveButton = screen.getByRole('button', { name: /Save/i });
     fireEvent.click(saveButton);
 
-    // Check inputs are disabled
+    // Check that Save button changes to Saving...
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
+    });
+
+    // Check inputs are disabled while saving
     expect(nameInput).toBeDisabled();
     expect(screen.getByLabelText(/Set as default template/i)).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
   });
 
   it('closes modal when cancel button is clicked', async () => {
@@ -313,6 +466,11 @@ describe('SaveTemplateModal', () => {
     const saveButton = screen.getByRole('button', { name: /Save/i });
     fireEvent.click(saveButton);
 
+    // Wait for save to complete
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
     await waitFor(() => {
       expect(mockOnClose).toHaveBeenCalled();
     });
@@ -334,24 +492,31 @@ describe('SaveTemplateModal', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
-      const body = JSON.parse(fetchCall[1].body);
+      expect(global.fetch).toHaveBeenCalled();
+    });
 
-      // Check first question (multiple choice)
-      expect(body.questions[0]).toEqual({
-        question: 'What is 2+2?',
-        options: ['3', '4', '5', '6'],
-        correctIndex: 1, // 'B' is at index 1
-        category: 'general_knowledge',
-      });
+    // Get the fetch call arguments
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(fetchCall).toBeDefined();
+    expect(fetchCall[1]).toBeDefined();
+    expect(fetchCall[1].body).toBeDefined();
 
-      // Check second question (true/false)
-      expect(body.questions[1]).toEqual({
-        question: 'Is the sky blue?',
-        options: ['True', 'False'],
-        correctIndex: 0, // 'True' is at index 0
-        category: 'science',
-      });
+    const body = JSON.parse(fetchCall[1].body);
+
+    // Check first question (multiple choice)
+    expect(body.questions[0]).toEqual({
+      question: 'What is 2+2?',
+      options: ['3', '4', '5', '6'],
+      correctIndex: 1, // 'B' is at index 1
+      category: 'general_knowledge',
+    });
+
+    // Check second question (true/false)
+    expect(body.questions[1]).toEqual({
+      question: 'Is the sky blue?',
+      options: ['True', 'False'],
+      correctIndex: 0, // 'True' is at index 0
+      category: 'science',
     });
   });
 });

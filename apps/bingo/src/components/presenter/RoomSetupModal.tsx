@@ -49,7 +49,7 @@ export function RoomSetupModal({
       const loadDefaultTemplate = async () => {
         try {
           const response = await fetch('/api/templates');
-          if (!response.ok) {
+          if (!response || !response.ok) {
             return; // Silently fail - not critical
           }
 

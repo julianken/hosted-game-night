@@ -64,8 +64,8 @@ export function SaveTemplateModal({
         }),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
+      if (!response || !response.ok) {
+        const data = response ? await response.json() : {};
         throw new Error(data.error || 'Failed to save template');
       }
 
@@ -151,7 +151,7 @@ export function SaveTemplateModal({
             </li>
             <li>
               <span className="font-medium">Auto-Call:</span>{' '}
-              {autoCallEnabled ? `On (${autoCallSpeed / 1000}s)` : 'Off'}
+              {autoCallEnabled ? `On (${autoCallSpeed}s)` : 'Off'}
             </li>
           </ul>
         </div>

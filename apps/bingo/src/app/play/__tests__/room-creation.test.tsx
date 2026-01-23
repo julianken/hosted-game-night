@@ -175,8 +175,21 @@ describe('Room Creation Flow', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
-    // Reset fetch mock
+    // Reset fetch mock and provide default response for template fetching
     (global.fetch as ReturnType<typeof vi.fn>).mockReset();
+    // Default mock for template API (used by RoomSetupModal)
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/templates')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ templates: [] }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+      } as Response);
+    });
   });
 
   afterEach(() => {
@@ -189,15 +202,26 @@ describe('Room Creation Flow', () => {
       const mockRoomCode = 'TEST-123';
       const mockSessionToken = 'session-token-123';
 
-      // Mock successful session creation
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            session: { roomCode: mockRoomCode },
-            sessionToken: mockSessionToken,
-          },
-        }),
+      // Mock fetch with conditional responses
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+        if (typeof url === 'string' && url.includes('/api/templates')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ templates: [] }),
+          } as Response);
+        }
+        if (typeof url === 'string' && url.includes('/api/sessions')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: {
+                session: { roomCode: mockRoomCode },
+                sessionToken: mockSessionToken,
+              },
+            }),
+          } as Response);
+        }
+        return Promise.resolve({ ok: false, status: 404 } as Response);
       });
 
       renderPlayPage();
@@ -211,19 +235,22 @@ describe('Room Creation Flow', () => {
       const createButton = screen.getByRole('button', { name: /create a new game room/i });
       await user.click(createButton);
 
-      // Verify API was called
+      // Verify API was called for session creation
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/sessions',
-          expect.objectContaining({
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          })
+        const sessionCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+          call => call[0] === '/api/sessions'
         );
-      });
+        expect(sessionCall).toBeDefined();
+        expect(sessionCall?.[1]).toMatchObject({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }, { timeout: 2000 });
 
-      // Verify session token was stored
-      expect(mockStoreToken).toHaveBeenCalledWith(mockSessionToken);
+      // Verify session token was stored (called from line 329 of page.tsx)
+      await waitFor(() => {
+        expect(mockStoreToken).toHaveBeenCalledWith(mockSessionToken);
+      }, { timeout: 2000 });
     });
 
     it('should handle API errors during room creation', async () => {
@@ -255,14 +282,26 @@ describe('Room Creation Flow', () => {
       const mockRoomCode = 'TEST-123';
       const mockSessionToken = 'session-token-123';
 
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            session: { roomCode: mockRoomCode },
-            sessionToken: mockSessionToken,
-          },
-        }),
+      // Mock fetch with conditional responses
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+        if (typeof url === 'string' && url.includes('/api/templates')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ templates: [] }),
+          } as Response);
+        }
+        if (typeof url === 'string' && url.includes('/api/sessions')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: {
+                session: { roomCode: mockRoomCode },
+                sessionToken: mockSessionToken,
+              },
+            }),
+          } as Response);
+        }
+        return Promise.resolve({ ok: false, status: 404 } as Response);
       });
 
       renderPlayPage();
@@ -274,14 +313,20 @@ describe('Room Creation Flow', () => {
       const createButton = screen.getByRole('button', { name: /create a new game room/i });
       await user.click(createButton);
 
+      // Wait for session creation to complete
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalled();
-      });
+        const sessionCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+          call => call[0] === '/api/sessions'
+        );
+        expect(sessionCall).toBeDefined();
+      }, { timeout: 2000 });
 
-      // Verify PIN was stored in localStorage
-      const storedPin = getStoredPin();
-      expect(storedPin).toBeTruthy();
-      expect(storedPin).toMatch(/^\d{4}$/);
+      // Verify PIN was stored in localStorage (line 331 of page.tsx)
+      await waitFor(() => {
+        const storedPin = getStoredPin();
+        expect(storedPin).toBeTruthy();
+        expect(storedPin).toMatch(/^\d{4}$/);
+      }, { timeout: 2000 });
     });
   });
 
@@ -295,17 +340,21 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
+      // Clear mocks after modal opens (modal loads templates on mount)
+      vi.clearAllMocks();
+      (global.fetch as ReturnType<typeof vi.fn>).mockClear();
+
       // Click "Play Offline" button
       const offlineButton = screen.getByRole('button', { name: /play offline without network/i });
       await user.click(offlineButton);
-
-      // Verify no API calls were made
-      expect(global.fetch).not.toHaveBeenCalled();
 
       // Modal should close
       await waitFor(() => {
         expect(screen.queryByText('Room Setup')).not.toBeInTheDocument();
       });
+
+      // Verify no API calls were made after clicking Play Offline
+      expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('should generate and store offline session ID', async () => {
@@ -399,10 +448,21 @@ describe('Room Creation Flow', () => {
       const mockPin = '1234';
       const mockToken = 'join-token-123';
 
-      // Mock successful PIN verification
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ token: mockToken }),
+      // Mock fetch with conditional responses
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+        if (typeof url === 'string' && url.includes('/api/templates')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ templates: [] }),
+          } as Response);
+        }
+        if (typeof url === 'string' && url.includes('/verify-pin')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ token: mockToken }),
+          } as Response);
+        }
+        return Promise.resolve({ ok: false, status: 404 } as Response);
       });
 
       renderPlayPage();
@@ -426,20 +486,23 @@ describe('Room Creation Flow', () => {
       expect(submitButton).not.toBeDisabled();
       await user.click(submitButton);
 
-      // Verify API call
+      // Verify API call for PIN verification
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          `/api/sessions/${mockRoomCode.toUpperCase()}/verify-pin`,
-          expect.objectContaining({
-            method: 'POST',
-            body: JSON.stringify({ pin: mockPin }),
-          })
+        const verifyCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.find(
+          call => call[0] === `/api/sessions/${mockRoomCode.toUpperCase()}/verify-pin`
         );
-      });
+        expect(verifyCall).toBeDefined();
+        expect(verifyCall?.[1]).toMatchObject({
+          method: 'POST',
+          body: JSON.stringify({ pin: mockPin }),
+        });
+      }, { timeout: 2000 });
 
-      // Verify token storage and recovery
-      expect(mockStoreToken).toHaveBeenCalledWith(mockToken);
-      expect(mockRecoverSession).toHaveBeenCalled();
+      // Verify token storage and recovery (lines 360, 366 of page.tsx)
+      await waitFor(() => {
+        expect(mockStoreToken).toHaveBeenCalledWith(mockToken);
+        expect(mockRecoverSession).toHaveBeenCalled();
+      }, { timeout: 2000 });
     });
 
     it('should reject invalid PIN format', async () => {
@@ -566,14 +629,26 @@ describe('Room Creation Flow', () => {
       const mockRoomCode = 'TEST-123';
       const mockSessionToken = 'session-token-123';
 
-      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            session: { roomCode: mockRoomCode },
-            sessionToken: mockSessionToken,
-          },
-        }),
+      // Mock fetch with conditional responses
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+        if (typeof url === 'string' && url.includes('/api/templates')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ templates: [] }),
+          } as Response);
+        }
+        if (typeof url === 'string' && url.includes('/api/sessions')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              data: {
+                session: { roomCode: mockRoomCode },
+                sessionToken: mockSessionToken,
+              },
+            }),
+          } as Response);
+        }
+        return Promise.resolve({ ok: false, status: 404 } as Response);
       });
 
       renderPlayPage();
@@ -585,22 +660,28 @@ describe('Room Creation Flow', () => {
       const createButton = screen.getByRole('button', { name: /create a new game room/i });
       await user.click(createButton);
 
+      // Wait for session to be created and storeToken to be called
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalled();
-      });
+        expect(mockStoreToken).toHaveBeenCalledWith(mockSessionToken);
+      }, { timeout: 2000 });
+
+      // Wait for state to settle and modal to close
+      await waitFor(() => {
+        expect(screen.queryByText('Room Setup')).not.toBeInTheDocument();
+      }, { timeout: 2000 });
 
       // Click "Open Display" button
       const openDisplayButton = screen.getByRole('button', { name: /open display/i });
       await user.click(openDisplayButton);
 
-      // Verify window.open was called with correct URL
+      // Verify window.open was called with correct URL (line 435-443 of page.tsx)
       await waitFor(() => {
         expect(window.open).toHaveBeenCalledWith(
           expect.stringContaining(`/display?room=${mockRoomCode}`),
           expect.stringContaining(`bingo-display-${mockRoomCode}`),
           expect.any(String)
         );
-      });
+      }, { timeout: 1000 });
     });
 
     it('should open display window with session ID in offline mode', async () => {

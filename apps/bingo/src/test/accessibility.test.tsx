@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import { axe } from 'vitest-axe';
+import { ToastProvider } from '@/components/ui/Toast';
 
 // Presenter components
 import { BingoBoard } from '@/components/presenter/BingoBoard';
@@ -35,6 +36,11 @@ const mockCalledBalls: BingoBall[] = [
 ];
 const mockPattern: BingoPattern = allPatterns[0]; // Single line pattern
 
+// Helper to render components with required providers
+function renderWithProviders(ui: React.ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
+
 describe('Accessibility Tests', () => {
   describe('Presenter Components', () => {
     it('BingoBoard has no accessibility violations', async () => {
@@ -50,7 +56,7 @@ describe('Accessibility Tests', () => {
     });
 
     it('ControlPanel in idle state has no accessibility violations', async () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <ControlPanel
           status="idle"
           canCall={false}
@@ -71,7 +77,7 @@ describe('Accessibility Tests', () => {
     });
 
     it('ControlPanel in playing state has no accessibility violations', async () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <ControlPanel
           status="playing"
           canCall={true}
@@ -92,7 +98,7 @@ describe('Accessibility Tests', () => {
     });
 
     it('ControlPanel in paused state has no accessibility violations', async () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <ControlPanel
           status="paused"
           canCall={true}
