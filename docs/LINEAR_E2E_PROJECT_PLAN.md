@@ -1,10 +1,10 @@
 # Linear E2E Testing Project Plan
 
-**Document Version:** 3.0
+**Document Version:** 4.0
 **Created:** 2026-01-23
-**Updated:** 2026-01-23 (Revised based on comprehensive audit)
-**Initiative:** Wave 3 - E2E Testing Coverage
-**Issue Range:** BEA-313 through BEA-318
+**Updated:** 2026-01-23 (Revised after codebase validation)
+**Initiative:** E2E Testing Coverage
+**Issue Range:** BEA-313 through BEA-318 (BEA-317 deferred to Phase 3)
 
 ---
 
@@ -15,14 +15,15 @@
 **This initiative validates the feature-complete MVP by adding Platform Hub E2E tests** while preserving the existing comprehensive coverage in Bingo and Trivia. The existing 288 tests provide irreplaceable coverage for game mechanics, dual-screen sync, accessibility, and PWA functionality that took significant effort to create and maintain.
 
 **What we are doing:**
-- Adding ~110-150 new Platform Hub tests to validate authentication, dashboard, profile, and SSO flows
+- Adding ~96-99 new Platform Hub tests to validate authentication, dashboard, profile, and SSO flows
 - Improving CI infrastructure (sharding, tags) to enable reliable test execution
-- Bringing total E2E coverage to ~400-440 tests across all three apps
+- Bringing total E2E coverage to ~384-387 tests across all three apps
 
 **What we are NOT doing:**
 - Deleting existing Bingo/Trivia tests (they provide critical coverage)
 - Rebuilding test infrastructure from scratch
 - Starting over with a "clean slate"
+- Testing features that don't exist yet (deferred to Phase 3)
 
 ### Current State
 
@@ -42,12 +43,12 @@
 | Trivia | 5 | ~130 | Game engine (questions/rounds), team management, scoring, TTS, dual-screen sync, question import, templates, timer system |
 | **Subtotal** | **13** | **~280** | **Comprehensive game coverage** |
 
-### Target State
+### Target State (Revised)
 
 | Metric | Target |
 |--------|--------|
-| Total E2E Tests | ~400-440 test cases (288 existing + 110-150 new) |
-| Platform Hub Tests | 8-10 spec files (~1,500-2,500 LOC) |
+| Total E2E Tests | ~384-387 test cases (288 existing + 96-99 new) |
+| Platform Hub Tests | 6-7 spec files (~1,200-1,400 LOC) |
 | CI Execution Time | <5 minutes (sharded) |
 | Critical Path Tests | <2 minutes |
 | Test Reliability | >98% pass rate |
@@ -60,16 +61,30 @@
 4. **Auth Fixtures Ready:** `e2e/fixtures/auth.ts` provides authenticatedPage fixture
 5. **Blockers Resolved:** Logout button and auth navigation already implemented in Platform Hub Header.tsx
 
-### Issue Summary (Wave 3)
+### Validation Findings (2026-01-23)
 
-| ID | Title | Priority | Complexity | Blocks |
-|----|-------|----------|------------|--------|
-| BEA-313 | E2E Infrastructure: Sharding & CI Integration | P1 | Medium | BEA-316, BEA-318 |
-| BEA-314 | Platform Hub Auth Flow E2E Tests | P0 | Large | BEA-316, BEA-317 |
-| BEA-315 | Platform Hub Dashboard & Profile E2E Tests | P1 | Medium | None |
-| BEA-316 | Cross-App SSO E2E Tests | P1 | Large | None |
-| BEA-317 | Template CRUD E2E Tests | P2 | Medium | None |
-| BEA-318 | PWA, Accessibility & Security E2E Tests | P2 | Medium | None |
+After comprehensive codebase validation, we identified scope adjustments needed:
+
+| Issue | Original | Revised | Reason |
+|-------|----------|---------|--------|
+| BEA-314 | 24 tests | 18-20 tests | Password reset token page missing, duplicate tests |
+| BEA-315 | 25 tests | 18 tests | Theme switching, notifications, avatar upload not implemented |
+| BEA-316 | 22 tests | 22 tests | ✅ All features exist |
+| BEA-317 | 8 tests | **DEFERRED** | Template management UI doesn't exist (Phase 3) |
+| BEA-318 | 20 tests | 18-19 tests | Platform Hub has no PWA, session timeout missing |
+
+**Impact:** Realistic scope is 96-99 new tests (down from 110-150), but all test what actually exists in the codebase.
+
+### Issue Summary (Revised)
+
+| ID | Title | Priority | Tests | Blocks | Status |
+|----|-------|----------|-------|--------|--------|
+| BEA-313 | E2E Infrastructure: Sharding & CI Integration | P1 | Setup | BEA-316, BEA-318 | ✅ Ready |
+| BEA-314 | Platform Hub Auth Flow E2E Tests | P0 | 18-20 | BEA-316 | ✅ Ready |
+| BEA-315 | Platform Hub Dashboard & Profile E2E Tests | P1 | 18 | None | ✅ Ready |
+| BEA-316 | Cross-App SSO E2E Tests | P1 | 22 | None | ⏳ Blocked |
+| BEA-317 | Template CRUD E2E Tests | P2 | 8 | None | 🚫 **DEFERRED (Phase 3)** |
+| BEA-318 | Accessibility & Security E2E Tests | P2 | 18-19 | None | ⏳ Blocked |
 
 ---
 
@@ -928,18 +943,18 @@ e2e/
 
 ## Appendix: Issue Quick Reference
 
-| ID | Title | Priority | Complexity | Blocks | Blocked By |
-|----|-------|----------|------------|--------|------------|
-| BEA-313 | Infrastructure | P1 | Medium | BEA-316, BEA-318 | None |
-| BEA-314 | Auth Tests | P0 | Large | BEA-316, BEA-317 | None |
-| BEA-315 | Dashboard Tests | P1 | Medium | None | None |
-| BEA-316 | SSO Tests | P1 | Large | None | BEA-313, BEA-314 |
-| BEA-317 | Template Tests | P2 | Medium | None | BEA-314 |
-| BEA-318 | A11y/Security Tests | P2 | Medium | None | BEA-313 |
+| ID | Title | Priority | Tests | Blocks | Blocked By | Status |
+|----|-------|----------|-------|--------|------------|--------|
+| BEA-313 | Infrastructure | P1 | Setup | BEA-316, BEA-318 | None | ✅ Ready |
+| BEA-314 | Auth Tests | P0 | 18-20 | BEA-316 | None | ✅ Ready |
+| BEA-315 | Dashboard Tests | P1 | 18 | None | None | ✅ Ready |
+| BEA-316 | SSO Tests | P1 | 22 | None | BEA-313, BEA-314 | ⏳ Blocked |
+| BEA-317 | Template Tests | P2 | 8 | None | Phase 3 | 🚫 **DEFERRED** |
+| BEA-318 | A11y/Security Tests | P2 | 18-19 | None | BEA-313 | ⏳ Blocked |
 
-**Total New LOC:** ~1,500-2,500 (Platform Hub tests only)
-**Total New Tests:** ~110-150 tests
-**Total After Wave 3:** ~400-440 tests (288 existing + 110-150 new)
+**Total New LOC:** ~1,200-1,400 (Platform Hub tests only)
+**Total New Tests:** ~96-99 tests (BEA-317 deferred to Phase 3)
+**Total After Implementation:** ~384-387 tests (288 existing + 96-99 new)
 
 ---
 
@@ -950,3 +965,4 @@ e2e/
 | 1.0 | 2026-01-23 | Initial draft |
 | 2.0 | 2026-01-23 | Added clean slate approach |
 | 3.0 | 2026-01-23 | **MAJOR REVISION**: Removed clean slate (BEA-313), preserved existing 288 tests, renumbered issues BEA-313-318, corrected metrics to ~400-440 total tests |
+| 4.0 | 2026-01-23 | **VALIDATION REVISION**: After codebase validation, adjusted test counts to realistic scope: BEA-314 (18-20), BEA-315 (18), BEA-316 (22), BEA-317 (DEFERRED), BEA-318 (18-19). Total: ~96-99 new tests, ~384-387 total |
