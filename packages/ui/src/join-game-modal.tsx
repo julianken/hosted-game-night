@@ -72,6 +72,7 @@ export function JoinGameModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Join Game ${roomCode}`}
+      showFooter={false}
     >
       <div className="space-y-6">
         <p className="text-lg text-foreground">

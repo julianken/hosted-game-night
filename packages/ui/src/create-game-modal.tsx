@@ -191,7 +191,7 @@ export function CreateGameModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Game">
+    <Modal isOpen={isOpen} onClose={onClose} title="Create New Game" showFooter={false}>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Introduction */}
         <p className="text-lg text-gray-700 dark:text-gray-300">
