@@ -1,19 +1,34 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { applyRateLimit } from '@/middleware/rate-limit';
+import { validateOrigin, addCorsHeaders, handlePreflight } from '@/middleware/cors';
 
 /**
  * Next.js Middleware
  *
  * Runs on every request to apply:
- * 1. Supabase session management (auth cookies)
- * 2. Rate limiting for OAuth endpoints
+ * 1. CORS validation for OAuth endpoints
+ * 2. Supabase session management (auth cookies)
+ * 3. Rate limiting for OAuth endpoints
+ *
+ * CORS protected paths:
+ * - /api/oauth/* (token, approve, deny, csrf)
  *
  * Rate limited paths:
  * - /oauth/consent (10 req/min per IP)
  *
  * Note: Middleware runs on Edge Runtime, so only edge-compatible code allowed.
  */
+
+/**
+ * OAuth API endpoints that require CORS validation
+ */
+const OAUTH_API_PATHS = [
+  '/api/oauth/token',
+  '/api/oauth/approve',
+  '/api/oauth/deny',
+  '/api/oauth/csrf',
+];
 
 /**
  * OAuth endpoints that require rate limiting
@@ -25,6 +40,13 @@ const OAUTH_PATHS = [
 ];
 
 /**
+ * Check if path requires CORS validation
+ */
+function requiresCors(pathname: string): boolean {
+  return OAUTH_API_PATHS.some((path) => pathname.startsWith(path));
+}
+
+/**
  * Check if path should be rate limited
  */
 function shouldRateLimit(pathname: string): boolean {
@@ -32,8 +54,52 @@ function shouldRateLimit(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  // Apply rate limiting to OAuth endpoints
-  if (shouldRateLimit(request.nextUrl.pathname)) {
+  const pathname = request.nextUrl.pathname;
+
+  // Apply CORS to OAuth API endpoints
+  if (requiresCors(pathname)) {
+    // Validate origin
+    const validOrigin = validateOrigin(request);
+    const requestOrigin = request.headers.get('origin');
+
+    // Block requests from unauthorized origins
+    if (requestOrigin && !validOrigin) {
+      const response = NextResponse.json(
+        {
+          error: 'forbidden',
+          error_description: 'Origin not allowed',
+        },
+        { status: 403 }
+      );
+      return response;
+    }
+
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return handlePreflight(request, validOrigin);
+    }
+
+    // Continue processing with CORS headers
+    let response = NextResponse.next();
+
+    // Apply rate limiting if needed
+    if (shouldRateLimit(pathname)) {
+      const rateLimitResponse = applyRateLimit(request, response);
+      if (rateLimitResponse.status === 429) {
+        return addCorsHeaders(rateLimitResponse, validOrigin);
+      }
+      response = rateLimitResponse;
+    }
+
+    // Update session
+    response = await updateSession(request);
+
+    // Add CORS headers to final response
+    return addCorsHeaders(response, validOrigin);
+  }
+
+  // Apply rate limiting to OAuth endpoints (non-API)
+  if (shouldRateLimit(pathname)) {
     // Check rate limit before processing request
     const rateLimitResponse = applyRateLimit(
       request,
