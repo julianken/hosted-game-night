@@ -17,7 +17,7 @@ describe('PIN Security Utilities', () => {
       expect(result).toHaveProperty('salt');
       expect(typeof result.hash).toBe('string');
       expect(typeof result.salt).toBe('string');
-      expect(result.hash.length).toBe(64); // SHA-256 produces 64 hex characters
+      expect(result.hash.length).toBe(64); // PBKDF2 with 256-bit key produces 64 hex characters
     });
 
     it('should generate different salts for the same PIN', async () => {
@@ -51,6 +51,23 @@ describe('PIN Security Utilities', () => {
       const result = await createPinHash('123456');
       expect(result.hash).toBeTruthy();
       expect(result.salt).toBeTruthy();
+    });
+
+    it('should use PBKDF2 (different output than simple SHA-256)', async () => {
+      // This test verifies we're using PBKDF2, not simple SHA-256
+      // PBKDF2 should produce different output than a simple SHA-256 hash
+      const pin = '1234';
+      const { hash: pbkdf2Hash, salt } = await createPinHash(pin);
+
+      // Calculate what a simple SHA-256 would produce
+      const simpleData = new TextEncoder().encode(pin + salt);
+      const simpleHashBuffer = await crypto.subtle.digest('SHA-256', simpleData);
+      const simpleHash = Array.from(new Uint8Array(simpleHashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // PBKDF2 output should be different from simple SHA-256
+      expect(pbkdf2Hash).not.toBe(simpleHash);
     });
   });
 

@@ -2,14 +2,16 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { applyRateLimit } from '@/middleware/rate-limit';
 import { validateOrigin, addCorsHeaders, handlePreflight } from '@/middleware/cors';
+import { checkBodySize } from '@/middleware/body-size';
 
 /**
  * Next.js Middleware
  *
  * Runs on every request to apply:
- * 1. CORS validation for OAuth endpoints
- * 2. Supabase session management (auth cookies)
+ * 1. Request body size limits (prevents DoS via large payloads)
+ * 2. CORS validation for OAuth endpoints
  * 3. Rate limiting for OAuth endpoints
+ * 4. Supabase session management (auth cookies)
  *
  * CORS protected paths:
  * - /api/oauth/* (token, approve, deny, csrf)
@@ -56,7 +58,16 @@ function shouldRateLimit(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Apply CORS to OAuth API endpoints
+  // 1. Check body size for POST, PUT, PATCH requests
+  // This prevents DoS attacks via large payloads
+  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+    const bodySizeCheck = checkBodySize(request);
+    if (bodySizeCheck) {
+      return bodySizeCheck; // Return 413 Payload Too Large or 400 Bad Request
+    }
+  }
+
+  // 2. Apply CORS to OAuth API endpoints
   if (requiresCors(pathname)) {
     // Validate origin
     const validOrigin = validateOrigin(request);
@@ -84,7 +95,7 @@ export async function middleware(request: NextRequest) {
 
     // Apply rate limiting if needed
     if (shouldRateLimit(pathname)) {
-      const rateLimitResponse = applyRateLimit(request, response);
+      const rateLimitResponse = await applyRateLimit(request, response);
       if (rateLimitResponse.status === 429) {
         return addCorsHeaders(rateLimitResponse, validOrigin);
       }
@@ -98,10 +109,10 @@ export async function middleware(request: NextRequest) {
     return addCorsHeaders(response, validOrigin);
   }
 
-  // Apply rate limiting to OAuth endpoints (non-API)
+  // 3. Apply rate limiting to OAuth endpoints (non-API)
   if (shouldRateLimit(pathname)) {
     // Check rate limit before processing request
-    const rateLimitResponse = applyRateLimit(
+    const rateLimitResponse = await applyRateLimit(
       request,
       NextResponse.next()
     );
