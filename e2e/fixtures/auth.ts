@@ -57,8 +57,8 @@ export const test = base.extend<AuthFixtures>({
    * Logs in via UI and stores auth state for reuse.
    */
   authenticatedPage: async ({ page, testUser }, use) => {
-    // Navigate to login page
-    await page.goto('http://localhost:3002/login');
+    // Navigate to login page with dashboard redirect
+    await page.goto('http://localhost:3002/login?redirect=/dashboard');
 
     // Fill in credentials
     await page.fill('input[name="email"]', testUser.email);
