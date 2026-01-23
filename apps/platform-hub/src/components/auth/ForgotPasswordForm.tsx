@@ -5,11 +5,6 @@ import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
 import { useAuth } from '@beak-gaming/auth';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ForgotPasswordFormProps {
-  // No props needed - form uses useAuth() hook directly
-}
-
 interface FormErrors {
   email?: string;
   general?: string;

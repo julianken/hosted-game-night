@@ -22,6 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Framework | Next.js (App Router) |
 | Frontend | React + Tailwind CSS |
 | Auth | Supabase Auth via @beak-gaming/auth (planned) |
+| Email | Resend SMTP (bypasses Supabase 2 emails/hour limit) |
 
 ## Implemented Features
 
@@ -37,9 +38,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Frontend
 - Game selection home page with cards for Bingo and Trivia
 - Complete auth form UI components (Login, Signup, Password Reset)
+- Password reset flow (ForgotPasswordForm → email → ResetPasswordForm)
 - Dashboard UI scaffolding
 - Header and Footer components
 - Responsive layout
+
+### Email Configuration
+- **Provider**: Resend SMTP (https://resend.com)
+- **Purpose**: Bypass Supabase's built-in rate limit (2 emails/hour)
+- **Free Tier**: 3,000 emails/month, 100 emails/day
+- **Configuration**: Stored in Supabase dashboard (not .env files)
+- **Sender**: onboarding@resend.dev (testing) or custom verified domain (production)
+- **Dashboard**: https://resend.com/emails
 
 ## Shared Packages
 
@@ -75,10 +85,10 @@ src/
 ## Current Routes
 
 - `/` - Game selector (Bingo, Trivia)
-
-## Current Routes
-
-- `/` - Game selector (Bingo, Trivia)
+- `/login` - User login page
+- `/signup` - User registration page
+- `/forgot-password` - Password reset request (sends email)
+- `/reset-password` - Password reset form (from email link)
 - `/oauth/consent` - OAuth consent page
 - `/api/oauth/token` - Token endpoint (OAuth 2.1)
 - `/api/oauth/approve` - Consent approval
@@ -93,8 +103,19 @@ src/
 
 ## Future Work (TODO)
 
+- [x] Password reset flow (BEA-319) - COMPLETE
 - [ ] User profile management (real data integration)
 - [ ] Template management UI
 - [ ] Facility branding/logo management
 - [ ] Admin dashboard (RBAC tables exist, no UI)
 - [ ] Cross-game session history
+
+## Email Troubleshooting
+
+If password reset emails are not being delivered:
+
+1. Check Supabase SMTP status: https://supabase.com/dashboard/project/iivxpjhmnalsuvpdzgza/auth/smtp
+2. Verify Resend API key is active: https://resend.com/api-keys
+3. Check Resend delivery logs: https://resend.com/emails
+4. View Supabase auth logs: https://supabase.com/dashboard/project/iivxpjhmnalsuvpdzgza/logs/auth-logs
+5. Test SMTP connection in Supabase dashboard (auto-validates on save)

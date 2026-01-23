@@ -9,7 +9,7 @@ export type { FooterProps } from './Footer';
 
 // Auth components
 export { LoginForm, SignupForm, ForgotPasswordForm } from './auth';
-export type { LoginFormProps, SignupFormProps, ForgotPasswordFormProps } from './auth';
+export type { LoginFormProps, SignupFormProps } from './auth';
 
 // Dashboard components
 export {
