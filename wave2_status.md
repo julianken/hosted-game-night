@@ -1,6 +1,6 @@
 # Wave 2 Execution Dashboard
 
-**Last Updated**: 2026-01-23 01:30 UTC
+**Last Updated**: 2026-01-23 04:45 UTC
 **Coordinating Lead**: Main Session
 **Target**: Complete all Wave 2 tickets for MVP readiness
 
@@ -11,7 +11,7 @@
 | Phase | Total | In Progress | In Review | Done | Blocked |
 |-------|-------|-------------|-----------|------|---------|
 | **2A: Critical** | 6 | 0 | 0 | 6 | 0 |
-| **2B: Security** | 5 | 0 | 0 | 0 | 0 |
+| **2B: Security** | 5 | 0 | 0 | 5 | 0 |
 | **2C: Consolidation** | 3 | 0 | 0 | 0 | 0 |
 | **2D: Infrastructure** | 3 | 0 | 0 | 0 | 0 |
 | **TOTAL** | 17 | 0 | 0 | 6 | 0 |
@@ -72,32 +72,47 @@
 
 ---
 
-## Wave 2B: Security Hardening (QUEUED)
+## Wave 2B: Security Hardening ✅ COMPLETE
 
-### BEA-299: Implement PBKDF2 for PIN hashing
-- **Status**: ⏸️ Queued - Waiting for Wave 2A completion
-- **Priority**: HIGH
+### ✅ BEA-299: Implement PBKDF2 for PIN hashing
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-23 04:19 UTC
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/179 (MERGED)
+- **Commit**: eb0b043
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-299
+- **Changes**: PBKDF2 with 100,000 iterations, constant-time comparison
 
-### BEA-301: Enforce SESSION_TOKEN_SECRET requirement
-- **Status**: ⏸️ Queued
-- **Priority**: HIGH
-- **Linear**: https://linear.app/beak-gaming/issue/BEA-301
-
-### BEA-302: Implement Redis rate limiting
-- **Status**: ⏸️ Queued
-- **Priority**: HIGH
-- **Linear**: https://linear.app/beak-gaming/issue/BEA-302
-
-### BEA-303: Configure CORS properly
-- **Status**: ⏸️ Queued
-- **Priority**: HIGH
-- **Linear**: https://linear.app/beak-gaming/issue/BEA-303
-
-### BEA-304: Add request size limits
-- **Status**: ⏸️ Queued
-- **Priority**: HIGH
+### ✅ BEA-304: Add request size limits
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-23 04:32 UTC
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/181 (MERGED)
+- **Commit**: e99a46a
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-304
+- **Changes**: 100KB default, 1MB templates, 5MB uploads
+
+### ✅ BEA-301: Enforce SESSION_TOKEN_SECRET requirement
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-23 04:32 UTC
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/182 (MERGED)
+- **Commit**: 5ffedc6
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-301
+- **Changes**: Startup validation, 64-char minimum
+
+### ✅ BEA-302: Implement Redis rate limiting
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-23 04:34 UTC
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/180 (MERGED)
+- **Commit**: dc8e3cc
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-302
+- **Changes**: Upstash Redis integration, sliding window algorithm
+
+### ✅ BEA-303: Configure CORS properly
+- **Status**: ✅ DONE
+- **Completed**: 2026-01-23 04:38 UTC
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/183 (MERGED)
+- **Commit**: 919ba61
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-303
+- **Changes**: OAuth endpoint CORS, configurable origins
 
 ---
 
@@ -209,12 +224,10 @@
 
 ### Next Actions
 
-**Wave 2A is complete.** Ready to proceed with Wave 2B: Security Hardening (5 tasks):
+**Wave 2A + 2B are complete.** Ready to proceed with Wave 2C: Code Consolidation (3 tasks):
 
-1. BEA-299: Implement PBKDF2 for PIN hashing
-2. BEA-301: Enforce SESSION_TOKEN_SECRET requirement
-3. BEA-302: Implement Redis rate limiting
-4. BEA-303: Configure CORS properly
-5. BEA-304: Add request size limits
+1. BEA-306: Consolidate OAuth clients to @beak-gaming/auth (-802 lines)
+2. BEA-307: Consolidate Toast components to @beak-gaming/ui (-702 lines)
+3. BEA-308: Consolidate Button/Modal components to @beak-gaming/ui (-500 lines)
 
-All Wave 2B tasks are now unblocked and ready for dispatch.
+All Wave 2C tasks are now unblocked and ready for dispatch.

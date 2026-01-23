@@ -32,13 +32,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |-------------|--------|-------|
 | `apps/bingo` | **✅ Production Ready (85%)** | Full 75-ball bingo with 29 patterns, audio, themes, dual-screen, PWA, OAuth auth, template CRUD API |
 | `apps/trivia` | **✅ Production Ready (95%)** | Full trivia with 20 questions, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth auth, CSV import |
-| `apps/platform-hub` | **⚠️ Backend Complete (45%)** | OAuth 2.1 server complete (3,479 lines). Game selector UI complete. Missing: user dashboard, profile/template management UI |
+| `apps/platform-hub` | **⚠️ Backend Complete (55-60%)** | OAuth 2.1 server complete (3,479 lines), CORS, rate limiting, request size limits, security hardening. Game selector UI complete. Missing: user dashboard, profile/template management UI |
 | `packages/sync` | **✅ Complete (100%)** | BroadcastChannel sync, Zustand store, React hook. Actively used in Bingo/Trivia |
 | `packages/ui` | **⚠️ Partial (88%)** | 15 components. Missing from package: Card, Toast (Toast duplicated in apps instead) |
 | `packages/theme` | **✅ Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
 | `packages/game-engine` | **⚠️ Partial (40%)** | Base GameStatus type, transition functions, statistics module |
 | `packages/auth` | **✅ Complete (95%)** | 30 exports: AuthProvider, hooks (useAuth, useSession, useUser), ProtectedRoute, client wrappers. Not integrated in Bingo/Trivia (apps have duplicate OAuth clients) |
-| `packages/database` | **✅ Complete (98%)** | 150+ exports: type-safe client, CRUD, pagination, filters, React hooks, session tokens, PIN security, API factories. Used in Bingo/Trivia |
+| `packages/database` | **✅ Complete (98%)** | 212 exports: type-safe client, CRUD, pagination, filters, React hooks, session tokens, PIN security (PBKDF2), API factories. Used in Bingo/Trivia |
 | `packages/testing` | **✅ Complete (100%)** | BroadcastChannel and Audio mocks for tests |
 | `packages/types` | **✅ Complete** | Shared TypeScript type definitions |
 | `packages/error-tracking` | **Complete** | Error logging and tracking utilities |
@@ -57,7 +57,7 @@ beak-gaming-platform/
 │   ├── theme/           # Senior-friendly design tokens and CSS
 │   ├── auth/            # Supabase authentication wrappers (30 exports)
 │   ├── game-engine/     # Abstract game state machine
-│   ├── database/        # Supabase database utilities (150+ exports)
+│   ├── database/        # Supabase database utilities (212 exports)
 │   ├── types/           # Shared TypeScript type definitions
 │   ├── error-tracking/  # Error logging and tracking utilities
 │   └── testing/         # Shared test utilities and mocks

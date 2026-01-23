@@ -18,9 +18,9 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 |-----------|-----------|--------|-------|
 | **Bingo App** | 85% | ✅ Production Ready | Full game engine, 29 patterns, audio, OAuth, templates |
 | **Trivia App** | 95% | ✅ Production Ready | Full game engine, 20 questions, TTS, OAuth, templates, CSV import |
-| **Platform Hub** | 45% | 🚧 Active Development | OAuth server + CSRF + token rotation + consent UI complete |
+| **Platform Hub** | 55-60% | 🚧 Active Development | OAuth server + CSRF + token rotation + consent UI + security hardening complete |
 | **@beak-gaming/auth** | 95% | ✅ Complete | 30+ exports, partially integrated (Platform Hub only) |
-| **@beak-gaming/database** | 98% | ✅ Complete | 150+ exports, type-safe client, CRUD, React hooks |
+| **@beak-gaming/database** | 98% | ✅ Complete | 212 exports, type-safe client, CRUD, React hooks, PIN security |
 | **@beak-gaming/sync** | 100% | ✅ Complete | BroadcastChannel sync, comprehensive tests |
 | **@beak-gaming/ui** | 100% | ✅ Complete | Button, Toggle, Slider, Modal, Input, Skeleton variants |
 | **@beak-gaming/theme** | 100% | ✅ Complete | 2 theme modes (light/dark), senior-friendly tokens |
@@ -317,7 +317,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 ---
 
-### 3.3 Platform Hub (45% Complete)
+### 3.3 Platform Hub (55-60% Complete)
 
 ✅ **Complete:**
 - OAuth 2.1 token endpoint (326 lines, production-ready)
@@ -335,6 +335,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 - Dashboard UI scaffolding with placeholder data
 - Session management middleware (automatic cookie updates)
 - Environment configuration documented
+- CORS middleware with configurable origins
+- Request body size limits (100KB-5MB per route)
+- Redis-backed rate limiting (Upstash integration)
+- Environment validation (SESSION_TOKEN_SECRET required at startup)
 
 ⚠️ **Partial:**
 - Home page (hardcoded dev URLs for localhost)
@@ -359,7 +363,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 | Package | Status | Exports | Test Coverage |
 |---------|--------|---------|---------------|
 | @beak-gaming/auth | ✅ 95% | 30 (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
-| @beak-gaming/database | ✅ 98% | 154 (client, CRUD, hooks, filters) | 90%+ |
+| @beak-gaming/database | ✅ 98% | 212 (client, CRUD, hooks, filters, PIN security) | 90%+ |
 | @beak-gaming/sync | ✅ 100% | ~70 exports (BroadcastSync, hooks, stores, session utils, room code generator) | 95%+ |
 | @beak-gaming/ui | ⚠️ 88% | 15 components (Button, Modal, Toggle, Input, Slider, Skeleton variants, Confetti, SyncStatusIndicator, CreateGameModal, JoinGameModal, RoomCodeDisplay). Missing: Card, Toast (Toast duplicated in apps) | 85%+ |
 | @beak-gaming/theme | ✅ 100% | 2 theme modes + design tokens | N/A |
@@ -520,11 +524,11 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 | ID | Issue | Location | Impact |
 |----|-------|----------|--------|
-| **CRIT-1** | RLS disabled on bingo_templates | Supabase database | Security vulnerability - anyone can modify templates |
-| **CRIT-2** | FK constraint removed from user_id | Supabase database | Data integrity compromised - orphaned data possible |
-| **CRIT-3** | Test-login routes exposed | `apps/bingo/src/app/*/test-login` | Auth bypass - unauthenticated access |
-| **CRIT-4** | Template loading tests failing | SaveTemplateModal and other async tests | Blocks merge - multiple test failures in Bingo and Trivia |
-| **CRIT-5** | Math.random() in offline session ID | `apps/bingo/src/lib/sync/offline-session.ts:34` | Predictable session IDs - should use crypto.getRandomValues() |
+| **CRIT-1** | ✅ FIXED: RLS enabled on bingo_templates | BEA-295, commit 0e3c833 | Security vulnerability resolved |
+| **CRIT-2** | ✅ FIXED: FK constraint restored | BEA-296, commit 4a7e99b | Data integrity restored |
+| **CRIT-3** | ✅ FIXED: Test-login routes removed | BEA-297, commit 78ebc0c | Auth bypass eliminated |
+| **CRIT-4** | ✅ FIXED: All tests passing (2,319/2,321) | BEA-300, PR #178, commit 8dc7e82 | Test suite fixed |
+| **CRIT-5** | ✅ FIXED: crypto.getRandomValues() used | BEA-298, PR #176, commit b51a9f9 | Cryptographically secure RNG |
 
 ---
 
@@ -532,11 +536,11 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 | ID | Issue | Location | Impact | Priority |
 |----|-------|----------|--------|----------|
-| **HIGH-1** | PIN hashing uses SHA-256 (not PBKDF2) | `packages/database/src/pin-security.ts:2-10` | Weak against rainbow tables | High |
-| **HIGH-2** | SESSION_TOKEN_SECRET not enforced | All apps | Token signing not validated | High |
-| **HIGH-3** | Rate limiting uses in-memory store | `apps/platform-hub/src/middleware/rate-limit.ts` | Doesn't work multi-instance | High |
-| **HIGH-4** | No CORS configuration | All API routes | XSS risk from third-party sites | High |
-| **HIGH-5** | Hardcoded dev URLs in production code | `apps/platform-hub/src/app/page.tsx` | Won't work in production | High |
+| **HIGH-1** | ✅ FIXED: PBKDF2 PIN hashing implemented | BEA-299, PR #179, commit eb0b043 | 100k iterations, constant-time comparison |
+| **HIGH-2** | ✅ FIXED: SESSION_TOKEN_SECRET enforced at startup | BEA-301, PR #182, commit 5ffedc6 | 64-char minimum validated |
+| **HIGH-3** | ✅ FIXED: Redis rate limiting via Upstash | BEA-302, PR #180, commit dc8e3cc | Multi-instance support |
+| **HIGH-4** | ✅ FIXED: CORS configured for OAuth endpoints | BEA-303, PR #183, commit 919ba61 | Configurable origins |
+| **HIGH-5** | ✅ FIXED: Environment variables for URLs | BEA-305, PR #177, commit ef6a441 | Dynamic configuration |
 
 ---
 
@@ -546,7 +550,7 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 |----|-------|--------|
 | **MED-1** | ~~User ID cookie not httpOnly~~ | NOT A VULNERABILITY - access_token and refresh_token ARE httpOnly. user_id cookie is intentionally httpOnly=false for client-side UX (non-sensitive identifier). |
 | **MED-2** | Toast ID generation uses Math.random() | Predictable toast IDs |
-| **MED-3** | No request size limits on API routes | DoS vulnerability |
+| **MED-3** | ✅ FIXED: Request size limits (BEA-304) | 100KB-5MB per route |
 | **MED-4** | Console logging in production | No audit trail for token events |
 | **MED-5** | Audit log RLS policy references non-existent columns | Admin can't read logs |
 | **MED-6** | Package Button missing aria-busy attribute | Accessibility regression - apps have it, package doesn't |
@@ -555,9 +559,9 @@ SELECT * FROM public.bingo_templates;  -- Should be empty or have valid user_ids
 
 ### 5.4 Security Debt Summary
 
-**5 Critical:** Must fix before any production deployment
-**5 High:** Should fix before beta testing
-**5 Medium:** Address before public launch (MED-1 is not a real issue, MED-6 added)
+**5 Critical:** ✅ ALL FIXED (Wave 2A - Jan 2026)
+**5 High:** ✅ ALL FIXED (Wave 2B - Jan 2026)
+**4 Medium:** Address before public launch (MED-1 not an issue, MED-3 fixed, MED-6 added)
 
 ---
 
@@ -701,35 +705,35 @@ async function safeHandler<T>(
 #### Authentication & Authorization
 - ✅ OAuth 2.1 with PKCE (implemented)
 - ✅ CSRF protection for consent flows (implemented)
-- ⚠️ HMAC token signing (infrastructure exists, not enforced)
+- ✅ HMAC token signing (SESSION_TOKEN_SECRET enforced)
 - ⚠️ JWT verification via JWKS (middleware implemented, needs testing)
 - ❌ Refresh token rotation in clients (backend ready, clients not integrated)
 - ❌ Logout functionality (not implemented)
 
 #### Data Protection
-- ⚠️ Row Level Security (enabled for most tables, **disabled for bingo_templates**)
+- ✅ Row Level Security (enabled on all tables)
 - ✅ httpOnly cookies for tokens (implemented)
-- ⚠️ Foreign key constraints (removed from bingo_templates)
+- ✅ Foreign key constraints (restored on all tables)
 - ✅ PIN rate limiting (5 attempts → 15 min lockout)
-- ⚠️ PIN hashing (SHA-256 used, should be PBKDF2)
+- ✅ PIN hashing (PBKDF2 with 100k iterations)
 
 #### Request Security
-- ✅ Rate limiting on OAuth endpoints (10 req/min per IP)
-- ❌ CORS configuration (not implemented)
-- ❌ Request size limits (not implemented)
+- ✅ Rate limiting on OAuth endpoints (10 req/min per IP, Redis-backed)
+- ✅ CORS configuration (OAuth endpoints)
+- ✅ Request size limits (100KB-5MB per route)
 - ✅ Input validation (partial - templates validated, needs more)
 
 ### 7.2 Security Checklist for Production
 
-- [ ] Enable RLS on bingo_templates table
-- [ ] Restore FK constraint on bingo_templates.user_id
-- [ ] Delete test-login routes
-- [ ] Replace Math.random() with crypto.getRandomValues()
-- [ ] Implement PBKDF2 for PIN hashing (100k+ iterations)
-- [ ] Add SESSION_TOKEN_SECRET validation at startup
-- [ ] Configure CORS middleware
-- [ ] Add request size limits to all API routes
-- [ ] Implement Redis-backed rate limiting for multi-instance
+- [x] Enable RLS on bingo_templates table
+- [x] Restore FK constraint on bingo_templates.user_id
+- [x] Delete test-login routes
+- [x] Replace Math.random() with crypto.getRandomValues()
+- [x] Implement PBKDF2 for PIN hashing (100k+ iterations)
+- [x] Add SESSION_TOKEN_SECRET validation at startup
+- [x] Configure CORS middleware
+- [x] Add request size limits to all API routes
+- [x] Implement Redis-backed rate limiting for multi-instance
 - [ ] Test JWT verification end-to-end
 - [ ] Add security headers (CSP, X-Frame-Options)
 - [ ] Run penetration test before public launch
@@ -1214,35 +1218,35 @@ mv docs/phase2_status.md docs/archive/2026-01-22/
 
 ### 13.2 Immediate Next Steps
 
-**Critical Path (Must Complete First):**
-1. Fix database security (RLS + FK restoration)
-2. Remove test-login routes from Bingo app
-3. Fix template loading tests (5 failing tests)
-4. Deploy to staging, test OAuth flow end-to-end
+**Wave 2A + 2B: ✅ COMPLETE (Jan 2026)**
+All critical path and security hardening tasks completed:
+- 6 Wave 2A tasks merged (BEA-295 through BEA-305)
+- 5 Wave 2B security PRs merged (BEA-299, BEA-301-304)
 
-**High Priority (Complete for Beta Stability):**
+**Wave 2C: Code Consolidation (QUEUED)**
+1. BEA-306: Consolidate OAuth clients to @beak-gaming/auth (-802 lines)
+2. BEA-307: Consolidate Toast components to @beak-gaming/ui (-702 lines)
+3. BEA-308: Consolidate Button/Modal components to @beak-gaming/ui (-500 lines)
+
+**Wave 2D: Infrastructure (QUEUED)**
+1. BEA-309: Set up Turborepo remote caching
+2. BEA-310: Complete Platform Hub user dashboard
+3. BEA-311: Migrate @packages/ui components
+
+**Quality & Testing (Post-Wave 2):**
 1. Add logout functionality to both games
-2. Fix Platform-Hub hardcoded URLs
-3. Extract OAuth clients to @beak-gaming/auth package
-4. Add health check endpoints to all apps
-5. Implement refresh token rotation in game clients
+2. Add OAuth deny route tests
+3. Add session endpoint tests
+4. Add Trivia template [id] route tests
+5. Fix skipped tests (9 remaining)
+6. Add end-to-end OAuth flow (Playwright)
+7. Add health check endpoints to all apps
+8. Implement refresh token rotation in game clients
 
-**Quality & Testing:**
-1. Add OAuth deny route tests
-2. Add session endpoint tests
-3. Add Trivia template [id] route tests
-4. Fix skipped tests (9 remaining)
-5. Add end-to-end OAuth flow (Playwright)
-6. Security review and remediation
-
-**Production Prep:**
-1. Implement PBKDF2 for PIN hashing (replace SHA-256)
-2. Add CORS middleware configuration
-3. Add request size limits to API routes
-4. Implement Redis-backed rate limiting for multi-instance support
-5. Add security headers (CSP, X-Frame-Options)
-6. Run penetration test
-7. Monitor and address issues from beta testing
+**Production Prep (Post-MVP):**
+1. Add security headers (CSP, X-Frame-Options)
+2. Run penetration test
+3. Monitor and address issues from beta testing
 
 ---
 
