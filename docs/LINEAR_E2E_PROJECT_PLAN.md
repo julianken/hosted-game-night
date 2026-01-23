@@ -1,13 +1,28 @@
 # Linear E2E Testing Project Plan
 
-**Document Version:** 2.0
+**Document Version:** 3.0
 **Created:** 2026-01-23
+**Updated:** 2026-01-23 (Revised based on comprehensive audit)
 **Initiative:** Wave 3 - E2E Testing Coverage
-**Issue Range:** BEA-313 through BEA-319
+**Issue Range:** BEA-313 through BEA-318
 
 ---
 
 ## Executive Summary
+
+### Scope Clarification
+
+**This initiative validates the feature-complete MVP by adding Platform Hub E2E tests** while preserving the existing comprehensive coverage in Bingo and Trivia. The existing 288 tests provide irreplaceable coverage for game mechanics, dual-screen sync, accessibility, and PWA functionality that took significant effort to create and maintain.
+
+**What we are doing:**
+- Adding ~110-150 new Platform Hub tests to validate authentication, dashboard, profile, and SSO flows
+- Improving CI infrastructure (sharding, tags) to enable reliable test execution
+- Bringing total E2E coverage to ~400-440 tests across all three apps
+
+**What we are NOT doing:**
+- Deleting existing Bingo/Trivia tests (they provide critical coverage)
+- Rebuilding test infrastructure from scratch
+- Starting over with a "clean slate"
 
 ### Current State
 
@@ -19,35 +34,42 @@
 | Platform Hub Tests | 0 (directory scaffolded, no tests) |
 | CI Status | **DISABLED** (17+ min execution, stability issues) |
 
+### Existing Coverage (Preserved)
+
+| Application | Test Files | Test Cases | Coverage Areas |
+|-------------|-----------|------------|----------------|
+| Bingo | 8 | ~150 | Game engine (75-ball mechanics), 29 patterns, dual-screen sync, audio system, room setup, keyboard shortcuts, accessibility (WCAG AA), PWA/offline |
+| Trivia | 5 | ~130 | Game engine (questions/rounds), team management, scoring, TTS, dual-screen sync, question import, templates, timer system |
+| **Subtotal** | **13** | **~280** | **Comprehensive game coverage** |
+
 ### Target State
 
 | Metric | Target |
 |--------|--------|
-| Total E2E Tests | ~90 test cases (clean slate + new) |
+| Total E2E Tests | ~400-440 test cases (288 existing + 110-150 new) |
 | Platform Hub Tests | 8-10 spec files (~1,500-2,500 LOC) |
 | CI Execution Time | <5 minutes (sharded) |
 | Critical Path Tests | <2 minutes |
 | Test Reliability | >98% pass rate |
 
-### Key Findings from Analysis
+### Key Findings from Audit
 
-1. **Clean Slate Required:** Existing 288 tests are outdated, unstable, and prevent CI enablement
-2. **Blockers Resolved:** Logout button and auth navigation already implemented in Platform Hub Header.tsx
+1. **Existing Tests Are Valuable:** The 288 Bingo/Trivia tests provide irreplaceable coverage for complex game mechanics, accessibility, and dual-screen synchronization
+2. **Platform Hub Is the Gap:** Zero E2E tests exist for authentication, dashboard, profile, or SSO flows
 3. **Infrastructure Ready:** Playwright config already includes platform-hub project and webServer configuration
 4. **Auth Fixtures Ready:** `e2e/fixtures/auth.ts` provides authenticatedPage fixture
-5. **Missing:** Actual test files for Platform Hub, auth flow tests, SSO tests
+5. **Blockers Resolved:** Logout button and auth navigation already implemented in Platform Hub Header.tsx
 
 ### Issue Summary (Wave 3)
 
 | ID | Title | Priority | Complexity | Blocks |
 |----|-------|----------|------------|--------|
-| BEA-313 | Remove All Existing E2E Tests (Clean Slate) | P0 | Small | BEA-314, BEA-315, BEA-316, BEA-317, BEA-318, BEA-319 |
-| BEA-314 | E2E Infrastructure: Sharding & CI Integration | P1 | Medium | BEA-316, BEA-317 |
-| BEA-315 | Platform Hub Auth Flow E2E Tests | P0 | Large | BEA-317 |
-| BEA-316 | Platform Hub Dashboard & Profile E2E Tests | P1 | Medium | None |
-| BEA-317 | Cross-App SSO E2E Tests | P1 | Large | None |
-| BEA-318 | Template CRUD E2E Tests | P2 | Medium | None |
-| BEA-319 | PWA, Accessibility & Security E2E Tests | P2 | Medium | None |
+| BEA-313 | E2E Infrastructure: Sharding & CI Integration | P1 | Medium | BEA-316, BEA-318 |
+| BEA-314 | Platform Hub Auth Flow E2E Tests | P0 | Large | BEA-316, BEA-317 |
+| BEA-315 | Platform Hub Dashboard & Profile E2E Tests | P1 | Medium | None |
+| BEA-316 | Cross-App SSO E2E Tests | P1 | Large | None |
+| BEA-317 | Template CRUD E2E Tests | P2 | Medium | None |
+| BEA-318 | PWA, Accessibility & Security E2E Tests | P2 | Medium | None |
 
 ---
 
@@ -56,35 +78,19 @@
 ```
                     ┌──────────────────────────────────────────────────────────────┐
                     │                 WAVE 3: E2E TESTING COVERAGE                  │
+                    │         (Adding Platform Hub tests to existing suite)         │
                     └──────────────────────────────────────────────────────────────┘
 
-    FOUNDATIONAL (Must Complete First)
+    PARALLEL GROUP A (No Dependencies - Can Start Immediately)
     ─────────────────────────────────────────────────────────────────────────────────
-    ┌─────────────────────────────────────────────────────────────────────────────┐
-    │                            BEA-313                                           │
-    │                 Remove All Existing E2E Tests                                │
-    │                       (Clean Slate)                                          │
-    │                         [Small]                                              │
-    │                                                                              │
-    │  Delete: e2e/bingo/*.spec.ts (8 files, ~2,500 LOC)                          │
-    │  Delete: e2e/trivia/*.spec.ts (5 files, ~1,900 LOC)                         │
-    │  Keep: playwright.config.ts, e2e/utils/, e2e/fixtures/                      │
-    │                                                                              │
-    │  BLOCKS: ALL OTHER ISSUES                                                    │
-    └─────────────────────────────────────────────────────────────────────────────┘
-                                         │
-                                         │ (blocks)
-                                         ▼
-    PARALLEL GROUP A (After BEA-313 - No Dependencies Between Them)
-    ─────────────────────────────────────────────────────────────────────────────────
-    ┌─────────────────────┐     ┌─────────────────────┐
-    │     BEA-314         │     │     BEA-315         │
-    │ Infrastructure &    │     │ Platform Hub Auth   │
-    │ Sharding Setup      │     │ Flow E2E Tests      │
-    │ [Medium]            │     │ [Large - Critical]  │
-    │                     │     │                     │
-    │ Blocked By: BEA-313 │     │ Blocked By: BEA-313 │
-    └─────────┬───────────┘     └─────────┬───────────┘
+    ┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+    │     BEA-313         │     │     BEA-314         │     │     BEA-315         │
+    │ Infrastructure &    │     │ Platform Hub Auth   │     │ Dashboard & Profile │
+    │ Sharding Setup      │     │ Flow E2E Tests      │     │ E2E Tests           │
+    │ [Medium]            │     │ [Large - Critical]  │     │ [Medium]            │
+    │                     │     │                     │     │                     │
+    │ Blocked By: None    │     │ Blocked By: None    │     │ Blocked By: None    │
+    └─────────┬───────────┘     └─────────┬───────────┘     └─────────────────────┘
               │                           │
               │ (blocks)                  │ (blocks)
               ▼                           ▼
@@ -92,67 +98,62 @@
     ─────────────────────────────────────────────────────────────────────────────────
     ┌─────────────────────┐     ┌─────────────────────┐
     │     BEA-316         │     │     BEA-317         │
-    │ Dashboard & Profile │     │ Cross-App SSO       │
+    │ Cross-App SSO       │     │ Template CRUD       │
     │ E2E Tests           │     │ E2E Tests           │
-    │ [Medium]            │     │ [Large]             │
+    │ [Large]             │     │ [Medium]            │
     │                     │     │                     │
-    │ Blocked By: BEA-313 │     │ Blocked By:         │
-    │                     │     │ BEA-314, BEA-315    │
+    │ Blocked By:         │     │ Blocked By:         │
+    │ BEA-313, BEA-314    │     │ BEA-314             │
     └─────────────────────┘     └─────────────────────┘
-              │
-              │
-    PARALLEL GROUP C (After BEA-313 - Independent of Other Groups)
-    ─────────────────────────────────────────────────────────────────────────────────
-    ┌─────────────────────┐     ┌─────────────────────┐
-    │     BEA-318         │     │     BEA-319         │
-    │ Template CRUD       │     │ PWA, A11y &         │
-    │ E2E Tests           │     │ Security Tests      │
-    │ [Medium]            │     │ [Medium]            │
-    │                     │     │                     │
-    │ Blocked By:         │     │ Blocked By: BEA-314 │
-    │ BEA-315             │     │                     │
-    └─────────────────────┘     └─────────────────────┘
+
+    ┌─────────────────────┐
+    │     BEA-318         │
+    │ PWA, A11y &         │
+    │ Security Tests      │
+    │ [Medium]            │
+    │                     │
+    │ Blocked By: BEA-313 │
+    └─────────────────────┘
 
 
     DEPENDENCY SUMMARY:
     ─────────────────────────────────────────────────────────────────────────────────
 
-    BEA-313 (Clean Slate)
-      └── BLOCKS: BEA-314, BEA-315, BEA-316, BEA-317, BEA-318, BEA-319
+    BEA-313 (Infrastructure)
+      └── BLOCKS: BEA-316, BEA-318
 
-    BEA-314 (Infrastructure)
-      └── BLOCKS: BEA-317, BEA-319
+    BEA-314 (Auth Tests)
+      └── BLOCKS: BEA-316, BEA-317
 
-    BEA-315 (Auth Tests)
-      └── BLOCKS: BEA-317, BEA-318
+    BEA-315 (Dashboard Tests)
+      └── BLOCKS: None (independent)
 
-    BEA-316 (Dashboard Tests)
-      └── BLOCKS: None (independent after BEA-313)
+    BEA-316 (SSO Tests)
+      └── BLOCKS: None (depends on BEA-313 + BEA-314)
 
-    BEA-317 (SSO Tests)
-      └── BLOCKS: None (depends on BEA-314 + BEA-315)
-
-    BEA-318 (Template Tests)
-      └── BLOCKS: None (depends on BEA-315)
-
-    BEA-319 (PWA/A11y Tests)
+    BEA-317 (Template Tests)
       └── BLOCKS: None (depends on BEA-314)
+
+    BEA-318 (PWA/A11y Tests)
+      └── BLOCKS: None (depends on BEA-313)
 
 
     PARALLELIZATION OPPORTUNITIES:
     ─────────────────────────────────────────────────────────────────────────────────
 
-    After BEA-313 completes, these can run in parallel:
-    ├── BEA-314 (Infrastructure)
-    ├── BEA-315 (Auth Tests)
-    └── BEA-316 (Dashboard Tests)
+    Can start immediately (no dependencies):
+    ├── BEA-313 (Infrastructure)
+    ├── BEA-314 (Auth Tests)
+    └── BEA-315 (Dashboard Tests)
 
-    After BEA-314 + BEA-315 complete:
-    ├── BEA-317 (SSO Tests)
-    ├── BEA-318 (Template Tests) - only needs BEA-315
-    └── BEA-319 (PWA/A11y Tests) - only needs BEA-314
+    After BEA-313 + BEA-314 complete:
+    ├── BEA-316 (SSO Tests)
+    └── BEA-317 (Template Tests) - only needs BEA-314
 
-    Maximum parallelism: 3 agents after BEA-313
+    After BEA-313 completes:
+    └── BEA-318 (PWA/A11y Tests)
+
+    Maximum parallelism: 3 agents from the start
 ```
 
 ---
@@ -162,126 +163,38 @@
 ### Shortest Path to CI-Enabled Tests
 
 ```
-BEA-313 (REQUIRED FIRST)
+BEA-314 (Auth Tests) ──► Critical auth coverage
     │
-    ├── BEA-314 (Infrastructure) ──► CI sharding enabled
-    │
-    └── BEA-315 (Auth Tests) ──► Critical auth coverage
-             │
-             └── Enable CI with @critical tag filter (<2 min)
+    └── Enable CI with @critical tag filter (<2 min)
+
+BEA-313 (Infrastructure) ──► CI sharding enabled
 
 After critical path:
-    ├── BEA-316 (Dashboard) - can run in parallel
-    ├── BEA-317 (SSO) - needs BEA-314 + BEA-315
-    ├── BEA-318 (Templates) - needs BEA-315
-    └── BEA-319 (PWA/A11y) - needs BEA-314
+    ├── BEA-315 (Dashboard) - can run in parallel with above
+    ├── BEA-316 (SSO) - needs BEA-313 + BEA-314
+    ├── BEA-317 (Templates) - needs BEA-314
+    └── BEA-318 (PWA/A11y) - needs BEA-313
 ```
 
-### Minimum Viable E2E (First Tests After Clean Slate)
+### Minimum Viable E2E (First Tests to Enable CI)
 
-To unblock CI as fast as possible, implement these tests first:
+To unblock CI as fast as possible, implement these tests first in BEA-314:
 
 1. Login success flow (1 test)
 2. Login failure flow (1 test)
 3. Logout flow (1 test)
 4. Protected route redirect (1 test)
 
-**4 tests = CI-enabled immediately after BEA-315**
+**4 tests = CI-enabled immediately after BEA-314**
 
 ---
 
 ## Linear Issues (Detailed)
 
-### BEA-313: Remove All Existing E2E Tests (Clean Slate)
+### BEA-313: E2E Infrastructure - Sharding & CI Integration
 
 ```yaml
 ID: BEA-313
-Title: Remove All Existing E2E Tests (Clean Slate)
-Project: Wave 3 - E2E Testing
-Type: type:chore, type:test
-Severity: severity:critical
-Priority: P0 (Urgent)
-Component: app:bingo, app:trivia
-Complexity: Small (~100 LOC deleted per file, deletion only)
-
-Blocks: BEA-314, BEA-315, BEA-316, BEA-317, BEA-318, BEA-319
-Blocked By: None
-Related: None
-```
-
-#### Problem
-
-The existing 288 E2E tests across Bingo and Trivia are:
-- **Outdated:** Written before OAuth integration, testing old auth flows
-- **Unstable:** 17+ minute execution time with flaky failures
-- **Blocking CI:** Tests are disabled because they never pass reliably
-- **Technical debt:** Tests make assumptions about UI that no longer hold
-
-Maintaining these tests while building new infrastructure creates merge conflicts and confusion.
-
-#### Solution
-
-Delete all existing E2E test spec files while preserving:
-- `playwright.config.ts` - Infrastructure configuration
-- `e2e/utils/` - Utility functions (may be useful)
-- `e2e/fixtures/` - Auth fixtures (already updated for OAuth)
-- `e2e/platform-hub/.gitkeep` - Directory structure
-
-#### Files to Delete
-
-| Directory | Files | Approx LOC |
-|-----------|-------|------------|
-| `e2e/bingo/` | `accessibility.spec.ts`, `display.spec.ts`, `dual-screen.spec.ts`, `home.spec.ts`, `keyboard.spec.ts`, `modal-timing.spec.ts`, `presenter.spec.ts`, `room-setup.spec.ts` | ~2,500 |
-| `e2e/trivia/` | `display.spec.ts`, `dual-screen.spec.ts`, `home.spec.ts`, `presenter.spec.ts`, `session-flow.spec.ts` | ~1,900 |
-
-**Total: 13 files, ~4,400 LOC to delete**
-
-#### Files to Keep
-
-| File | Reason |
-|------|--------|
-| `playwright.config.ts` | Contains webServer config, project definitions |
-| `e2e/utils/fixtures.ts` | Helper functions may be reusable |
-| `e2e/utils/helpers.ts` | Wait utilities still useful |
-| `e2e/fixtures/auth.ts` | Updated for OAuth, needed for new tests |
-| `e2e/platform-hub/.gitkeep` | Preserve directory structure |
-
-#### Acceptance Criteria
-
-- [ ] All `e2e/bingo/*.spec.ts` files deleted (8 files)
-- [ ] All `e2e/trivia/*.spec.ts` files deleted (5 files)
-- [ ] `playwright.config.ts` preserved and unchanged
-- [ ] `e2e/utils/` directory preserved with all files
-- [ ] `e2e/fixtures/` directory preserved with all files
-- [ ] `npx playwright test` shows 0 tests found (expected)
-- [ ] Git shows ~4,400 lines deleted
-- [ ] No broken imports in remaining files
-
-#### Verification Commands
-
-```bash
-# Verify deletion
-ls e2e/bingo/*.spec.ts  # Should show "No such file"
-ls e2e/trivia/*.spec.ts  # Should show "No such file"
-
-# Verify infrastructure intact
-cat playwright.config.ts  # Should exist
-ls e2e/utils/  # Should show fixtures.ts, helpers.ts
-ls e2e/fixtures/  # Should show auth.ts
-
-# Verify zero tests
-npx playwright test --list  # Should show 0 tests
-
-# Verify no broken imports
-pnpm build  # Should succeed
-```
-
----
-
-### BEA-314: E2E Infrastructure - Sharding & CI Integration
-
-```yaml
-ID: BEA-314
 Title: E2E Infrastructure - Sharding & CI Integration
 Project: Wave 3 - E2E Testing
 Type: type:infra, type:test
@@ -290,17 +203,18 @@ Priority: P1 (High)
 Component: app:bingo, app:trivia, app:platform-hub
 Complexity: Medium (~150-250 LOC)
 
-Blocks: BEA-317, BEA-319
-Blocked By: BEA-313
-Related: BEA-315
+Blocks: BEA-316, BEA-318
+Blocked By: None
+Related: BEA-314
 ```
 
 #### Problem
 
-E2E tests need infrastructure for:
+E2E tests need infrastructure improvements for:
 - Sharding to run tests in parallel across CI workers
 - Tag-based filtering for critical-path-only runs on PRs
 - Global auth state setup to avoid redundant logins
+- CI execution currently disabled due to 17+ minute runtime
 
 #### Solution
 
@@ -328,6 +242,7 @@ E2E tests need infrastructure for:
 - [ ] GitHub Actions workflow runs full suite on main with 4 shards
 - [ ] `pnpm test:e2e:critical` runs only @critical tagged tests
 - [ ] Total sharded execution time <5 minutes
+- [ ] Existing Bingo/Trivia tests continue to pass
 
 #### Verification Commands
 
@@ -341,14 +256,18 @@ npx playwright test --grep "@critical"
 
 # Verify all 3 web servers start
 pnpm dev & sleep 30 && curl -s localhost:3000 && curl -s localhost:3001 && curl -s localhost:3002
+
+# Verify existing tests still pass
+npx playwright test --project=bingo
+npx playwright test --project=trivia
 ```
 
 ---
 
-### BEA-315: Platform Hub Auth Flow E2E Tests
+### BEA-314: Platform Hub Auth Flow E2E Tests
 
 ```yaml
-ID: BEA-315
+ID: BEA-314
 Title: Platform Hub Auth Flow E2E Tests
 Project: Wave 3 - E2E Testing
 Type: type:test, type:e2e
@@ -357,9 +276,9 @@ Priority: P0 (Urgent)
 Component: app:platform-hub
 Complexity: Large (~400-600 LOC)
 
-Blocks: BEA-317, BEA-318
-Blocked By: BEA-313
-Related: BEA-314
+Blocks: BEA-316, BEA-317
+Blocked By: None
+Related: BEA-313
 ```
 
 #### Problem
@@ -385,7 +304,7 @@ Create comprehensive auth flow E2E tests covering:
 - Login flow (success, invalid credentials, unconfirmed email)
 - Logout flow (button click, session clear, redirect)
 - Password reset flow (request, email validation)
-- Protected route redirects (unauthenticated → login)
+- Protected route redirects (unauthenticated -> login)
 - Session persistence (refresh maintains auth)
 
 #### Files to Create
@@ -396,7 +315,7 @@ Create comprehensive auth flow E2E tests covering:
 | `e2e/platform-hub/signup.spec.ts` | ~150 | 6 |
 | `e2e/platform-hub/logout.spec.ts` | ~100 | 4 |
 
-#### Test Cases (14 total)
+#### Test Cases (24 total)
 
 ```typescript
 // auth.spec.ts - Login flows
@@ -406,18 +325,25 @@ describe('@critical Authentication', () => {
   test('email not confirmed shows error message');          // CP-AUTH-004
   test('protected routes redirect to login');               // CP-AUTH-007
   test('session persists after page refresh');              // Session persistence
+  test('forgot password page renders correctly');           // CP-AUTH-005
+  test('password reset request shows confirmation');        // CP-AUTH-005
+  test('password reset with valid token works');            // CP-AUTH-006
+  test('password reset with invalid token shows error');    // Error handling
 });
 
 // signup.spec.ts - Registration flows
 describe('@critical Signup', () => {
+  test('signup page renders correctly');                    // UI validation
   test('user can sign up with email');                      // CP-AUTH-001
   test('invalid email format shows error');                 // Validation
   test('weak password shows requirements');                 // Validation
+  test('password mismatch shows error');                    // Validation
   test('duplicate email shows error');                      // Error handling
 });
 
 // logout.spec.ts - Logout flows
 describe('@critical Logout', () => {
+  test('logout button visible when authenticated');         // UI
   test('user can logout via header button');                // CP-AUTH-008
   test('logout clears auth cookies');                       // Security
   test('logout redirects to home page');                    // UX
@@ -427,12 +353,11 @@ describe('@critical Logout', () => {
 
 #### Acceptance Criteria
 
-- [ ] `e2e/platform-hub/auth.spec.ts` has 5+ passing tests
-- [ ] `e2e/platform-hub/signup.spec.ts` has 4+ passing tests
-- [ ] `e2e/platform-hub/logout.spec.ts` has 4+ passing tests
+- [ ] `e2e/platform-hub/auth.spec.ts` has 9+ passing tests
+- [ ] `e2e/platform-hub/signup.spec.ts` has 6+ passing tests
+- [ ] `e2e/platform-hub/logout.spec.ts` has 5+ passing tests
 - [ ] All tests tagged with @critical
 - [ ] Tests use `e2e/fixtures/auth.ts` for authenticated pages
-- [ ] Tests follow existing patterns from Bingo/Trivia specs
 - [ ] `npx playwright test --project=platform-hub` passes
 - [ ] No flaky tests (3 consecutive green runs)
 
@@ -451,10 +376,10 @@ npx playwright test --project=platform-hub --reporter=html
 
 ---
 
-### BEA-316: Platform Hub Dashboard & Profile E2E Tests
+### BEA-315: Platform Hub Dashboard & Profile E2E Tests
 
 ```yaml
-ID: BEA-316
+ID: BEA-315
 Title: Platform Hub Dashboard & Profile E2E Tests
 Project: Wave 3 - E2E Testing
 Type: type:test, type:e2e
@@ -464,19 +389,20 @@ Component: app:platform-hub
 Complexity: Medium (~200-300 LOC)
 
 Blocks: None
-Blocked By: BEA-313
-Related: BEA-310 (Profile Management feature)
+Blocked By: None
+Related: BEA-310 (Profile Management feature), BEA-309 (Dashboard feature)
 ```
 
 #### Problem
 
-Dashboard and profile management features (BEA-309, BEA-310) have no E2E coverage. Users cannot verify end-to-end functionality.
+Dashboard and profile management features (BEA-309, BEA-310) have no E2E coverage. Users cannot verify end-to-end functionality of these recently completed features.
 
 #### Solution
 
 Create E2E tests for:
 - Dashboard displays user info correctly
 - Dashboard shows recent sessions
+- Dashboard shows game statistics
 - Profile update functionality
 - Settings page functionality
 - Error handling for profile updates
@@ -485,31 +411,39 @@ Create E2E tests for:
 
 | File | LOC Est | Tests Est |
 |------|---------|-----------|
-| `e2e/platform-hub/dashboard.spec.ts` | ~150 | 6 |
-| `e2e/platform-hub/profile.spec.ts` | ~150 | 6 |
-| `e2e/platform-hub/settings.spec.ts` | ~100 | 4 |
+| `e2e/platform-hub/dashboard.spec.ts` | ~200 | 10 |
+| `e2e/platform-hub/profile.spec.ts` | ~200 | 10 |
+| `e2e/platform-hub/settings.spec.ts` | ~100 | 5 |
 
-#### Test Cases (16 total)
+#### Test Cases (25 total)
 
 ```typescript
 // dashboard.spec.ts
 describe('@high Dashboard', () => {
+  test('dashboard page renders for authenticated user');    // Basic render
   test('dashboard shows user email');                       // CP-DASH-001
+  test('dashboard shows display name');                     // CP-DASH-001
   test('dashboard shows facility name');                    // CP-DASH-001
   test('dashboard shows recent game sessions');             // CP-DASH-002
+  test('dashboard shows game statistics');                  // Stats display
   test('dashboard links to settings');                      // Navigation
   test('empty state shows for new users');                  // Edge case
   test('dashboard data refreshes on navigation');           // UX
+  test('unauthenticated user redirected from dashboard');   // Protection
 });
 
 // profile.spec.ts
 describe('@high Profile Management', () => {
+  test('profile section displays current values');          // Read
+  test('user can update display name');                     // HI-PROF-001
   test('user can update facility name');                    // HI-PROF-001
   test('user can change email');                            // HI-PROF-002
   test('user can change password');                         // HI-PROF-003
   test('invalid current password rejected');                // HI-PROF-004
   test('profile changes show success toast');               // UX
   test('profile validation errors displayed');              // UX
+  test('avatar upload works correctly');                    // If implemented
+  test('profile changes persist after page reload');        // Persistence
 });
 
 // settings.spec.ts
@@ -518,14 +452,15 @@ describe('@high Settings', () => {
   test('theme preference can be changed');
   test('notification preferences can be toggled');
   test('settings persist after page reload');
+  test('unauthenticated user redirected from settings');
 });
 ```
 
 #### Acceptance Criteria
 
-- [ ] `e2e/platform-hub/dashboard.spec.ts` has 6 passing tests
-- [ ] `e2e/platform-hub/profile.spec.ts` has 6 passing tests
-- [ ] `e2e/platform-hub/settings.spec.ts` has 4 passing tests
+- [ ] `e2e/platform-hub/dashboard.spec.ts` has 10 passing tests
+- [ ] `e2e/platform-hub/profile.spec.ts` has 10 passing tests
+- [ ] `e2e/platform-hub/settings.spec.ts` has 5 passing tests
 - [ ] All tests tagged with @high
 - [ ] Tests use `authenticatedPage` fixture
 - [ ] Tests verify toast notifications appear
@@ -543,10 +478,10 @@ npx playwright test --project=platform-hub --repeat-each=3
 
 ---
 
-### BEA-317: Cross-App SSO E2E Tests
+### BEA-316: Cross-App SSO E2E Tests
 
 ```yaml
-ID: BEA-317
+ID: BEA-316
 Title: Cross-App SSO E2E Tests
 Project: Wave 3 - E2E Testing
 Type: type:test, type:e2e
@@ -556,7 +491,7 @@ Component: app:bingo, app:trivia, app:platform-hub
 Complexity: Large (~300-500 LOC)
 
 Blocks: None
-Blocked By: BEA-314, BEA-315
+Blocked By: BEA-313, BEA-314
 Related: OAuth implementation (BEA-306 through BEA-312)
 ```
 
@@ -577,11 +512,11 @@ Create E2E tests for:
 
 | File | LOC Est | Tests Est |
 |------|---------|-----------|
-| `e2e/platform-hub/oauth.spec.ts` | ~200 | 8 |
-| `e2e/bingo/oauth-flow.spec.ts` | ~150 | 5 |
-| `e2e/trivia/oauth-flow.spec.ts` | ~150 | 5 |
+| `e2e/platform-hub/oauth.spec.ts` | ~250 | 10 |
+| `e2e/platform-hub/sso-bingo.spec.ts` | ~150 | 6 |
+| `e2e/platform-hub/sso-trivia.spec.ts` | ~150 | 6 |
 
-#### Test Cases (18 total)
+#### Test Cases (22 total)
 
 ```typescript
 // platform-hub/oauth.spec.ts - Consent page
@@ -594,20 +529,28 @@ describe('@critical OAuth Consent', () => {
   test('invalid authorization_id shows error');             // Error handling
   test('expired authorization shows error');                // Error handling
   test('unauthenticated user redirected to login');         // Protection
+  test('PKCE code_challenge validated correctly');          // Security
+  test('state parameter preserved through flow');           // Security
 });
 
-// bingo/oauth-flow.spec.ts
-describe('@critical Bingo OAuth', () => {
+// platform-hub/sso-bingo.spec.ts
+describe('@critical Bingo SSO', () => {
   test('login button triggers OAuth flow');                 // CP-SSO-001
+  test('complete SSO flow: Bingo -> Hub -> Bingo');         // Full flow
   test('OAuth callback exchanges code for tokens');         // Token flow
   test('authenticated user can access /play');              // Protected route
   test('tokens stored in httpOnly cookies');                // Security
   test('token refresh works before expiration');            // Session maintenance
 });
 
-// trivia/oauth-flow.spec.ts - Same as Bingo
-describe('@critical Trivia OAuth', () => {
-  // Same 5 tests as Bingo but for Trivia app
+// platform-hub/sso-trivia.spec.ts
+describe('@critical Trivia SSO', () => {
+  test('login button triggers OAuth flow');                 // CP-SSO-002
+  test('complete SSO flow: Trivia -> Hub -> Trivia');       // Full flow
+  test('OAuth callback exchanges code for tokens');         // Token flow
+  test('authenticated user can access /play');              // Protected route
+  test('tokens stored in httpOnly cookies');                // Security
+  test('token refresh works before expiration');            // Session maintenance
 });
 ```
 
@@ -617,7 +560,7 @@ These tests require all 3 apps running and coordination:
 
 ```typescript
 // Example multi-app flow
-test('complete SSO flow: Bingo → Hub → Bingo', async ({ browser }) => {
+test('complete SSO flow: Bingo -> Hub -> Bingo', async ({ browser }) => {
   // 1. Start at Bingo
   const bingoPage = await browser.newPage();
   await bingoPage.goto('http://localhost:3000');
@@ -643,9 +586,9 @@ test('complete SSO flow: Bingo → Hub → Bingo', async ({ browser }) => {
 
 #### Acceptance Criteria
 
-- [ ] `e2e/platform-hub/oauth.spec.ts` has 8 passing tests
-- [ ] `e2e/bingo/oauth-flow.spec.ts` has 5 passing tests
-- [ ] `e2e/trivia/oauth-flow.spec.ts` has 5 passing tests
+- [ ] `e2e/platform-hub/oauth.spec.ts` has 10 passing tests
+- [ ] `e2e/platform-hub/sso-bingo.spec.ts` has 6 passing tests
+- [ ] `e2e/platform-hub/sso-trivia.spec.ts` has 6 passing tests
 - [ ] All tests tagged with @critical
 - [ ] Tests handle multi-app navigation correctly
 - [ ] PKCE code_verifier/code_challenge flow verified
@@ -656,7 +599,7 @@ test('complete SSO flow: Bingo → Hub → Bingo', async ({ browser }) => {
 
 ```bash
 # Run all OAuth tests
-npx playwright test oauth-flow oauth
+npx playwright test oauth sso-bingo sso-trivia
 
 # Run cross-app tests (requires all servers)
 pnpm dev & npx playwright test --grep "SSO"
@@ -664,162 +607,163 @@ pnpm dev & npx playwright test --grep "SSO"
 
 ---
 
-### BEA-318: Template CRUD E2E Tests
+### BEA-317: Template CRUD E2E Tests
 
 ```yaml
-ID: BEA-318
-Title: Template CRUD E2E Tests
+ID: BEA-317
+Title: Template CRUD E2E Tests (Platform Hub)
 Project: Wave 3 - E2E Testing
 Type: type:test, type:e2e
 Severity: severity:medium
 Priority: P2 (Medium)
-Component: app:bingo, app:trivia
-Complexity: Medium (~200-300 LOC)
+Component: app:platform-hub
+Complexity: Medium (~150-200 LOC)
 
 Blocks: None
-Blocked By: BEA-315
+Blocked By: BEA-314
 Related: Template API routes
 ```
 
 #### Problem
 
-Template CRUD operations (create, read, update, delete) have API tests but no E2E coverage through the UI.
+Template management in Platform Hub (viewing, organizing user templates) has API tests but no E2E coverage through the UI. Note: Bingo/Trivia already have template tests in their existing suites.
 
 #### Solution
 
-Create E2E tests for template management in both Bingo and Trivia apps.
+Create E2E tests for template management UI in Platform Hub (if template management UI exists in Platform Hub). Focus on:
+- Template list view
+- Template details view
+- Template organization/categorization
+- Template sharing (if implemented)
 
 #### Files to Create
 
 | File | LOC Est | Tests Est |
 |------|---------|-----------|
-| `e2e/bingo/templates.spec.ts` | ~150 | 6 |
-| `e2e/trivia/templates.spec.ts` | ~150 | 6 |
+| `e2e/platform-hub/templates.spec.ts` | ~150 | 8 |
 
-#### Test Cases (12 total)
+#### Test Cases (8 total)
 
 ```typescript
-// bingo/templates.spec.ts
-describe('@high Bingo Templates', () => {
-  test('user can create new template');                     // HI-TMPL-001
-  test('user can load saved template');                     // HI-TMPL-002
-  test('user can update existing template');                // HI-TMPL-003
-  test('user can delete template');                         // HI-TMPL-004
-  test('template list shows all user templates');           // UI
-  test('template selection updates game state');            // Integration
-});
-
-// trivia/templates.spec.ts
-describe('@high Trivia Templates', () => {
-  test('user can create trivia template');                  // HI-TMPL-005
-  test('user can load saved trivia template');              // HI-TMPL-006
-  test('user can import questions from CSV');               // HI-TMPL-007
-  test('user can update trivia template');                  // CRUD
-  test('user can delete trivia template');                  // CRUD
-  test('template questions display correctly');             // UI
+// platform-hub/templates.spec.ts
+describe('@high Platform Hub Templates', () => {
+  test('template list shows all user templates');           // HI-TMPL-001
+  test('template list shows bingo templates');              // Filter
+  test('template list shows trivia templates');             // Filter
+  test('clicking template shows details');                  // Navigation
+  test('template details show game-specific info');         // Details
+  test('empty state shows for users with no templates');    // Edge case
+  test('template search works correctly');                  // Search
+  test('template sorting works correctly');                 // Sort
 });
 ```
 
 #### Acceptance Criteria
 
-- [ ] `e2e/bingo/templates.spec.ts` has 6 passing tests
-- [ ] `e2e/trivia/templates.spec.ts` has 6 passing tests
+- [ ] `e2e/platform-hub/templates.spec.ts` has 8 passing tests
 - [ ] All tests tagged with @high
 - [ ] Tests use authenticated fixtures
-- [ ] CSV import test includes file upload
-- [ ] Template persistence verified across sessions
+- [ ] Template listing verified with real data
+- [ ] If template management UI doesn't exist in Platform Hub, document that scope is reduced
 
 #### Verification Commands
 
 ```bash
 # Run template tests
-npx playwright test templates
-
-# Test with file upload
-npx playwright test --grep "CSV"
+npx playwright test --project=platform-hub templates
 ```
 
 ---
 
-### BEA-319: PWA, Accessibility & Security E2E Tests
+### BEA-318: PWA, Accessibility & Security E2E Tests (Platform Hub)
 
 ```yaml
-ID: BEA-319
-Title: PWA, Accessibility & Security E2E Tests
+ID: BEA-318
+Title: PWA, Accessibility & Security E2E Tests (Platform Hub)
 Project: Wave 3 - E2E Testing
 Type: type:test, type:e2e
 Severity: severity:medium
 Priority: P2 (Medium)
-Component: app:bingo, app:trivia, app:platform-hub
+Component: app:platform-hub
 Complexity: Medium (~200-300 LOC)
 
 Blocks: None
-Blocked By: BEA-314
-Related: Accessibility tests already exist for Bingo
+Blocked By: BEA-313
+Related: Existing accessibility tests in Bingo/Trivia
 ```
 
 #### Problem
 
-PWA functionality, accessibility compliance, and security edge cases lack comprehensive E2E coverage.
+Platform Hub lacks PWA functionality, accessibility compliance, and security edge case E2E coverage. Note: Bingo and Trivia already have comprehensive accessibility tests in their existing suites.
 
 #### Solution
 
-Create tests for:
-- PWA install prompts and service worker
-- Accessibility (keyboard navigation, screen reader)
-- Security edge cases (rate limiting, session timeout)
-- Theme switching
+Create Platform Hub-specific tests for:
+- Accessibility (keyboard navigation, screen reader, focus indicators)
+- Security edge cases (rate limiting, session timeout, XSS prevention)
+- Error handling and edge cases
 
-#### Files to Create/Modify
+#### Files to Create
 
 | File | LOC Est | Tests Est |
 |------|---------|-----------|
-| `e2e/bingo/pwa.spec.ts` | ~80 | 4 |
-| `e2e/trivia/pwa.spec.ts` | ~80 | 4 |
-| `e2e/platform-hub/accessibility.spec.ts` | ~100 | 4 |
-| `e2e/platform-hub/security.spec.ts` | ~100 | 4 |
+| `e2e/platform-hub/accessibility.spec.ts` | ~150 | 8 |
+| `e2e/platform-hub/security.spec.ts` | ~100 | 6 |
+| `e2e/platform-hub/error-handling.spec.ts` | ~100 | 6 |
 
-#### Test Cases (16 total)
+#### Test Cases (20 total)
 
 ```typescript
-// pwa.spec.ts (both apps)
-describe('@medium PWA', () => {
-  test('service worker registers on load');                 // MD-PWA-002
-  test('offline banner shows when disconnected');           // MD-PWA-003
-  test('app works offline with cached data');               // MD-PWA-004
-  test('install prompt appears on eligible devices');       // MD-PWA-001
-});
-
 // accessibility.spec.ts
 describe('@medium Accessibility', () => {
   test('all interactive elements are focusable');           // MD-A11Y-001
-  test('keyboard navigation works throughout');             // MD-A11Y-001
+  test('keyboard navigation works on login page');          // MD-A11Y-001
+  test('keyboard navigation works on dashboard');           // MD-A11Y-001
+  test('keyboard navigation works on settings');            // MD-A11Y-001
   test('focus indicators are visible');                     // WCAG
-  test('color contrast meets WCAG AA');                     // MD-A11Y-002
+  test('color contrast meets WCAG AA on login');            // MD-A11Y-002
+  test('color contrast meets WCAG AA on dashboard');        // MD-A11Y-002
+  test('form labels are properly associated');              // WCAG
 });
 
 // security.spec.ts
 describe('@low Security', () => {
-  test('rate limiting triggers after 10 requests');         // LO-ERR-001
+  test('rate limiting triggers after excessive requests');  // LO-ERR-001
   test('session timeout redirects to login');               // LO-ERR-003
-  test('XSS prevention in input fields');                   // LO-SEC-001
-  test('CSRF token required for mutations');                // LO-ERR-002
+  test('XSS prevention in profile input fields');           // LO-SEC-001
+  test('XSS prevention in search fields');                  // LO-SEC-001
+  test('CSRF protection on form submissions');              // LO-ERR-002
+  test('sensitive data not exposed in page source');        // Security
+});
+
+// error-handling.spec.ts
+describe('@medium Error Handling', () => {
+  test('404 page displays for invalid routes');             // Error page
+  test('500 error handled gracefully');                     // Error handling
+  test('network error shows retry option');                 // LO-ERR-006
+  test('form submission errors display clearly');           // UX
+  test('API timeout handled with user feedback');           // UX
+  test('concurrent request conflicts handled');             // Edge case
 });
 ```
 
 #### Acceptance Criteria
 
-- [ ] PWA tests verify service worker registration
-- [ ] Accessibility tests pass axe-core checks
-- [ ] Security tests verify rate limiting (may need test mode)
+- [ ] `e2e/platform-hub/accessibility.spec.ts` passes axe-core checks
+- [ ] `e2e/platform-hub/security.spec.ts` has 6 passing tests
+- [ ] `e2e/platform-hub/error-handling.spec.ts` has 6 passing tests
 - [ ] All tests appropriately tagged (@medium, @low)
 - [ ] Tests don't depend on network conditions unreliably
+- [ ] Security tests may need test mode for rate limiting
 
 #### Verification Commands
 
 ```bash
 # Run accessibility tests
-npx playwright test accessibility
+npx playwright test --project=platform-hub accessibility
+
+# Run security tests (may need special setup for rate limiting)
+npx playwright test --project=platform-hub security
 
 # Run with axe analysis
 npx playwright test --grep "a11y"
@@ -832,54 +776,50 @@ npx playwright test --grep "a11y"
 ### Work Distribution for Multiple Agents
 
 ```
-                       BEA-313 (Clean Slate)
-                              │
-        ┌─────────────────────┼─────────────────────┐
+    START (No prerequisites - can run immediately)
+    ─────────────────────────────────────────────────────────────────
         │                     │                     │
         ▼                     ▼                     ▼
-    BEA-314              BEA-315              BEA-316
+    BEA-313              BEA-314              BEA-315
   (Infrastructure)    (Auth Tests)       (Dashboard Tests)
         │                     │
         │    ┌────────────────┤
         │    │                │
         ▼    ▼                ▼
-    BEA-319              BEA-317              BEA-318
-  (PWA/A11y)           (SSO Tests)       (Template Tests)
+    BEA-318              BEA-316              BEA-317
+  (A11y/Security)      (SSO Tests)       (Template Tests)
 ```
 
 ### Agent Assignment Based on Dependencies
 
 | Issue | Can Start When | Can Run Parallel With |
 |-------|----------------|----------------------|
-| BEA-313 | Immediately | Nothing (foundational) |
-| BEA-314 | After BEA-313 | BEA-315, BEA-316 |
-| BEA-315 | After BEA-313 | BEA-314, BEA-316 |
-| BEA-316 | After BEA-313 | BEA-314, BEA-315 |
-| BEA-317 | After BEA-314 + BEA-315 | BEA-318, BEA-319 |
-| BEA-318 | After BEA-315 | BEA-317, BEA-319 |
-| BEA-319 | After BEA-314 | BEA-317, BEA-318 |
+| BEA-313 | Immediately | BEA-314, BEA-315 |
+| BEA-314 | Immediately | BEA-313, BEA-315 |
+| BEA-315 | Immediately | BEA-313, BEA-314 |
+| BEA-316 | After BEA-313 + BEA-314 | BEA-317, BEA-318 |
+| BEA-317 | After BEA-314 | BEA-316, BEA-318 |
+| BEA-318 | After BEA-313 | BEA-316, BEA-317 |
 
 ### Optimal Execution Order
 
 ```
-Execution 1: BEA-313 (required first, blocks all)
-             └── Output: Clean slate, 0 tests
-
-Execution 2: BEA-314 + BEA-315 + BEA-316 (parallel - 3 agents)
+Execution 1: BEA-313 + BEA-314 + BEA-315 (parallel - 3 agents)
              └── Output: CI enabled, auth + dashboard tests
 
-Execution 3: BEA-317 + BEA-318 + BEA-319 (parallel - 3 agents)
-             └── Output: Full coverage, all tests passing
+Execution 2: BEA-316 + BEA-317 + BEA-318 (parallel - 3 agents)
+             └── Output: Full Platform Hub coverage
 ```
 
 ### Risk Mitigation
 
 | Risk | Mitigation |
 |------|------------|
-| Auth fixture flakiness | BEA-315 includes 3-run stability check |
-| Multi-app coordination | BEA-317 uses explicit waits, not race conditions |
-| CI timeout | BEA-314 implements sharding before full suite |
+| Auth fixture flakiness | BEA-314 includes 3-run stability check |
+| Multi-app coordination | BEA-316 uses explicit waits, not race conditions |
+| CI timeout | BEA-313 implements sharding before full suite |
 | Test data pollution | Each test cleans up its data (afterEach hooks) |
+| Existing tests break | All issues include verification that existing tests pass |
 
 ---
 
@@ -889,12 +829,20 @@ Execution 3: BEA-317 + BEA-318 + BEA-319 (parallel - 3 agents)
 
 | Area | Current | Target | Notes |
 |------|---------|--------|-------|
-| Auth flows | 0% | 100% | BEA-315 |
-| Platform Hub | 0% | 80% | BEA-315, BEA-316 |
-| SSO/OAuth | 0% | 100% | BEA-317 |
-| Templates | 0% | 80% | BEA-318 |
-| Bingo gameplay | 100% (deleted) | 0% | Clean slate - future wave |
-| Trivia gameplay | 100% (deleted) | 0% | Clean slate - future wave |
+| Auth flows | 0% | 100% | BEA-314 |
+| Platform Hub | 0% | 80% | BEA-314, BEA-315, BEA-316, BEA-317, BEA-318 |
+| SSO/OAuth | 0% | 100% | BEA-316 |
+| Bingo gameplay | 100% | 100% | Preserved (existing 150 tests) |
+| Trivia gameplay | 100% | 100% | Preserved (existing 130 tests) |
+
+### Test Count Targets
+
+| Metric | Current | After Wave 3 |
+|--------|---------|--------------|
+| Bingo tests | ~150 | ~150 (preserved) |
+| Trivia tests | ~130 | ~130 (preserved) |
+| Platform Hub tests | 0 | ~110-150 (new) |
+| **Total tests** | **~280** | **~400-440** |
 
 ### Execution Targets
 
@@ -907,8 +855,10 @@ Execution 3: BEA-317 + BEA-318 + BEA-319 (parallel - 3 agents)
 
 ### Definition of Done (Wave 3)
 
-- [ ] All 7 issues completed
-- [ ] ~90 new tests passing
+- [ ] All 6 issues completed
+- [ ] ~110-150 new Platform Hub tests passing
+- [ ] Existing 288 Bingo/Trivia tests still passing
+- [ ] Total test count: ~400-440 tests
 - [ ] CI enabled for critical tests on PRs
 - [ ] CI enabled for full suite on main
 - [ ] <5 minute execution with sharding
@@ -923,36 +873,46 @@ Execution 3: BEA-317 + BEA-318 + BEA-319 (parallel - 3 agents)
 e2e/
 ├── fixtures/
 │   ├── auth.ts              # Existing - authenticatedPage fixture
-│   └── tags.ts              # NEW - test tagging utilities (BEA-314)
-├── global-setup.ts          # NEW - auth state persistence (BEA-314)
+│   └── tags.ts              # NEW - test tagging utilities (BEA-313)
+├── global-setup.ts          # NEW - auth state persistence (BEA-313)
 ├── utils/
 │   ├── fixtures.ts          # Existing - helper fixtures
 │   └── helpers.ts           # Existing - wait utilities
-├── bingo/
-│   ├── oauth-flow.spec.ts   # NEW (BEA-317)
-│   ├── templates.spec.ts    # NEW (BEA-318)
-│   └── pwa.spec.ts          # NEW (BEA-319)
-├── trivia/
-│   ├── oauth-flow.spec.ts   # NEW (BEA-317)
-│   ├── templates.spec.ts    # NEW (BEA-318)
-│   └── pwa.spec.ts          # NEW (BEA-319)
-└── platform-hub/
-    ├── auth.spec.ts         # NEW (BEA-315)
-    ├── signup.spec.ts       # NEW (BEA-315)
-    ├── logout.spec.ts       # NEW (BEA-315)
-    ├── dashboard.spec.ts    # NEW (BEA-316)
-    ├── profile.spec.ts      # NEW (BEA-316)
-    ├── settings.spec.ts     # NEW (BEA-316)
-    ├── oauth.spec.ts        # NEW (BEA-317)
-    ├── accessibility.spec.ts # NEW (BEA-319)
-    └── security.spec.ts     # NEW (BEA-319)
+├── bingo/                   # PRESERVED - 8 existing spec files (~150 tests)
+│   ├── accessibility.spec.ts
+│   ├── display.spec.ts
+│   ├── dual-screen.spec.ts
+│   ├── home.spec.ts
+│   ├── keyboard.spec.ts
+│   ├── modal-timing.spec.ts
+│   ├── presenter.spec.ts
+│   └── room-setup.spec.ts
+├── trivia/                  # PRESERVED - 5 existing spec files (~130 tests)
+│   ├── display.spec.ts
+│   ├── dual-screen.spec.ts
+│   ├── home.spec.ts
+│   ├── presenter.spec.ts
+│   └── session-flow.spec.ts
+└── platform-hub/            # NEW - 10 spec files (~110-150 tests)
+    ├── auth.spec.ts         # NEW (BEA-314)
+    ├── signup.spec.ts       # NEW (BEA-314)
+    ├── logout.spec.ts       # NEW (BEA-314)
+    ├── dashboard.spec.ts    # NEW (BEA-315)
+    ├── profile.spec.ts      # NEW (BEA-315)
+    ├── settings.spec.ts     # NEW (BEA-315)
+    ├── oauth.spec.ts        # NEW (BEA-316)
+    ├── sso-bingo.spec.ts    # NEW (BEA-316)
+    ├── sso-trivia.spec.ts   # NEW (BEA-316)
+    ├── templates.spec.ts    # NEW (BEA-317)
+    ├── accessibility.spec.ts # NEW (BEA-318)
+    ├── security.spec.ts     # NEW (BEA-318)
+    └── error-handling.spec.ts # NEW (BEA-318)
 ```
 
 **Summary:**
-- **Deleted files:** 13 spec files (~4,400 LOC)
-- **Kept files:** 4 utility/fixture files
-- **New files:** 15 spec files
-- **Total after Wave 3:** 19 files (15 spec + 4 utils)
+- **Preserved files:** 13 spec files in Bingo/Trivia (~4,400 LOC, ~280 tests)
+- **New files:** 13 spec files in Platform Hub (~1,500-2,500 LOC, ~110-150 tests)
+- **Total after Wave 3:** 26 spec files + 4 utils (~400-440 tests)
 
 ---
 
@@ -970,14 +930,23 @@ e2e/
 
 | ID | Title | Priority | Complexity | Blocks | Blocked By |
 |----|-------|----------|------------|--------|------------|
-| BEA-313 | Clean Slate | P0 | Small | ALL | None |
-| BEA-314 | Infrastructure | P1 | Medium | BEA-317, BEA-319 | BEA-313 |
-| BEA-315 | Auth Tests | P0 | Large | BEA-317, BEA-318 | BEA-313 |
-| BEA-316 | Dashboard Tests | P1 | Medium | None | BEA-313 |
-| BEA-317 | SSO Tests | P1 | Large | None | BEA-314, BEA-315 |
-| BEA-318 | Template Tests | P2 | Medium | None | BEA-315 |
-| BEA-319 | PWA/A11y Tests | P2 | Medium | None | BEA-314 |
+| BEA-313 | Infrastructure | P1 | Medium | BEA-316, BEA-318 | None |
+| BEA-314 | Auth Tests | P0 | Large | BEA-316, BEA-317 | None |
+| BEA-315 | Dashboard Tests | P1 | Medium | None | None |
+| BEA-316 | SSO Tests | P1 | Large | None | BEA-313, BEA-314 |
+| BEA-317 | Template Tests | P2 | Medium | None | BEA-314 |
+| BEA-318 | A11y/Security Tests | P2 | Medium | None | BEA-313 |
 
-**Total Estimated LOC:** ~1,500-2,300 (new tests)
-**Total Estimated Tests:** ~90 new tests
-**Total After Wave 3:** ~90 tests (after deleting 288 existing)
+**Total New LOC:** ~1,500-2,500 (Platform Hub tests only)
+**Total New Tests:** ~110-150 tests
+**Total After Wave 3:** ~400-440 tests (288 existing + 110-150 new)
+
+---
+
+## Revision History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-01-23 | Initial draft |
+| 2.0 | 2026-01-23 | Added clean slate approach |
+| 3.0 | 2026-01-23 | **MAJOR REVISION**: Removed clean slate (BEA-313), preserved existing 288 tests, renumbered issues BEA-313-318, corrected metrics to ~400-440 total tests |
