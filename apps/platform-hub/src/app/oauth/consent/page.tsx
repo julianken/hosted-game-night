@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client';
 import { ConsentScreen } from '@/components/oauth';
 import type { AuthorizationDetails } from '@/types/oauth';
 
+// Force dynamic rendering - this page requires runtime authentication
+export const dynamic = 'force-dynamic';
+
 export interface ConsentPageProps {
   searchParams: {
     authorization_id?: string;
