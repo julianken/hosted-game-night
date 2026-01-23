@@ -15,6 +15,7 @@ export function ClientInfo({ client }: ClientInfoProps) {
     <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg border-2 border-border">
       {/* Client logo/icon */}
       {client.logo_uri ? (
+        // eslint-disable-next-line @next/next/no-img-element -- External OAuth client logo, not optimizable with next/image
         <img
           src={client.logo_uri}
           alt={`${client.name} logo`}
