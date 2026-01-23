@@ -68,7 +68,7 @@ export default function SignupPage() {
 
         {/* Form card */}
         <div className="bg-background border-2 border-border rounded-2xl p-8 shadow-sm">
-          <SignupForm redirectTo="/login" />
+          <SignupForm />
         </div>
 
         {/* Help text */}
