@@ -1,15 +1,6 @@
 import type { NextConfig } from 'next';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
-/**
- * Maximum request body size in MB (default: 1MB)
- * Can be overridden via MAX_BODY_SIZE_MB environment variable
- */
-const MAX_BODY_SIZE_MB = parseInt(
-  process.env.MAX_BODY_SIZE_MB || '1',
-  10
-);
-
 const nextConfig: NextConfig = {
   transpilePackages: [
     '@beak-gaming/ui',
