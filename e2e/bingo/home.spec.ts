@@ -7,7 +7,7 @@ test.describe('Bingo Home Page', () => {
     await waitForHydration(page);
   });
 
-  test('displays the main title and tagline', async ({ page }) => {
+  test('displays the main title and tagline @medium', async ({ page }) => {
     await expect(page.getByRole('heading', { name: /beak bingo/i })).toBeVisible();
     await expect(page.getByText(/modern bingo for retirement communities/i)).toBeVisible();
   });

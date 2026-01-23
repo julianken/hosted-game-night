@@ -16,8 +16,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI due to resource constraints */
-  workers: process.env.CI ? 1 : undefined,
+  /* Use 4 workers on CI for parallel execution across shards */
+  workers: process.env.CI ? 4 : undefined,
+  /* Configure sharding for CI to split tests across multiple jobs */
+  shard: process.env.CI && process.env.SHARD
+    ? { total: 4, current: parseInt(process.env.SHARD, 10) }
+    : undefined,
   /* Reporter to use */
   reporter: [
     ['list'],
