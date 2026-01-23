@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ToastProvider, useToast, StandaloneToast } from '../Toast';
+import { ToastProvider, useToast, StandaloneToast } from '@beak-gaming/ui';
 
 // Test component that uses the toast hook
 function TestComponent() {
