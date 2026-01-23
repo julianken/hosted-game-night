@@ -11,6 +11,24 @@ export async function POST() {
   try {
     const cookieStore = await cookies();
 
+    // Get tokens BEFORE clearing cookies (for revocation)
+    const accessToken = cookieStore.get('bingo_access_token')?.value;
+    const refreshToken = cookieStore.get('bingo_refresh_token')?.value;
+
+    // Revoke tokens with Supabase if they exist
+    if ((accessToken || refreshToken) && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        );
+        await supabase.auth.signOut();
+      } catch (supabaseError) {
+        // Log but don't fail the request - cookies will be cleared anyway
+        console.error('Supabase signOut error (non-critical):', supabaseError);
+      }
+    }
+
     // Clear all Bingo-specific authentication cookies
     cookieStore.set('bingo_access_token', '', {
       httpOnly: true,
@@ -35,22 +53,6 @@ export async function POST() {
       maxAge: 0,
       path: '/',
     });
-
-    // Optional: Attempt to revoke tokens with Supabase
-    // This is best-effort - if it fails, cookies are already cleared
-    const accessToken = cookieStore.get('bingo_access_token')?.value;
-    if (accessToken && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        );
-        await supabase.auth.signOut();
-      } catch (supabaseError) {
-        // Log but don't fail the request - cookies are cleared anyway
-        console.error('Supabase signOut error (non-critical):', supabaseError);
-      }
-    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
