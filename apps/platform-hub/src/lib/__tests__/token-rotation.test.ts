@@ -62,6 +62,7 @@ describe('Token Rotation Module', () => {
         error: null,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           refreshSession: mockRefreshSession,
@@ -92,6 +93,7 @@ describe('Token Rotation Module', () => {
         },
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           refreshSession: mockRefreshSession,
@@ -116,6 +118,7 @@ describe('Token Rotation Module', () => {
         },
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           refreshSession: mockRefreshSession,
@@ -141,6 +144,7 @@ describe('Token Rotation Module', () => {
 
       const mockRefreshSession = vi.fn().mockRejectedValue(new Error('Network error'));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           refreshSession: mockRefreshSession,
@@ -171,6 +175,7 @@ describe('Token Rotation Module', () => {
         error: null,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           admin: {
@@ -192,6 +197,7 @@ describe('Token Rotation Module', () => {
         error: { message: 'User not found' },
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           admin: {

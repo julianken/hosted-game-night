@@ -29,8 +29,7 @@ interface FormErrors {
  * - Confirmation password field
  * - Loading states during submission
  */
-export function SignupForm({ redirectTo }: SignupFormProps) {
-  const router = useRouter();
+export function SignupForm() {
   const { signUp, isLoading, error: authError } = useAuth();
 
   const [name, setName] = useState('');
@@ -99,7 +98,7 @@ export function SignupForm({ redirectTo }: SignupFormProps) {
         // Redirect handled by success screen link to /login
       }
       // Error handling is automatic via authError state
-    } catch (err) {
+    } catch {
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     }
   };
