@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 import PlayPage from '../page';
+import { ToastProvider } from '@/components/ui/Toast';
 import {
   generateSecurePin,
   generateShortSessionId,
@@ -108,6 +109,11 @@ vi.mock('@/stores/game-store', () => ({
   }),
 }));
 
+// Helper to render PlayPage with required providers
+function renderWithProviders(ui: React.ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
+
 describe('PlayPage - Session ID Strategy', () => {
   beforeEach(() => {
     // Clear localStorage before each test
@@ -139,7 +145,7 @@ describe('PlayPage - Session ID Strategy', () => {
       // Ensure no stored session ID
       expect(getStoredOfflineSessionId()).toBeNull();
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       // Wait for the useEffect to run
       await waitFor(() => {
@@ -154,7 +160,7 @@ describe('PlayPage - Session ID Strategy', () => {
       const existingId = generateShortSessionId();
       storeOfflineSessionId(existingId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       // Should use the existing ID
       await waitFor(() => {
@@ -167,7 +173,7 @@ describe('PlayPage - Session ID Strategy', () => {
       const existingId = 'ABC123';
       storeOfflineSessionId(existingId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       await waitFor(() => {
         const storedId = getStoredOfflineSessionId();
@@ -181,7 +187,7 @@ describe('PlayPage - Session ID Strategy', () => {
       const offlineId = generateShortSessionId();
       storeOfflineSessionId(offlineId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       // The component should use the offline session ID for BroadcastChannel
       await waitFor(() => {
@@ -195,7 +201,7 @@ describe('PlayPage - Session ID Strategy', () => {
       const offlineId = generateShortSessionId();
       storeOfflineSessionId(offlineId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       await waitFor(() => {
         expect(getStoredOfflineSessionId()).toBe(offlineId);
@@ -211,7 +217,7 @@ describe('PlayPage - Session ID Strategy', () => {
       storePin(pin);
       storeOfflineSessionId(sessionId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       await waitFor(() => {
         expect(getStoredPin()).toBe(pin);
@@ -222,7 +228,7 @@ describe('PlayPage - Session ID Strategy', () => {
     it('handles missing PIN gracefully', async () => {
       clearStoredPin();
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       await waitFor(() => {
         expect(getStoredPin()).toBeNull();
@@ -235,7 +241,7 @@ describe('PlayPage - Session ID Strategy', () => {
       // Store an invalid session ID
       localStorage.setItem('bingo_offline_session_id', 'INVALID');
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       // Should still render without crashing
       await waitFor(() => {
@@ -285,7 +291,7 @@ describe('PlayPage - Session ID Strategy', () => {
       // Store different session IDs
       storeOfflineSessionId(tab1SessionId);
 
-      render(<PlayPage />);
+      renderWithProviders(<PlayPage />);
 
       await waitFor(() => {
         const storedId = getStoredOfflineSessionId();
