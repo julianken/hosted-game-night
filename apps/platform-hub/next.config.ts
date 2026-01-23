@@ -22,10 +22,6 @@ const nextConfig: NextConfig = {
     // bodyParser config is now a top-level property in Next.js 16
     // We configure it at the route level via route handlers
   },
-  // Server runtime config for API routes
-  serverRuntimeConfig: {
-    maxRequestBodySize: MAX_BODY_SIZE_MB * 1024 * 1024, // Convert MB to bytes
-  },
 };
 
 // Bundle analyzer is enabled via ANALYZE=true environment variable
