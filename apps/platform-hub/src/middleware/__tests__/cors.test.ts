@@ -22,6 +22,7 @@ describe('CORS Middleware', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   /**
@@ -325,7 +326,7 @@ describe('CORS Middleware', () => {
 
   describe('Environment Configuration', () => {
     it('should reject wildcard origins in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
       process.env.CORS_ALLOWED_ORIGINS = '*';
 
       // Wildcard "*" is not a valid URL, so it throws during URL parsing
@@ -333,18 +334,18 @@ describe('CORS Middleware', () => {
         'Invalid origin in CORS_ALLOWED_ORIGINS'
       );
 
-      process.env.NODE_ENV = 'test';
+      vi.unstubAllEnvs();
     });
 
     it('should reject origins with wildcard in production', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
       process.env.CORS_ALLOWED_ORIGINS = 'http://*.example.com';
 
       expect(() => getConfiguredOrigins()).toThrow(
         'Wildcard origins not allowed in production'
       );
 
-      process.env.NODE_ENV = 'test';
+      vi.unstubAllEnvs();
     });
 
     it('should reject origins with invalid protocols', () => {
@@ -374,7 +375,7 @@ describe('CORS Middleware', () => {
     });
 
     it('should accept http origins in development', () => {
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
       process.env.CORS_ALLOWED_ORIGINS =
         'http://localhost:3000,http://192.168.1.100:3000';
 
@@ -384,8 +385,6 @@ describe('CORS Middleware', () => {
         'http://localhost:3000',
         'http://192.168.1.100:3000',
       ]);
-
-      process.env.NODE_ENV = 'test';
     });
   });
 
