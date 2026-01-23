@@ -15,6 +15,7 @@ build
 coverage
 .auth
 playwright-report
+.playwright-mcp
 
 # Environment
 .env
