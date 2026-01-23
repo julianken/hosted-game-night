@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
+import { useAuth } from '@beak-gaming/auth';
 
 export interface SignupFormProps {
-  /** Callback when form is submitted successfully */
-  onSubmit?: (email: string, password: string, name?: string) => Promise<{ error: string | null }>;
   /** Optional redirect URL after successful signup */
   redirectTo?: string;
 }
@@ -29,13 +29,15 @@ interface FormErrors {
  * - Confirmation password field
  * - Loading states during submission
  */
-export function SignupForm({ onSubmit, redirectTo }: SignupFormProps) {
+export function SignupForm({ redirectTo }: SignupFormProps) {
+  const router = useRouter();
+  const { signUp, isLoading, error: authError } = useAuth();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -86,30 +88,19 @@ export function SignupForm({ onSubmit, redirectTo }: SignupFormProps) {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      if (onSubmit) {
-        const result = await onSubmit(email, password, name || undefined);
-        if (result.error) {
-          setErrors({ general: result.error });
-        } else {
-          setIsSuccess(true);
-          if (redirectTo) {
-            window.location.href = redirectTo;
-          }
-        }
-      } else {
-        // Placeholder behavior when no onSubmit handler
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setErrors({
-          general: 'Registration is not yet connected. This form will work once Supabase authentication is configured.'
-        });
+      // Call signUp from useAuth hook with metadata
+      const { error } = await signUp(email, password, {
+        data: name ? { full_name: name } : undefined,
+      });
+
+      if (!error) {
+        setIsSuccess(true);
+        // Redirect handled by success screen link to /login
       }
-    } catch {
+      // Error handling is automatic via authError state
+    } catch (err) {
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -146,8 +137,8 @@ export function SignupForm({ onSubmit, redirectTo }: SignupFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      {/* General error message */}
-      {errors.general && (
+      {/* General error message from useAuth */}
+      {authError && (
         <div
           role="alert"
           className="p-4 rounded-lg bg-error/10 border-2 border-error text-error text-lg"
@@ -161,7 +152,7 @@ export function SignupForm({ onSubmit, redirectTo }: SignupFormProps) {
             >
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            <span>{errors.general}</span>
+            <span>{authError.message}</span>
           </div>
         </div>
       )}
