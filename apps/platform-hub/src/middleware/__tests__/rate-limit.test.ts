@@ -397,10 +397,13 @@ describe('Rate Limiting Middleware', () => {
         limit: mockLimit,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Ratelimit as any).mockImplementation(MockRatelimitClass);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Ratelimit as any).slidingWindow = vi.fn().mockReturnValue('mock-limiter');
 
       const MockRedisClass = vi.fn();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Redis as any).mockImplementation(MockRedisClass);
 
       // Set environment variables
@@ -461,10 +464,13 @@ describe('Rate Limiting Middleware', () => {
         limit: mockLimit,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Ratelimit as any).mockImplementation(MockRatelimitClass);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Ratelimit as any).slidingWindow = vi.fn().mockReturnValue('mock-limiter');
 
       const MockRedisClass = vi.fn();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Redis as any).mockImplementation(MockRedisClass);
 
       process.env.REDIS_URL = 'https://test-redis.upstash.io';

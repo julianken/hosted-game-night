@@ -110,12 +110,14 @@ async function testMethods() {
     // We expect this to fail (invalid ID), but we're checking the response structure
     if (result.error) {
       console.log('   ✅ Method callable - returns { data, error } structure');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.log(`   📝 Error response: ${result.error.message || (result.error as any).error_description || JSON.stringify(result.error)}`);
       console.log('   ℹ️  This is expected for a mock authorization ID');
     } else if (result.data) {
       console.log('   ⚠️  Unexpected: Got data for mock ID');
       console.log('   📝 Data structure:', Object.keys(result.data));
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('   ❌ Method threw exception:', error.message);
     allPassed = false;

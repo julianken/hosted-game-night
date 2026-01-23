@@ -5,13 +5,16 @@ import type { SessionRecoveryHookOptions } from '../use-session-recovery';
 
 describe('useSessionRecovery', () => {
   let mockLocalStorage: Record<string, string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockFetchGameState: ReturnType<typeof vi.fn<(roomCode: string, token: string) => Promise<any>>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockHydrateStore: ReturnType<typeof vi.fn<(state: any) => void>>;
   let mockGetRoomCodeFromUrl: ReturnType<typeof vi.fn<() => string | null>>;
 
   beforeEach(() => {
     // Mock localStorage
     mockLocalStorage = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).localStorage = {
       getItem: vi.fn((key: string) => mockLocalStorage[key] ?? null),
       setItem: vi.fn((key: string, value: string) => {
@@ -25,10 +28,13 @@ describe('useSessionRecovery', () => {
       }),
       length: 0,
       key: vi.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     // Mock fetch callback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockFetchGameState = vi.fn<(roomCode: string, token: string) => Promise<any>>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockHydrateStore = vi.fn<(state: any) => void>();
     mockGetRoomCodeFromUrl = vi.fn<() => string | null>();
 
@@ -416,6 +422,7 @@ describe('useSessionRecovery', () => {
     it('should set isRecovering during recovery', async () => {
       const validToken = createValidToken();
       mockLocalStorage.session_token = validToken;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let resolvePromise: ((value: any) => void) | null = null;
       mockFetchGameState.mockImplementation(
         () =>
@@ -563,6 +570,7 @@ describe('useSessionRecovery', () => {
 
     it('should handle localStorage errors gracefully', async () => {
       // Mock localStorage to throw errors
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).localStorage.getItem = vi.fn(() => {
         throw new Error('Storage quota exceeded');
       });

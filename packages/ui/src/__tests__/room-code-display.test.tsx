@@ -15,7 +15,9 @@ Object.defineProperty(navigator, 'clipboard', {
 let mockWriteText: ReturnType<typeof vi.spyOn>;
 
 // Mock window.location
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (window as any).location;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 window.location = { origin: 'http://localhost:3000' } as any;
 
 describe('RoomCodeDisplay', () => {

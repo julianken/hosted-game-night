@@ -30,6 +30,7 @@ async function registerClients() {
       'https://bingo.beakgaming.com/auth/callback'
     ],
     client_type: 'public'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   if (bingoResult.error) {
@@ -48,6 +49,7 @@ async function registerClients() {
       'https://trivia.beakgaming.com/auth/callback'
     ],
     client_type: 'public'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   if (triviaResult.error) {

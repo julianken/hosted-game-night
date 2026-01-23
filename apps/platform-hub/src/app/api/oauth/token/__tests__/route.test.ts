@@ -81,6 +81,7 @@ describe('OAuth Token Endpoint', () => {
 
       // Mock Supabase response
       const { createClient } = await import('@supabase/supabase-js');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           exchangeCodeForSession: vi.fn().mockResolvedValue({
@@ -169,6 +170,7 @@ describe('OAuth Token Endpoint', () => {
       });
 
       const { createClient } = await import('@supabase/supabase-js');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (createClient as any).mockReturnValue({
         auth: {
           exchangeCodeForSession: vi.fn().mockResolvedValue({
@@ -195,6 +197,7 @@ describe('OAuth Token Endpoint', () => {
         token_type: 'Bearer',
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (tokenRotation.refreshAccessToken as any).mockResolvedValue({
         success: true,
         tokens: mockNewTokens,
@@ -224,6 +227,7 @@ describe('OAuth Token Endpoint', () => {
     });
 
     it('should detect token reuse and return error', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (tokenRotation.refreshAccessToken as any).mockResolvedValue({
         success: false,
         error: tokenRotation.TokenRefreshError.TOKEN_REUSE_DETECTED,
@@ -271,6 +275,7 @@ describe('OAuth Token Endpoint', () => {
     });
 
     it('should handle expired refresh token', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (tokenRotation.refreshAccessToken as any).mockResolvedValue({
         success: false,
         error: tokenRotation.TokenRefreshError.EXPIRED_TOKEN,
@@ -296,6 +301,7 @@ describe('OAuth Token Endpoint', () => {
     });
 
     it('should handle network errors', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (tokenRotation.refreshAccessToken as any).mockResolvedValue({
         success: false,
         error: tokenRotation.TokenRefreshError.NETWORK_ERROR,
@@ -330,6 +336,7 @@ describe('OAuth Token Endpoint', () => {
         token_type: 'Bearer',
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (tokenRotation.refreshAccessToken as any).mockResolvedValue({
         success: true,
         tokens: mockNewTokens,
