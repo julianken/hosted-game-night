@@ -38,7 +38,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
       try {
         const response = await fetch('/api/templates');
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
           throw new Error('Failed to fetch templates');
         }
 

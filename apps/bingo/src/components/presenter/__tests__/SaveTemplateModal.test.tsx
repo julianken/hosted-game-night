@@ -18,7 +18,7 @@ vi.mock('@/stores/game-store', () => ({
         cells: [],
       },
       autoCallEnabled: true,
-      autoCallSpeed: 10000,
+      autoCallSpeed: 10, // Speed in seconds (converted to milliseconds in component)
     };
     return selector ? selector(store) : store;
   }),

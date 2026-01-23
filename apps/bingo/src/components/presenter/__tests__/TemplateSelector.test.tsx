@@ -166,7 +166,8 @@ describe('TemplateSelector', () => {
         cells: [],
       });
       expect(mockToggleAutoCall).toHaveBeenCalled();
-      expect(mockSetAutoCallSpeed).toHaveBeenCalledWith(10000);
+      // auto_call_interval is 10000ms, converted to 10 seconds
+      expect(mockSetAutoCallSpeed).toHaveBeenCalledWith(10);
       expect(mockSetVoicePack).toHaveBeenCalledWith('standard');
     });
   });
