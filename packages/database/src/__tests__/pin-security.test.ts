@@ -95,12 +95,14 @@ describe('PIN Security Utilities', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should be case-sensitive for hash comparison', async () => {
+    it('should accept case-insensitive hex hash strings', async () => {
+      // Hex strings are case-insensitive by standard (both 'a1' and 'A1' = byte 161)
+      // Buffer.from(hash, 'hex') correctly parses both to the same bytes
       const { hash, salt } = await createPinHash('1234');
-      const modifiedHash = hash.toUpperCase();
+      const uppercaseHash = hash.toUpperCase();
 
-      const isValid = await verifyPin('1234', modifiedHash, salt);
-      expect(isValid).toBe(false);
+      const isValid = await verifyPin('1234', uppercaseHash, salt);
+      expect(isValid).toBe(true);
     });
 
     it('should handle empty PIN gracefully', async () => {

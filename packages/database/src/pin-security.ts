@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 // PBKDF2 configuration
 const PBKDF2_ITERATIONS = 100000;
 const PBKDF2_KEY_LENGTH = 256; // bits
@@ -67,7 +69,18 @@ export async function verifyPin(
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return computedHash === storedHash;
+  // SECURITY: Use timing-safe comparison to prevent timing attacks
+  // Convert hex strings to buffers for constant-time comparison
+  const computedBuffer = Buffer.from(computedHash, 'hex');
+  const storedBuffer = Buffer.from(storedHash, 'hex');
+
+  // Validate buffer lengths before timingSafeEqual
+  // crypto.timingSafeEqual() throws RangeError if lengths don't match
+  if (computedBuffer.length !== storedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(computedBuffer, storedBuffer);
 }
 
 export function isValidPin(pin: string): boolean {
