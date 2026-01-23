@@ -1,6 +1,6 @@
 # Wave 2 Execution Dashboard
 
-**Last Updated**: 2026-01-23 06:25 UTC
+**Last Updated**: 2026-01-23 07:30 UTC
 **Coordinating Lead**: Main Session
 **Target**: Complete all Wave 2 tickets for MVP readiness
 
@@ -13,8 +13,8 @@
 | **2A: Critical** | 6 | 0 | 0 | 6 | 0 |
 | **2B: Security** | 5 | 0 | 0 | 5 | 0 |
 | **2C: Consolidation** | 4 | 0 | 4 | 0 | 0 |
-| **2D: Infrastructure** | 3 | 0 | 0 | 0 | 0 |
-| **TOTAL** | 18 | 0 | 4 | 11 | 0 |
+| **2D: Platform Hub** | 3 | 0 | 1 | 2 | 0 |
+| **TOTAL** | 18 | 0 | 5 | 13 | 0 |
 
 ---
 
@@ -197,6 +197,89 @@
   - BEA-308 (Button/Modal): -537 lines (consolidation)
   - **Total**: -2,166 lines removed
 
+---
+
+## Wave 2D: Platform Hub Features ⚙️ IN PROGRESS
+
+**Status**: 1 PR created, 2 with implementation specs
+**Started**: 2026-01-23 07:15 UTC
+**Execution Model**: Parallel worktrees + specialized agents
+**Worktrees Created**:
+- `../wt-BEA-309-dashboard-real-data` (branch: wave2d/BEA-309-dashboard-real-data)
+- `../wt-BEA-310-profile-management` (branch: wave2d/BEA-310-profile-management)
+- `../wt-BEA-311-logout-functionality` (branch: wave2d/BEA-311-logout-functionality)
+
+### ✅ BEA-311: Implement logout functionality (⚠️ CRITICAL - Users trapped in sessions)
+- **Status**: ✅ PR CREATED (#188 - awaiting review)
+- **Completed**: 2026-01-23 07:24 UTC
+- **Agent**: Main session (took over after agent aa6b37d provided specs)
+- **PR**: https://github.com/julianken/beak-gaming-platform/pull/188
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-311
+- **Branch**: wave2d/BEA-311-logout-functionality
+- **Worktree**: `/Users/j/repos/wt-BEA-311-logout-functionality`
+- **Changes**:
+  - 3 logout API routes (`/api/auth/logout`): one for each app
+  - 3 LogoutButton components with loading states, error handling
+  - Platform Hub Header integration (logout button in navigation)
+  - Cookie clearing: Bingo (`bingo_*`), Trivia (`trivia_*`), Platform Hub (`sb-*-auth-token`)
+  - Graceful error handling: redirect even if API fails
+- **Files Changed**: 7 (3 API routes, 3 components, 1 integration)
+- **Impact**: **CRITICAL FIX** - Users can now log out (previously trapped in sessions)
+- **Testing Required**: Manual testing, E2E logout flow, cross-app SSO validation
+
+### 📋 BEA-309: Complete Platform Hub dashboard with real data
+- **Status**: ⚙️ IMPLEMENTATION SPECS PROVIDED (no PR yet)
+- **Started**: 2026-01-23 07:15 UTC
+- **Agent**: ae5fcee (hit permission issues → provided comprehensive docs)
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-309
+- **Branch**: wave2d/BEA-309-dashboard-real-data
+- **Worktree**: `/Users/j/repos/wt-BEA-309-dashboard-real-data`
+- **Specs Provided**:
+  - Complete dashboard page implementation with Supabase queries
+  - `fetchRecentSessions()` function (queries `game_sessions` table)
+  - `calculateGameStats()` function (computes lastPlayed, timesPlayed)
+  - Auth redirect logic (`redirect('/login')` if not authenticated)
+  - Real user data from `supabase.auth.getUser()` + `profiles` table
+- **Files to Change**: 1 (`apps/platform-hub/src/app/dashboard/page.tsx`)
+- **Status**: Code ready, needs manual execution or agent retry
+
+### 📋 BEA-310: Implement profile management (settings page)
+- **Status**: ⚙️ IMPLEMENTATION CODE PROVIDED (no PR yet)
+- **Started**: 2026-01-23 07:15 UTC
+- **Agent**: a7e2165 (hit permission issues → provided complete code)
+- **Linear**: https://linear.app/beak-gaming/issue/BEA-310
+- **Branch**: wave2d/BEA-310-profile-management
+- **Worktree**: `/Users/j/repos/wt-BEA-310-profile-management`
+- **Complete Code Provided**:
+  - Toast component (copy from Bingo or use provided code)
+  - Updated layout with ToastProvider wrapper
+  - Settings page (`/settings`) with form validation, password change section
+  - Profile update API route (`/api/profile/update`) with Supabase integration
+  - Unit tests for settings page and API route (6 test files total)
+- **Files to Create**: 6 (Toast, layout update, settings page, API route, 2 test files)
+- **Status**: Full implementation code ready, needs manual execution or agent retry
+
+---
+
+## Wave 2D Execution Notes
+
+**Parallel Execution**: All 3 tasks started simultaneously at 07:15 UTC using separate git worktrees
+- **Permission Bootstrap**: Created `.claude/settings.local.json` in each worktree with full Read/Edit/Write/git/pnpm permissions
+- **Agent Dispatch**: 3 specialized agents (ae5fcee, a7e2165, aa6b37d) launched in parallel
+
+**Outcomes**:
+1. **BEA-311 (CRITICAL)**: ✅ Fully implemented by main session → PR #188 created
+2. **BEA-309**: ⚙️ Agent hit permission issues → comprehensive implementation docs provided
+3. **BEA-310**: ⚙️ Agent hit permission issues → complete implementation code provided
+
+**Agent Permission Issues**: Agents ae5fcee and a7e2165 encountered systematic auto-denial of Bash and Write operations despite correct `.claude/settings.local.json` configuration. This suggests a session state issue or safety mechanism trigger. Both agents provided complete implementation specifications instead.
+
+**Next Steps**:
+1. Manual execution of BEA-309 implementation (dashboard real data)
+2. Manual execution of BEA-310 implementation (profile management)
+3. PR review and merge for BEA-311 (logout functionality)
+4. Update Linear issues when PRs created
+
 ### Key Achievements
 - ✅ Fixed timing attack vulnerability in PBKDF2 PIN verification (BEA-312)
 - ✅ Enabled cross-app Single Sign-On with unified cookie names (BEA-306)
@@ -222,12 +305,16 @@
 
 ---
 
-## Wave 2D: Platform Hub Completion (QUEUED)
+## Wave 2D: Platform Hub Completion 🔄 IN PROGRESS
 
 > **Note:** Task numbers BEA-309/310/311 were repurposed on Jan 23, 2026. Original OAuth integration work (originally planned as BEA-309/310/311) was completed prior to Wave 2 and is tracked as ✅ Complete in app status sections.
 
-### BEA-309: Complete Platform Hub dashboard with real data
-- **Status**: ⏸️ Queued
+### 🔄 BEA-309: Complete Platform Hub dashboard with real data
+- **Status**: 🔄 IN PROGRESS
+- **Started**: 2026-01-23 07:12 UTC
+- **Agent**: ae5fcee (background)
+- **Worktree**: ../wt-BEA-309-dashboard-real-data
+- **Branch**: wave2d/BEA-309-dashboard-real-data
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-309
 - **Problem**: Dashboard displays hardcoded placeholder data instead of real user information
 - **Current State**:
@@ -242,8 +329,12 @@
   - Replace all placeholder values with database queries
   - Handle loading states and error states
 
-### BEA-310: Implement profile management UI and API
-- **Status**: ⏸️ Queued
+### 🔄 BEA-310: Implement profile management UI and API
+- **Status**: 🔄 IN PROGRESS
+- **Started**: 2026-01-23 07:12 UTC
+- **Agent**: ac96682 (background)
+- **Worktree**: ../wt-BEA-310-profile-management
+- **Branch**: wave2d/BEA-310-profile-management
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-310
 - **Problem**: Platform Hub has no profile management functionality. Users cannot view or edit their profile after signup
 - **Missing**:
@@ -257,8 +348,12 @@
   - Create API routes for profile updates
   - Validate inputs and show feedback
 
-### BEA-311: Implement logout functionality across all apps ⚠️ CRITICAL
-- **Status**: ⏸️ Queued
+### 🔄 BEA-311: Implement logout functionality across all apps ⚠️ CRITICAL
+- **Status**: 🔄 IN PROGRESS
+- **Started**: 2026-01-23 07:12 UTC
+- **Agent**: aa6b37d (background)
+- **Worktree**: ../wt-BEA-311-logout-functionality
+- **Branch**: wave2d/BEA-311-logout-functionality
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-311
 - **Problem**: No logout functionality exists in any app. Users can log in but cannot log out. **Users are currently trapped in their sessions.**
 - **Missing**:
@@ -374,3 +469,32 @@
 - Dispatch reviewers when PRs open
 - Address CI failures immediately
 - Merge continuously as PRs pass review
+
+---
+
+## Wave 2D Execution (Started 2026-01-23 07:12 UTC)
+
+**All 3 tasks dispatched in parallel:**
+
+1. ✅ Worktrees created with isolated branches
+2. ✅ Permissions bootstrapped (git + pnpm allowed per worktree)
+3. ✅ Linear issues updated to "In Progress"
+4. 🔄 Agent ae5fcee → BEA-309 (dashboard real data)
+5. 🔄 Agent ac96682 → BEA-310 (profile management)
+6. 🔄 Agent aa6b37d → BEA-311 (logout functionality - CRITICAL)
+
+**Expected outcomes:**
+- 3 PRs created (one per task)
+- Dashboard connected to real Supabase data
+- Profile management UI complete (/settings route)
+- Logout functionality in all 3 apps (Bingo, Trivia, Platform Hub)
+- Cross-app SSO logout working
+- ~800-1000 lines added (new features)
+
+**Next actions:**
+- Monitor agents for PR creation
+- Dispatch reviewers when PRs open
+- Address CI failures immediately
+- Verify Playwright E2E tests pass (especially BEA-311 cross-app SSO)
+- Merge continuously as PRs pass review
+
