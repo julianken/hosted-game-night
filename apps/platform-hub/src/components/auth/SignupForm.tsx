@@ -81,20 +81,18 @@ export function SignupForm() {
       return;
     }
 
-    try {
-      // Call signUp from useAuth hook with metadata
-      const { error } = await signUp(email, password, {
-        data: name ? { full_name: name } : undefined,
-      });
+    // Call signUp from useAuth hook
+    const { error } = await signUp(email, password, {
+      data: {
+        full_name: name,
+      },
+    });
 
-      if (!error) {
-        setIsSuccess(true);
-        // Redirect handled by success screen link to /login
-      }
-      // Error handling is automatic via authError state
-    } catch {
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+    if (!error) {
+      // Success - show success state
+      setIsSuccess(true);
     }
+    // Error handling is automatic via authError state
   };
 
   // Success state
