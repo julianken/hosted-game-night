@@ -184,8 +184,16 @@ test.describe('@critical Platform Hub Authentication', () => {
     test('signup empty form shows validation errors @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/signup`);
 
+      // Wait for the form to be fully loaded and interactive
+      await page.waitForLoadState('networkidle');
+      const submitButton = page.locator('button[type="submit"]').first();
+      await submitButton.waitFor({ state: 'visible' });
+
+      // Ensure button is not in loading state
+      await expect(submitButton).not.toHaveAttribute('aria-busy', 'true');
+
       // Try to submit empty form
-      await page.locator('button[type="submit"]').first().click({ force: true });
+      await submitButton.click();
 
       // Should show validation errors for required fields
       await expect(page.locator('#email-error').first()).toBeVisible();
