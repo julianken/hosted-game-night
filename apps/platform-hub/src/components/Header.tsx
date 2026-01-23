@@ -2,6 +2,7 @@
 
 import { HTMLAttributes, forwardRef } from 'react';
 import Link from 'next/link';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 export interface HeaderProps extends HTMLAttributes<HTMLElement> {
   /** Optional logo URL */
@@ -54,7 +55,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
             </div>
           </Link>
 
-          {/* Navigation placeholder - Auth links will go here later */}
+          {/* Navigation - Auth links */}
           <nav aria-label="Main navigation">
             <ul className="flex items-center gap-4">
               <li>
@@ -72,6 +73,9 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
                 >
                   Games
                 </Link>
+              </li>
+              <li>
+                <LogoutButton variant="secondary" size="md" />
               </li>
             </ul>
           </nav>
