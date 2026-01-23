@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+
 /**
  * Playwright configuration for Beak Gaming Platform E2E tests.
  *
@@ -7,19 +9,22 @@ import { defineConfig, devices } from '@playwright/test';
  * - Bingo app (port 3000)
  * - Trivia app (port 3001)
  * - Platform Hub (port 3002)
+ *
+ * In CI: Uses production servers (next start) since apps are pre-built
+ * Locally: Uses dev servers (next dev) for hot reload during development
  */
 export default defineConfig({
   testDir: './e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: isCI ? 2 : 0,
   /* Use 4 workers on CI for parallel execution across shards */
-  workers: process.env.CI ? 4 : undefined,
+  workers: isCI ? 4 : undefined,
   /* Configure sharding for CI to split tests across multiple jobs */
-  shard: process.env.CI && process.env.SHARD
+  shard: isCI && process.env.SHARD
     ? { total: 4, current: parseInt(process.env.SHARD, 10) }
     : undefined,
   /* Reporter to use */
@@ -79,28 +84,35 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /**
+   * Web server configuration:
+   * - CI: Use production servers (next start) - apps are pre-built by workflow
+   * - Local: Use dev servers (next dev) - supports hot reload
+   *
+   * Production servers start much faster (~2s vs ~30s each) since they don't
+   * need to compile TypeScript/JSX on startup.
+   */
   webServer: [
     {
-      command: 'pnpm dev:bingo',
+      command: isCI ? 'pnpm --filter @beak-gaming/bingo start' : 'pnpm dev:bingo',
       url: 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',
     },
     {
-      command: 'pnpm dev:trivia',
+      command: isCI ? 'pnpm --filter @beak-gaming/trivia start' : 'pnpm dev:trivia',
       url: 'http://localhost:3001',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',
     },
     {
-      command: 'pnpm dev:hub',
+      command: isCI ? 'pnpm --filter @beak-gaming/platform-hub start' : 'pnpm dev:hub',
       url: 'http://localhost:3002',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120 * 1000,
       stdout: 'pipe',
       stderr: 'pipe',

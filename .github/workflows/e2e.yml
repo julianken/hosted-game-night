@@ -73,6 +73,8 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          # Required by platform-hub for HMAC-signed session tokens
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
 
       - name: Run Critical E2E Tests (Shard ${{ matrix.shard }}/4)
         run: pnpm test:e2e:critical
@@ -81,6 +83,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -156,6 +159,8 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          # Required by platform-hub for HMAC-signed session tokens
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
 
       - name: Run Full E2E Test Suite (Shard ${{ matrix.shard }}/4)
         run: pnpm test:e2e
@@ -164,6 +169,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
