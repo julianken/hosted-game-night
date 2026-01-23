@@ -27,6 +27,12 @@ vi.mock('@/lib/supabase/server', () => ({
   })),
 }));
 
+// Mock audit middleware
+vi.mock('@/middleware/audit-middleware', () => ({
+  auditAuthorizationSuccess: vi.fn(),
+  auditAuthorizationError: vi.fn(),
+}));
+
 import { validateCsrfToken, clearCsrfToken } from '@/lib/csrf';
 import { createClient } from '@/lib/supabase/server';
 
@@ -196,6 +202,24 @@ describe('POST /api/oauth/approve', () => {
             }),
           },
         },
+        from: vi.fn(() => ({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: 'auth-123',
+              client_id: 'client-123',
+              user_id: 'user-123',
+              redirect_uri: 'https://client.example.com/callback',
+              scope: 'read',
+              state: 'random-state',
+              status: 'pending',
+              oauth_clients: { id: 'client-123', name: 'Test Client' },
+            },
+            error: null,
+          }),
+          update: vi.fn().mockReturnThis(),
+        })),
       };
       vi.mocked(createClient).mockReturnValue(mockSupabase as never);
 
@@ -208,30 +232,59 @@ describe('POST /api/oauth/approve', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.redirect_url).toBe('https://client.example.com/callback?code=abc123');
-      expect(mockSupabase.auth.oauth.approveAuthorization).toHaveBeenCalledWith('auth-123');
+      expect(data.redirect_url).toMatch(/^https:\/\/client\.example\.com\/callback\?code=[a-f0-9]{64}&state=random-state$/);
+      // Verify the from().update() was called to store the authorization code
+      expect(mockSupabase.from).toHaveBeenCalledWith('oauth_authorizations');
     });
 
     it('should return 400 if authorization approval fails', async () => {
       vi.mocked(validateCsrfToken).mockResolvedValue(true);
 
+      let callCount = 0;
       const mockSupabase = {
         auth: {
           getSession: vi.fn().mockResolvedValue({
             data: { session: { user: { id: 'user-123' } } },
             error: null,
           }),
-          oauth: {
-            getAuthorizationDetails: vi.fn().mockResolvedValue({
-              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
-              error: null,
-            }),
-            approveAuthorization: vi.fn().mockResolvedValue({
+        },
+        from: vi.fn(() => {
+          callCount++;
+          if (callCount === 1) {
+            // First call: select query (fetching authorization details)
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockReturnThis(),
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: 'auth-123',
+                  client_id: 'client-123',
+                  user_id: 'user-123',
+                  redirect_uri: 'https://client.example.com/callback',
+                  scope: 'read',
+                  state: 'random-state',
+                  status: 'pending',
+                  oauth_clients: { id: 'client-123', name: 'Test Client' },
+                },
+                error: null,
+              }),
+            };
+          } else {
+            // Second call: update query (updating with approval code)
+            const finalResult = {
               data: null,
               error: { message: 'Authorization not found' },
-            }),
-          },
-        },
+            };
+            const eqChain = {
+              eq: vi.fn(() => ({
+                eq: vi.fn().mockResolvedValue(finalResult),
+              })),
+            };
+            return {
+              update: vi.fn(() => eqChain),
+            };
+          }
+        }),
       };
       vi.mocked(createClient).mockReturnValue(mockSupabase as never);
 
@@ -256,17 +309,25 @@ describe('POST /api/oauth/approve', () => {
             data: { session: { user: { id: 'user-123' } } },
             error: null,
           }),
-          oauth: {
-            getAuthorizationDetails: vi.fn().mockResolvedValue({
-              data: { client: { id: 'client-123', name: 'Test Client' }, scopes: ['read'] },
-              error: null,
-            }),
-            approveAuthorization: vi.fn().mockResolvedValue({
-              data: {},
-              error: null,
-            }),
-          },
         },
+        from: vi.fn(() => ({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: 'auth-123',
+              client_id: 'client-123',
+              user_id: 'user-123',
+              redirect_uri: '', // Empty redirect_uri to trigger the error
+              scope: 'read',
+              state: 'random-state',
+              status: 'pending',
+              oauth_clients: { id: 'client-123', name: 'Test Client' },
+            },
+            error: null,
+          }),
+          update: vi.fn().mockReturnThis(),
+        })),
       };
       vi.mocked(createClient).mockReturnValue(mockSupabase as never);
 
