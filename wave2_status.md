@@ -222,19 +222,57 @@
 
 ---
 
-## Wave 2D: Infrastructure (QUEUED)
+## Wave 2D: Platform Hub Completion (QUEUED)
 
-### BEA-309: Set up Turborepo remote caching
+> **Note:** Task numbers BEA-309/310/311 were repurposed on Jan 23, 2026. Original OAuth integration work (originally planned as BEA-309/310/311) was completed prior to Wave 2 and is tracked as ✅ Complete in app status sections.
+
+### BEA-309: Complete Platform Hub dashboard with real data
 - **Status**: ⏸️ Queued
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-309
+- **Problem**: Dashboard displays hardcoded placeholder data instead of real user information
+- **Current State**:
+  - Placeholder user: `{ name: 'Activity Director', email: 'activities@sunnydale.com' }`
+  - Fake game session data (hardcoded timestamps, play counts)
+  - RecentSessions component shows 4 fake sessions
+  - UserPreferences component has non-functional buttons
+- **Scope**:
+  - Connect dashboard to Supabase user data
+  - Fetch real game session history
+  - Display actual user preferences
+  - Replace all placeholder values with database queries
+  - Handle loading states and error states
 
-### BEA-310: Complete Platform Hub user dashboard
+### BEA-310: Implement profile management UI and API
 - **Status**: ⏸️ Queued
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-310
+- **Problem**: Platform Hub has no profile management functionality. Users cannot view or edit their profile after signup
+- **Missing**:
+  - No `/profile` or `/settings` route (dashboard links to it = 404)
+  - No API routes for profile updates
+  - Dashboard links to non-existent settings page
+- **Scope**:
+  - Create `/settings` or `/profile` page
+  - Display current user information
+  - Allow editing display name, email, password
+  - Create API routes for profile updates
+  - Validate inputs and show feedback
 
-### BEA-311: Migrate @packages/ui components
+### BEA-311: Implement logout functionality across all apps ⚠️ CRITICAL
 - **Status**: ⏸️ Queued
 - **Linear**: https://linear.app/beak-gaming/issue/BEA-311
+- **Problem**: No logout functionality exists in any app. Users can log in but cannot log out. **Users are currently trapped in their sessions.**
+- **Missing**:
+  - No logout buttons in UI (Bingo, Trivia, Platform Hub)
+  - No `/api/auth/logout` routes
+  - No session cleanup on logout
+- **Note**: `@beak-gaming/auth` package has full `signOut()` implementation, but apps don't expose it to users
+- **Scope**:
+  - Create `/api/auth/logout` route in each app
+  - Clear httpOnly cookies (beak_access_token, beak_refresh_token, beak_user_id)
+  - Revoke refresh tokens on server
+  - Add LogoutButton component to presenter UI
+  - Redirect to home after logout
+  - Test cross-app logout with SSO (should log out from all apps)
 
 ---
 
