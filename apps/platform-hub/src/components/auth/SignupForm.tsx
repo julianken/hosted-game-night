@@ -13,6 +13,10 @@ interface FormErrors {
   general?: string;
 }
 
+interface SignupFormProps {
+  redirectTo?: string;
+}
+
 /**
  * SignupForm - Senior-friendly registration form.
  *
@@ -23,7 +27,7 @@ interface FormErrors {
  * - Confirmation password field
  * - Loading states during submission
  */
-export function SignupForm({ redirectTo }: SignupFormProps) {
+export function SignupForm({ redirectTo: _redirectTo }: SignupFormProps) {
   const { signUp, isLoading, error: authError } = useAuth();
 
   const [name, setName] = useState('');
