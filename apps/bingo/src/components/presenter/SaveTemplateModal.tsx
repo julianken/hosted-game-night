@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useId } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from "@beak-gaming/ui";
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
 import { useToast } from '@/components/ui/Toast';

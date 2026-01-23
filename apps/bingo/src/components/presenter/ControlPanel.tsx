@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@beak-gaming/ui";
 import { GameStatus } from '@/types';
 import { SaveTemplateModal } from './SaveTemplateModal';
 

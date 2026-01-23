@@ -2,7 +2,7 @@
 
 import { useId, useState, useCallback } from 'react';
 import { RollSoundType, RollDuration, ROLL_SOUND_OPTIONS } from '@/types';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@beak-gaming/ui";
 import { Slider } from '@beak-gaming/ui';
 import { useAudioStore } from '@/stores/audio-store';
 

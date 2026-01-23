@@ -21,7 +21,7 @@ import { ControlPanel } from '@/components/presenter/ControlPanel';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider, RoomCodeDisplay } from '@beak-gaming/ui';
 import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@beak-gaming/ui";
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
 import { RevealChimeSelector } from '@/components/presenter/RevealChimeSelector';
