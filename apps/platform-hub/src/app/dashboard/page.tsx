@@ -159,7 +159,7 @@ export default async function DashboardPage() {
 
   // Redirect to login if not authenticated
   if (userError || !user) {
-    redirect('/login');
+    redirect('/login?redirect=%2Fdashboard');
   }
 
   // Fetch recent sessions and calculate statistics
