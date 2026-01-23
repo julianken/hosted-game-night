@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     '@beak-gaming/theme',
     '@beak-gaming/auth',
   ],
+  // Note: Request body size limits are enforced via middleware.ts
+  // using Content-Length header inspection, not Next.js bodyParser config
 };
 
 // Bundle analyzer is enabled via ANALYZE=true environment variable

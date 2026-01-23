@@ -1,6 +1,110 @@
-# Rate Limiting Middleware
+# Middleware
 
 ## Overview
+
+Security middleware for the Platform Hub API, providing multiple layers of protection:
+
+1. **Body Size Limits** - Prevents DoS attacks via large payloads
+2. **Rate Limiting** - Protects OAuth endpoints from brute force attacks
+3. **Session Management** - Handles Supabase authentication cookies
+
+---
+
+## Body Size Middleware
+
+### Overview
+
+Enforces maximum request body size limits to prevent Denial of Service (DoS) attacks where attackers send extremely large payloads to exhaust server resources.
+
+### Configuration
+
+- **Default Limit:** 1MB per request
+- **Environment Variable:** `MAX_BODY_SIZE_MB`
+- **Applied to:** POST, PUT, PATCH requests
+- **Check Method:** Content-Length header inspection
+
+### Usage
+
+The body size check is automatically applied via Next.js middleware (`src/middleware.ts`) before any request processing:
+
+```typescript
+export async function middleware(request: NextRequest) {
+  // Check body size for POST, PUT, PATCH requests
+  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+    const bodySizeCheck = checkBodySize(request);
+    if (bodySizeCheck) {
+      return bodySizeCheck; // Return 413 Payload Too Large
+    }
+  }
+  // Continue with other middleware...
+}
+```
+
+You can also use it directly in API route handlers:
+
+```typescript
+import { checkBodySize } from '@/middleware/body-size';
+
+export async function POST(request: NextRequest) {
+  const bodySizeCheck = checkBodySize(request);
+  if (bodySizeCheck) {
+    return bodySizeCheck;
+  }
+  // Process request...
+}
+```
+
+### Configuration
+
+Set the maximum body size in your `.env.local`:
+
+```bash
+# Maximum request body size in MB (default: 1)
+MAX_BODY_SIZE_MB=1
+```
+
+### Error Response
+
+When body size is exceeded, clients receive HTTP 413:
+
+```json
+{
+  "error": "payload_too_large",
+  "error_description": "Request body exceeds maximum size of 1MB",
+  "max_size_bytes": 1048576,
+  "max_size_mb": 1
+}
+```
+
+### Security Benefits
+
+- **DoS Prevention:** Stops attackers from exhausting server memory/disk with large payloads
+- **Resource Protection:** Prevents slow request attacks that tie up server connections
+- **Early Rejection:** Checks Content-Length header before reading body data
+- **Configurable:** Adjust limit based on your application's needs
+
+### Testing
+
+Comprehensive test suite covers:
+
+- Requests within limit (allowed)
+- Requests exceeding limit (rejected with 413)
+- Requests at exact limit boundary
+- Missing Content-Length header
+- Various HTTP methods (POST, PUT, PATCH)
+- Integration scenarios (file uploads, JSON, form data)
+
+Run tests:
+
+```bash
+pnpm test src/middleware/__tests__/body-size.test.ts
+```
+
+---
+
+## Rate Limiting Middleware
+
+### Overview
 
 Rate limiting middleware to protect OAuth endpoints from brute force attacks and DDoS. Implements a token bucket algorithm with in-memory storage.
 

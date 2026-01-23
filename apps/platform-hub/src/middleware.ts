@@ -1,13 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import { applyRateLimit } from '@/middleware/rate-limit';
+import { checkBodySize } from '@/middleware/body-size';
 
 /**
  * Next.js Middleware
  *
  * Runs on every request to apply:
- * 1. Supabase session management (auth cookies)
- * 2. Rate limiting for OAuth endpoints
+ * 1. Request body size limits (prevents DoS via large payloads)
+ * 2. Supabase session management (auth cookies)
+ * 3. Rate limiting for OAuth endpoints
  *
  * Rate limited paths:
  * - /oauth/consent (10 req/min per IP)
@@ -32,6 +34,15 @@ function shouldRateLimit(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
+  // Check body size for POST, PUT, PATCH requests
+  // This prevents DoS attacks via large payloads
+  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+    const bodySizeCheck = checkBodySize(request);
+    if (bodySizeCheck) {
+      return bodySizeCheck; // Return 413 Payload Too Large
+    }
+  }
+
   // Apply rate limiting to OAuth endpoints
   if (shouldRateLimit(request.nextUrl.pathname)) {
     // Check rate limit before processing request

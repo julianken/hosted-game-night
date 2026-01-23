@@ -74,3 +74,5 @@ jobs:
           # Stub Supabase env vars for build (not used at build time)
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          # Stub session token secret for build (required by platform-hub)
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
