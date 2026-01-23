@@ -3,10 +3,10 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
+import { useAuth } from '@beak-gaming/auth';
 
 export interface ForgotPasswordFormProps {
-  /** Callback when form is submitted successfully */
-  onSubmit?: (email: string) => Promise<{ error: string | null }>;
+  // No props needed - form uses useAuth() hook directly
 }
 
 interface FormErrors {
@@ -23,10 +23,10 @@ interface FormErrors {
  * - Success state with helpful next steps
  * - Loading states during submission
  */
-export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
+export function ForgotPasswordForm() {
+  const { resetPassword, isLoading, error: authError } = useAuth();
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const validateForm = (): boolean => {
@@ -51,26 +51,15 @@ export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      if (onSubmit) {
-        const result = await onSubmit(email);
-        if (result.error) {
-          setErrors({ general: result.error });
-        } else {
-          setIsSuccess(true);
-        }
-      } else {
-        // Placeholder behavior when no onSubmit handler
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Show success anyway for demo purposes
+      // Use resetPassword from auth package
+      const { error } = await resetPassword(email);
+      if (!error) {
         setIsSuccess(true);
       }
-    } catch {
+      // Error handling is automatic via authError state
+    } catch (err) {
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,8 +116,8 @@ export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
         Enter the email address associated with your account, and we&apos;ll send you a link to reset your password.
       </p>
 
-      {/* General error message */}
-      {errors.general && (
+      {/* General error message from useAuth */}
+      {authError && (
         <div
           role="alert"
           className="p-4 rounded-lg bg-error/10 border-2 border-error text-error text-lg"
@@ -142,7 +131,7 @@ export function ForgotPasswordForm({ onSubmit }: ForgotPasswordFormProps) {
             >
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            <span>{errors.general}</span>
+            <span>{authError.message}</span>
           </div>
         </div>
       )}
