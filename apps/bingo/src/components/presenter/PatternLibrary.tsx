@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { BingoPattern } from '@/types';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@beak-gaming/ui";
 import { PatternEditor } from './PatternEditor';
 import { PatternPreviewSmall } from './PatternPreviewSmall';
 

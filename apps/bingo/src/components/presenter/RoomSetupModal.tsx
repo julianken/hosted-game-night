@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
-import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
+import { Modal, Button } from '@beak-gaming/ui';
 import { Input } from '../ui/Input';
 import { TemplateSelector } from './TemplateSelector';
 import { useGameStore } from '@/stores/game-store';

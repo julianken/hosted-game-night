@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from "@beak-gaming/ui";
 
 export interface PinDisplayProps {
   /** The room PIN to display */

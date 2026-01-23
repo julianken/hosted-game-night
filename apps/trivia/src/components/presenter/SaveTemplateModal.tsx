@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useId } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from "@beak-gaming/ui";
 import { useGameStore } from '@/stores/game-store';
 import { useToast } from "@beak-gaming/ui";
 import type { Question } from '@/types';

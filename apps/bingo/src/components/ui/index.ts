@@ -1,5 +1,5 @@
-export { Button } from './Button';
-export type { ButtonProps } from './Button';
+export { Button } from '@beak-gaming/ui';
+export type { ButtonProps } from '@beak-gaming/ui';
 
 export { Toggle } from './Toggle';
 export type { ToggleProps } from './Toggle';

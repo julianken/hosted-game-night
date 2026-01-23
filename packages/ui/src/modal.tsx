@@ -1,115 +1,168 @@
 'use client';
 
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { Button } from './button';
 
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
-  className?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+  variant?: 'default' | 'danger';
+  showFooter?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, children, className = '' }: ModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  onConfirm,
+  variant = 'default',
+  showFooter = true,
+}: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (isOpen) {
-      // Store currently focused element
-      previousFocusRef.current = document.activeElement as HTMLElement;
-
-      dialog.showModal();
-
-      // Focus first focusable element
-      const firstFocusable = dialog.querySelector<HTMLElement>(
+  // Get all focusable elements within the modal
+  const getFocusableElements = useCallback(() => {
+    if (!modalRef.current) return [];
+    return Array.from(
+      modalRef.current.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      firstFocusable?.focus();
-    } else {
-      dialog.close();
+      )
+    ).filter((el) => !el.hasAttribute('disabled'));
+  }, []);
 
-      // Restore focus to previously focused element
-      previousFocusRef.current?.focus();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    const handleCancel = (e: Event) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog =
-        rect.top <= e.clientY &&
-        e.clientY <= rect.top + rect.height &&
-        rect.left <= e.clientX &&
-        e.clientX <= rect.left + rect.width;
-
-      if (!isInDialog) {
+  // Focus trap implementation
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose();
+        return;
       }
-    };
 
-    dialog.addEventListener('cancel', handleCancel);
-    dialog.addEventListener('click', handleClickOutside);
+      if (event.key === 'Tab') {
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    },
+    [getFocusableElements, onClose]
+  );
+
+  // Store previously focused element and focus modal on open
+  useEffect(() => {
+    if (isOpen) {
+      previouslyFocusedElement.current = document.activeElement as HTMLElement;
+
+      // Focus the modal container after a short delay to allow render
+      setTimeout(() => {
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        } else {
+          modalRef.current?.focus();
+        }
+      }, 0);
+
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+    }
 
     return () => {
-      dialog.removeEventListener('cancel', handleCancel);
-      dialog.removeEventListener('click', handleClickOutside);
+      document.body.style.overflow = '';
+      if (previouslyFocusedElement.current && !isOpen) {
+        previouslyFocusedElement.current.focus();
+      }
     };
-  }, [onClose]);
+  }, [isOpen, getFocusableElements]);
+
+  // Handle backdrop click
+  const handleBackdropClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (event.target === event.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   if (!isOpen) return null;
 
-  return (
-    <dialog
-      ref={dialogRef}
-      className={`
-        fixed z-50
-        m-auto
-        bg-white dark:bg-gray-900
-        rounded-xl shadow-2xl
-        w-full max-w-md
-        p-0
-        backdrop:bg-black/50
-        open:animate-fade-in
-        ${className}
-      `.trim()}
-      aria-labelledby="modal-title"
+  const modalContent = (
+    <div
+      role="dialog"
       aria-modal="true"
+      aria-labelledby="modal-title"
+      className="
+        fixed inset-0 z-50
+        flex items-center justify-center
+        p-4
+      "
+      onKeyDown={handleKeyDown as unknown as React.KeyboardEventHandler}
     >
-      <div className="flex flex-col h-full">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={handleBackdropClick}
+        aria-hidden="true"
+      />
+
+      {/* Modal content */}
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="
+          relative z-10
+          w-full max-w-lg
+          bg-background rounded-xl
+          shadow-2xl
+          border-2 border-border
+          outline-none
+        "
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <h2
             id="modal-title"
-            className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+            className="text-2xl font-bold text-foreground"
           >
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close modal"
             className="
-              min-w-[44px] min-h-[44px]
+              min-h-[44px] min-w-[44px]
               flex items-center justify-center
               rounded-lg
-              text-gray-500 hover:text-gray-700
-              dark:text-gray-400 dark:hover:text-gray-200
-              hover:bg-gray-100 dark:hover:bg-gray-800
+              text-muted hover:text-foreground
+              hover:bg-muted/20
               transition-colors
               focus:outline-none focus:ring-4 focus:ring-primary/50
             "
-            aria-label="Close modal"
           >
             <svg
               className="w-6 h-6"
@@ -128,11 +181,40 @@ export function Modal({ isOpen, onClose, title, children, className = '' }: Moda
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 px-6 py-6 overflow-y-auto">
+        {/* Body */}
+        <div className="p-6 text-lg">
           {children}
         </div>
+
+        {/* Footer */}
+        {showFooter && (
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-border">
+            <Button
+              variant="secondary"
+              onClick={onClose}
+              className="flex-1"
+            >
+              {cancelLabel}
+            </Button>
+            {onConfirm && (
+              <Button
+                variant={variant === 'danger' ? 'danger' : 'primary'}
+                onClick={onConfirm}
+                className="flex-1"
+              >
+                {confirmLabel}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
-    </dialog>
+    </div>
   );
+
+  // Use portal to render at document root
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return null;
 }

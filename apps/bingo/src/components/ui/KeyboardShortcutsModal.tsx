@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Button } from './Button';
+import { Button } from '@beak-gaming/ui';
 
 export interface KeyboardShortcut {
   key: string;
