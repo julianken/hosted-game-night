@@ -4,7 +4,7 @@ import { useState, useId } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from "@beak-gaming/ui";
 
 export interface SaveTemplateModalProps {
   isOpen: boolean;

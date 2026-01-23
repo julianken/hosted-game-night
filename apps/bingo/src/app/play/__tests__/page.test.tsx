@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 import PlayPage from '../page';
-import { ToastProvider } from '@/components/ui/Toast';
+import { ToastProvider } from "@beak-gaming/ui";
 import {
   generateSecurePin,
   generateShortSessionId,
