@@ -199,6 +199,9 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
     devDependencies:
+      '@beak-gaming/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@next/bundle-analyzer':
         specifier: ^16.1.3
         version: 16.1.3

@@ -30,6 +30,8 @@
     "test:e2e": "playwright test",
     "test:e2e:bingo": "playwright test --project=bingo",
     "test:e2e:trivia": "playwright test --project=trivia",
+    "test:e2e:critical": "playwright test --grep @critical",
+    "test:e2e:high": "playwright test --grep '@critical|@high'",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"
   },
