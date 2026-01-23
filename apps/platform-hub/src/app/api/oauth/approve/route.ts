@@ -24,6 +24,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { validateCsrfToken, clearCsrfToken } from '@/lib/csrf';
 import { createClient } from '@/lib/supabase/server';
 import { auditAuthorizationSuccess, auditAuthorizationError } from '@/middleware/audit-middleware';
@@ -80,10 +81,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch authorization details for audit logging
-    const { data: authDetails, error: detailsError } = await supabase.auth.oauth.getAuthorizationDetails(
-      authorization_id
-    );
+    // Fetch authorization details from custom oauth_authorizations table
+    const { data: authDetails, error: detailsError } = await supabase
+      .from('oauth_authorizations')
+      .select(`
+        id,
+        client_id,
+        user_id,
+        redirect_uri,
+        scope,
+        state,
+        status,
+        oauth_clients!inner(id, name)
+      `)
+      .eq('id', authorization_id)
+      .eq('user_id', session.user.id)
+      .eq('status', 'pending')
+      .single();
 
     if (detailsError || !authDetails) {
       // Log error to audit log
@@ -102,14 +116,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { client } = authDetails;
-    // Note: scopes may not be available in Supabase SDK response type
-    const scopes = (authDetails as any).scopes || [];
+    const clientArray = authDetails.oauth_clients as unknown as Array<{ id: string; name: string }>;
+    const client = Array.isArray(clientArray) ? clientArray[0] : clientArray;
+    const scopes = authDetails.scope.split(' ');
 
-    // Approve authorization request
-    const { data, error: approveError } = await supabase.auth.oauth.approveAuthorization(
-      authorization_id
-    );
+    // Generate authorization code (32 bytes = 64 hex characters)
+    const authCode = crypto.randomBytes(32).toString('hex');
+    const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Update authorization with code and approval
+    const { error: approveError } = await supabase
+      .from('oauth_authorizations')
+      .update({
+        code: authCode,
+        code_expires_at: codeExpiresAt.toISOString(),
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', authorization_id)
+      .eq('user_id', session.user.id);
 
     if (approveError) {
       // Log error to audit log
@@ -128,15 +153,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supabase returns 'redirect_url'
-    const redirectUrl = (data as { redirect_url?: string }).redirect_url;
-
-    if (!redirectUrl) {
-      return NextResponse.json(
-        { error: 'No redirect URL provided by authorization server' },
-        { status: 500 }
-      );
-    }
+    // Build redirect URL with authorization code
+    const redirectUrl = new URL(authDetails.redirect_uri);
+    redirectUrl.searchParams.set('code', authCode);
+    redirectUrl.searchParams.set('state', authDetails.state);
 
     // Log success to audit log
     await auditAuthorizationSuccess(
@@ -148,7 +168,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Return redirect URL
-    return NextResponse.json({ redirect_url: redirectUrl });
+    return NextResponse.json({ redirect_url: redirectUrl.toString() });
   } catch (error) {
     console.error('Unexpected error in approve route:', error);
 

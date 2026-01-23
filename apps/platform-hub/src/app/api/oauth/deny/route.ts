@@ -62,10 +62,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch authorization details
-    const { data: authDetails, error: detailsError } = await supabase.auth.oauth.getAuthorizationDetails(
-      authorization_id
-    );
+    // Fetch authorization details from custom oauth_authorizations table
+    const { data: authDetails, error: detailsError } = await supabase
+      .from('oauth_authorizations')
+      .select(`
+        id,
+        client_id,
+        user_id,
+        redirect_uri,
+        state,
+        oauth_clients!inner(id, name)
+      `)
+      .eq('id', authorization_id)
+      .eq('user_id', session.user.id)
+      .single();
 
     if (detailsError || !authDetails) {
       // Log error to audit log
@@ -84,12 +94,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { client } = authDetails;
+    const clientArray = authDetails.oauth_clients as unknown as Array<{ id: string; name: string }>;
+    const client = Array.isArray(clientArray) ? clientArray[0] : clientArray;
 
-    // Deny authorization via Supabase OAuth SDK
-    const { data: denialData, error: denialError } = await supabase.auth.oauth.denyAuthorization(
-      authorization_id
-    );
+    // Update authorization status to denied
+    const { error: denialError } = await supabase
+      .from('oauth_authorizations')
+      .update({ status: 'denied' })
+      .eq('id', authorization_id)
+      .eq('user_id', session.user.id);
 
     if (denialError) {
       // Log error to audit log
@@ -117,9 +130,15 @@ export async function POST(request: NextRequest) {
       reason || 'user_denied'
     );
 
-    // Return redirect URL (or indicate success)
+    // Build redirect URL with error
+    const redirectUrl = new URL(authDetails.redirect_uri);
+    redirectUrl.searchParams.set('error', 'access_denied');
+    redirectUrl.searchParams.set('error_description', reason || 'User denied authorization');
+    redirectUrl.searchParams.set('state', authDetails.state);
+
+    // Return redirect URL
     return NextResponse.json({
-      redirect_url: denialData?.redirect_url || '/dashboard',
+      redirect_url: redirectUrl.toString(),
     });
   } catch (error) {
     console.error('Error in OAuth denial:', error);
