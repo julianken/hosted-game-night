@@ -3,7 +3,7 @@
 import { useState, useId } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useGameStore } from '@/stores/game-store';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from "@beak-gaming/ui";
 import type { Question } from '@/types';
 import type { TriviaQuestion } from '@beak-gaming/database/types';
 

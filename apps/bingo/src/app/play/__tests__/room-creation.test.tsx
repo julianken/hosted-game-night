@@ -13,7 +13,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, useEffect } from 'react';
 import PlayPage from '../page';
-import { ToastProvider } from '@/components/ui/Toast';
+import { ToastProvider } from "@beak-gaming/ui";
 import {
   generateSecurePin,
   generateShortSessionId,

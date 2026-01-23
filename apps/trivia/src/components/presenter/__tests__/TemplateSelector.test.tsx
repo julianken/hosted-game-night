@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { TemplateSelector } from '../TemplateSelector';
-import { ToastProvider } from '@/components/ui/Toast';
+import { ToastProvider } from "@beak-gaming/ui";
 import type { TriviaTemplate } from '@beak-gaming/database/types';
 
 // Mock fetch globally

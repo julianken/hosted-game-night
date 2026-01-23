@@ -3,7 +3,7 @@
 import { useId, useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from "@beak-gaming/ui";
 import { patternRegistry } from '@/lib/game/patterns';
 import type { BingoTemplate } from '@beak-gaming/database/types';
 import type { VoicePackId } from '@/types';

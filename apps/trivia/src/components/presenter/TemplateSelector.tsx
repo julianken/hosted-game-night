@@ -2,7 +2,7 @@
 
 import { useId, useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from "@beak-gaming/ui";
 import type { TriviaTemplate, TriviaQuestion } from '@beak-gaming/database/types';
 import type { Question } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
