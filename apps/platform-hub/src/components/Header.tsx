@@ -2,6 +2,9 @@
 
 import { HTMLAttributes, forwardRef } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@beak-gaming/auth';
+import { Button } from '@beak-gaming/ui';
+import { useRouter } from 'next/navigation';
 
 export interface HeaderProps extends HTMLAttributes<HTMLElement> {
   /** Optional logo URL */
@@ -14,6 +17,30 @@ export interface HeaderProps extends HTMLAttributes<HTMLElement> {
  */
 export const Header = forwardRef<HTMLElement, HeaderProps>(
   ({ logoUrl: _logoUrl, className = '', ...props }, ref) => {
+    const { user, signOut, isLoading } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+      try {
+        // Call the logout API endpoint to revoke tokens
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        // Sign out from auth context
+        await signOut();
+
+        // Redirect to home page
+        router.push('/');
+      } catch (error) {
+        console.error('Logout failed:', error);
+        // Still attempt to sign out locally even if API call fails
+        await signOut();
+        router.push('/');
+      }
+    };
+
     return (
       <header
         ref={ref}
@@ -54,7 +81,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
             </div>
           </Link>
 
-          {/* Navigation placeholder - Auth links will go here later */}
+          {/* Navigation */}
           <nav aria-label="Main navigation">
             <ul className="flex items-center gap-4">
               <li>
@@ -73,6 +100,70 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
                   Games
                 </Link>
               </li>
+
+              {/* Authenticated user navigation */}
+              {!isLoading && user && (
+                <>
+                  <li>
+                    <Link
+                      href="/dashboard"
+                      className="
+                        inline-flex items-center justify-center
+                        min-h-[44px] px-6 py-2
+                        text-lg font-medium text-foreground
+                        hover:text-primary
+                        focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
+                        rounded-lg
+                        transition-colors duration-150
+                      "
+                    >
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/settings"
+                      className="
+                        inline-flex items-center justify-center
+                        min-h-[44px] px-6 py-2
+                        text-lg font-medium text-foreground
+                        hover:text-primary
+                        focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
+                        rounded-lg
+                        transition-colors duration-150
+                      "
+                    >
+                      Settings
+                    </Link>
+                  </li>
+                  <li>
+                    <Button
+                      onClick={handleLogout}
+                      variant="secondary"
+                      size="md"
+                      data-testid="logout-button"
+                      aria-label="Sign out of your account"
+                    >
+                      Sign Out
+                    </Button>
+                  </li>
+                </>
+              )}
+
+              {/* Unauthenticated user navigation */}
+              {!isLoading && !user && (
+                <li>
+                  <Button
+                    onClick={() => router.push('/login')}
+                    variant="primary"
+                    size="md"
+                    data-testid="sign-in-button"
+                    aria-label="Sign in to your account"
+                  >
+                    Sign In
+                  </Button>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
