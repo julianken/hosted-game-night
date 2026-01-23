@@ -223,6 +223,13 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Session Token Secret (for HMAC-signed JWT tokens)
 # Generate with: openssl rand -hex 32
 SESSION_TOKEN_SECRET=your-64-character-hex-string
+
+# Redis (Optional - platform-hub only, for production rate limiting)
+# Required for multi-instance deployments to share rate limit state
+# If not set, rate limiting falls back to in-memory (single instance only)
+# Get from: https://console.upstash.com/
+REDIS_URL=https://your-redis-instance.upstash.io
+REDIS_TOKEN=your-redis-token
 ```
 
 ## Pull Request Template

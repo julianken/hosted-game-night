@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
   // Apply rate limiting to OAuth endpoints
   if (shouldRateLimit(request.nextUrl.pathname)) {
     // Check rate limit before processing request
-    const rateLimitResponse = applyRateLimit(
+    const rateLimitResponse = await applyRateLimit(
       request,
       NextResponse.next()
     );

@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
 
 /**
  * Rate Limiting Middleware for OAuth Endpoints
  *
  * Protects OAuth endpoints from brute force and DDoS attacks.
- * Implements a simple in-memory token bucket algorithm.
+ * Implements sliding window algorithm with Redis backing for production.
  *
  * Limits:
  * - 10 requests per minute per IP address
  * - Returns HTTP 429 (Too Many Requests) when exceeded
  * - Includes Retry-After header with seconds until reset
  *
- * Note: In-memory implementation suitable for MVP/development.
- * For production with multiple instances, use Redis-backed solution
- * (e.g., @upstash/ratelimit).
+ * Storage Strategy:
+ * - Production (REDIS_URL set): Uses Redis for multi-instance consistency
+ * - Development (no REDIS_URL): Falls back to in-memory store
+ * - Edge Runtime compatible via @upstash/redis
  */
 
 interface RateLimitEntry {
@@ -22,17 +25,62 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-// In-memory store for rate limit tracking
+// Redis-based rate limiter (lazy initialization)
+let redisRatelimit: Ratelimit | null = null;
+let ratelimitInitialized = false;
+
+/**
+ * Initialize Redis-based rate limiter if REDIS_URL and REDIS_TOKEN are available
+ * Compatible with Edge Runtime
+ */
+function getRedisRatelimit(): Ratelimit | null {
+  if (ratelimitInitialized) {
+    return redisRatelimit;
+  }
+
+  ratelimitInitialized = true;
+
+  const redisUrl = process.env.REDIS_URL;
+  const redisToken = process.env.REDIS_TOKEN;
+
+  if (!redisUrl || !redisToken) {
+    console.info('[Rate Limit] No REDIS_URL or REDIS_TOKEN found, using in-memory fallback');
+    return null;
+  }
+
+  try {
+    const redis = new Redis({
+      url: redisUrl,
+      token: redisToken,
+    });
+
+    redisRatelimit = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '60s'),
+      prefix: 'ratelimit',
+      analytics: true,
+    });
+
+    console.info('[Rate Limit] Redis rate limiter initialized');
+    return redisRatelimit;
+  } catch (error) {
+    console.error('[Rate Limit] Failed to initialize Redis rate limiter:', error);
+    return null;
+  }
+}
+
+// In-memory store for rate limit tracking (fallback)
 // Key: IP address, Value: { count, resetAt }
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-// Rate limit configuration
+// Rate limit configuration (for in-memory fallback)
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per window
 
 /**
  * Clean up expired rate limit entries every 5 minutes
  * Prevents memory leaks in long-running processes
+ * Only used for in-memory fallback
  */
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 let cleanupTimer: NodeJS.Timeout | null = null;
@@ -54,7 +102,7 @@ function startCleanup() {
   }, CLEANUP_INTERVAL_MS);
 }
 
-// Start cleanup timer
+// Start cleanup timer for in-memory fallback
 if (typeof window === 'undefined') {
   startCleanup();
 }
@@ -87,13 +135,42 @@ function getClientIp(request: NextRequest): string {
 }
 
 /**
- * Check if request should be rate limited
- * Returns null if allowed, or response object if rate limited
+ * Check rate limit using Redis (async)
+ * Returns rate limit result using @upstash/ratelimit
  */
-export function checkRateLimit(request: NextRequest): NextResponse | null {
-  const ip = getClientIp(request);
-  const now = Date.now();
+async function checkRateLimitRedis(
+  ip: string
+): Promise<{ success: boolean; limit: number; remaining: number; reset: number } | null> {
+  const ratelimit = getRedisRatelimit();
+  if (!ratelimit) {
+    return null;
+  }
 
+  try {
+    const result = await ratelimit.limit(ip);
+
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    console.error('[Rate Limit] Redis operation failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Check rate limit using in-memory store (fallback)
+ * Synchronous operation for when Redis is unavailable
+ */
+function checkRateLimitMemory(ip: string, now: number): {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+} {
   // Get or create rate limit entry
   let entry = rateLimitStore.get(ip);
 
@@ -104,20 +181,61 @@ export function checkRateLimit(request: NextRequest): NextResponse | null {
       resetAt: now + RATE_LIMIT_WINDOW_MS,
     };
     rateLimitStore.set(ip, entry);
-    return null; // Allow request
+
+    return {
+      success: true,
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      remaining: RATE_LIMIT_MAX_REQUESTS - 1,
+      reset: entry.resetAt,
+    };
   }
 
   // Increment counter
   entry.count++;
+  rateLimitStore.set(ip, entry);
+
+  const success = entry.count <= RATE_LIMIT_MAX_REQUESTS;
+  const remaining = Math.max(0, RATE_LIMIT_MAX_REQUESTS - entry.count);
+
+  return {
+    success,
+    limit: RATE_LIMIT_MAX_REQUESTS,
+    remaining,
+    reset: entry.resetAt,
+  };
+}
+
+/**
+ * Check if request should be rate limited
+ * Returns null if allowed, or response object if rate limited
+ *
+ * This function is now async to properly support Redis operations.
+ */
+export async function checkRateLimit(request: NextRequest): Promise<NextResponse | null> {
+  const ip = getClientIp(request);
+  const now = Date.now();
+
+  // Try Redis first, fall back to in-memory
+  let result: { success: boolean; limit: number; remaining: number; reset: number };
+
+  const redisResult = await checkRateLimitRedis(ip);
+
+  if (redisResult) {
+    // Redis is available and working
+    result = redisResult;
+  } else {
+    // Fall back to in-memory store
+    result = checkRateLimitMemory(ip, now);
+  }
 
   // Check if limit exceeded
-  if (entry.count > RATE_LIMIT_MAX_REQUESTS) {
-    const retryAfterSeconds = Math.ceil((entry.resetAt - now) / 1000);
+  if (!result.success) {
+    const retryAfterSeconds = Math.ceil((result.reset - now) / 1000);
 
     // Log rate limit violation
     console.warn(
       `[Rate Limit] IP ${ip} exceeded limit on ${request.nextUrl.pathname} ` +
-      `(${entry.count} requests in window, limit: ${RATE_LIMIT_MAX_REQUESTS})`
+        `(limit: ${result.limit}, remaining: ${result.remaining})`
     );
 
     // Return 429 Too Many Requests
@@ -132,15 +250,14 @@ export function checkRateLimit(request: NextRequest): NextResponse | null {
 
     // Add standard rate limit headers
     response.headers.set('Retry-After', retryAfterSeconds.toString());
-    response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString());
-    response.headers.set('X-RateLimit-Remaining', '0');
-    response.headers.set('X-RateLimit-Reset', entry.resetAt.toString());
+    response.headers.set('X-RateLimit-Limit', result.limit.toString());
+    response.headers.set('X-RateLimit-Remaining', result.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', result.reset.toString());
 
     return response;
   }
 
-  // Request allowed, update entry
-  rateLimitStore.set(ip, entry);
+  // Request allowed
   return null;
 }
 
@@ -148,23 +265,40 @@ export function checkRateLimit(request: NextRequest): NextResponse | null {
  * Get rate limit headers for successful requests
  * Allows clients to track their usage
  */
-export function getRateLimitHeaders(request: NextRequest): Record<string, string> {
+export async function getRateLimitHeaders(
+  request: NextRequest
+): Promise<Record<string, string>> {
   const ip = getClientIp(request);
-  const entry = rateLimitStore.get(ip);
 
-  if (!entry) {
-    return {
-      'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
-      'X-RateLimit-Remaining': RATE_LIMIT_MAX_REQUESTS.toString(),
+  // Try Redis first
+  const redisResult = await checkRateLimitRedis(ip);
+
+  let result: { limit: number; remaining: number; reset: number };
+
+  if (redisResult) {
+    result = redisResult;
+  } else {
+    // Fall back to in-memory
+    const entry = rateLimitStore.get(ip);
+
+    if (!entry) {
+      return {
+        'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+        'X-RateLimit-Remaining': RATE_LIMIT_MAX_REQUESTS.toString(),
+      };
+    }
+
+    result = {
+      limit: RATE_LIMIT_MAX_REQUESTS,
+      remaining: Math.max(0, RATE_LIMIT_MAX_REQUESTS - entry.count),
+      reset: entry.resetAt,
     };
   }
 
-  const remaining = Math.max(0, RATE_LIMIT_MAX_REQUESTS - entry.count);
-
   return {
-    'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
-    'X-RateLimit-Remaining': remaining.toString(),
-    'X-RateLimit-Reset': entry.resetAt.toString(),
+    'X-RateLimit-Limit': result.limit.toString(),
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.reset.toString(),
   };
 }
 
@@ -172,21 +306,21 @@ export function getRateLimitHeaders(request: NextRequest): Record<string, string
  * Apply rate limiting to a Next.js middleware response
  * Usage in middleware.ts:
  *
- * const rateLimitResponse = checkRateLimit(request);
+ * const rateLimitResponse = await checkRateLimit(request);
  * if (rateLimitResponse) return rateLimitResponse;
  */
-export function applyRateLimit(
+export async function applyRateLimit(
   request: NextRequest,
   response: NextResponse
-): NextResponse {
+): Promise<NextResponse> {
   // Check rate limit
-  const limitResponse = checkRateLimit(request);
+  const limitResponse = await checkRateLimit(request);
   if (limitResponse) {
     return limitResponse;
   }
 
   // Add rate limit headers to successful response
-  const headers = getRateLimitHeaders(request);
+  const headers = await getRateLimitHeaders(request);
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
   }

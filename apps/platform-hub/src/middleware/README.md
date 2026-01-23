@@ -164,31 +164,36 @@ When rate limit is exceeded, clients receive:
 
 ## Implementation Details
 
-### In-Memory Storage
+### Redis-Based Rate Limiting (Production)
 
-The MVP implementation uses in-memory storage (`Map`) for rate limit tracking. This is suitable for:
+The implementation uses **@upstash/ratelimit** with Redis for production deployments. This provides:
+
+- **Multi-instance consistency:** Rate limits are shared across all instances
+- **Atomic operations:** No race conditions (INCR is atomic in Redis)
+- **Sliding window algorithm:** More accurate than fixed windows
+- **Automatic persistence:** Survives server restarts
+- **Edge Runtime compatible:** Works with Vercel Edge Functions
+
+**Requirements:**
+```bash
+REDIS_URL=https://your-redis.upstash.io
+REDIS_TOKEN=your-token-here
+```
+
+Get credentials from [Upstash Console](https://console.upstash.com/).
+
+### In-Memory Fallback
+
+When Redis is not configured (REDIS_URL or REDIS_TOKEN missing), the system automatically falls back to in-memory storage (`Map`). This is suitable for:
 
 - Development environments
 - Single-instance deployments
-- Low to moderate traffic
+- Testing
 
 **Limitations:**
 - Resets on server restart
 - Not shared across multiple instances
-- Memory grows with unique IPs (mitigated by automatic cleanup)
-
-### Production Considerations
-
-For production deployments with multiple instances, consider:
-
-1. **Redis-based rate limiting** using `@upstash/ratelimit`:
-   ```bash
-   pnpm add @upstash/ratelimit @upstash/redis
-   ```
-
-2. **Vercel Edge Config** for serverless deployments
-
-3. **CloudFlare Rate Limiting** at the CDN level
+- Memory grows with unique IPs (mitigated by automatic cleanup every 5 minutes)
 
 ### IP Extraction
 
