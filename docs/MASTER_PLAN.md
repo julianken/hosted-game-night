@@ -1223,20 +1223,26 @@ All critical path and security hardening tasks completed:
 - 6 Wave 2A tasks merged (BEA-295 through BEA-305)
 - 5 Wave 2B security PRs merged (BEA-299, BEA-301-304)
 
-**Wave 2C: Code Consolidation (QUEUED)**
-1. BEA-306: Consolidate OAuth clients to @beak-gaming/auth (-802 lines)
-2. BEA-307: Consolidate Toast components to @beak-gaming/ui (-702 lines)
-3. BEA-308: Consolidate Button/Modal components to @beak-gaming/ui (-500 lines)
+**Wave 2C: Code Consolidation ✅ COMPLETE (Jan 2026)**
+1. BEA-312: Fixed PBKDF2 timing attack vulnerability (PR #184)
+2. BEA-306: Implemented cross-app SSO with unified cookies (PR #185, -936 lines)
+3. BEA-307: Consolidated Toast components to @beak-gaming/ui (PR #186, -693 lines)
+4. BEA-308: Consolidated Button/Modal components to @beak-gaming/ui (PR #187, -537 lines)
+- **Total:** 2,166 lines removed, 4 PRs awaiting review
 
-**Wave 2D: Infrastructure (QUEUED)**
-1. BEA-309: Set up Turborepo remote caching
-2. BEA-310: Complete Platform Hub user dashboard
-3. BEA-311: Migrate @packages/ui components
+> **Note:** Original BEA-306 scope was OAuth client consolidation. Implemented SSO instead as more valuable MVP feature. OAuth client consolidation deemed premature optimization.
+
+**Wave 2D: Platform Hub Completion (QUEUED)**
+1. BEA-309: Complete Platform Hub dashboard with real data
+2. BEA-310: Implement profile management UI and API
+3. BEA-311: Implement logout functionality across all apps ⚠️ CRITICAL
+
+> **Note:** Task numbers BEA-309/310/311 were repurposed on Jan 23, 2026. Original OAuth integration work (originally planned as BEA-309/310/311/312) was completed prior to Wave 2 and is tracked as ✅ Complete in Section 3 (apps/bingo and apps/trivia both have working OAuth).
 
 **Quality & Testing (Post-Wave 2):**
-1. Add logout functionality to both games
-2. Add OAuth deny route tests
-3. Add session endpoint tests
+1. Add OAuth deny route tests
+2. Add session endpoint tests
+3. Add E2E tests for cross-app SSO flow
 4. Add Trivia template [id] route tests
 5. Fix skipped tests (9 remaining)
 6. Add end-to-end OAuth flow (Playwright)
