@@ -1,0 +1,41 @@
+-- Migration: Re-enable Row-Level Security on bingo_templates
+-- Fixes: CRIT-1
+-- Issue: Database security vulnerability - RLS was manually disabled during testing
+-- Related: docs/DATABASE_CLEANUP_NEEDED.md (Step 1)
+--
+-- Context:
+-- RLS policies were created in 20260119000002_create_bingo_templates.sql
+-- but RLS was manually disabled in production database for testing.
+-- This migration re-enables RLS to restore security.
+
+-- Re-enable Row Level Security on bingo_templates table
+ALTER TABLE public.bingo_templates ENABLE ROW LEVEL SECURITY;
+
+-- Verification queries (run after migration to confirm RLS is active):
+--
+-- 1. Check RLS enabled:
+-- SELECT tablename, rowsecurity
+-- FROM pg_tables
+-- WHERE schemaname = 'public' AND tablename = 'bingo_templates';
+-- Expected: rowsecurity = t (true)
+--
+-- 2. Check existing policies are still active:
+-- SELECT policyname, cmd, roles
+-- FROM pg_policies
+-- WHERE schemaname = 'public' AND tablename = 'bingo_templates'
+-- ORDER BY policyname;
+-- Expected: 4 policies (SELECT, INSERT, UPDATE, DELETE)
+--
+-- 3. Test unauthorized access (without auth token):
+-- SELECT * FROM public.bingo_templates;
+-- Expected: Returns only rows matching auth.uid() or empty if no auth
+--
+-- 4. Test authorized access (with auth token):
+-- Should only see templates where user_id = auth.uid()
+
+-- SECURITY IMPACT:
+-- After this migration:
+-- ✅ Unauthenticated users CANNOT read any templates
+-- ✅ Authenticated users can ONLY read/modify their own templates (user_id = auth.uid())
+-- ✅ Users cannot create templates with fake user_id values
+-- ✅ Database enforces authorization at PostgreSQL level (not just app level)

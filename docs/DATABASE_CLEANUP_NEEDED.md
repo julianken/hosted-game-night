@@ -34,12 +34,15 @@ VALUES (
 
 ## Required Cleanup Actions
 
-### Step 1: Re-enable Row Level Security
+### Step 1: Re-enable Row Level Security ✅ FIXED
+**Status:** Fixed by migration `20260123000002_enable_bingo_templates_rls.sql` (CRIT-1)
+
 ```sql
 ALTER TABLE public.bingo_templates ENABLE ROW LEVEL SECURITY;
 ```
 
-### Step 2: Restore Foreign Key Constraint
+### Step 2: Restore Foreign Key Constraint ✅ FIXED
+**Status:** Fixed by migration `20260122172524_restore_bingo_templates_fk.sql` (CRIT-2)
 ```sql
 ALTER TABLE public.bingo_templates
 ADD CONSTRAINT bingo_templates_user_id_fkey
@@ -48,7 +51,9 @@ REFERENCES public.profiles(id)
 ON DELETE CASCADE;
 ```
 
-### Step 3: Delete Test Data
+### Step 3: Delete Test Data ✅ FIXED
+**Status:** Fixed by migration `20260122172524_restore_bingo_templates_fk.sql` (CRIT-2)
+
 ```sql
 DELETE FROM public.bingo_templates
 WHERE user_id = '00000000-0000-0000-0000-000000000000';
@@ -96,7 +101,17 @@ WHERE user_id = '00000000-0000-0000-0000-000000000000';
 
 These cleanup actions should be performed **immediately** as the current state is insecure for production use.
 
+## Cleanup Status Summary
+
+| Issue | Status | Migration | Task |
+|-------|--------|-----------|------|
+| RLS Disabled | ✅ FIXED | `20260123000002_enable_bingo_templates_rls.sql` | CRIT-1 |
+| FK Constraint Removed | ✅ FIXED | `20260122172524_restore_bingo_templates_fk.sql` | CRIT-2 |
+| Test Data | ✅ FIXED | Cleaned by CRIT-2 migration | CRIT-2 |
+
 ## Related Files
 
-- Migration: `supabase/migrations/20260119000002_create_bingo_templates.sql`
+- Original migration: `supabase/migrations/20260119000002_create_bingo_templates.sql`
+- RLS fix (CRIT-1): `supabase/migrations/20260123000002_enable_bingo_templates_rls.sql`
+- FK fix (CRIT-2): `supabase/migrations/20260122172524_restore_bingo_templates_fk.sql`
 - Test Results: `MANUAL_TESTING_RESULTS.md`
