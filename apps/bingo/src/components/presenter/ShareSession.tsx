@@ -247,7 +247,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
           {/* Close button */}
           <button
             onClick={() => setShowPanel(false)}
-            className="absolute top-3 right-3 min-w-[44px] min-h-[44px] flex items-center justify-center
+            className="absolute top-3 right-3 min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center
               rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/30
               transition-colors"
             aria-label="Close share panel"
