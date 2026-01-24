@@ -1,10 +1,13 @@
 name: E2E Tests
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# DISABLED: Temporarily disabled to conserve GitHub Actions minutes
+# Re-enable by uncommenting the 'on:' section below
+on: workflow_dispatch  # Manual trigger only
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
