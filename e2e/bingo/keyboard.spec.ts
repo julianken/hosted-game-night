@@ -1,13 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth';
 import { waitForHydration, pressKey } from '../utils/helpers';
 
 test.describe('Bingo Keyboard Shortcuts', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/play');
+  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
   });
 
-  test('Space key calls a ball', async ({ page }) => {
+  test('Space key calls a ball', async ({ authenticatedBingoPage: page }) => {
     // Get initial ball count
     const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
     const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
@@ -25,7 +24,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(newNum).toBeGreaterThan(initialNum);
   });
 
-  test('P key toggles pause', async ({ page }) => {
+  test('P key toggles pause', async ({ authenticatedBingoPage: page }) => {
     // Start a game first
     await page.keyboard.press('Space');
     await page.waitForTimeout(2000);
@@ -49,7 +48,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }
   });
 
-  test('U key undoes last call', async ({ page }) => {
+  test('U key undoes last call', async ({ authenticatedBingoPage: page }) => {
     // Call two balls
     await page.keyboard.press('Space');
     await page.waitForTimeout(2000);
@@ -69,7 +68,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(numAfter).toBeLessThan(numBefore);
   });
 
-  test('R key resets the game', async ({ page }) => {
+  test('R key resets the game', async ({ authenticatedBingoPage: page }) => {
     // Call some balls first
     await page.keyboard.press('Space');
     await page.waitForTimeout(2000);
@@ -96,7 +95,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await expect(page.getByText(/0\s*called/i)).toBeVisible({ timeout: 2000 });
   });
 
-  test('M key toggles audio', async ({ page }) => {
+  test('M key toggles audio', async ({ authenticatedBingoPage: page }) => {
     // Find audio toggle state
     const audioToggle = page.getByRole('switch').filter({ hasText: /audio/i }).or(
       page.locator('[aria-label*="audio"]')
@@ -125,7 +124,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }
   });
 
-  test('keyboard shortcuts do not work when typing in input', async ({ page }) => {
+  test('keyboard shortcuts do not work when typing in input', async ({ authenticatedBingoPage: page }) => {
     // Find any input field (if present)
     const input = page.locator('input').first();
 
@@ -149,8 +148,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }
   });
 
-  test('display page F key toggles fullscreen', async ({ page, context }) => {
-    await page.goto('/play');
+  test('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -172,8 +170,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(await fullscreenIndicator.count()).toBeGreaterThanOrEqual(0);
   });
 
-  test('display page ? key opens help modal', async ({ page, context }) => {
-    await page.goto('/play');
+  test('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -201,7 +198,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }
   });
 
-  test('multiple rapid key presses are handled correctly', async ({ page }) => {
+  test('multiple rapid key presses are handled correctly', async ({ authenticatedBingoPage: page }) => {
     // Get initial count
     const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
     const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
