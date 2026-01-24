@@ -1,10 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth';
 import { waitForHydration, waitForSyncConnection } from '../utils/helpers';
 
 test.describe('Bingo Dual-Screen Synchronization', () => {
-  test('presenter and display sync on connection', async ({ page, context }) => {
+  test('presenter and display sync on connection', async ({ authenticatedBingoPage: page, context }) => {
     // Open presenter
-    await page.goto('/play');
     await waitForHydration(page);
 
     // Check presenter shows sync ready status
@@ -23,9 +22,8 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(displayPage.locator('[class*="bg-success"]').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('ball called on presenter appears on display', async ({ page, context }) => {
+  test('ball called on presenter appears on display', async ({ authenticatedBingoPage: page, context }) => {
     // Setup presenter
-    await page.goto('/play');
     await waitForHydration(page);
 
     // Open display
@@ -57,8 +55,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('multiple balls sync correctly', async ({ page, context }) => {
-    await page.goto('/play');
+  test('multiple balls sync correctly', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -88,8 +85,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(displayBoard).toBeVisible();
   });
 
-  test('pattern change syncs to display', async ({ page, context }) => {
-    await page.goto('/play');
+  test('pattern change syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -117,8 +113,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('game reset syncs to display', async ({ page, context }) => {
-    await page.goto('/play');
+  test('game reset syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -154,8 +149,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('undo syncs to display', async ({ page, context }) => {
-    await page.goto('/play');
+  test('undo syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -190,8 +184,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('display reconnects after visibility change', async ({ page, context }) => {
-    await page.goto('/play');
+  test('display reconnects after visibility change', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -218,8 +211,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(syncIndicator).toBeVisible({ timeout: 5000 });
   });
 
-  test('closing display does not affect presenter', async ({ page, context }) => {
-    await page.goto('/play');
+  test('closing display does not affect presenter', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
