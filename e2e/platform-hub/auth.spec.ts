@@ -80,14 +80,14 @@ test.describe('@critical Platform Hub Authentication', () => {
 
       // Note: MSW mock auto-confirms email, so login works immediately
 
-      // Now attempt to login (default redirect is home page)
+      // Now attempt to login (default redirect is dashboard)
       await page.goto(`${BASE_URL}/login`);
       await page.locator('input[name="email"]').first().fill(email);
       await page.locator('input[name="password"]').first().fill(password);
       await page.locator('button[type="submit"]').first().click({ force: true });
 
-      // Should redirect after login (default is home page)
-      await expect(page).toHaveURL(`${BASE_URL}/`, { timeout: 10000 });
+      // Should redirect after login (default is dashboard)
+      await expect(page).toHaveURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
 
       // Verify user is authenticated (logout button visible in navigation)
       await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible();
