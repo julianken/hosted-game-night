@@ -1,18 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth';
 import { waitForHydration } from '../utils/helpers';
 
 test.describe('Trivia Dual-Screen Synchronization', () => {
   test.describe('Initial Connection', () => {
-    test('presenter shows sync ready status before display opens', async ({ page }) => {
-      await page.goto('/play');
+    test('presenter shows sync ready status before display opens', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       // Check presenter shows sync ready status
       await expect(page.getByText(/sync ready|sync active/i)).toBeVisible();
     });
 
-    test('presenter and display sync on connection', async ({ page, context }) => {
-      await page.goto('/play');
+    test('presenter and display sync on connection', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Open display from presenter
@@ -31,8 +29,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.locator('[class*="bg-success"]').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('display shows waiting state initially', async ({ page, context }) => {
-      await page.goto('/play');
+    test('display shows waiting state initially', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       const [displayPage] = await Promise.all([
@@ -48,8 +45,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Changes in Presenter Reflect in Display', () => {
-    test('question displayed on presenter syncs to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('question displayed on presenter syncs to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Add team
@@ -76,8 +72,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/round 1/i)).toBeVisible();
     });
 
-    test('game status changes sync to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('game status changes sync to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Add team
@@ -107,8 +102,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/round 1/i)).toBeVisible();
     });
 
-    test('question navigation syncs display index', async ({ page, context }) => {
-      await page.goto('/play');
+    test('question navigation syncs display index', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -147,8 +141,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/question 2 of/i)).toBeVisible();
     });
 
-    test('pause state syncs to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('pause state syncs to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -174,8 +167,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/paused/i)).toBeVisible();
     });
 
-    test('emergency pause blanks display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('emergency pause blanks display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -203,8 +195,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Score Updates Sync Correctly', () => {
-    test('team scores sync to display scoreboard', async ({ page, context }) => {
-      await page.goto('/play');
+    test('team scores sync to display scoreboard', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Add teams
@@ -248,8 +239,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       }
     });
 
-    test('multiple teams score updates sync correctly', async ({ page, context }) => {
-      await page.goto('/play');
+    test('multiple teams score updates sync correctly', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Add multiple teams
@@ -300,8 +290,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Round Completion and Progression', () => {
-    test('round completion syncs scoreboard to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('round completion syncs scoreboard to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -335,8 +324,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       }
     });
 
-    test('next round transition syncs to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('next round transition syncs to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -382,8 +370,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Timer Sync', () => {
-    test('timer state syncs to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('timer state syncs to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -405,8 +392,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Game Reset Sync', () => {
-    test('game reset syncs to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('game reset syncs to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -443,8 +429,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Connection Resilience', () => {
-    test('closing display does not affect presenter', async ({ page, context }) => {
-      await page.goto('/play');
+    test('closing display does not affect presenter', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -473,8 +458,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // No error should occur
     });
 
-    test('display reconnects after visibility change', async ({ page, context }) => {
-      await page.goto('/play');
+    test('display reconnects after visibility change', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -510,8 +494,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(syncIndicator).toBeVisible({ timeout: 5000 });
     });
 
-    test('can reopen display after closing', async ({ page, context }) => {
-      await page.goto('/play');
+    test('can reopen display after closing', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -541,8 +524,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage2.locator('[class*="bg-success"]').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('display receives state on reconnect', async ({ page, context }) => {
-      await page.goto('/play');
+    test('display receives state on reconnect', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -570,8 +552,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Theme Sync', () => {
-    test('theme changes sync from presenter to display', async ({ page, context }) => {
-      await page.goto('/play');
+    test('theme changes sync from presenter to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       const [displayPage] = await Promise.all([
@@ -591,8 +572,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Multiple Display Sessions', () => {
-    test('opening second display works correctly', async ({ page, context }) => {
-      await page.goto('/play');
+    test('opening second display works correctly', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Open first display
@@ -614,8 +594,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Sync Message Types', () => {
-    test('STATE_UPDATE message syncs game state', async ({ page, context }) => {
-      await page.goto('/play');
+    test('STATE_UPDATE message syncs game state', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -636,8 +615,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayContent).toBeVisible();
     });
 
-    test('REQUEST_SYNC triggers state refresh', async ({ page, context }) => {
-      await page.goto('/play');
+    test('REQUEST_SYNC triggers state refresh', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -663,8 +641,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Edge Cases', () => {
-    test('rapid state changes sync correctly', async ({ page, context }) => {
-      await page.goto('/play');
+    test('rapid state changes sync correctly', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -694,8 +671,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(presenterContent).toBeVisible();
     });
 
-    test('handles display opened before teams added', async ({ page, context }) => {
-      await page.goto('/play');
+    test('handles display opened before teams added', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
       // Open display before any setup
