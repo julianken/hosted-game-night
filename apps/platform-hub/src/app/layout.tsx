@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Header, Footer } from '@/components';
@@ -6,6 +6,7 @@ import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvi
 import { AuthProvider } from '@beak-gaming/auth';
 import { ToastProvider } from '@beak-gaming/ui';
 import { validateEnvironment } from '@/lib/env-validation';
+import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 
 // Validate environment variables at startup
 // This will throw and prevent the app from starting if configuration is invalid
@@ -26,13 +27,30 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Beak Gaming Platform',
-  description: 'Fun, accessible games designed for retirement communities - Bingo, Trivia, and more',
+  description:
+    'Fun, accessible games designed for retirement communities - Bingo, Trivia, and more',
   keywords: ['bingo', 'trivia', 'games', 'retirement', 'senior', 'accessible'],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Beak Gaming Platform',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: 'Beak Gaming Platform',
     description: 'Fun, accessible games designed for retirement communities',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1e40af',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -42,6 +60,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
@@ -49,13 +70,12 @@ export default function RootLayout({
           <AuthProvider>
             <ToastProvider position="top-right">
               <Header />
-              <div className="flex-1 flex flex-col">
-                {children}
-              </div>
+              <div className="flex-1 flex flex-col">{children}</div>
               <Footer />
             </ToastProvider>
           </AuthProvider>
         </ErrorBoundaryProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
