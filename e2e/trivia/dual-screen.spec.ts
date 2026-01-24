@@ -496,9 +496,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(500);
 
       // Reopen display
-      const popupPromise = page.waitForEvent('popup');
+      const popupPromise2 = page.waitForEvent('popup');
       await page.getByRole('button', { name: /open display/i }).click();
-      const displayPage2 = await popupPromise;
+      const displayPage2 = await popupPromise2;
 
       await waitForHydration(displayPage2);
 
