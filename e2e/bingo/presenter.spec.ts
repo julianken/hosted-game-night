@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration, clickButton, pressKey } from '../utils/helpers';
+import { waitForHydration } from '../utils/helpers';
 
 test.describe('Bingo Presenter View', () => {
   test.beforeEach(async ({ authenticatedBingoPage: page }) => {

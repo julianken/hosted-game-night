@@ -17,7 +17,7 @@ test.describe('Bingo Display Page', () => {
     await expect(page.getByText(/invalid session/i)).toBeVisible();
   });
 
-  test('displays correctly when opened from presenter', async ({ authenticatedBingoPage: page, context }) => {
+  test('displays correctly when opened from presenter', async ({ authenticatedBingoPage: page }) => {
     // First go to presenter view
     await waitForHydration(page);
 
@@ -33,7 +33,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.getByRole('heading', { name: /beak bingo/i })).toBeVisible();
   });
 
-  test('shows waiting state when no game started', async ({ authenticatedBingoPage: page, context }) => {
+  test('shows waiting state when no game started', async ({ authenticatedBingoPage: page }) => {
     // Open presenter first
     await waitForHydration(page);
 
@@ -49,7 +49,7 @@ test.describe('Bingo Display Page', () => {
     await expect(waitingText).toBeVisible();
   });
 
-  test('displays current ball when game is active', async ({ authenticatedBingoPage: page, context }) => {
+  test('displays current ball when game is active', async ({ authenticatedBingoPage: page }) => {
     // Open presenter
     await waitForHydration(page);
 
@@ -71,7 +71,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayContent).toBeVisible();
   });
 
-  test('shows bingo board with called numbers', async ({ authenticatedBingoPage: page, context }) => {
+  test('shows bingo board with called numbers', async ({ authenticatedBingoPage: page }) => {
     // Setup presenter
     await waitForHydration(page);
 
@@ -93,7 +93,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.getByText(/called numbers/i)).toBeVisible();
   });
 
-  test('shows connection status indicator', async ({ authenticatedBingoPage: page, context }) => {
+  test('shows connection status indicator', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -110,7 +110,7 @@ test.describe('Bingo Display Page', () => {
     await expect(syncIndicator).toBeVisible({ timeout: 10000 });
   });
 
-  test('displays winning pattern', async ({ authenticatedBingoPage: page, context }) => {
+  test('displays winning pattern', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -128,7 +128,7 @@ test.describe('Bingo Display Page', () => {
     await expect(patternSection.first()).toBeVisible();
   });
 
-  test('has fullscreen button', async ({ authenticatedBingoPage: page, context }) => {
+  test('has fullscreen button', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -142,7 +142,7 @@ test.describe('Bingo Display Page', () => {
     await expect(fullscreenBtn).toBeVisible();
   });
 
-  test('has help button for keyboard shortcuts', async ({ authenticatedBingoPage: page, context }) => {
+  test('has help button for keyboard shortcuts', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -156,7 +156,7 @@ test.describe('Bingo Display Page', () => {
     await expect(helpBtn).toBeVisible();
   });
 
-  test('footer shows fullscreen hint', async ({ authenticatedBingoPage: page, context }) => {
+  test('footer shows fullscreen hint', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
