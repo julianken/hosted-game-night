@@ -7,6 +7,7 @@ import { AuthProvider } from '@beak-gaming/auth';
 import { ToastProvider } from '@beak-gaming/ui';
 import { validateEnvironment } from '@/lib/env-validation';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
+import { SessionTimeoutMonitor } from '@/components/SessionTimeoutMonitor';
 
 // Validate environment variables at startup
 // This will throw and prevent the app from starting if configuration is invalid
@@ -68,6 +69,7 @@ export default function RootLayout({
       >
         <ErrorBoundaryProvider>
           <AuthProvider>
+            <SessionTimeoutMonitor />
             <ToastProvider position="top-right">
               <Header />
               <div className="flex-1 flex flex-col">{children}</div>

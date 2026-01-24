@@ -18,11 +18,13 @@ export const dynamic = 'force-dynamic';
  * - LoginForm component with validation
  * - Easy navigation to signup and password reset
  * - OAuth redirect support (preserves authorization_id parameter)
+ * - Session expiration messaging (shows when session_expired=true)
  */
 export default async function LoginPage(props: {
-  searchParams: Promise<{ redirect?: string; authorization_id?: string }>;
+  searchParams: Promise<{ redirect?: string; authorization_id?: string; session_expired?: string }>;
 }) {
   const searchParams = await props.searchParams;
+  const sessionExpired = searchParams.session_expired === 'true';
 
   return (
     <main className="flex-1 flex items-center justify-center px-4 py-12">
@@ -48,6 +50,37 @@ export default async function LoginPage(props: {
           </svg>
           Back to Home
         </Link>
+
+        {/* Session expired notification */}
+        {sessionExpired && (
+          <div
+            role="alert"
+            className="mb-6 p-5 rounded-xl bg-warning/10 border-2 border-warning text-foreground"
+          >
+            <div className="flex items-start gap-3">
+              <svg
+                className="w-7 h-7 mt-0.5 flex-shrink-0 text-warning"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div>
+                <h2 className="text-xl font-semibold mb-1">
+                  Your session has expired
+                </h2>
+                <p className="text-lg">
+                  Please sign in again to continue.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="text-center mb-10">
