@@ -2,6 +2,7 @@
   "name": "beak-gaming-platform",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "A unified gaming platform for retirement communities - Bingo, Trivia, and more",
   "scripts": {
     "dev": "turbo dev",

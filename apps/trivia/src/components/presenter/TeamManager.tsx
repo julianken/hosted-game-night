@@ -87,7 +87,7 @@ export function TeamManager({
                   <button
                     onClick={() => handleStartEdit(team)}
                     aria-label={`Rename team ${team.name}`}
-                    className="px-2 py-1 text-sm text-muted-foreground
+                    className="px-3 min-h-[var(--size-touch)] text-sm text-muted-foreground
                       hover:text-foreground hover:bg-muted rounded-lg
                       transition-colors"
                     title="Rename team"
@@ -98,7 +98,7 @@ export function TeamManager({
                     <button
                       onClick={() => onRemoveTeam(team.id)}
                       aria-label={`Remove team ${team.name}`}
-                      className="px-2 py-1 text-sm text-red-500
+                      className="px-3 min-h-[var(--size-touch)] text-sm text-red-500
                         hover:text-red-600 hover:bg-red-500/10 rounded-lg
                         transition-colors"
                       title="Remove team"

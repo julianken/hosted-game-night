@@ -312,7 +312,7 @@ function AudienceDisplay({
             {/* Fullscreen toggle button */}
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg hover:bg-muted/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] p-2 rounded-lg hover:bg-muted/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               title={isFullscreen ? 'Exit fullscreen (F)' : 'Enter fullscreen (F)'}
               aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             >

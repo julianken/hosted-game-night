@@ -13,8 +13,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('shows game status indicator', async ({ authenticatedTriviaPage: page }) => {
-      // Should show setup status initially
-      await expect(page.getByText(/setup/i)).toBeVisible();
+      // Should show setup status initially - look for the status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^setup$/i })).toBeVisible();
     });
 
     test('shows Open Display button', async ({ authenticatedTriviaPage: page }) => {
@@ -29,7 +29,8 @@ test.describe('Trivia Presenter View', () => {
     test('shows keyboard shortcuts reference', async ({ authenticatedTriviaPage: page }) => {
       await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
       await expect(page.getByText(/navigate/i)).toBeVisible();
-      await expect(page.getByText(/peek/i)).toBeVisible();
+      // Look for "Peek answer" text in shortcuts section (not the button)
+      await expect(page.getByText('Peek answer')).toBeVisible();
     });
   });
 
@@ -104,8 +105,9 @@ test.describe('Trivia Presenter View', () => {
 
       await expect(page.getByText(/table 1/i)).toBeVisible();
 
-      // Remove the team
-      const removeBtn = page.getByRole('button', { name: /remove/i }).first();
+      // Remove the team - scope to Table 1 team card
+      const team1Card = page.locator('[class*="team"], [data-testid*="team"]').filter({ hasText: /table 1/i });
+      const removeBtn = team1Card.getByRole('button', { name: /remove/i });
       await removeBtn.click();
       await page.waitForTimeout(300);
 
@@ -119,8 +121,9 @@ test.describe('Trivia Presenter View', () => {
       await addTeamBtn.click();
       await page.waitForTimeout(300);
 
-      // Click rename button
-      const renameBtn = page.getByRole('button', { name: /rename/i }).first();
+      // Click rename button - scope to Table 1 team card
+      const team1Card = page.locator('[class*="team"], [data-testid*="team"]').filter({ hasText: /table 1/i });
+      const renameBtn = team1Card.getByRole('button', { name: /rename/i });
       await renameBtn.click();
       await page.waitForTimeout(200);
 
@@ -147,9 +150,8 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Question Navigation', () => {
     test('shows question list', async ({ authenticatedTriviaPage: page }) => {
-      // Question list section should be visible
-      const questionList = page.locator('section').filter({ hasText: /round 1/i });
-      await expect(questionList.first()).toBeVisible();
+      // Question list section should be visible - use heading to find the section
+      await expect(page.getByRole('heading', { name: /round 1/i })).toBeVisible();
     });
 
     test('can navigate questions with keyboard', async ({ authenticatedTriviaPage: page }) => {
@@ -249,45 +251,53 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can increase team score with + button', async ({ authenticatedTriviaPage: page }) => {
-      // Find the plus button
-      const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
+      // Scope to team scores section
+      const scoresSection = page.locator('section, div').filter({ has: page.getByRole('heading', { name: /team scores/i }) });
+
+      // Find the plus button within scores section
+      const plusBtn = scoresSection.getByRole('button', { name: /add 1 point/i });
       await expect(plusBtn).toBeVisible();
 
       // Initial score should be 0
-      const scoreDisplay = page.getByRole('button', { name: /score.*0|0.*click to edit/i }).first();
+      const scoreDisplay = scoresSection.getByRole('button', { name: /score.*0|0.*click to edit/i });
       if (await scoreDisplay.isVisible()) {
         await plusBtn.click();
         await page.waitForTimeout(300);
 
         // Score should increase
-        const newScoreDisplay = page.getByRole('button', { name: /score.*1|1.*click to edit/i }).first();
+        const newScoreDisplay = scoresSection.getByRole('button', { name: /score.*1|1.*click to edit/i });
         await expect(newScoreDisplay).toBeVisible();
       }
     });
 
     test('can decrease team score with - button', async ({ authenticatedTriviaPage: page }) => {
+      // Scope to team scores section
+      const scoresSection = page.locator('section, div').filter({ has: page.getByRole('heading', { name: /team scores/i }) });
+
       // First increase score
-      const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
+      const plusBtn = scoresSection.getByRole('button', { name: /add 1 point/i });
       await plusBtn.click();
       await page.waitForTimeout(200);
       await plusBtn.click();
       await page.waitForTimeout(200);
 
       // Now decrease
-      const minusBtn = page.getByRole('button', { name: /subtract 1 point/i }).first();
+      const minusBtn = scoresSection.getByRole('button', { name: /subtract 1 point/i });
       await minusBtn.click();
       await page.waitForTimeout(300);
     });
 
     test('can edit score directly by clicking', async ({ authenticatedTriviaPage: page }) => {
-      const scoreDisplay = page.getByRole('button', { name: /click to edit/i }).first();
+      // Scope to team scores section
+      const scoresSection = page.locator('section, div').filter({ has: page.getByRole('heading', { name: /team scores/i }) });
+      const scoreDisplay = scoresSection.getByRole('button', { name: /click to edit/i });
 
       if (await scoreDisplay.isVisible()) {
         await scoreDisplay.click();
         await page.waitForTimeout(200);
 
-        // Input should appear
-        const input = page.locator('input[type="number"]').first();
+        // Input should appear within scores section
+        const input = scoresSection.locator('input[type="number"]');
         await input.fill('5');
         await input.press('Enter');
         await page.waitForTimeout(300);
@@ -295,8 +305,11 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('shows per-round score breakdown', async ({ authenticatedTriviaPage: page }) => {
+      // Scope to team scores section
+      const scoresSection = page.locator('section, div').filter({ has: page.getByRole('heading', { name: /team scores/i }) });
+
       // Add some points
-      const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
+      const plusBtn = scoresSection.getByRole('button', { name: /add 1 point/i });
       await plusBtn.click();
       await page.waitForTimeout(200);
 
@@ -473,8 +486,8 @@ test.describe('Trivia Presenter View', () => {
       await page.keyboard.press('Shift+?');
       await page.waitForTimeout(500);
 
-      // Modal should open
-      const modal = page.locator('[role="dialog"]');
+      // Keyboard shortcuts modal should open - look for the modal with specific aria-label
+      const modal = page.getByLabel('Keyboard Shortcuts', { exact: true });
       if (await modal.isVisible()) {
         await expect(modal).toBeVisible();
       }
@@ -483,9 +496,8 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Theme Selector', () => {
     test('shows theme selector section', async ({ authenticatedTriviaPage: page }) => {
-      // Look for theme-related elements
-      const themeSection = page.getByText(/theme|light|dark/i);
-      await expect(themeSection.first()).toBeVisible();
+      // Look for theme-related heading or label
+      await expect(page.getByRole('heading', { name: /theme/i })).toBeVisible();
     });
   });
 });

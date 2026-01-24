@@ -85,7 +85,7 @@ export function QuestionDisplay({
             aria-pressed={peekAnswer}
             aria-label={peekAnswer ? 'Hide answer preview' : 'Peek at correct answer (visible only to presenter)'}
             className={`
-              flex items-center justify-center gap-2 w-24 py-1.5 rounded-lg text-sm font-medium
+              flex items-center justify-center gap-2 w-24 min-h-[var(--size-touch)] px-3 rounded-lg text-sm font-medium
               transition-colors duration-200
               ${
                 peekAnswer

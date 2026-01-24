@@ -322,7 +322,7 @@ function AudienceDisplay({
             {/* Fullscreen toggle */}
             <button
               onClick={toggleFullscreen}
-              className="w-10 h-10 flex items-center justify-center rounded-lg
+              className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
                 text-muted-foreground hover:text-foreground hover:bg-muted/30
                 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}

@@ -17,18 +17,18 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('displays bingo board with B-I-N-G-O columns @high', async ({ authenticatedBingoPage: page }) => {
-    // Check for column headers
-    await expect(page.getByText('B').first()).toBeVisible();
-    await expect(page.getByText('I').first()).toBeVisible();
-    await expect(page.getByText('N').first()).toBeVisible();
-    await expect(page.getByText('G').first()).toBeVisible();
-    await expect(page.getByText('O').first()).toBeVisible();
+    // Check for column headers - scope to the bingo board area
+    const bingoBoard = page.locator('[class*="board"], [data-testid*="board"], main').first();
+    await expect(bingoBoard.getByText('B', { exact: true })).toBeVisible();
+    await expect(bingoBoard.getByText('I', { exact: true })).toBeVisible();
+    await expect(bingoBoard.getByText('N', { exact: true })).toBeVisible();
+    await expect(bingoBoard.getByText('G', { exact: true })).toBeVisible();
+    await expect(bingoBoard.getByText('O', { exact: true })).toBeVisible();
   });
 
   test('shows pattern selector @high', async ({ authenticatedBingoPage: page }) => {
-    // Look for pattern selection UI
-    const patternSection = page.getByText(/pattern/i).first();
-    await expect(patternSection).toBeVisible();
+    // Look for pattern selection UI - use specific "Pattern" heading or label
+    await expect(page.getByRole('heading', { name: /pattern/i })).toBeVisible();
   });
 
   test('shows settings section with toggles @medium', async ({ authenticatedBingoPage: page }) => {
@@ -39,38 +39,39 @@ test.describe('Bingo Presenter View', () => {
 
   test('displays keyboard shortcuts reference @medium', async ({ authenticatedBingoPage: page }) => {
     await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
-    await expect(page.getByText(/roll/i)).toBeVisible();
-    await expect(page.getByText(/pause/i)).toBeVisible();
-    await expect(page.getByText(/undo/i)).toBeVisible();
+    // Look for keyboard shortcuts section specifically (not settings labels)
+    const shortcutsSection = page.locator('text=/keyboard shortcuts/i').locator('..');
+    await expect(shortcutsSection.getByText('Roll', { exact: true })).toBeVisible();
+    await expect(shortcutsSection.getByText(/pause/i)).toBeVisible();
+    await expect(shortcutsSection.getByText(/undo/i)).toBeVisible();
   });
 
   test('shows ball counter at zero initially @high', async ({ authenticatedBingoPage: page }) => {
-    // Look for the ball counter display
-    const counter = page.getByText(/0\s*(called|of|remaining)/i).first();
-    await expect(counter).toBeVisible();
+    // Look for the ball counter display - use specific "0 called" or "0 of 75" text
+    await expect(page.getByText('0 called', { exact: true })).toBeVisible();
   });
 
   test('can select a pattern @high', async ({ authenticatedBingoPage: page }) => {
-    // Click to open pattern selector if needed
-    const patternButton = page.getByRole('button').filter({ hasText: /line|pattern/i }).first();
+    // Click to open pattern selector if needed - use specific button with "Pattern" text
+    const patternButton = page.getByRole('button', { name: /pattern/i });
 
     if (await patternButton.isVisible()) {
       await patternButton.click();
-      // Select a pattern from dropdown/list
-      const linePattern = page.getByText(/horizontal line|single line/i).first();
+      // Select a pattern from dropdown/list - use specific "Single Line" option
+      const linePattern = page.getByRole('option', { name: /single line|horizontal/i });
       if (await linePattern.isVisible()) {
         await linePattern.click();
       }
     }
 
-    // Pattern should be selected/shown somewhere
-    await expect(page.getByText(/pattern/i)).toBeVisible();
+    // Pattern should be selected/shown somewhere - use specific label
+    await expect(page.getByText('Winning Pattern')).toBeVisible();
   });
 
   test('can toggle auto-call setting @medium', async ({ authenticatedBingoPage: page }) => {
-    const autoCallToggle = page.locator('[role="switch"], [type="checkbox"]')
-      .filter({ hasNot: page.locator('[disabled]') })
-      .first();
+    // Find the auto-call switch in settings section
+    const settingsSection = page.locator('section, div').filter({ has: page.getByText(/auto.call/i) });
+    const autoCallToggle = settingsSection.locator('[role="switch"], [type="checkbox"]');
 
     if (await autoCallToggle.isVisible()) {
       const initialState = await autoCallToggle.getAttribute('aria-checked');
@@ -84,17 +85,17 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('Start button becomes active @high', async ({ authenticatedBingoPage: page }) => {
-    // Look for start/roll button
-    const startButton = page.getByRole('button', { name: /start|roll|call/i }).first();
+    // Look for start/roll button - use specific "Roll" button in game controls
+    const startButton = page.getByRole('button', { name: /^(roll|call next ball)$/i });
     await expect(startButton).toBeVisible();
   });
 
   test('can call a ball with button click @high', async ({ authenticatedBingoPage: page }) => {
-    // Find and click the roll/call button
-    const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
+    // Find and click the roll/call button - use specific "Roll" button
+    const rollButton = page.getByRole('button', { name: /^(roll|call next ball)$/i });
 
-    // Initial state - no ball called
-    const initialCountText = await page.getByText(/(\d+)\s*(called|of)/i).first().textContent();
+    // Initial state - no ball called - look for exact "0 called" text
+    const initialCountText = await page.getByText('0 called', { exact: true }).textContent();
     const initialCount = initialCountText?.match(/(\d+)/)?.[1] || '0';
 
     await rollButton.click();
@@ -102,16 +103,17 @@ test.describe('Bingo Presenter View', () => {
     // Wait for animation and state update
     await page.waitForTimeout(2000);
 
-    // Ball should be called - counter should increase or ball should appear
-    const newCountText = await page.getByText(/(\d+)\s*(called|of)/i).first().textContent();
+    // Ball should be called - counter should increase - look in game status area
+    const statusArea = page.locator('[class*="status"], main').first();
+    const newCountText = await statusArea.getByText(/\d+\s*called/i).textContent();
     const newCount = newCountText?.match(/(\d+)/)?.[1] || '0';
 
     expect(parseInt(newCount)).toBeGreaterThanOrEqual(parseInt(initialCount));
   });
 
   test('displays current ball after calling @high', async ({ authenticatedBingoPage: page }) => {
-    // Call a ball
-    const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
+    // Call a ball - use specific "Roll" button
+    const rollButton = page.getByRole('button', { name: /^(roll|call next ball)$/i });
     await rollButton.click();
 
     // Wait for the ball to be displayed
@@ -126,8 +128,8 @@ test.describe('Bingo Presenter View', () => {
     // Get initial state of board
     const initialHighlighted = await page.locator('[class*="called"], [class*="highlighted"]').count();
 
-    // Call a ball
-    await page.getByRole('button', { name: /roll|call|start/i }).first().click();
+    // Call a ball - use specific "Roll" button
+    await page.getByRole('button', { name: /^(roll|call next ball)$/i }).click();
     await page.waitForTimeout(2000);
 
     // Board should have a highlighted cell
@@ -138,8 +140,8 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('can pause and resume the game @medium', async ({ authenticatedBingoPage: page }) => {
-    // Start the game first
-    await page.getByRole('button', { name: /roll|call|start/i }).first().click();
+    // Start the game first - use specific "Roll" button
+    await page.getByRole('button', { name: /^(roll|call next ball)$/i }).click();
     await page.waitForTimeout(1000);
 
     // Look for pause button
@@ -157,8 +159,8 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('undo removes the last called ball @high', async ({ authenticatedBingoPage: page }) => {
-    // Call two balls first
-    const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
+    // Call two balls first - use specific "Roll" button
+    const rollButton = page.getByRole('button', { name: /^(roll|call next ball)$/i });
     await rollButton.click();
     await page.waitForTimeout(2000);
     await rollButton.click();
@@ -168,12 +170,14 @@ test.describe('Bingo Presenter View', () => {
     const undoButton = page.getByRole('button', { name: /undo/i });
 
     if (await undoButton.isVisible() && await undoButton.isEnabled()) {
-      const countBefore = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      // Look for count in status area
+      const statusArea = page.locator('[class*="status"], main').first();
+      const countBefore = await statusArea.getByText(/\d+\s*called/i).textContent();
 
       await undoButton.click();
       await page.waitForTimeout(500);
 
-      const countAfter = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const countAfter = await statusArea.getByText(/\d+\s*called/i).textContent();
 
       const before = parseInt(countBefore?.match(/(\d+)/)?.[1] || '0');
       const after = parseInt(countAfter?.match(/(\d+)/)?.[1] || '0');
@@ -183,8 +187,8 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('reset clears all called balls @high', async ({ authenticatedBingoPage: page }) => {
-    // Call some balls first
-    const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
+    // Call some balls first - use specific "Roll" button
+    const rollButton = page.getByRole('button', { name: /^(roll|call next ball)$/i });
     await rollButton.click();
     await page.waitForTimeout(2000);
 
@@ -202,8 +206,8 @@ test.describe('Bingo Presenter View', () => {
 
       await page.waitForTimeout(500);
 
-      // Counter should be back to 0
-      await expect(page.getByText(/0\s*called/i)).toBeVisible();
+      // Counter should be back to 0 - use exact match
+      await expect(page.getByText('0 called', { exact: true })).toBeVisible();
     }
   });
 });

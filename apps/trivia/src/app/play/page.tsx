@@ -585,7 +585,7 @@ export default function PlayPage() {
             {/* Fullscreen toggle - hidden on small mobile */}
             <button
               onClick={game.toggleFullscreen}
-              className="hidden sm:flex w-10 h-10 items-center justify-center rounded-lg
+              className="hidden sm:flex min-w-[var(--size-touch)] min-h-[var(--size-touch)] items-center justify-center rounded-lg
                 text-muted-foreground hover:text-foreground hover:bg-muted/30
                 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               title={game.isFullscreen ? 'Exit fullscreen (F)' : 'Enter fullscreen (F)'}
@@ -605,7 +605,7 @@ export default function PlayPage() {
             {/* Settings button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`w-10 h-10 flex items-center justify-center rounded-lg
+              className={`min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
                 transition-colors focus:outline-none focus:ring-2 focus:ring-primary
                 ${showSettings
                   ? 'bg-primary/20 text-primary'
@@ -624,7 +624,7 @@ export default function PlayPage() {
             {/* Help button - hidden on mobile (keyboard shortcuts not relevant for touch) */}
             <button
               onClick={() => game.setShowHelp(true)}
-              className="hidden md:flex w-10 h-10 items-center justify-center rounded-lg
+              className="hidden md:flex min-w-[var(--size-touch)] min-h-[var(--size-touch)] items-center justify-center rounded-lg
                 text-muted-foreground hover:text-foreground hover:bg-muted/30
                 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               title="Keyboard shortcuts (?)"
@@ -714,7 +714,7 @@ export default function PlayPage() {
                   <button
                     onClick={() => game.selectQuestion(Math.max(0, game.selectedQuestionIndex - 1))}
                     disabled={game.selectedQuestionIndex === 0}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
                       bg-muted/30 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed
                       transition-colors"
                     aria-label="Previous question"
@@ -728,8 +728,8 @@ export default function PlayPage() {
                   </span>
                   <button
                     onClick={() => game.selectQuestion(Math.min(game.questions.length - 1, game.selectedQuestionIndex + 1))}
-                    disabled={game.selectedQuestionIndex === game.questions.length - 1}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg
+                    disabled={game.selectedQuestionIndex === 0}
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
                       bg-muted/30 hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed
                       transition-colors"
                     aria-label="Next question"
@@ -1002,7 +1002,7 @@ export default function PlayPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-3 md:gap-4">
                 {/* Pause icon */}
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                <div className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] md:w-12 md:h-12 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
                   <svg
                     className="w-5 h-5 md:w-6 md:h-6 text-orange-600"
                     fill="currentColor"

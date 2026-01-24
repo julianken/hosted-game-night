@@ -213,6 +213,9 @@ importers:
       web-vitals:
         specifier: ^5.1.0
         version: 5.1.0
+      zustand:
+        specifier: ^5.0.10
+        version: 5.0.10(@types/react@19.2.8)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
     devDependencies:
       '@beak-gaming/testing':
         specifier: workspace:*

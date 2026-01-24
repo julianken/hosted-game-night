@@ -88,7 +88,7 @@ export function TeamScoreInput({
                     onClick={() => onAdjustScore(team.id, -1)}
                     aria-label={`Subtract 1 point from ${team.name}`}
                     title="Subtract 1 point"
-                    className="w-10 h-10 rounded-lg bg-red-500/10 text-red-600
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-red-500/10 text-red-600
                       hover:bg-red-500/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
                   >
@@ -105,7 +105,7 @@ export function TeamScoreInput({
                       onKeyDown={handleKeyDown}
                       autoFocus
                       aria-label={`Edit score for ${team.name}`}
-                      className="w-16 h-10 text-center text-xl font-bold
+                      className="w-16 min-h-[var(--size-touch)] text-center text-xl font-bold
                         border border-border rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -114,7 +114,7 @@ export function TeamScoreInput({
                       onClick={() => handleStartEdit(team)}
                       aria-label={`${team.name} score: ${team.score}. Click to edit`}
                       title="Click to edit total score"
-                      className="w-16 h-10 text-center text-xl font-bold
+                      className="w-16 min-h-[var(--size-touch)] text-center text-xl font-bold
                         bg-muted rounded-lg hover:bg-muted/80
                         transition-colors"
                     >
@@ -127,7 +127,7 @@ export function TeamScoreInput({
                     onClick={() => onAdjustScore(team.id, 1)}
                     aria-label={`Add 1 point to ${team.name}`}
                     title="Add 1 point"
-                    className="w-10 h-10 rounded-lg bg-green-500/10 text-green-600
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-green-500/10 text-green-600
                       hover:bg-green-500/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
                   >

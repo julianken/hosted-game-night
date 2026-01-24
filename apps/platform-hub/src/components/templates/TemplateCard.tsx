@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Template } from '../../app/api/templates/route';
 
 type TemplateCardProps = {
@@ -48,6 +49,7 @@ function getGameStats(template: Template): string {
 }
 
 export function TemplateCard({ template, onDelete }: TemplateCardProps) {
+  const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -100,6 +102,14 @@ export function TemplateCard({ template, onDelete }: TemplateCardProps) {
       {/* Actions */}
       {!showConfirm ? (
         <div className="flex gap-3">
+          <button
+            onClick={() =>
+              router.push(`/dashboard/templates/${template.id}?game=${template.game}`)
+            }
+            className="flex-1 min-h-[44px] px-4 py-2 text-base font-medium text-blue-700 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            View Details
+          </button>
           <button
             onClick={() => setShowConfirm(true)}
             className="flex-1 min-h-[44px] px-4 py-2 text-base font-medium text-red-700 bg-red-50 border-2 border-red-200 rounded-lg hover:bg-red-100 transition-colors"
