@@ -15,6 +15,8 @@ const isCI = !!process.env.CI;
  */
 export default defineConfig({
   testDir: './e2e',
+  /* Global setup to validate test environment */
+  globalSetup: './e2e/global-setup.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
