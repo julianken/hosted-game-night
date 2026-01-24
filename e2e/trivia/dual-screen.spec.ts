@@ -14,10 +14,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       // Open display from presenter
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -32,10 +31,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     test('display shows waiting state initially', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -53,10 +51,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(200);
 
       // Open display
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -80,10 +77,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(200);
 
       // Open display
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -108,10 +104,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -147,10 +142,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -173,10 +167,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -203,10 +196,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(200);
 
       // Open display
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -250,10 +242,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -296,10 +287,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -330,10 +320,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -376,10 +365,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -398,10 +386,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -435,10 +422,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -464,10 +450,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -501,10 +486,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(200);
 
       // Open and close display
-      const [displayPage1] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+      await page.getByRole('button', { name: /open display/i }).click();
+      const displayPage1 = await popupPromise;
 
       await waitForHydration(displayPage1);
       await displayPage1.close();
@@ -512,10 +496,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(500);
 
       // Reopen display
-      const [displayPage2] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+      await page.getByRole('button', { name: /open display/i }).click();
+      const displayPage2 = await popupPromise;
 
       await waitForHydration(displayPage2);
 
@@ -538,10 +521,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(300);
 
       // Now open display - should receive current state
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
       await page.waitForTimeout(1000);
@@ -555,10 +537,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     test('theme changes sync from presenter to display', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
       await page.waitForTimeout(500);
@@ -576,10 +557,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       // Open first display
-      const [displayPage1] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+      await page.getByRole('button', { name: /open display/i }).click();
+      const displayPage1 = await popupPromise;
 
       await waitForHydration(displayPage1);
 
@@ -600,10 +580,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -627,10 +606,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.waitForTimeout(300);
 
       // Open display after state is set
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -647,10 +625,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -675,10 +652,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       // Open display before any setup
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 

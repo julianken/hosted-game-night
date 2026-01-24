@@ -41,10 +41,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       // Open display window
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -56,10 +55,9 @@ test.describe('Trivia Audience Display', () => {
     test('shows waiting state when game not started', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -70,10 +68,9 @@ test.describe('Trivia Audience Display', () => {
     test('shows connection status indicator - connected', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -88,10 +85,9 @@ test.describe('Trivia Audience Display', () => {
     test('shows sync timestamp when connected', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
       await page.waitForTimeout(1000);
@@ -109,10 +105,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -134,10 +129,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -157,10 +151,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -180,10 +173,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -205,10 +197,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -238,10 +229,9 @@ test.describe('Trivia Audience Display', () => {
         await page.waitForTimeout(100);
       }
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -273,10 +263,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -309,10 +298,9 @@ test.describe('Trivia Audience Display', () => {
         await page.waitForTimeout(100);
       }
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -344,10 +332,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -385,10 +372,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -420,10 +406,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -442,10 +427,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -468,10 +452,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -494,10 +477,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -524,10 +506,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -540,10 +521,9 @@ test.describe('Trivia Audience Display', () => {
     test('has proper ARIA landmarks', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -560,10 +540,9 @@ test.describe('Trivia Audience Display', () => {
     test('has fullscreen button', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -574,10 +553,9 @@ test.describe('Trivia Audience Display', () => {
     test('footer shows display hint', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -588,10 +566,9 @@ test.describe('Trivia Audience Display', () => {
     test('has skip link for keyboard navigation', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -608,10 +585,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -633,10 +609,9 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /add team/i }).click();
       await page.waitForTimeout(200);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -652,10 +627,9 @@ test.describe('Trivia Audience Display', () => {
     test('adapts to large viewport (projector)', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
@@ -670,10 +644,9 @@ test.describe('Trivia Audience Display', () => {
     test('adapts to medium viewport', async ({ authenticatedTriviaPage: page, context }) => {
       await waitForHydration(page);
 
-      const [displayPage] = await Promise.all([
-        context.waitForEvent('page'),
-        page.getByRole('button', { name: /open display/i }).click(),
-      ]);
+      const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 

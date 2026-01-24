@@ -22,10 +22,9 @@ test.describe('Bingo Display Page', () => {
     await waitForHydration(page);
 
     // Open display window
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -39,10 +38,9 @@ test.describe('Bingo Display Page', () => {
     await waitForHydration(page);
 
     // Open display
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -56,10 +54,9 @@ test.describe('Bingo Display Page', () => {
     await waitForHydration(page);
 
     // Open display
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -79,10 +76,9 @@ test.describe('Bingo Display Page', () => {
     await waitForHydration(page);
 
     // Open display
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -100,10 +96,9 @@ test.describe('Bingo Display Page', () => {
   test('shows connection status indicator', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -118,10 +113,9 @@ test.describe('Bingo Display Page', () => {
   test('displays winning pattern', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -137,10 +131,9 @@ test.describe('Bingo Display Page', () => {
   test('has fullscreen button', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -152,10 +145,9 @@ test.describe('Bingo Display Page', () => {
   test('has help button for keyboard shortcuts', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -167,10 +159,9 @@ test.describe('Bingo Display Page', () => {
   test('footer shows fullscreen hint', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 

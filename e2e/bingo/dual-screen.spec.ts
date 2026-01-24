@@ -10,10 +10,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(page.getByText(/sync ready|sync active/i)).toBeVisible();
 
     // Open display from presenter
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    // Start waiting for popup before clicking. Note no await.
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -27,10 +27,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await waitForHydration(page);
 
     // Open display
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -58,10 +57,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('multiple balls sync correctly', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
     await page.waitForTimeout(1000);
@@ -88,10 +86,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('pattern change syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -116,10 +113,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('game reset syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -152,10 +148,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('undo syncs to display', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -187,10 +182,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('display reconnects after visibility change', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -214,10 +208,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('closing display does not affect presenter', async ({ authenticatedBingoPage: page, context }) => {
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
