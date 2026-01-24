@@ -52,6 +52,13 @@ export function SessionTimeoutMonitor() {
     // Update ref for next render
     previousSessionRef.current = currentSession;
 
+    // Reset redirect flag when user re-authenticates
+    // This allows the monitor to redirect on subsequent session expirations
+    if (previousSession === null && currentSession !== null) {
+      hasRedirectedRef.current = false;
+      return;
+    }
+
     // Don't redirect if we've already redirected in this session
     if (hasRedirectedRef.current) {
       return;
