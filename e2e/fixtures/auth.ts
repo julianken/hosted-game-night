@@ -1,5 +1,13 @@
 import { test as base, type Page } from '@playwright/test';
 
+// URL Constants
+const HUB_URL = 'http://localhost:3002';
+const BINGO_URL = 'http://localhost:3000';
+const TRIVIA_URL = 'http://localhost:3001';
+
+// Timeout Constants
+const AUTH_TIMEOUT_MS = 10000; // OAuth login can be slow in CI
+
 /**
  * Test user credentials for E2E authentication tests.
  * This user should be created in the test database setup.
@@ -46,6 +54,28 @@ export interface GameAuthFixtures {
 }
 
 /**
+ * Helper function to login via Platform Hub and verify SSO cookies.
+ * Used by game app fixtures (Bingo, Trivia) for cross-app authentication.
+ *
+ * @param page - Playwright page instance
+ * @param testUser - Test user credentials
+ * @throws Error if OAuth login fails (missing beak_access_token cookie)
+ */
+async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void> {
+  await page.goto(`${HUB_URL}/login`);
+  await page.fill('input[name="email"]', testUser.email);
+  await page.fill('input[name="password"]', testUser.password);
+  await page.click('button[type="submit"]');
+  await page.waitForURL(`${HUB_URL}/dashboard`, { timeout: AUTH_TIMEOUT_MS });
+
+  // Verify SSO cookies exist
+  const cookies = await page.context().cookies();
+  if (!cookies.some((c) => c.name === 'beak_access_token')) {
+    throw new Error('OAuth login failed: beak_access_token cookie not set');
+  }
+}
+
+/**
  * Extended test with authentication fixtures.
  *
  * Usage:
@@ -76,7 +106,7 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    */
   authenticatedPage: async ({ page, testUser }, use) => {
     // Navigate to login page with dashboard redirect
-    await page.goto('http://localhost:3002/login?redirect=/dashboard');
+    await page.goto(`${HUB_URL}/login?redirect=/dashboard`);
 
     // Fill in credentials
     await page.fill('input[name="email"]', testUser.email);
@@ -86,8 +116,8 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
     await page.click('button[type="submit"]');
 
     // Wait for redirect to dashboard (indicates successful login)
-    await page.waitForURL('http://localhost:3002/dashboard', {
-      timeout: 10000,
+    await page.waitForURL(`${HUB_URL}/dashboard`, {
+      timeout: AUTH_TIMEOUT_MS,
     });
 
     // Store auth state for potential reuse
@@ -100,7 +130,7 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
     const logoutButton = page.locator('[data-testid="logout-button"]');
     if (await logoutButton.isVisible()) {
       await logoutButton.click();
-      await page.waitForURL('http://localhost:3002/', { timeout: 5000 });
+      await page.waitForURL(`${HUB_URL}/`, { timeout: 5000 });
     }
   },
 
@@ -110,25 +140,10 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    */
   authenticatedBingoPage: async ({ page, testUser }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
-    await page.goto('http://localhost:3002/login');
-    await page.fill('input[name="email"]', testUser.email);
-    await page.fill('input[name="password"]', testUser.password);
-    await page.click('button[type="submit"]');
+    await loginViaPlatformHub(page, testUser);
 
-    // Wait for successful login (redirects to dashboard)
-    await page.waitForURL('http://localhost:3002/dashboard', {
-      timeout: 10000,
-    });
-
-    // 2. Verify SSO cookies exist (cross-app cookies set by Platform Hub)
-    const cookies = await page.context().cookies();
-    const hasAccessToken = cookies.some((c) => c.name === 'beak_access_token');
-    if (!hasAccessToken) {
-      throw new Error('OAuth login failed: beak_access_token cookie not set');
-    }
-
-    // 3. Navigate to Bingo /play with SSO cookies
-    await page.goto('http://localhost:3000/play');
+    // 2. Navigate to Bingo /play with SSO cookies
+    await page.goto(`${BINGO_URL}/play`);
 
     // Provide authenticated Bingo page to test
     await use(page);
@@ -142,25 +157,10 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    */
   authenticatedTriviaPage: async ({ page, testUser }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
-    await page.goto('http://localhost:3002/login');
-    await page.fill('input[name="email"]', testUser.email);
-    await page.fill('input[name="password"]', testUser.password);
-    await page.click('button[type="submit"]');
+    await loginViaPlatformHub(page, testUser);
 
-    // Wait for successful login (redirects to dashboard)
-    await page.waitForURL('http://localhost:3002/dashboard', {
-      timeout: 10000,
-    });
-
-    // 2. Verify SSO cookies exist
-    const cookies = await page.context().cookies();
-    const hasAccessToken = cookies.some((c) => c.name === 'beak_access_token');
-    if (!hasAccessToken) {
-      throw new Error('OAuth login failed: beak_access_token cookie not set');
-    }
-
-    // 3. Navigate to Trivia /play with SSO cookies
-    await page.goto('http://localhost:3001/play');
+    // 2. Navigate to Trivia /play with SSO cookies
+    await page.goto(`${TRIVIA_URL}/play`);
 
     // Provide authenticated Trivia page to test
     await use(page);
