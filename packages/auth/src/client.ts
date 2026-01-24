@@ -18,6 +18,14 @@ function validateEnvVariables(config?: AuthConfig): EnvVariables {
   const url = config?.supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = config?.supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // During build time, use placeholder values to avoid build failures
+  // The validation will still run at runtime when the client is actually used
+  const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV !== 'test';
+
+  if (isBuildTime && (!url || !anonKey)) {
+    return { url: 'https://placeholder.supabase.co', anonKey: 'placeholder-key' };
+  }
+
   if (!url) {
     throw new Error(
       'Missing required Supabase URL.\n' +
