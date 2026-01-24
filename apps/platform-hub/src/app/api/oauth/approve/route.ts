@@ -153,6 +153,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate redirect_uri exists
+    if (!authDetails.redirect_uri) {
+      await auditAuthorizationError(
+        request,
+        client.id,
+        authorization_id,
+        'invalid_redirect_uri',
+        'No redirect URL provided by authorization server',
+        session.user.id
+      );
+
+      return NextResponse.json(
+        { error: 'No redirect URL provided by authorization server' },
+        { status: 500 }
+      );
+    }
+
     // Build redirect URL with authorization code
     const redirectUrl = new URL(authDetails.redirect_uri);
     redirectUrl.searchParams.set('code', authCode);

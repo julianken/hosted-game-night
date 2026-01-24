@@ -87,40 +87,79 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
           return;
         }
 
-        // Fetch authorization details from Supabase
-        const { data, error: authError } = await supabase.auth.oauth.getAuthorizationDetails(
-          authorizationId
-        );
+        // Fetch authorization details from oauth_authorizations table
+        const { data: authData, error: authError } = await supabase
+          .from('oauth_authorizations')
+          .select(`
+            id,
+            client_id,
+            user_id,
+            scope,
+            status,
+            expires_at,
+            oauth_clients!inner(id, name)
+          `)
+          .eq('id', authorizationId)
+          .eq('user_id', session.user.id)
+          .eq('status', 'pending')
+          .single();
 
         if (authError) {
           // Handle different error scenarios
           const errorMessage = authError.message || 'Unknown error';
 
-          if (errorMessage.includes('not found') || errorMessage.includes('invalid')) {
+          if (errorMessage.includes('No rows') || authError.code === 'PGRST116') {
             setError('Authorization request not found or has expired. Please try again from the application.');
-          } else if (errorMessage.includes('already used')) {
-            setError('This authorization request has already been processed. Please start a new authorization from the application.');
           } else {
             setError(`Unable to load authorization details: ${errorMessage}`);
           }
-        } else if (data && isValidAuthorizationDetails(data)) {
-          setDetails(data);
-
-          // Fetch CSRF token after successful authorization details load
-          try {
-            const csrfResponse = await fetch('/api/oauth/csrf');
-            if (csrfResponse.ok) {
-              const { token } = await csrfResponse.json();
-              setCsrfToken(token);
-            } else {
-              setError('Failed to generate security token. Please refresh and try again.');
-            }
-          } catch (csrfErr) {
-            console.error('Error fetching CSRF token:', csrfErr);
-            setError('Failed to initialize security token. Please refresh and try again.');
+        } else if (authData) {
+          // Check if authorization has expired
+          if (authData.expires_at && new Date(authData.expires_at) < new Date()) {
+            setError('This authorization request has expired. Please start a new authorization from the application.');
+            setLoading(false);
+            return;
           }
-        } else if (data) {
-          setError('Invalid authorization details structure received from server.');
+
+          // Extract client info (handle both array and object response from Supabase)
+          const clientArray = authData.oauth_clients as unknown as Array<{ id: string; name: string }>;
+          const client = Array.isArray(clientArray) ? clientArray[0] : clientArray;
+
+          // Parse scopes
+          const scopes = authData.scope.split(' ');
+
+          // Transform to AuthorizationDetails format
+          const authDetails: AuthorizationDetails = {
+            client: {
+              id: client.id,
+              name: client.name,
+            },
+            scopes,
+            user: {
+              id: session.user.id,
+              email: session.user.email || '',
+            },
+          };
+
+          if (isValidAuthorizationDetails(authDetails)) {
+            setDetails(authDetails);
+
+            // Fetch CSRF token after successful authorization details load
+            try {
+              const csrfResponse = await fetch('/api/oauth/csrf');
+              if (csrfResponse.ok) {
+                const { token } = await csrfResponse.json();
+                setCsrfToken(token);
+              } else {
+                setError('Failed to generate security token. Please refresh and try again.');
+              }
+            } catch (csrfErr) {
+              console.error('Error fetching CSRF token:', csrfErr);
+              setError('Failed to initialize security token. Please refresh and try again.');
+            }
+          } else {
+            setError('Invalid authorization details structure received from server.');
+          }
         } else {
           setError('No authorization details received. Please try again.');
         }
@@ -187,13 +226,25 @@ export default function ConsentPage({ searchParams }: ConsentPageProps) {
     if (!authorizationId) return;
 
     try {
-      const { data, error: denyError } = await supabase.auth.oauth.denyAuthorization(
-        authorizationId
-      );
+      // Send denial request through API route
+      const response = await fetch('/api/oauth/deny', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          authorization_id: authorizationId,
+        }),
+      });
 
-      if (denyError) {
-        setError(`Failed to deny authorization: ${denyError.message}`);
-      } else if (data?.redirect_url) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to deny authorization');
+        return;
+      }
+
+      if (data.redirect_url) {
         // Redirect back to client app with error
         window.location.href = data.redirect_url;
       } else {

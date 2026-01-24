@@ -9,6 +9,14 @@ function validateEnvVariables(): { url: string; anonKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  // During build time, use placeholder values to avoid build failures
+  // The validation will still run at runtime when the client is actually used
+  const isBuildTime = process.env.NODE_ENV !== 'test' && process.env.NEXT_PHASE === 'phase-production-build'
+
+  if (isBuildTime && (!url || !anonKey)) {
+    return { url: 'https://placeholder.supabase.co', anonKey: 'placeholder-key' }
+  }
+
   if (!url) {
     throw new Error(
       'Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL\n' +

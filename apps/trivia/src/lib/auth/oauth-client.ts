@@ -5,7 +5,7 @@
 
 import { generatePKCE } from './pkce';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const PLATFORM_HUB_URL = process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002';
 const CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI!;
 
@@ -15,8 +15,8 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI!;
  */
 export async function startOAuthFlow(): Promise<void> {
   // Validate environment variables
-  if (!SUPABASE_URL) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not configured');
+  if (!PLATFORM_HUB_URL) {
+    throw new Error('NEXT_PUBLIC_PLATFORM_HUB_URL is not configured');
   }
   if (!CLIENT_ID) {
     throw new Error('NEXT_PUBLIC_OAUTH_CLIENT_ID is not configured');
@@ -53,8 +53,8 @@ export async function startOAuthFlow(): Promise<void> {
     response_type: 'code',
   });
 
-  const authorizeUrl = `${SUPABASE_URL}/auth/v1/authorize?${params.toString()}`;
+  const authorizeUrl = `${PLATFORM_HUB_URL}/api/oauth/authorize?${params.toString()}`;
 
-  // Redirect to Platform Hub OAuth consent page
+  // Redirect to Platform Hub OAuth authorization endpoint
   window.location.href = authorizeUrl;
 }
