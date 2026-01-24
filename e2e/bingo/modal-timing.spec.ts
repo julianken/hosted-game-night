@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth';
 
 /**
  * Tests for Issue #112 - Fix Modal Timing and Recovery Error Handling
@@ -19,9 +19,8 @@ test.describe('Room Setup Modal Timing', () => {
     });
   });
 
-  test('should show modal on first visit (no session)', async ({ page }) => {
-    // Navigate to /play page
-    await page.goto('/play');
+  test('should show modal on first visit (no session)', async ({ authenticatedBingoPage: page }) => {
+    // Navigate to /play page (fixture already does this)
 
     // Wait for the page to load and recovery to complete
     await page.waitForLoadState('networkidle');
@@ -36,16 +35,16 @@ test.describe('Room Setup Modal Timing', () => {
     await expect(page.getByRole('button', { name: /play offline/i })).toBeVisible();
   });
 
-  test('should show modal on recovery error', async ({ page }) => {
-    // Mock a failed session recovery by setting invalid token in localStorage
-    await page.goto('/');
+  test('should show modal on recovery error', async ({ authenticatedBingoPage: page }) => {
+    // First clear current session and set an invalid token
     await page.evaluate(() => {
+      localStorage.clear();
       // Store an invalid session token that will fail recovery
       localStorage.setItem('bingo_session_token', 'invalid-token-12345');
     });
 
-    // Navigate to /play page
-    await page.goto('/play');
+    // Reload to trigger recovery
+    await page.reload();
 
     // Wait for recovery to attempt and fail
     await page.waitForLoadState('networkidle');
@@ -61,9 +60,8 @@ test.describe('Room Setup Modal Timing', () => {
     await expect(errorAlert).toContainText(/error/i);
   });
 
-  test('should NOT show modal on successful recovery', async ({ page }) => {
+  test('should NOT show modal on successful recovery', async ({ authenticatedBingoPage: page }) => {
     // First, create a valid session by playing offline
-    await page.goto('/play');
     await page.waitForLoadState('networkidle');
 
     // Click "Play Offline" button in the modal
@@ -90,15 +88,15 @@ test.describe('Room Setup Modal Timing', () => {
     await expect(page.getByText(/offline session/i)).toBeVisible();
   });
 
-  test('should allow dismissing modal with recovery error', async ({ page }) => {
+  test('should allow dismissing modal with recovery error', async ({ authenticatedBingoPage: page }) => {
     // Mock a failed session recovery
-    await page.goto('/');
     await page.evaluate(() => {
+      localStorage.clear();
       localStorage.setItem('bingo_session_token', 'invalid-token-12345');
     });
 
-    // Navigate to /play page
-    await page.goto('/play');
+    // Reload to trigger recovery
+    await page.reload();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
@@ -114,15 +112,15 @@ test.describe('Room Setup Modal Timing', () => {
     await expect(modal).not.toBeVisible();
   });
 
-  test('should clear error when creating new session after recovery error', async ({ page }) => {
+  test('should clear error when creating new session after recovery error', async ({ authenticatedBingoPage: page }) => {
     // Mock a failed session recovery
-    await page.goto('/');
     await page.evaluate(() => {
+      localStorage.clear();
       localStorage.setItem('bingo_session_token', 'invalid-token-12345');
     });
 
-    // Navigate to /play page
-    await page.goto('/play');
+    // Reload to trigger recovery
+    await page.reload();
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
