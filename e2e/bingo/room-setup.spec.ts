@@ -11,8 +11,7 @@
  * - BroadcastChannel message delivery
  */
 import { test, expect } from '../fixtures/auth';
-import type { Page } from '@playwright/test';
-import { waitForHydration, clickButton, openDisplayWindow } from '../utils/helpers';
+import { waitForHydration, clickButton } from '../utils/helpers';
 
 test.describe('Room Setup Flow', () => {
   test.beforeEach(async ({ authenticatedBingoPage: page }) => {
@@ -198,8 +197,8 @@ test.describe('Room Setup Flow', () => {
       await clickButton(page, /show form to join existing game/i);
 
       // Form inputs should be visible
-      await expect(page.getByLabelText(/enter room code/i)).toBeVisible();
-      await expect(page.getByLabelText(/enter room pin/i)).toBeVisible();
+      await expect(page.getByLabel(/enter room code/i)).toBeVisible();
+      await expect(page.getByLabel(/enter room pin/i)).toBeVisible();
       await expect(page.getByRole('button', { name: /join game/i })).toBeVisible();
       await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
     });
@@ -207,8 +206,8 @@ test.describe('Room Setup Flow', () => {
     test('should validate PIN format (4 digits)', async ({ authenticatedBingoPage: page }) => {
       await clickButton(page, /show form to join existing game/i);
 
-      const roomCodeInput = page.getByLabelText(/enter room code/i);
-      const pinInput = page.getByLabelText(/enter room pin/i);
+      const roomCodeInput = page.getByLabel(/enter room code/i);
+      const pinInput = page.getByLabel(/enter room pin/i);
       const joinButton = page.getByRole('button', { name: /join game/i });
 
       // Fill in room code
@@ -226,7 +225,7 @@ test.describe('Room Setup Flow', () => {
     test('should convert room code to uppercase', async ({ authenticatedBingoPage: page }) => {
       await clickButton(page, /show form to join existing game/i);
 
-      const roomCodeInput = page.getByLabelText(/enter room code/i);
+      const roomCodeInput = page.getByLabel(/enter room code/i);
 
       // Type lowercase
       await roomCodeInput.fill('test-123');
@@ -239,8 +238,8 @@ test.describe('Room Setup Flow', () => {
     test('should clear form when cancel clicked', async ({ authenticatedBingoPage: page }) => {
       await clickButton(page, /show form to join existing game/i);
 
-      const roomCodeInput = page.getByLabelText(/enter room code/i);
-      const pinInput = page.getByLabelText(/enter room pin/i);
+      const roomCodeInput = page.getByLabel(/enter room code/i);
+      const pinInput = page.getByLabel(/enter room pin/i);
 
       // Fill in form
       await roomCodeInput.fill('TEST-123');
@@ -254,8 +253,8 @@ test.describe('Room Setup Flow', () => {
 
       // Click join again - form should be empty
       await clickButton(page, /show form to join existing game/i);
-      expect(await page.getByLabelText(/enter room code/i).inputValue()).toBe('');
-      expect(await page.getByLabelText(/enter room pin/i).inputValue()).toBe('');
+      expect(await page.getByLabel(/enter room code/i).inputValue()).toBe('');
+      expect(await page.getByLabel(/enter room pin/i).inputValue()).toBe('');
     });
   });
 
@@ -465,8 +464,8 @@ test.describe('Room Setup Flow', () => {
     test('form inputs should have proper labels', async ({ authenticatedBingoPage: page }) => {
       await clickButton(page, /show form to join existing game/i);
 
-      const roomCodeInput = page.getByLabelText(/enter room code/i);
-      const pinInput = page.getByLabelText(/enter room pin/i);
+      const roomCodeInput = page.getByLabel(/enter room code/i);
+      const pinInput = page.getByLabel(/enter room pin/i);
 
       // Both inputs should have proper labels
       await expect(roomCodeInput).toBeVisible();
