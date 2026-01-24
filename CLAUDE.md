@@ -309,6 +309,71 @@ src/
 └── types/            # TypeScript types
 ```
 
+### Next.js Middleware Best Practices
+
+**CRITICAL:** Middleware files execute during module compilation, BEFORE the Next.js server is ready. Never make network requests or perform async operations at module-load time.
+
+#### ❌ NEVER: Module-Load-Time Network Requests
+
+```typescript
+// ❌ WRONG - Causes server to hang indefinitely
+import { createRemoteJWKSet } from 'jose';
+
+const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+// Network request executes during compilation → infinite retry loop → server hangs
+
+export async function middleware(request: NextRequest) {
+  await jwtVerify(token, JWKS, { ... });
+}
+```
+
+**Why this fails:**
+- Module runs during Next.js compilation (before server starts)
+- `createRemoteJWKSet()` tries to fetch JWKS from Supabase
+- Network stack not ready → request fails → error handler retries → infinite recursion
+- Server consumes 100%+ CPU, never responds to HTTP requests
+
+**Evidence of failure:**
+```bash
+$ ps -o pid,state,time
+  PID STAT      TIME
+93817 R    111:42.93  # Server hung for 111+ minutes at 117% CPU
+```
+
+#### ✅ ALWAYS: Lazy Initialization
+
+```typescript
+// ✅ CORRECT - Defers network request until first use
+import { createRemoteJWKSet } from 'jose';
+
+let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function getJWKS() {
+  if (!jwksCache) {
+    jwksCache = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+  }
+  return jwksCache;
+}
+
+export async function middleware(request: NextRequest) {
+  await jwtVerify(token, getJWKS(), { ... }); // Network request only on first HTTP request
+}
+```
+
+**Why this works:**
+- No network requests during module compilation
+- JWKS fetch only happens on first middleware invocation (when server is ready)
+- Server starts in <1 second
+- Singleton pattern ensures JWKS is only fetched once
+
+#### Files Using This Pattern
+
+- `apps/bingo/src/middleware.ts` - OAuth token verification
+- `apps/trivia/src/middleware.ts` - OAuth token verification
+- `e2e/fixtures/auth.ts` - E2E test authentication
+
+**Related:** See `docs/plans/2026-01-23-fix-e2e-auth.md` for full debugging analysis of the server hanging issue.
+
 ## Design Requirements
 
 - **Senior-friendly:** Large fonts (min 18px body), high contrast, large click targets (min 44x44px)

@@ -74,7 +74,7 @@ export default async function LoginPage(props: {
         {/* Form card */}
         <div className="bg-background border-2 border-border rounded-2xl p-8 shadow-sm">
           <LoginForm
-            redirectTo={searchParams.redirect || '/'}
+            redirectTo={searchParams.redirect}
             authorizationId={searchParams.authorization_id}
           />
         </div>

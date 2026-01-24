@@ -12,6 +12,65 @@ E2E tests use Playwright to test the full Beak Gaming Platform including OAuth a
 
 All game apps use cross-app SSO via `beak_access_token` cookies.
 
+## Setup
+
+### Prerequisites
+
+1. **Supabase Project**: You need a Supabase project with the database configured
+2. **Environment Variables**: `.env.local` files in each app with Supabase credentials
+3. **Test User**: E2E tests require a test user account in your Supabase database
+
+### Creating the Test User
+
+E2E tests require a test user account in your Supabase database. Run the seed script to create it:
+
+#### Option 1: Via Supabase Dashboard (Easiest)
+
+1. Open your Supabase project: https://supabase.com/dashboard
+2. Go to **SQL Editor**
+3. Open the file `supabase/seed.sql` from this repository
+4. Copy the contents and paste into the SQL Editor
+5. Click **Run**
+
+You should see: `Created E2E test user: e2e-test@beak-gaming.test`
+
+#### Option 2: Via Supabase CLI (If installed)
+
+```bash
+# Reset database and run all migrations + seed
+supabase db reset
+
+# Or just run the seed file
+supabase db execute --file supabase/seed.sql
+```
+
+#### Verify Test User
+
+Check the test user was created:
+
+```sql
+SELECT email, created_at, email_confirmed_at
+FROM auth.users
+WHERE email = 'e2e-test@beak-gaming.test';
+```
+
+You should see one row with the test user email.
+
+### Using a Custom Test User
+
+If you want to use a different test user (e.g., for CI/CD):
+
+1. Create the user in Supabase (Dashboard → Authentication → Users → Add User)
+2. Set environment variables before running tests:
+
+```bash
+export TEST_USER_EMAIL=your-test@example.com
+export TEST_USER_PASSWORD=YourPassword123!
+pnpm playwright test
+```
+
+**Note:** The default test user (`e2e-test@beak-gaming.test`) is recommended for local development because it's created by the seed script and doesn't require environment variables.
+
 ## Running Tests
 
 ```bash

@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@beak-gaming/auth';
 import { Button, Input } from '@beak-gaming/ui';
 import { useToast } from '@beak-gaming/ui';
+import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store';
+import { ThemeMode } from '@/types';
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const { theme, setTheme } = useThemeStore();
 
   const [facilityName, setFacilityName] = useState('');
   const [email, setEmail] = useState('');
@@ -153,6 +156,47 @@ export default function SettingsPage() {
                 className="w-full"
                 required
               />
+            </div>
+          </section>
+
+          {/* Theme Preference */}
+          <section className="p-6 bg-background rounded-2xl border border-border">
+            <h2 className="text-2xl font-semibold text-foreground mb-4">
+              Theme Preference
+            </h2>
+            <p className="text-base text-muted-foreground mb-6">
+              Choose your preferred color theme. Changes apply immediately.
+            </p>
+            <div className="space-y-3">
+              {THEME_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/10"
+                  style={{
+                    borderColor: theme === option.value ? 'var(--color-primary)' : 'var(--color-border)',
+                    backgroundColor: theme === option.value ? 'var(--color-primary-light)' : 'transparent',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="theme"
+                    value={option.value}
+                    checked={theme === option.value}
+                    onChange={(e) => setTheme(e.target.value as ThemeMode)}
+                    className="w-6 h-6 min-w-[24px] min-h-[24px] mr-4 accent-primary cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <span className="text-xl font-medium text-foreground">
+                      {option.label}
+                    </span>
+                    {option.value === 'system' && (
+                      <p className="text-base text-muted-foreground mt-1">
+                        Automatically switches between light and dark based on your device settings
+                      </p>
+                    )}
+                  </div>
+                </label>
+              ))}
             </div>
           </section>
 
