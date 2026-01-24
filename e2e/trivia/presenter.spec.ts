@@ -13,8 +13,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('shows game status indicator', async ({ authenticatedTriviaPage: page }) => {
-      // Should show setup status initially
-      await expect(page.getByText(/setup/i)).toBeVisible();
+      // Should show setup status initially - look for the status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^setup$/i })).toBeVisible();
     });
 
     test('shows Open Display button', async ({ authenticatedTriviaPage: page }) => {
@@ -29,7 +29,8 @@ test.describe('Trivia Presenter View', () => {
     test('shows keyboard shortcuts reference', async ({ authenticatedTriviaPage: page }) => {
       await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
       await expect(page.getByText(/navigate/i)).toBeVisible();
-      await expect(page.getByText(/peek/i)).toBeVisible();
+      // Look for "Peek answer" text in shortcuts section (not the button)
+      await expect(page.getByText('Peek answer')).toBeVisible();
     });
   });
 
@@ -473,8 +474,8 @@ test.describe('Trivia Presenter View', () => {
       await page.keyboard.press('Shift+?');
       await page.waitForTimeout(500);
 
-      // Modal should open
-      const modal = page.locator('[role="dialog"]');
+      // Keyboard shortcuts modal should open - look for the modal with specific aria-label
+      const modal = page.getByLabel('Keyboard Shortcuts', { exact: true });
       if (await modal.isVisible()) {
         await expect(modal).toBeVisible();
       }

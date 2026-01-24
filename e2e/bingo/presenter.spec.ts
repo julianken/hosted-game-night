@@ -39,9 +39,11 @@ test.describe('Bingo Presenter View', () => {
 
   test('displays keyboard shortcuts reference @medium', async ({ authenticatedBingoPage: page }) => {
     await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
-    await expect(page.getByText(/roll/i)).toBeVisible();
-    await expect(page.getByText(/pause/i)).toBeVisible();
-    await expect(page.getByText(/undo/i)).toBeVisible();
+    // Look for keyboard shortcuts section specifically (not settings labels)
+    const shortcutsSection = page.locator('text=/keyboard shortcuts/i').locator('..');
+    await expect(shortcutsSection.getByText('Roll', { exact: true })).toBeVisible();
+    await expect(shortcutsSection.getByText(/pause/i)).toBeVisible();
+    await expect(shortcutsSection.getByText(/undo/i)).toBeVisible();
   });
 
   test('shows ball counter at zero initially @high', async ({ authenticatedBingoPage: page }) => {
@@ -63,8 +65,8 @@ test.describe('Bingo Presenter View', () => {
       }
     }
 
-    // Pattern should be selected/shown somewhere
-    await expect(page.getByText(/pattern/i)).toBeVisible();
+    // Pattern should be selected/shown somewhere - use specific label
+    await expect(page.getByText('Winning Pattern')).toBeVisible();
   });
 
   test('can toggle auto-call setting @medium', async ({ authenticatedBingoPage: page }) => {
