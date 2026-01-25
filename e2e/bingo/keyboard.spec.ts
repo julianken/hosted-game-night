@@ -212,53 +212,15 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }
   });
 
-  test('keyboard shortcuts do not work when typing in input', async ({ authenticatedBingoPage: page }) => {
-    // Start the game first so shortcut would normally work
-    const startButton = page.getByRole('button', { name: /start game/i });
-    if (await startButton.isVisible()) {
-      await startButton.click();
-      await page.waitForTimeout(500);
-    }
+  // Removed: Test for non-existent feature
+  // The Bingo play page does not have text input fields - it uses buttons, toggles, and selectors.
+  // If text inputs are added in the future, this test can be restored to verify keyboard shortcuts
+  // don't trigger while typing in input fields.
 
-    // Find any input field (if present)
-    // Try to find visible text inputs (not hidden password fields, etc.)
-    const input = page.locator('input[type="text"], input:not([type])').first();
-
-    let hasInput = false;
-    try {
-      hasInput = await input.isVisible({ timeout: 1000 });
-    } catch {
-      // No input found
-    }
-
-    test.skip(!hasInput, 'No input field found');
-
-    await input.focus();
-    await input.fill('');
-    await page.waitForTimeout(100);
-
-    // Get initial ball count
-    const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
-
-    // Press space while focused on input
-    await page.keyboard.press('Space');
-
-    // Wait a moment to ensure shortcut would have triggered if it was going to
-    await page.waitForTimeout(1000);
-
-    // Ball count should NOT increase (space should type in input, not call ball)
-    const newCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const newNum = parseInt(newCount?.match(/(\d+)/)?.[1] || '0');
-
-    expect(newNum).toBe(initialNum);
-  });
-
-  test('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
-    // Skip: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
+  test.fixme('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
+    // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
     // The popup window times out at 30s before we can test keyboard shortcuts
-    // This test should be re-enabled once BEA-333 is resolved
-    test.skip();
+    // Re-enable this test once BEA-333 is resolved
 
     await waitForHydration(page);
 
@@ -284,11 +246,10 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(await fullscreenIndicator.count()).toBeGreaterThanOrEqual(0);
   });
 
-  test('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
-    // Skip: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
+  test.fixme('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
+    // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
     // The popup window times out at 30s before we can test keyboard shortcuts
-    // This test should be re-enabled once BEA-333 is resolved
-    test.skip();
+    // Re-enable this test once BEA-333 is resolved
 
     await waitForHydration(page);
 
@@ -306,24 +267,13 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await displayPage.keyboard.press('Shift+/'); // ? is Shift+/
 
     // Help modal should appear
-    const helpModal = displayPage.getByRole('dialog').or(
-      displayPage.locator('[class*="modal"]')
-    );
-
-    let hasModal = false;
-    try {
-      hasModal = await helpModal.isVisible({ timeout: 2000 });
-    } catch {
-      // No help modal found
-    }
-
-    test.skip(!hasModal, 'No help modal implemented yet');
-
+    const helpModal = displayPage.getByRole('dialog');
+    await expect(helpModal).toBeVisible({ timeout: 2000 });
     await expect(helpModal).toContainText(/keyboard|shortcut|help/i);
 
     // Close with Escape
     await displayPage.keyboard.press('Escape');
-    await displayPage.waitForTimeout(500);
+    await expect(helpModal).not.toBeVisible();
   });
 
   test('multiple rapid key presses are handled correctly', async ({ authenticatedBingoPage: page }) => {

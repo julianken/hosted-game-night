@@ -187,8 +187,18 @@ test.describe('Room Setup Flow', () => {
     });
 
     test.skip('should work offline with network disconnected', async ({ authenticatedBingoPage: page, context }) => {
-      // TODO: Requires service worker (production build only)
-      // Run with: pnpm build && pnpm start && pnpm exec playwright test
+      // REQUIRES: Production build with service worker
+      //
+      // Why skipped: page.reload() while offline fails in dev mode because Next.js dev server
+      // doesn't register service workers. Without SW, browser has no cached assets to serve offline.
+      //
+      // To run this test:
+      // 1. pnpm --filter @beak-gaming/bingo build
+      // 2. pnpm --filter @beak-gaming/bingo start
+      // 3. pnpm exec playwright test --project=bingo-pwa
+      //
+      // Alternative: Create separate 'bingo-pwa' test project in playwright.config.ts
+      // that runs against production builds. See Opus analysis for implementation details.
 
       // Simulate offline mode
       await context.setOffline(true);
@@ -430,8 +440,18 @@ test.describe('Room Setup Flow', () => {
     });
 
     test.skip('should hide offline banner when network reconnects', async ({ authenticatedBingoPage: page, context }) => {
-      // TODO: Requires service worker (production build only)
-      // Run with: pnpm build && pnpm start && pnpm exec playwright test
+      // REQUIRES: Production build with service worker (for page.reload() while offline)
+      //
+      // Alternative approach: This test COULD be unskipped using JavaScript event injection
+      // to test the banner UI behavior without requiring service worker:
+      //
+      // await page.evaluate(() => {
+      //   Object.defineProperty(navigator, 'onLine', { value: false });
+      //   window.dispatchEvent(new Event('offline'));
+      // });
+      //
+      // This tests the UI reaction (OfflineBanner component) but not true network offline behavior.
+      // See Opus analysis for full implementation details if this approach is preferred.
 
       // Start offline
       await context.setOffline(true);
