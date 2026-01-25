@@ -98,15 +98,33 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
       return;
     }
 
-    // Call signIn from useAuth hook
-    const { error } = await signIn(email, password);
+    // Call Platform Hub login API to set cross-app SSO cookies
+    // This replaces direct signIn call to ensure beak_access_token is set
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!error) {
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        // Show error via useAuth's error state
+        await signIn(email, password);
+        return; // signIn will update authError state
+      }
+
       // Success - redirect with preserved authorization_id if present
       const redirectUrl = buildRedirectUrl(redirectTo, authorizationId);
       router.push(redirectUrl);
+    } catch (error) {
+      console.error('Login API error:', error);
+      // Fallback to direct signIn on network errors
+      await signIn(email, password);
     }
-    // Error handling is automatic via authError state
   };
 
   return (

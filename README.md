@@ -132,7 +132,22 @@ pnpm dev:hub          # Run platform-hub only (port 3002)
 pnpm test             # Run all tests in watch mode
 pnpm test:run         # Single run
 pnpm test:coverage    # With coverage report
+pnpm test:e2e         # Run E2E tests with Playwright
 ```
+
+#### E2E Testing Setup
+
+Before running E2E tests for the first time, install Playwright browsers:
+
+```bash
+# Install all browsers (Chromium, Firefox, WebKit)
+pnpm exec playwright install
+
+# Or install only WebKit for mobile viewport tests
+pnpm exec playwright install webkit
+```
+
+E2E tests include mobile viewport testing on WebKit (iPhone 12 simulation). If you encounter "Executable doesn't exist" errors, run the install command above.
 
 ### Building
 

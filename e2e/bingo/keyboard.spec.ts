@@ -4,9 +4,29 @@ import { waitForHydration, pressKey } from '../utils/helpers';
 test.describe('Bingo Keyboard Shortcuts', () => {
   test.beforeEach(async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
+
+    // Wait for keyboard event handlers to be registered
+    // The useGameKeyboard hook registers listeners in a useEffect
+    await page.waitForTimeout(500);
+
+    // Ensure page is focused (not any specific element)
+    // This allows keyboard shortcuts to work properly
+    await page.evaluate(() => {
+      const body = document.querySelector('body');
+      if (body) {
+        body.focus();
+      }
+    });
   });
 
   test('Space key calls a ball', async ({ authenticatedBingoPage: page }) => {
+    // Start the game first - Space only works when canCall is true
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(500);
+    }
+
     // Get initial ball count
     const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
     const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
@@ -14,84 +34,152 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     // Press Space to call a ball
     await page.keyboard.press('Space');
 
-    // Wait for ball to be called
-    await page.waitForTimeout(2000);
-
-    // Ball count should increase
-    const newCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const newNum = parseInt(newCount?.match(/(\d+)/)?.[1] || '0');
-
-    expect(newNum).toBeGreaterThan(initialNum);
+    // Wait for ball to be called (audio + animation) using event-driven assertion
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBeGreaterThan(initialNum);
+    }).toPass({ timeout: 5000 });
   });
 
   test('P key toggles pause', async ({ authenticatedBingoPage: page }) => {
-    // Start a game first
+    // Start the game first
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Get initial ball count
+    const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
+    const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
+
+    // Call a ball to ensure game is in playing state
     await page.keyboard.press('Space');
-    await page.waitForTimeout(2000);
+
+    // Wait for ball to be called using event-driven assertion
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBeGreaterThan(initialNum);
+    }).toPass({ timeout: 5000 });
 
     // Press P to pause
     await page.keyboard.press('KeyP');
-    await page.waitForTimeout(500);
 
-    // Should show paused state or resume button
-    const pauseIndicator = page.getByText(/paused|resume/i);
-    const isPaused = await pauseIndicator.isVisible();
+    // Should show resume button
+    const resumeButton = page.getByRole('button', { name: /resume/i });
+    await expect(resumeButton).toBeVisible({ timeout: 2000 });
 
-    if (isPaused) {
-      // Press P again to resume
-      await page.keyboard.press('KeyP');
-      await page.waitForTimeout(500);
+    // Press P again to resume
+    await page.keyboard.press('KeyP');
 
-      // Should show play state again
-      const playButton = page.getByRole('button', { name: /pause/i });
-      await expect(playButton).toBeVisible();
-    }
+    // Should show pause button again
+    const pauseButton = page.getByRole('button', { name: /pause/i });
+    await expect(pauseButton).toBeVisible({ timeout: 2000 });
   });
 
   test('U key undoes last call', async ({ authenticatedBingoPage: page }) => {
-    // Call two balls
+    // Start the game first
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    // Get initial ball count
+    const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
+    const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
+
+    // Call first ball
     await page.keyboard.press('Space');
-    await page.waitForTimeout(2000);
+
+    // Wait for first ball to complete (including audio processing)
+    // The game has an isProcessingRef guard that blocks calls during audio playback
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBe(initialNum + 1);
+    }).toPass({ timeout: 5000 });
+
+    // Wait for audio processing to complete before second call
+    // Ball calls include: roll sound + reveal chime + voice (~2-3s total)
+    await page.waitForTimeout(3000);
+
+    // Call second ball
     await page.keyboard.press('Space');
-    await page.waitForTimeout(2000);
+
+    // Wait for second ball to complete
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBe(initialNum + 2);
+    }).toPass({ timeout: 5000 });
 
     const countBefore = await page.getByText(/(\d+)\s*called/i).first().textContent();
     const numBefore = parseInt(countBefore?.match(/(\d+)/)?.[1] || '0');
 
     // Press U to undo
     await page.keyboard.press('KeyU');
-    await page.waitForTimeout(500);
 
-    const countAfter = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const numAfter = parseInt(countAfter?.match(/(\d+)/)?.[1] || '0');
-
-    expect(numAfter).toBeLessThan(numBefore);
+    // Wait for undo to complete using event-driven assertion
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBe(numBefore - 1);
+    }).toPass({ timeout: 2000 });
   });
 
   test('R key resets the game', async ({ authenticatedBingoPage: page }) => {
-    // Call some balls first
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(2000);
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(2000);
-
-    // Verify balls were called
-    const countBefore = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const numBefore = parseInt(countBefore?.match(/(\d+)/)?.[1] || '0');
-    expect(numBefore).toBeGreaterThan(0);
-
-    // Press R to reset
-    await page.keyboard.press('KeyR');
-    await page.waitForTimeout(500);
-
-    // May need to confirm reset
-    const confirmButton = page.getByRole('button', { name: /confirm|yes/i });
-    if (await confirmButton.isVisible()) {
-      await confirmButton.click();
+    // Start the game first
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
       await page.waitForTimeout(500);
     }
 
-    // Ball count should be 0
+    // Get initial ball count
+    const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
+    const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
+
+    // Call first ball
+    await page.keyboard.press('Space');
+
+    // Wait for first ball to complete (including audio processing)
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBe(initialNum + 1);
+    }).toPass({ timeout: 5000 });
+
+    // Wait for audio processing to complete before second call
+    // Ball calls include: roll sound + reveal chime + voice (~2-3s total)
+    await page.waitForTimeout(3000);
+
+    // Call second ball
+    await page.keyboard.press('Space');
+
+    // Wait for second ball to complete
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBe(initialNum + 2);
+    }).toPass({ timeout: 5000 });
+
+    // Press R to reset
+    await page.keyboard.press('KeyR');
+
+    // May need to confirm reset (dialog may appear)
+    const confirmButton = page.getByRole('button', { name: /confirm|yes/i });
+    try {
+      if (await confirmButton.isVisible({ timeout: 1000 })) {
+        await confirmButton.click();
+      }
+    } catch {
+      // No confirmation dialog - that's fine
+    }
+
+    // Ball count should be 0 - use event-driven assertion
     await expect(page.getByText(/0\s*called/i)).toBeVisible({ timeout: 2000 });
   });
 
@@ -125,30 +213,53 @@ test.describe('Bingo Keyboard Shortcuts', () => {
   });
 
   test('keyboard shortcuts do not work when typing in input', async ({ authenticatedBingoPage: page }) => {
-    // Find any input field (if present)
-    const input = page.locator('input').first();
-
-    if (await input.isVisible()) {
-      await input.focus();
-      await input.fill('');
-
-      // Get initial ball count
-      const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-      const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
-
-      // Press space while focused on input
-      await page.keyboard.press('Space');
+    // Start the game first so shortcut would normally work
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
       await page.waitForTimeout(500);
-
-      // Ball count should NOT increase (space should type in input, not call ball)
-      const newCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-      const newNum = parseInt(newCount?.match(/(\d+)/)?.[1] || '0');
-
-      expect(newNum).toBe(initialNum);
     }
+
+    // Find any input field (if present)
+    // Try to find visible text inputs (not hidden password fields, etc.)
+    const input = page.locator('input[type="text"], input:not([type])').first();
+
+    let hasInput = false;
+    try {
+      hasInput = await input.isVisible({ timeout: 1000 });
+    } catch {
+      // No input found
+    }
+
+    test.skip(!hasInput, 'No input field found');
+
+    await input.focus();
+    await input.fill('');
+    await page.waitForTimeout(100);
+
+    // Get initial ball count
+    const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
+    const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
+
+    // Press space while focused on input
+    await page.keyboard.press('Space');
+
+    // Wait a moment to ensure shortcut would have triggered if it was going to
+    await page.waitForTimeout(1000);
+
+    // Ball count should NOT increase (space should type in input, not call ball)
+    const newCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
+    const newNum = parseInt(newCount?.match(/(\d+)/)?.[1] || '0');
+
+    expect(newNum).toBe(initialNum);
   });
 
   test('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
+    // Skip: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
+    // The popup window times out at 30s before we can test keyboard shortcuts
+    // This test should be re-enabled once BEA-333 is resolved
+    test.skip();
+
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -158,10 +269,13 @@ test.describe('Bingo Keyboard Shortcuts', () => {
 
     await waitForHydration(displayPage);
 
+    // Wait for keyboard event handlers to be registered on display page
+    await displayPage.waitForTimeout(500);
+
     // Note: Fullscreen API may not work in headless mode
     // Just verify the key handler exists by checking for UI response
     await displayPage.keyboard.press('KeyF');
-    await displayPage.waitForTimeout(300);
+    await displayPage.waitForTimeout(500);
 
     // If fullscreen indicator appears, it worked
     // Otherwise, just verify no error occurred
@@ -171,6 +285,11 @@ test.describe('Bingo Keyboard Shortcuts', () => {
   });
 
   test('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
+    // Skip: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
+    // The popup window times out at 30s before we can test keyboard shortcuts
+    // This test should be re-enabled once BEA-333 is resolved
+    test.skip();
+
     await waitForHydration(page);
 
     const [displayPage] = await Promise.all([
@@ -180,43 +299,59 @@ test.describe('Bingo Keyboard Shortcuts', () => {
 
     await waitForHydration(displayPage);
 
+    // Wait for keyboard event handlers to be registered on display page
+    await displayPage.waitForTimeout(500);
+
     // Press ? to open help
     await displayPage.keyboard.press('Shift+/'); // ? is Shift+/
-    await displayPage.waitForTimeout(500);
 
     // Help modal should appear
     const helpModal = displayPage.getByRole('dialog').or(
       displayPage.locator('[class*="modal"]')
     );
 
-    if (await helpModal.isVisible()) {
-      await expect(helpModal).toContainText(/keyboard|shortcut|help/i);
-
-      // Close with Escape
-      await displayPage.keyboard.press('Escape');
-      await displayPage.waitForTimeout(300);
+    let hasModal = false;
+    try {
+      hasModal = await helpModal.isVisible({ timeout: 2000 });
+    } catch {
+      // No help modal found
     }
+
+    test.skip(!hasModal, 'No help modal implemented yet');
+
+    await expect(helpModal).toContainText(/keyboard|shortcut|help/i);
+
+    // Close with Escape
+    await displayPage.keyboard.press('Escape');
+    await displayPage.waitForTimeout(500);
   });
 
   test('multiple rapid key presses are handled correctly', async ({ authenticatedBingoPage: page }) => {
+    // Start the game first
+    const startButton = page.getByRole('button', { name: /start game/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(500);
+    }
+
     // Get initial count
     const initialCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
     const initialNum = parseInt(initialCount?.match(/(\d+)/)?.[1] || '0');
 
     // Press Space rapidly 3 times
+    // The hook has a guard (isProcessingRef) to prevent race conditions
     await page.keyboard.press('Space');
     await page.waitForTimeout(100);
     await page.keyboard.press('Space');
     await page.waitForTimeout(100);
     await page.keyboard.press('Space');
 
-    // Wait for all balls to be called
-    await page.waitForTimeout(5000);
-
-    // Should have called balls (may not be exactly 3 due to debouncing)
-    const finalCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const finalNum = parseInt(finalCount?.match(/(\d+)/)?.[1] || '0');
-
-    expect(finalNum).toBeGreaterThan(initialNum);
+    // Wait for all balls to be called using event-driven assertion
+    // Should have called at least 1 ball (may not be exactly 3 due to race condition guards)
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBeGreaterThan(initialNum);
+    }).toPass({ timeout: 10000 });
   });
 });

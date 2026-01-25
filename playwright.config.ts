@@ -1,4 +1,21 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load .env file manually (Playwright doesn't auto-load it)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach((line) => {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const [, key, value] = match;
+      process.env[key.trim()] = value.trim();
+    }
+  });
+}
 
 const isCI = !!process.env.CI;
 
@@ -15,6 +32,8 @@ const isCI = !!process.env.CI;
  */
 export default defineConfig({
   testDir: './e2e',
+  /* Global setup to validate test environment */
+  globalSetup: './e2e/global-setup.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
@@ -87,35 +106,43 @@ export default defineConfig({
   /**
    * Web server configuration:
    * - CI: Use production servers (next start) - apps are pre-built by workflow
-   * - Local: Use dev servers (next dev) - supports hot reload
+   * - Local: Disabled - assumes dev servers are manually started
    *
-   * Production servers start much faster (~2s vs ~30s each) since they don't
-   * need to compile TypeScript/JSX on startup.
+   * REASON: webServer with reuseExistingServer causes Playwright to hang
+   * during initialization even when servers are already running. This appears
+   * to be a Playwright bug with the health check logic. Manual server startup
+   * works reliably.
+   *
+   * To run E2E tests locally:
+   * 1. Start servers: pnpm dev (or pnpm dev:bingo, pnpm dev:hub separately)
+   * 2. Run tests: pnpm test:e2e
    */
-  webServer: [
-    {
-      command: isCI ? 'pnpm --filter @beak-gaming/bingo start' : 'pnpm dev:bingo',
-      url: 'http://localhost:3000',
-      reuseExistingServer: !isCI,
-      timeout: 120 * 1000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-    {
-      command: isCI ? 'pnpm --filter @beak-gaming/trivia start' : 'pnpm dev:trivia',
-      url: 'http://localhost:3001',
-      reuseExistingServer: !isCI,
-      timeout: 120 * 1000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-    {
-      command: isCI ? 'pnpm --filter @beak-gaming/platform-hub start' : 'pnpm dev:hub',
-      url: 'http://localhost:3002',
-      reuseExistingServer: !isCI,
-      timeout: 120 * 1000,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    },
-  ],
+  webServer: isCI
+    ? [
+        {
+          command: 'pnpm --filter @beak-gaming/bingo start',
+          url: 'http://localhost:3000',
+          reuseExistingServer: false,
+          timeout: 120 * 1000,
+          stdout: 'ignore',
+          stderr: 'ignore',
+        },
+        {
+          command: 'pnpm --filter @beak-gaming/trivia start',
+          url: 'http://localhost:3001',
+          reuseExistingServer: false,
+          timeout: 120 * 1000,
+          stdout: 'ignore',
+          stderr: 'ignore',
+        },
+        {
+          command: 'pnpm --filter @beak-gaming/platform-hub start',
+          url: 'http://localhost:3002',
+          reuseExistingServer: false,
+          timeout: 120 * 1000,
+          stdout: 'ignore',
+          stderr: 'ignore',
+        },
+      ]
+    : undefined,
 });
