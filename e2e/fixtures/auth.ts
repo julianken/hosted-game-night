@@ -43,14 +43,22 @@ export interface GameAuthFixtures {
   /**
    * Pre-authenticated page for Bingo app.
    * Logs in via Platform Hub, then navigates to Bingo with SSO cookies.
+   * By default, dismisses the Room Setup modal automatically.
    */
   authenticatedBingoPage: Page;
 
   /**
    * Pre-authenticated page for Trivia app.
    * Logs in via Platform Hub, then navigates to Trivia with SSO cookies.
+   * By default, dismisses the Room Setup modal automatically.
    */
   authenticatedTriviaPage: Page;
+
+  /**
+   * Skip automatic Room Setup modal dismissal.
+   * Use this when testing the modal itself.
+   */
+  skipModalDismissal: boolean;
 }
 
 /**
@@ -76,6 +84,35 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
 }
 
 /**
+ * Helper function to dismiss the Room Setup modal on Bingo/Trivia /play pages.
+ * The modal auto-opens when the user is authenticated but has no active session.
+ * This helper clicks "Play Offline" to create an offline session and dismiss the modal.
+ *
+ * @param page - Playwright page instance
+ * @param timeout - Maximum time to wait for modal (default: 5000ms)
+ */
+async function dismissRoomSetupModal(page: Page, timeout = 5000): Promise<void> {
+  try {
+    // Wait for the modal to appear (with timeout)
+    const modal = page.getByRole('dialog');
+    await modal.waitFor({ state: 'visible', timeout });
+
+    // Click "Play Offline" button within the modal
+    const playOfflineButton = modal.getByRole('button', { name: /play offline/i });
+    await playOfflineButton.click();
+
+    // Wait for modal to close
+    await modal.waitFor({ state: 'hidden', timeout });
+  } catch (error) {
+    // If modal doesn't appear within timeout, that's fine - user might already have a session
+    // Only throw if the error is NOT a timeout
+    if (error instanceof Error && !error.message.includes('Timeout')) {
+      throw error;
+    }
+  }
+}
+
+/**
  * Extended test with authentication fixtures.
  *
  * Usage:
@@ -89,6 +126,15 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
  * ```
  */
 export const test = base.extend<AuthFixtures & GameAuthFixtures>({
+  /**
+   * Skip automatic Room Setup modal dismissal.
+   * Defaults to false (modal IS dismissed automatically).
+   * Set to true in tests that need to test the modal itself.
+   */
+  skipModalDismissal: async ({}, use) => {
+    await use(false);
+  },
+
   /**
    * Default test user credentials.
    * Override in individual tests if needed.
@@ -137,13 +183,19 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   /**
    * Authenticated Bingo page fixture.
    * Logs in via Platform Hub OAuth, then navigates to Bingo /play.
+   * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedBingoPage: async ({ page, testUser }, use) => {
+  authenticatedBingoPage: async ({ page, testUser, skipModalDismissal }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
     await loginViaPlatformHub(page, testUser);
 
     // 2. Navigate to Bingo /play with SSO cookies
     await page.goto(`${BINGO_URL}/play`);
+
+    // 3. Dismiss Room Setup modal (unless test opts out)
+    if (!skipModalDismissal) {
+      await dismissRoomSetupModal(page);
+    }
 
     // Provide authenticated Bingo page to test
     await use(page);
@@ -154,13 +206,19 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   /**
    * Authenticated Trivia page fixture.
    * Logs in via Platform Hub OAuth, then navigates to Trivia /play.
+   * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedTriviaPage: async ({ page, testUser }, use) => {
+  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
     await loginViaPlatformHub(page, testUser);
 
     // 2. Navigate to Trivia /play with SSO cookies
     await page.goto(`${TRIVIA_URL}/play`);
+
+    // 3. Dismiss Room Setup modal (unless test opts out)
+    if (!skipModalDismissal) {
+      await dismissRoomSetupModal(page);
+    }
 
     // Provide authenticated Trivia page to test
     await use(page);
