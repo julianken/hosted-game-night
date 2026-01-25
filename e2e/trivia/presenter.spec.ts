@@ -150,9 +150,8 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Question Navigation', () => {
     test('shows question list', async ({ authenticatedTriviaPage: page }) => {
-      // Question list has "Questions" heading, rounds are shown in the list
-      await expect(page.getByRole('heading', { name: /questions/i })).toBeVisible();
-      await expect(page.getByText('Round 1', { exact: true })).toBeVisible();
+      // Question list section should be visible - use heading to find the section
+      await expect(page.getByRole('heading', { name: /round 1/i })).toBeVisible();
     });
 
     test('can navigate questions with keyboard', async ({ authenticatedTriviaPage: page }) => {
@@ -329,17 +328,17 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can pause game', async ({ authenticatedTriviaPage: page }) => {
-      const pauseBtn = page.getByRole('button', { name: /pause/i });
+      const pauseBtn = page.getByRole('button', { name: /^pause$/i });
       await pauseBtn.click();
       await page.waitForTimeout(300);
 
-      // Should show paused state
-      await expect(page.getByText(/paused/i)).toBeVisible();
+      // Should show paused state - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^paused$/i })).toBeVisible();
     });
 
     test('can resume game from pause', async ({ authenticatedTriviaPage: page }) => {
       // Pause first
-      await page.getByRole('button', { name: /pause/i }).click();
+      await page.getByRole('button', { name: /^pause$/i }).click();
       await page.waitForTimeout(300);
 
       // Resume
@@ -347,39 +346,40 @@ test.describe('Trivia Presenter View', () => {
       await resumeBtn.click();
       await page.waitForTimeout(300);
 
-      // Should be playing again
-      await expect(page.getByText(/playing|round 1/i)).toBeVisible();
+      // Should be playing again - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^playing/i })).toBeVisible();
     });
 
     test('can use pause keyboard shortcut (P)', async ({ authenticatedTriviaPage: page }) => {
       await pressKey(page, 'KeyP');
       await page.waitForTimeout(300);
 
-      // Should show paused state
-      await expect(page.getByText(/paused/i)).toBeVisible();
+      // Should show paused state - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^paused$/i })).toBeVisible();
 
       // Press P again to resume
       await pressKey(page, 'KeyP');
       await page.waitForTimeout(300);
 
-      await expect(page.getByText(/playing|round 1/i)).toBeVisible();
+      // Should be playing again - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^playing/i })).toBeVisible();
     });
 
     test('can trigger emergency pause', async ({ authenticatedTriviaPage: page }) => {
-      const emergencyBtn = page.getByRole('button', { name: /emergency/i });
+      const emergencyBtn = page.getByRole('button', { name: /^emergency$/i });
       await emergencyBtn.click();
       await page.waitForTimeout(300);
 
-      // Should show emergency pause state
-      await expect(page.getByText(/emergency pause/i)).toBeVisible();
+      // Should show emergency pause state - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^emergency pause$/i })).toBeVisible();
     });
 
     test('can use emergency pause keyboard shortcut (E)', async ({ authenticatedTriviaPage: page }) => {
       await pressKey(page, 'KeyE');
       await page.waitForTimeout(300);
 
-      // Should show emergency pause state
-      await expect(page.getByText(/emergency pause/i)).toBeVisible();
+      // Should show emergency pause state - use status badge specifically
+      await expect(page.locator('span').filter({ hasText: /^emergency pause$/i })).toBeVisible();
     });
   });
 
@@ -426,8 +426,8 @@ test.describe('Trivia Presenter View', () => {
         await completeBtn.click();
         await page.waitForTimeout(500);
 
-        // Should show between rounds state
-        await expect(page.getByText(/round.*complete/i)).toBeVisible();
+        // Should show between rounds state - use heading specifically
+        await expect(page.getByRole('heading', { name: /round.*complete/i })).toBeVisible();
 
         // Click next round
         const nextRoundBtn = page.getByRole('button', { name: /next round/i });

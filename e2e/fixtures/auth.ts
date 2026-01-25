@@ -200,21 +200,31 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
  */
 async function dismissRoomSetupModal(page: Page, timeout = 5000): Promise<void> {
   try {
-    // Wait for the modal to appear (with timeout)
-    const modal = page.getByRole('dialog');
+    // Wait for the modal to appear (with specific name matcher)
+    const modal = page.getByRole('dialog', { name: /room setup/i });
     await modal.waitFor({ state: 'visible', timeout });
 
-    // Click "Play Offline" button within the modal
+    // Wait for modal content to be fully rendered
     const playOfflineButton = modal.getByRole('button', { name: /play offline/i });
+    await playOfflineButton.waitFor({ state: 'visible', timeout: 2000 });
+
+    // Click "Play Offline" button
     await playOfflineButton.click();
 
-    // Wait for modal to close
+    // Verify modal closed
     await modal.waitFor({ state: 'hidden', timeout });
   } catch (error) {
     // If modal doesn't appear within timeout, that's fine - user might already have a session
-    // Only throw if the error is NOT a timeout
+    // Only throw if the error is NOT a timeout waiting for the modal to appear
     if (error instanceof Error && !error.message.includes('Timeout')) {
       throw error;
+    }
+    // If the modal appeared but didn't close properly, that's a real error
+    // Check if modal is still visible
+    const modal = page.getByRole('dialog', { name: /room setup/i });
+    const isVisible = await modal.isVisible().catch(() => false);
+    if (isVisible) {
+      throw new Error('Room Setup modal failed to close after clicking Play Offline');
     }
   }
 }
