@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration } from '../utils/helpers';
+import { waitForHydration, waitForDualScreenSync, waitForSyncedContent, waitForRoomSetupModal } from '../utils/helpers';
 
 test.describe('Bingo Dual-Screen Synchronization', () => {
   test('presenter and display sync on connection', async ({ authenticatedBingoPage: page }) => {
@@ -34,13 +34,13 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await waitForHydration(displayPage);
 
     // Wait for sync to establish
-    await page.waitForTimeout(1000);
+    await waitForDualScreenSync(displayPage);
 
     // Call a ball
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
 
-    // Wait for the ball to be called and synced
-    await page.waitForTimeout(3000);
+    // Wait for sync to update display with called ball
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
     // Get the ball from presenter (looking for B-XX, I-XX, etc. format)
     const presenterBallArea = page.locator('text="Current Ball"').locator('..').locator('[class*="ball-"]');
@@ -57,18 +57,31 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('multiple balls sync correctly', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Close Room Setup modal if present
+    await waitForRoomSetupModal(page);
+    const closeButton = page.getByRole('button', { name: /close/i });
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+    }
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
-    await page.waitForTimeout(1000);
+    await waitForDualScreenSync(displayPage);
 
     // Call 3 balls
     const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
     for (let i = 0; i < 3; i++) {
       await rollButton.click();
-      await page.waitForTimeout(2000);
+      // Wait for ball count to increment on presenter
+      const expectedCount = i + 1;
+      await expect(async () => {
+        const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+        const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+        expect(num).toBeGreaterThanOrEqual(expectedCount);
+      }).toPass({ timeout: 5000 });
     }
 
     // Check presenter ball count
@@ -86,23 +99,32 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('pattern change syncs to display', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Close Room Setup modal if present
+    await waitForRoomSetupModal(page);
+    const closeButton = page.getByRole('button', { name: /close/i });
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+    }
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
+    await waitForDualScreenSync(displayPage);
 
     // Select a pattern on presenter (if dropdown exists)
     const patternSelector = page.getByRole('combobox').filter({ hasText: /pattern/i }).first();
 
     if (await patternSelector.isVisible()) {
-      await patternSelector.click();
-      await page.getByText(/four corners/i).first().click();
-      await page.waitForTimeout(1000);
+      // Select option using value or label string
+      await patternSelector.selectOption('four-corners');
 
       // Start the game to trigger pattern sync
       await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-      await page.waitForTimeout(2000);
+
+      // Wait for pattern to sync to display
+      await waitForSyncedContent(displayPage, /pattern|four corners/i);
 
       // Display should show the pattern
       const displayPattern = displayPage.getByText(/pattern|four corners/i);
@@ -118,13 +140,14 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
+    await waitForDualScreenSync(displayPage);
 
     // Call some balls
     const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
     await rollButton.click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
     await rollButton.click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
     // Reset the game
     const resetButton = page.getByRole('button', { name: /reset/i });
@@ -137,9 +160,8 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
         await confirmButton.click();
       }
 
-      await page.waitForTimeout(1000);
-
       // Display should reset (show waiting/ready state or zero balls)
+      await waitForSyncedContent(displayPage, /ready to start|waiting|0.*called/i);
       const displayWaiting = displayPage.getByText(/ready to start|waiting|0.*called/i);
       await expect(displayWaiting.first()).toBeVisible({ timeout: 5000 });
     }
@@ -153,13 +175,14 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
+    await waitForDualScreenSync(displayPage);
 
     // Call some balls
     const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
     await rollButton.click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
     await rollButton.click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
     // Get count before undo
     const countBefore = await displayPage.getByText(/(\d+).*called/i).first().textContent();
@@ -169,13 +192,13 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     const undoButton = page.getByRole('button', { name: /undo/i });
     if (await undoButton.isVisible() && await undoButton.isEnabled()) {
       await undoButton.click();
-      await page.waitForTimeout(1000);
 
-      // Display count should decrease
-      const countAfter = await displayPage.getByText(/(\d+).*called/i).first().textContent();
-      const numAfter = parseInt(countAfter?.match(/(\d+)/)?.[1] || '0');
-
-      expect(numAfter).toBeLessThan(numBefore);
+      // Wait for undo to sync (count should change)
+      await expect(async () => {
+        const countAfter = await displayPage.getByText(/(\d+).*called/i).first().textContent();
+        const numAfter = parseInt(countAfter?.match(/(\d+)/)?.[1] || '0');
+        expect(numAfter).toBeLessThan(numBefore);
+      }).toPass({ timeout: 5000 });
     }
   });
 
@@ -187,10 +210,11 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
+    await waitForDualScreenSync(displayPage);
 
     // Call a ball
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
     // Simulate tab becoming hidden then visible
     await displayPage.evaluate(() => {
@@ -198,9 +222,8 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    await page.waitForTimeout(500);
-
     // Connection should still be active
+    await waitForDualScreenSync(displayPage);
     const syncIndicator = displayPage.locator('[class*="bg-success"]').first();
     await expect(syncIndicator).toBeVisible({ timeout: 5000 });
   });
@@ -208,26 +231,33 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('closing display does not affect presenter', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Close Room Setup modal if present
+    await waitForRoomSetupModal(page);
+    const closeButton = page.getByRole('button', { name: /close/i });
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+    }
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
+    await waitForDualScreenSync(displayPage);
 
     // Call a ball
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-    await page.waitForTimeout(2000);
+    await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
     // Close display
     await displayPage.close();
 
-    // Presenter should still work
+    // Presenter should still work - wait for ball count to update
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-    await page.waitForTimeout(1000);
-
-    // Presenter should show 2 balls called
-    const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
-    expect(num).toBeGreaterThanOrEqual(2);
+    await expect(async () => {
+      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
+      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      expect(num).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 5000 });
   });
 });
