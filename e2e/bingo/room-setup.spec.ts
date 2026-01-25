@@ -127,10 +127,12 @@ test.describe('Room Setup Flow', () => {
       await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
 
       // Session ID should be displayed
-      const offlineSection = page.getByRole('status', { name: /offline session id/i });
-      await expect(offlineSection).toBeVisible();
+      const offlineHeading = page.getByRole('heading', { name: /offline session id/i });
+      await expect(offlineHeading).toBeVisible();
 
       // Look for 6-character alphanumeric session ID within the offline section
+      // The heading's parent status element contains the session ID
+      const offlineSection = offlineHeading.locator('..');
       const sessionIdDisplay = offlineSection.locator('.text-2xl').first();
       await expect(sessionIdDisplay).toBeVisible();
 
