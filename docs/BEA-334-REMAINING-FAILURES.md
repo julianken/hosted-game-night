@@ -61,7 +61,7 @@ await expect(page.getByRole('heading', { name: /offline session id/i })).toBeVis
 2. Find line 130: `await expect(page.getByText(/offline session/i)).toBeVisible();`
 3. Replace with: `await expect(page.getByRole('heading', { name: /offline session id/i })).toBeVisible();`
 4. Find line 183: Same replacement
-5. Run tests: `pnpm exec playwright test -g "should generate and display 6-character"`
+5. Run tests: `pnpm test:e2e -g "should generate and display 6-character"`
 
 ---
 
@@ -105,7 +105,7 @@ localStorage.setItem('bingo_offline_session_A3B7K9', JSON.stringify({
 ```
 
 #### Debugging Steps:
-1. Run test with `--headed` mode: `pnpm exec playwright test --headed -g "should persist offline session"`
+1. Run test with `--headed` mode: `pnpm test:e2e --headed -g "should persist offline session"`
 2. Open browser console during test
 3. Check localStorage after clicking "Play Offline"
 4. Add console.log in the save effect to confirm it runs
@@ -145,7 +145,7 @@ pnpm build
 pnpm start
 
 # Run E2E tests against production
-pnpm exec playwright test
+pnpm test:e2e
 ```
 
 **Option B: Mock Service Worker in Dev Mode** (COMPLEX)
@@ -166,7 +166,7 @@ pnpm exec playwright test
 // e2e/bingo/room-setup.spec.ts
 test.skip('should work offline with network disconnected', async ({ ... }) => {
   // TODO: Requires service worker (production build only)
-  // Run with: pnpm build && pnpm start && playwright test
+  // Run with: pnpm build && pnpm start && pnpm test:e2e
 });
 ```
 
@@ -211,7 +211,7 @@ Error: element(s) not found
 ```
 
 #### Debugging Steps:
-1. Run test with `--headed`: `pnpm exec playwright test --headed -g "should sync display window in offline"`
+1. Run test with `--headed`: `pnpm test:e2e --headed -g "should sync display window in offline"`
 2. Check display page URL when it opens
 3. Check browser console for errors
 4. Verify session ID is in URL query params
@@ -314,8 +314,8 @@ import { FocusTrap } from '@beak-gaming/ui';
 ```bash
 # Fix test selectors
 # Edit e2e/bingo/room-setup.spec.ts lines 130, 183
-pnpm exec playwright test -g "should generate and display 6-character"
-pnpm exec playwright test -g "should recover offline session after page refresh"
+pnpm test:e2e -g "should generate and display 6-character"
+pnpm test:e2e -g "should recover offline session after page refresh"
 
 # Result: 21/26 passing (81%)
 ```
@@ -324,11 +324,11 @@ pnpm exec playwright test -g "should recover offline session after page refresh"
 ```bash
 # Fix localStorage persistence
 # Investigate apps/bingo/src/app/play/page.tsx
-pnpm exec playwright test -g "should persist offline session"
+pnpm test:e2e -g "should persist offline session"
 
 # Fix display window sync
 # Investigate apps/bingo/src/app/display/page.tsx
-pnpm exec playwright test -g "should sync display window in offline mode"
+pnpm test:e2e -g "should sync display window in offline mode"
 
 # Result: 23/26 passing (88%)
 ```
@@ -337,7 +337,7 @@ pnpm exec playwright test -g "should sync display window in offline mode"
 ```bash
 # Fix keyboard focus
 # Add autoFocus to RoomSetupModal.tsx
-pnpm exec playwright test -g "keyboard accessible"
+pnpm test:e2e -g "keyboard accessible"
 
 # Result: 24/26 passing (92%)
 ```
@@ -346,7 +346,7 @@ pnpm exec playwright test -g "keyboard accessible"
 ```bash
 # Skip PWA tests in dev mode
 # Run full E2E suite against production build before releases
-pnpm build && pnpm start && pnpm exec playwright test
+pnpm build && pnpm start && pnpm test:e2e
 
 # Result: All tests passing in appropriate environments
 ```
@@ -363,7 +363,7 @@ pnpm build && pnpm start && pnpm exec playwright test
 Before marking task complete:
 
 1. [ ] Start dev servers: `pnpm dev`
-2. [ ] Run relevant E2E tests: `pnpm exec playwright test e2e/<feature>.spec.ts`
+2. [ ] Run relevant E2E tests: `pnpm test:e2e e2e/<feature>.spec.ts`
 3. [ ] All tests pass (0 failures)
 4. [ ] Screenshots reviewed (no unexpected states)
 5. [ ] If failures: Fix code, not tests (unless test is wrong)
@@ -378,7 +378,7 @@ Before marking task complete:
 ## Spec Review Checklist
 
 1. [ ] Implementation matches requirements
-2. [ ] E2E tests pass: `pnpm exec playwright test e2e/<feature>.spec.ts`
+2. [ ] E2E tests pass: `pnpm test:e2e e2e/<feature>.spec.ts`
 3. [ ] Test coverage is adequate
 4. [ ] No regressions in other tests
 
@@ -391,7 +391,7 @@ Before marking task complete:
 ## Quality Review Checklist
 
 1. [ ] Code quality acceptable
-2. [ ] ALL E2E tests pass: `pnpm exec playwright test`
+2. [ ] ALL E2E tests pass: `pnpm test:e2e`
 3. [ ] No test warnings or flaky tests
 4. [ ] Screenshots show correct UI states
 

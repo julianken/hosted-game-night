@@ -263,18 +263,18 @@ E2E tests need infrastructure improvements for:
 
 ```bash
 # Test sharding locally
-npx playwright test --shard=1/4
-npx playwright test --shard=2/4
+pnpm test:e2e --shard=1/4
+pnpm test:e2e --shard=2/4
 
 # Test critical-only filter
-npx playwright test --grep "@critical"
+pnpm test:e2e --grep "@critical"
 
 # Verify all 3 web servers start
 pnpm dev & sleep 30 && curl -s localhost:3000 && curl -s localhost:3001 && curl -s localhost:3002
 
 # Verify existing tests still pass
-npx playwright test --project=bingo
-npx playwright test --project=trivia
+pnpm test:e2e --project=bingo
+pnpm test:e2e --project=trivia
 ```
 
 ---
@@ -373,20 +373,20 @@ describe('@critical Logout', () => {
 - [ ] `e2e/platform-hub/logout.spec.ts` has 5+ passing tests
 - [ ] All tests tagged with @critical
 - [ ] Tests use `e2e/fixtures/auth.ts` for authenticated pages
-- [ ] `npx playwright test --project=platform-hub` passes
+- [ ] `pnpm test:e2e --project=platform-hub` passes
 - [ ] No flaky tests (3 consecutive green runs)
 
 #### Verification Commands
 
 ```bash
 # Run Platform Hub tests only
-npx playwright test --project=platform-hub
+pnpm test:e2e --project=platform-hub
 
 # Run critical auth tests
-npx playwright test --project=platform-hub --grep "@critical"
+pnpm test:e2e --project=platform-hub --grep "@critical"
 
 # Generate HTML report
-npx playwright test --project=platform-hub --reporter=html
+pnpm test:e2e --project=platform-hub --reporter=html
 ```
 
 ---
@@ -479,16 +479,16 @@ describe('@high Settings', () => {
 - [ ] All tests tagged with @high
 - [ ] Tests use `authenticatedPage` fixture
 - [ ] Tests verify toast notifications appear
-- [ ] `npx playwright test --project=platform-hub` passes
+- [ ] `pnpm test:e2e --project=platform-hub` passes
 
 #### Verification Commands
 
 ```bash
 # Run dashboard/profile tests
-npx playwright test --project=platform-hub dashboard profile settings
+pnpm test:e2e --project=platform-hub dashboard profile settings
 
 # Check for flaky tests
-npx playwright test --project=platform-hub --repeat-each=3
+pnpm test:e2e --project=platform-hub --repeat-each=3
 ```
 
 ---
@@ -614,10 +614,10 @@ test('complete SSO flow: Bingo -> Hub -> Bingo', async ({ browser }) => {
 
 ```bash
 # Run all OAuth tests
-npx playwright test oauth sso-bingo sso-trivia
+pnpm test:e2e oauth sso-bingo sso-trivia
 
 # Run cross-app tests (requires all servers)
-pnpm dev & npx playwright test --grep "SSO"
+pnpm dev & pnpm test:e2e --grep "SSO"
 ```
 
 ---
@@ -685,7 +685,7 @@ describe('@high Platform Hub Templates', () => {
 
 ```bash
 # Run template tests
-npx playwright test --project=platform-hub templates
+pnpm test:e2e --project=platform-hub templates
 ```
 
 ---
@@ -775,13 +775,13 @@ describe('@medium Error Handling', () => {
 
 ```bash
 # Run accessibility tests
-npx playwright test --project=platform-hub accessibility
+pnpm test:e2e --project=platform-hub accessibility
 
 # Run security tests (may need special setup for rate limiting)
-npx playwright test --project=platform-hub security
+pnpm test:e2e --project=platform-hub security
 
 # Run with axe analysis
-npx playwright test --grep "a11y"
+pnpm test:e2e --grep "a11y"
 ```
 
 ---

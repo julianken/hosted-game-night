@@ -43,7 +43,20 @@ flowchart TD
 - [ ] `pnpm lint`
 - [ ] `pnpm typecheck`
 - [ ] `pnpm build`
-- [ ] Other: 
+- [ ] `pnpm test:e2e` followed by `pnpm test:e2e:summary` (0 failures required)
+- [ ] Other:
+
+### E2E Test Results (if UI/flow changes)
+<!-- Paste output of `pnpm test:e2e:summary` here. MUST show "0 failed" -->
+```
+Test Results Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  0 failed       ← REQUIRED
+  X skipped
+  Y passed
+  Z total
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+``` 
 
 ## Risk / Impact
 <!-- What could break? Who is affected? Mitigations? -->

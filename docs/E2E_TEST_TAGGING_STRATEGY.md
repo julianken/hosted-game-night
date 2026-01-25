@@ -197,11 +197,11 @@ pnpm test:e2e:high
 pnpm test:e2e
 
 # Run specific tag locally
-npx playwright test --grep @medium
-npx playwright test --grep '@critical|@high'
+pnpm test:e2e --grep @medium
+pnpm test:e2e --grep '@critical|@high'
 
 # Run specific app with tag
-npx playwright test --project=bingo --grep @critical
+pnpm test:e2e --project=bingo --grep @critical
 ```
 
 ## CI Configuration

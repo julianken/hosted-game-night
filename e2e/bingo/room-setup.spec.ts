@@ -195,7 +195,7 @@ test.describe('Room Setup Flow', () => {
       // To run this test:
       // 1. pnpm --filter @beak-gaming/bingo build
       // 2. pnpm --filter @beak-gaming/bingo start
-      // 3. pnpm exec playwright test --project=bingo-pwa
+      // 3. pnpm test:e2e --project=bingo-pwa
       //
       // Alternative: Create separate 'bingo-pwa' test project in playwright.config.ts
       // that runs against production builds. See Opus analysis for implementation details.

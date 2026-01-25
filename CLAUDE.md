@@ -73,10 +73,10 @@ Skill(subagent-workflow)
 pnpm dev
 
 # 2. Run E2E tests for your changes
-pnpm exec playwright test e2e/<your-feature>.spec.ts
+pnpm test:e2e e2e/<your-feature>.spec.ts
 
 # 3. Run ALL E2E tests before creating PR
-pnpm exec playwright test
+pnpm test:e2e
 
 # 4. If tests fail: FIX CODE, DO NOT COMMIT
 ```
@@ -88,11 +88,38 @@ Before marking ANY task complete or creating a PR:
 - [ ] Dev servers running (bingo, trivia, platform-hub on ports 3000, 3001, 3002)
 - [ ] `.env.local` files exist in ALL apps (bingo, trivia, platform-hub)
 - [ ] SESSION_TOKEN_SECRET is valid 64-char hex (generate with `openssl rand -hex 32`)
-- [ ] E2E tests pass: `pnpm exec playwright test e2e/<feature>.spec.ts`
+- [ ] E2E tests pass: `pnpm test:e2e e2e/<feature>.spec.ts`
 - [ ] NO test failures (0 failures required)
 - [ ] Test screenshots reviewed (check `test-results/` directory)
 
 **If E2E tests fail: DO NOT COMMIT. Fix the code first.**
+
+### E2E Test Output Format
+
+**CRITICAL:** Always check the JSON summary after running tests.
+
+```bash
+# Run tests (generates test-results/results.json)
+$ pnpm test:e2e
+
+# View clear summary with failure counts
+$ pnpm test:e2e:summary
+
+Test Results Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  155 failed      ← ALWAYS clearly visible
+  45 skipped
+  138 passed
+  338 total
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Why this matters:**
+- Terminal output from `pnpm test:e2e` may not show failure counts (background runs, TTY detection issues)
+- The JSON reporter (`test-results/results.json`) has complete, structured results
+- The summary script (`pnpm test:e2e:summary`) parses JSON and shows counts clearly
+- **NEVER claim "no failures" without running `pnpm test:e2e:summary`**
+- Exit code 1 = failures exist (even if terminal output doesn't show count)
 
 ### Common E2E Issues
 

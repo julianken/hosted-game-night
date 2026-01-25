@@ -50,28 +50,50 @@ curl -I http://localhost:3001
 curl -I http://localhost:3002/login
 
 # 4. Run E2E tests
-pnpm exec playwright test
+pnpm test:e2e
 
 # Run specific test file
-pnpm exec playwright test e2e/bingo/room-setup.spec.ts
+pnpm test:e2e e2e/bingo/room-setup.spec.ts
 
 # Run specific test
-pnpm exec playwright test -g "should show room setup modal"
+pnpm test:e2e -g "should show room setup modal"
 
 # Run in headed mode (see browser)
-pnpm exec playwright test --headed
+pnpm test:e2e --headed
 
 # Run with UI mode (interactive)
-pnpm exec playwright test --ui
+pnpm test:e2e --ui
 ```
 
 ### Understanding Test Results
 
-```bash
-# Test output shows:
-✓ 19 passed (35.7s)  # Success
-✘ 7 failed           # Failures
+**CRITICAL:** Always run the summary command to see failure counts clearly:
 
+```bash
+# Step 1: Run tests (generates JSON results)
+pnpm test:e2e
+
+# Step 2: View clear summary
+pnpm test:e2e:summary
+
+Test Results Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  155 failed      ← ALWAYS clearly visible
+  45 skipped
+  138 passed
+  338 total
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Why the summary command is necessary:**
+- Terminal output may not show failure counts (background runs, TTY issues)
+- The JSON reporter writes complete results to `test-results/results.json`
+- `pnpm test:e2e:summary` parses JSON and displays counts clearly
+- **NEVER claim "no failures" without checking the summary**
+
+**Viewing failure details:**
+
+```bash
 # View detailed results
 ls test-results/
 
@@ -97,7 +119,7 @@ pnpm test:e2e:prod
 # Option 2: Manual control
 pnpm build              # Build all apps
 pnpm start              # Start production servers
-pnpm exec playwright test  # Run E2E tests
+pnpm test:e2e  # Run E2E tests
 # Kill servers when done (Ctrl+C)
 ```
 
@@ -108,7 +130,7 @@ Tests marked with `test.skip` and a TODO comment:
 ```typescript
 test.skip('test name', async ({ page, context }) => {
   // TODO: Requires service worker (production build only)
-  // Run with: pnpm build && pnpm start && pnpm exec playwright test
+  // Run with: pnpm build && pnpm start && pnpm test:e2e
 
   // Test implementation...
 });
@@ -202,7 +224,7 @@ openssl rand -hex 32
 # Implementer agent completes task
 # → BEFORE marking task complete, run E2E tests
 
-pnpm exec playwright test e2e/<relevant-test-file>.spec.ts
+pnpm test:e2e e2e/<relevant-test-file>.spec.ts
 ```
 
 **Step 2: In Spec Review**
@@ -211,7 +233,7 @@ pnpm exec playwright test e2e/<relevant-test-file>.spec.ts
 # → MUST include E2E test verification
 
 # Check test results match requirements
-pnpm exec playwright test e2e/<relevant-test-file>.spec.ts
+pnpm test:e2e e2e/<relevant-test-file>.spec.ts
 ```
 
 **Step 3: In Quality Review**
@@ -219,13 +241,13 @@ pnpm exec playwright test e2e/<relevant-test-file>.spec.ts
 # Quality reviewer checks code quality
 # → MUST verify E2E tests pass
 
-pnpm exec playwright test  # Run ALL tests
+pnpm test:e2e  # Run ALL tests
 ```
 
 **Step 4: Before Creating PR**
 ```bash
 # Final validation before merge
-pnpm exec playwright test  # ALL tests must pass
+pnpm test:e2e  # ALL tests must pass
 
 # If any failures:
 # 1. DO NOT create PR
@@ -241,12 +263,12 @@ Each agent in separate worktree can run E2E tests independently:
 # Worktree A: Agent fixing BEA-334
 cd .worktrees/BEA-334-room-setup-modal
 pnpm dev:bingo &
-pnpm exec playwright test e2e/bingo/room-setup.spec.ts
+pnpm test:e2e e2e/bingo/room-setup.spec.ts
 
 # Worktree B: Agent fixing BEA-335 (different feature)
 cd .worktrees/BEA-335-other-feature
 pnpm dev:trivia &
-pnpm exec playwright test e2e/trivia/other-feature.spec.ts
+pnpm test:e2e e2e/trivia/other-feature.spec.ts
 ```
 
 **Port conflicts**: Each worktree shares the same ports (3000, 3001, 3002). Only ONE set of dev servers can run at a time.
@@ -329,14 +351,14 @@ cat test-results/<test-name>/error-context.md
 
 ```bash
 # See browser actions in real-time
-pnpm exec playwright test --headed --project=bingo
+pnpm test:e2e --headed --project=bingo
 ```
 
 ### 4. Use UI Mode (Interactive)
 
 ```bash
 # Step through test execution
-pnpm exec playwright test --ui
+pnpm test:e2e --ui
 ```
 
 ### 5. Check Server Logs

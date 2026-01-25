@@ -298,10 +298,10 @@ Task({
        pnpm dev
 
        # Run E2E tests for affected features
-       pnpm exec playwright test e2e/<feature>.spec.ts
+       pnpm test:e2e e2e/<feature>.spec.ts
 
        # Run FULL E2E suite before PR
-       pnpm exec playwright test
+       pnpm test:e2e
        ```
        **BLOCKING:** DO NOT create PR if ANY E2E tests fail. Fix failures first.
     6. **CLEANUP DEBUG ARTIFACTS**:
@@ -365,7 +365,7 @@ Before creating a PR, the implementer MUST verify:
 ```bash
 # 1. All tests pass
 pnpm test:run
-pnpm exec playwright test
+pnpm test:e2e
 
 # 2. No lint errors
 pnpm lint
@@ -376,9 +376,12 @@ pnpm typecheck
 # 4. No debug artifacts
 git status --porcelain | grep -E "debug-|\.bak$" && echo "FAIL: Debug artifacts found" && exit 1
 
-# 5. All E2E tests pass (0 failures)
-pnpm exec playwright test 2>&1 | grep -E "failed" && echo "FAIL: E2E tests failing" && exit 1
+# 5. E2E tests pass - MANDATORY TWO-STEP VERIFICATION
+pnpm test:e2e                # Step 1: Run tests (generates JSON)
+pnpm test:e2e:summary        # Step 2: View results - MUST show "0 failed"
 ```
+
+**CRITICAL:** If `pnpm test:e2e:summary` shows ANY failures, DO NOT PROCEED.
 
 **If ANY check fails:**
 1. DO NOT create PR
@@ -386,19 +389,31 @@ pnpm exec playwright test 2>&1 | grep -E "failed" && echo "FAIL: E2E tests faili
 3. Re-run all checks
 4. Only proceed when ALL pass
 
-**Evidence requirement:** Include test output in Linear comment:
+**Evidence requirement:** Include ACTUAL test output in Linear comment:
 ```markdown
 🤖 Implementation complete.
 
 **Pre-PR Verification:**
-- ✅ `pnpm test:run` - X tests passed
+- ✅ `pnpm test:run` - 156 tests passed
 - ✅ `pnpm lint` - No errors
 - ✅ `pnpm typecheck` - No errors
-- ✅ `pnpm exec playwright test` - X tests passed, 0 failed
+- ✅ `pnpm test:e2e:summary` output:
+  ```
+  Test Results Summary:
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    0 failed       ← MUST BE ZERO
+    4 skipped
+    334 passed
+    338 total
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ```
 - ✅ `git status --porcelain` - No debug artifacts
 
 Ready for spec review.
 ```
+
+**IMPORTANT:** Copy-paste ACTUAL `pnpm test:e2e:summary` output, not placeholders.
+
 
 ## Monitoring Progress
 
@@ -574,7 +589,7 @@ Task({
     4. Performance considerations
     5. Accessibility (WCAG 2.1 AA, 44x44px touch targets)
     6. Test quality and coverage
-    7. **E2E tests pass** - Run: `pnpm exec playwright test`
+    7. **E2E tests pass** - Run: `pnpm test:e2e`
     8. Documentation/comments where needed
     9. No code duplication
     10. **NO DEBUG ARTIFACTS**:
@@ -689,7 +704,7 @@ Before merging, verify PR template is complete:
 
 1. **Check PR Testing section:**
    - ALL checkboxes should be `[x]` checked
-   - Especially: `[x] pnpm exec playwright test` (E2E tests)
+   - Especially: `[x] pnpm test:e2e` (E2E tests)
 
 2. **If E2E checkbox is unchecked:**
    - DO NOT merge
