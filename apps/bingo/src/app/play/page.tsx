@@ -263,10 +263,26 @@ export default function PlayPage() {
     if (isOfflineMode && offlineSessionId) {
       try {
         const sessionKey = `bingo_offline_session_${offlineSessionId}`;
+
+        // Read existing session to preserve createdAt
+        let createdAt = new Date().toISOString();
+        try {
+          const existing = localStorage.getItem(sessionKey);
+          if (existing) {
+            const existingData = JSON.parse(existing);
+            if (existingData.createdAt) {
+              createdAt = existingData.createdAt;
+            }
+          }
+        } catch {
+          // If parsing fails, use new timestamp
+        }
+
         const sessionData = {
           sessionId: offlineSessionId,
           isOffline: true,
           gameState: serializeBingoState(gameState),
+          createdAt,
           lastUpdated: new Date().toISOString(),
         };
         localStorage.setItem(sessionKey, JSON.stringify(sessionData));
@@ -320,11 +336,13 @@ export default function PlayPage() {
     // Initialize offline session in localStorage
     try {
       const sessionKey = `bingo_offline_session_${newSessionId}`;
+      const now = new Date().toISOString();
       const sessionData = {
         sessionId: newSessionId,
         isOffline: true,
         gameState: serializeBingoState(gameState),
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        lastUpdated: now,
       };
       localStorage.setItem(sessionKey, JSON.stringify(sessionData));
     } catch (error) {
