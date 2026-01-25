@@ -164,12 +164,15 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
 
       // Check if this is a rate limit error or a retryable error
       const errorMessage = error instanceof Error ? error.message : String(error);
+      // Only check page content for rate limit errors if still on login page
+      // After successful navigation to /play, "try again" text on game error pages
+      // causes false positive rate limit detection
       const isRetryable =
         errorMessage.includes('rate limit') ||
         errorMessage.includes('Rate limit') ||
         errorMessage.includes('Too many requests') ||
         errorMessage.includes('Timeout') ||
-        (await isRateLimitError(page));
+        (page.url().includes('/login') && (await isRateLimitError(page)));
 
       if (!isRetryable || attempt === AUTH_RETRY_ATTEMPTS) {
         // Non-retryable error or final attempt - rethrow
@@ -310,12 +313,15 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         lastError = error as Error;
 
         const errorMessage = error instanceof Error ? error.message : String(error);
+        // Only check page content for rate limit errors if still on login page
+        // After successful navigation to /dashboard, "try again" text on other pages
+        // causes false positive rate limit detection
         const isRetryable =
           errorMessage.includes('rate limit') ||
           errorMessage.includes('Rate limit') ||
           errorMessage.includes('Too many requests') ||
           errorMessage.includes('Timeout') ||
-          (await isRateLimitError(page));
+          (page.url().includes('/login') && (await isRateLimitError(page)));
 
         if (!isRetryable || attempt === AUTH_RETRY_ATTEMPTS) {
           throw error;
