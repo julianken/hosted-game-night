@@ -260,12 +260,6 @@ export function RoomSetupModal({
         {/* Divider */}
         <div className="border-t border-border" />
 
-        {/* Template Selector */}
-        <TemplateSelector disabled={isLoading} />
-
-        {/* Divider */}
-        <div className="border-t border-border" />
-
         {/* Join Existing Game Option */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
@@ -433,6 +427,12 @@ export function RoomSetupModal({
             Play Offline
           </Button>
         </div>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Template Selector */}
+        <TemplateSelector disabled={isLoading} />
       </div>
     </Modal>
   );
