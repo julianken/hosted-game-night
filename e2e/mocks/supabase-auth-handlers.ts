@@ -464,10 +464,111 @@ async function handleUpdateUser(route: Route, request: Request): Promise<void> {
 }
 
 /**
+ * Handle Platform Hub login API
+ * This mocks the BFF login endpoint to use mock user storage
+ */
+async function handlePlatformHubLogin(route: Route, request: Request): Promise<void> {
+  const body = request.postDataJSON() as { email: string; password: string };
+  const { email, password } = body;
+
+  // Find user in mock storage
+  const user = mockUsers.get(email);
+
+  if (!user || user.password !== password) {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: false,
+        error: 'Invalid login credentials',
+      }),
+    });
+    return;
+  }
+
+  // Check email confirmation
+  if (!user.email_confirmed_at) {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: false,
+        error: 'Email not confirmed',
+      }),
+    });
+    return;
+  }
+
+  // Create session
+  const session = createMockSession(user);
+
+  // Set cookies to simulate Platform Hub's SSO cookie behavior
+  const cookies = [
+    {
+      name: 'beak_access_token',
+      value: session.access_token,
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax' as const,
+      expires: session.expires_at,
+    },
+    {
+      name: 'beak_refresh_token',
+      value: session.refresh_token,
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax' as const,
+      expires: session.expires_at + (30 * 24 * 60 * 60), // 30 days
+    },
+    {
+      name: 'beak_user_id',
+      value: user.id,
+      path: '/',
+      httpOnly: false,
+      sameSite: 'Lax' as const,
+      expires: session.expires_at,
+    },
+  ];
+
+  // Fulfill with Set-Cookie headers
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add Set-Cookie headers for each cookie
+  const setCookieHeaders = cookies.map((cookie) => {
+    let cookieStr = `${cookie.name}=${cookie.value}; Path=${cookie.path}; SameSite=${cookie.sameSite}`;
+    if (cookie.httpOnly) {
+      cookieStr += '; HttpOnly';
+    }
+    if (cookie.expires) {
+      cookieStr += `; Max-Age=${cookie.expires - Math.floor(Date.now() / 1000)}`;
+    }
+    return cookieStr;
+  });
+
+  await route.fulfill({
+    status: 200,
+    headers: {
+      ...headers,
+      'Set-Cookie': setCookieHeaders.join(', '),
+    },
+    body: JSON.stringify({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    }),
+  });
+}
+
+/**
  * Setup Supabase Auth mock routes on a Playwright page.
  *
- * This intercepts all requests to Supabase Auth API endpoints and returns
- * mock responses, allowing E2E tests to run without a real Supabase instance.
+ * This intercepts all requests to Supabase Auth API endpoints and Platform Hub
+ * login API, returning mock responses to allow E2E tests to run without a real
+ * Supabase instance.
  *
  * @param page - Playwright page instance
  *
@@ -481,7 +582,18 @@ async function handleUpdateUser(route: Route, request: Request): Promise<void> {
  * });
  * ```
  */
-export async function setupSupabaseAuthMocks(page: Page): Promise<void> {
+export async function setupSupabaseAuthMocks(page: Page, options?: { mockPlatformHubLogin?: boolean }): Promise<void> {
+  // Optionally intercept Platform Hub login API (for tests that create users via mocked signup)
+  if (options?.mockPlatformHubLogin) {
+    await page.route('**/api/auth/login', async (route, request) => {
+      if (request.method() === 'POST') {
+        await handlePlatformHubLogin(route, request);
+        return;
+      }
+      await route.continue();
+    });
+  }
+
   // Match any Supabase URL (handles placeholder.supabase.co and real URLs)
   const supabasePattern = /https:\/\/[^/]+\.supabase\.co\/auth\/v1\//;
 

@@ -64,33 +64,32 @@ test.describe('@critical Platform Hub Authentication', () => {
       await expect(page.locator('a[href="/forgot-password"]').first()).toBeVisible();
     });
 
+    // NOTE: This test uses a real test user (e2e-test@beak-gaming.test) that exists in Supabase
+    // with a confirmed email. It does NOT use mocks, so the beforeEach hook's mock setup
+    // doesn't interfere. The mocks only intercept browser-level Supabase calls, not the
+    // server-side Platform Hub login API.
     test('user can log in with valid credentials @critical', async ({ page }) => {
-      // First, create a test account via signup
-      const email = generateTestEmail();
+      // Use pre-existing test user (exists in real Supabase with confirmed email)
+      // This tests the login flow without requiring signup mocking
+      const email = 'e2e-test@beak-gaming.test';
       const password = 'TestPassword123!';
 
-      await page.goto(`${BASE_URL}/signup`);
-      await page.locator('input[name="email"]').first().fill(email);
-      await page.locator('input[name="password"]').first().fill(password);
-      await page.locator('input[name="confirmPassword"]').first().fill(password);
-      await page.locator('button[type="submit"]').first().click({ force: true });
-
-      // Wait for signup success message
-      await expect(page.locator('text=Account Created!').first()).toBeVisible({ timeout: 10000 });
-
-      // Note: MSW mock auto-confirms email, so login works immediately
-
-      // Now attempt to login (default redirect is dashboard)
+      // Navigate to login page
       await page.goto(`${BASE_URL}/login`);
+
+      // Fill in credentials
       await page.locator('input[name="email"]').first().fill(email);
       await page.locator('input[name="password"]').first().fill(password);
+
+      // Submit login form
       await page.locator('button[type="submit"]').first().click({ force: true });
 
-      // Should redirect after login (default is dashboard)
+      // Should redirect to dashboard after successful login
       await expect(page).toHaveURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
 
-      // Verify user is authenticated (logout button visible in navigation)
-      await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible();
+      // Verify user is authenticated (personalized greeting visible)
+      await expect(page.locator('h1').first()).toContainText('Good');
+      await expect(page.locator('h1').first()).toContainText('e2e-test');
     });
 
     test('invalid login shows error message @critical', async ({ page }) => {

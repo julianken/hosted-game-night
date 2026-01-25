@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 
 interface LoginRequest {
   email: string;
@@ -46,8 +46,26 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       );
     }
 
-    // Create Supabase client for authentication
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Create SSR Supabase client with cookie handling
+    // This ensures both standard Supabase cookies (for Platform Hub)
+    // and custom SSO cookies (for Bingo/Trivia) are set
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignore errors from Server Component context
+          }
+        },
+      },
+    });
 
     // Authenticate with Supabase
     const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -56,6 +74,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     });
 
     if (authError || !data.session) {
+      // Log the actual Supabase error for debugging
+      console.error('[Login API] Authentication failed:', {
+        errorCode: authError?.code,
+        errorMessage: authError?.message,
+        errorStatus: authError?.status,
+        hasSession: !!data.session,
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -66,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     }
 
     // Set cross-app SSO cookies for Bingo/Trivia
-    const cookieStore = await cookies();
+    // (cookieStore already initialized above for SSR client)
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
 
