@@ -150,8 +150,9 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Question Navigation', () => {
     test('shows question list', async ({ authenticatedTriviaPage: page }) => {
-      // Question list section should be visible - use heading to find the section
-      await expect(page.getByRole('heading', { name: /round 1/i })).toBeVisible();
+      // Question list has "Questions" heading, rounds are shown in the list
+      await expect(page.getByRole('heading', { name: /questions/i })).toBeVisible();
+      await expect(page.getByText('Round 1', { exact: true })).toBeVisible();
     });
 
     test('can navigate questions with keyboard', async ({ authenticatedTriviaPage: page }) => {

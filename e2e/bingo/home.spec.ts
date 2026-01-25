@@ -46,7 +46,7 @@ test.describe('Bingo Home Page', () => {
     await expect(h1).toHaveCount(1);
 
     const h2s = page.getByRole('heading', { level: 2 });
-    await expect(h2s).toHaveCount(3); // Features, How It Works, and one more
+    await expect(h2s).toHaveCount(2); // Designed for Seniors, How It Works
 
     const h3s = page.getByRole('heading', { level: 3 });
     expect(await h3s.count()).toBeGreaterThan(3); // Feature cards and steps
