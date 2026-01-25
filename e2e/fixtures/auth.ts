@@ -7,6 +7,9 @@ const TRIVIA_URL = 'http://localhost:3001';
 
 // Timeout Constants
 const AUTH_TIMEOUT_MS = 10000; // OAuth login can be slow in CI
+const AUTH_RETRY_ATTEMPTS = 3; // Retry up to 3 times for rate limit errors
+const AUTH_RETRY_DELAY_MS = 2000; // Base delay between retries (will use exponential backoff)
+const AUTH_STAGGER_MAX_MS = 1000; // Max random delay to stagger parallel logins (0-1000ms)
 
 /**
  * Test user credentials for E2E authentication tests.
@@ -62,25 +65,129 @@ export interface GameAuthFixtures {
 }
 
 /**
+ * Helper function to sleep for a specified duration.
+ * Used for retry delays when handling rate limits.
+ *
+ * @param ms - Milliseconds to sleep
+ */
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Helper function to check if page is showing a rate limit error.
+ * Checks for common rate limit error messages on the page.
+ *
+ * @param page - Playwright page instance
+ * @returns True if rate limit error is detected
+ */
+async function isRateLimitError(page: Page): Promise<boolean> {
+  const bodyText = await page.textContent('body');
+  if (!bodyText) return false;
+
+  // Check for common rate limit error messages
+  const rateLimitPatterns = [
+    /rate limit/i,
+    /too many requests/i,
+    /try again later/i,
+    /exceeded.*limit/i,
+  ];
+
+  return rateLimitPatterns.some((pattern) => pattern.test(bodyText));
+}
+
+/**
  * Helper function to login via Platform Hub and verify SSO cookies.
  * Used by game app fixtures (Bingo, Trivia) for cross-app authentication.
  *
+ * Includes retry logic to handle Supabase rate limiting during parallel test execution.
+ * Supabase auth has limits of ~30 requests/hour per email or ~10 requests/hour per IP.
+ * When multiple tests run in parallel, they can hit these limits.
+ *
+ * Strategy:
+ * 1. Add random stagger delay (0-1000ms) BEFORE first attempt to spread parallel requests
+ * 2. Retry up to 3 times with exponential backoff (2s, 4s, 8s)
+ * 3. Detect rate limit errors quickly via page content check
+ *
  * @param page - Playwright page instance
  * @param testUser - Test user credentials
- * @throws Error if OAuth login fails (missing beak_access_token cookie)
+ * @throws Error if OAuth login fails after all retries
  */
 async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void> {
-  await page.goto(`${HUB_URL}/login`);
-  await page.fill('input[name="email"]', testUser.email);
-  await page.fill('input[name="password"]', testUser.password);
-  await page.click('button[type="submit"]');
-  await page.waitForURL(`${HUB_URL}/dashboard`, { timeout: AUTH_TIMEOUT_MS });
+  // Add random stagger delay BEFORE first attempt to prevent thundering herd
+  // This spreads out parallel login requests across a 1-second window
+  const staggerDelay = Math.random() * AUTH_STAGGER_MAX_MS;
+  await sleep(staggerDelay);
 
-  // Verify SSO cookies exist
-  const cookies = await page.context().cookies();
-  if (!cookies.some((c) => c.name === 'beak_access_token')) {
-    throw new Error('OAuth login failed: beak_access_token cookie not set');
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= AUTH_RETRY_ATTEMPTS; attempt++) {
+    try {
+      // Navigate to login page
+      await page.goto(`${HUB_URL}/login`);
+
+      // Fill in credentials
+      await page.fill('input[name="email"]', testUser.email);
+      await page.fill('input[name="password"]', testUser.password);
+
+      // Submit login form
+      await page.click('button[type="submit"]');
+
+      // Wait for redirect to dashboard (indicates successful login)
+      // Use a race condition to detect rate limit errors faster
+      const dashboardPromise = page.waitForURL(`${HUB_URL}/dashboard`, {
+        timeout: AUTH_TIMEOUT_MS,
+      });
+
+      // Also wait for potential rate limit error on the page
+      const rateLimitCheckPromise = (async () => {
+        await page.waitForTimeout(1000); // Wait 1s for error to appear
+        if (await isRateLimitError(page)) {
+          throw new Error('Rate limit error detected on login page');
+        }
+      })();
+
+      // Race: either we redirect to dashboard OR we detect a rate limit error
+      await Promise.race([dashboardPromise, rateLimitCheckPromise]);
+
+      // If we get here, we successfully navigated to dashboard
+      // Verify SSO cookies exist
+      const cookies = await page.context().cookies();
+      if (!cookies.some((c) => c.name === 'beak_access_token')) {
+        throw new Error('OAuth login failed: beak_access_token cookie not set');
+      }
+
+      // Success! Exit the retry loop
+      return;
+    } catch (error) {
+      lastError = error as Error;
+
+      // Check if this is a rate limit error or a retryable error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isRetryable =
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('Rate limit') ||
+        errorMessage.includes('Too many requests') ||
+        errorMessage.includes('Timeout') ||
+        (await isRateLimitError(page));
+
+      if (!isRetryable || attempt === AUTH_RETRY_ATTEMPTS) {
+        // Non-retryable error or final attempt - rethrow
+        throw error;
+      }
+
+      // Exponential backoff: 2s, 4s, 8s
+      const retryDelay = AUTH_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      console.log(
+        `[Auth Fixture] Login attempt ${attempt}/${AUTH_RETRY_ATTEMPTS} failed (rate limit). ` +
+          `Retrying in ${retryDelay}ms...`
+      );
+      await sleep(retryDelay);
+    }
   }
+
+  // If we get here, all retries failed
+  throw lastError || new Error('Login failed after all retries');
 }
 
 /**
@@ -149,25 +256,70 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   /**
    * Authenticated page fixture.
    * Logs in via UI and stores auth state for reuse.
+   * Includes retry logic to handle Supabase rate limiting with staggered delays.
    */
   authenticatedPage: async ({ page, testUser }, use) => {
-    // Navigate to login page with dashboard redirect
-    await page.goto(`${HUB_URL}/login?redirect=/dashboard`);
+    // Add random stagger delay BEFORE first attempt to prevent thundering herd
+    const staggerDelay = Math.random() * AUTH_STAGGER_MAX_MS;
+    await sleep(staggerDelay);
 
-    // Fill in credentials
-    await page.fill('input[name="email"]', testUser.email);
-    await page.fill('input[name="password"]', testUser.password);
+    let lastError: Error | null = null;
 
-    // Submit login form
-    await page.click('button[type="submit"]');
+    // Retry login if rate limited
+    for (let attempt = 1; attempt <= AUTH_RETRY_ATTEMPTS; attempt++) {
+      try {
+        // Navigate to login page with dashboard redirect
+        await page.goto(`${HUB_URL}/login?redirect=/dashboard`);
 
-    // Wait for redirect to dashboard (indicates successful login)
-    await page.waitForURL(`${HUB_URL}/dashboard`, {
-      timeout: AUTH_TIMEOUT_MS,
-    });
+        // Fill in credentials
+        await page.fill('input[name="email"]', testUser.email);
+        await page.fill('input[name="password"]', testUser.password);
 
-    // Store auth state for potential reuse
-    await page.context().storageState({ path: '.auth/user.json' });
+        // Submit login form
+        await page.click('button[type="submit"]');
+
+        // Wait for redirect to dashboard (indicates successful login)
+        const dashboardPromise = page.waitForURL(`${HUB_URL}/dashboard`, {
+          timeout: AUTH_TIMEOUT_MS,
+        });
+
+        // Also check for rate limit errors
+        const rateLimitCheckPromise = (async () => {
+          await page.waitForTimeout(1000);
+          if (await isRateLimitError(page)) {
+            throw new Error('Rate limit error detected on login page');
+          }
+        })();
+
+        await Promise.race([dashboardPromise, rateLimitCheckPromise]);
+
+        // Success! Store auth state and break out of retry loop
+        await page.context().storageState({ path: '.auth/user.json' });
+        break;
+      } catch (error) {
+        lastError = error as Error;
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isRetryable =
+          errorMessage.includes('rate limit') ||
+          errorMessage.includes('Rate limit') ||
+          errorMessage.includes('Too many requests') ||
+          errorMessage.includes('Timeout') ||
+          (await isRateLimitError(page));
+
+        if (!isRetryable || attempt === AUTH_RETRY_ATTEMPTS) {
+          throw error;
+        }
+
+        // Exponential backoff: 2s, 4s, 8s
+        const retryDelay = AUTH_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        console.log(
+          `[Auth Fixture] Login attempt ${attempt}/${AUTH_RETRY_ATTEMPTS} failed (rate limit). ` +
+            `Retrying in ${retryDelay}ms...`
+        );
+        await sleep(retryDelay);
+      }
+    }
 
     // Provide authenticated page to test
     await use(page);

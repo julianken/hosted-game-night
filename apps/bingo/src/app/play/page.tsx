@@ -54,6 +54,7 @@ export default function PlayPage() {
   // Offline mode state
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
+  const [offlineRecoveryAttempted, setOfflineRecoveryAttempted] = useState(false);
 
   // PIN state
   const [currentPin, setCurrentPin] = useState<string | null>(null);
@@ -179,12 +180,12 @@ export default function PlayPage() {
   // Determine if modal should be shown
   // Show modal if:
   // 1. Explicitly requested via showCreateModal state
-  // 2. No active session (roomCode or offline mode) after recovery completes AND user hasn't dismissed it
+  // 2. No active session (roomCode or offline mode) after BOTH online AND offline recovery complete AND user hasn't dismissed it
   // 3. Recovery failed with an error that hasn't been dismissed
   const shouldShowModal =
     showCreateModal ||
-    (!userDismissedModal && !roomCode && !isOfflineMode && recoveryAttempted) ||
-    (recoveryErrorMessage !== null && !dismissedRecoveryError);
+    (!userDismissedModal && !roomCode && !isOfflineMode && recoveryAttempted && offlineRecoveryAttempted) ||
+    (!isRecovering && recoveryErrorMessage !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
@@ -257,6 +258,8 @@ export default function PlayPage() {
     };
 
     recoverOfflineSession();
+    // Mark offline recovery as attempted
+    setOfflineRecoveryAttempted(true);
   }, []);
 
   // Save offline session state to localStorage
@@ -719,18 +722,10 @@ export default function PlayPage() {
           </>
         )}
         {isOfflineMode && offlineSessionId && (
-          <>
-            <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-              <div className="text-sm text-muted-foreground mb-1">Offline Session</div>
-              <div className="text-2xl font-mono font-bold tracking-wider">
-                {offlineSessionId}
-              </div>
-            </div>
-            <PinDisplay
-              pin={null}
-              offlineSessionId={offlineSessionId}
-            />
-          </>
+          <PinDisplay
+            pin={null}
+            offlineSessionId={offlineSessionId}
+          />
         )}
         <Button
           onClick={handleCreateNewGame}

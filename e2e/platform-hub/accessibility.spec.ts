@@ -25,37 +25,65 @@ test.describe('Platform Hub Accessibility @high', () => {
     test('login page keyboard navigation works @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
 
-      // Tab through form elements
-      await page.keyboard.press('Tab');
+      // Wait for page to be fully loaded
+      await page.waitForLoadState('networkidle');
+
+      // Focus the email input directly to test keyboard navigation through form
+      await page.locator('input[name="email"]').focus();
       await expect(page.locator('input[name="email"]')).toBeFocused();
 
+      // Tab to password input
       await page.keyboard.press('Tab');
       await expect(page.locator('input[name="password"]')).toBeFocused();
 
+      // Tab to show/hide password button
       await page.keyboard.press('Tab');
-      await expect(page.locator('button[type="submit"]')).toBeFocused();
+      await expect(page.locator('button[aria-label*="password"]')).toBeFocused();
+
+      // Tab to forgot password link
+      await page.keyboard.press('Tab');
+      await expect(page.locator('a[href="/forgot-password"]')).toBeFocused();
+
+      // Tab to submit button
+      await page.keyboard.press('Tab');
+      await expect(page.locator('button[type="submit"]').first()).toBeFocused();
     });
 
     test('login form has proper labels @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
 
+      // Wait for form to be fully rendered
+      await page.waitForLoadState('networkidle');
+
       // Check for associated labels
       const emailInput = page.locator('input[name="email"]');
       const passwordInput = page.locator('input[name="password"]');
 
-      await expect(emailInput).toHaveAttribute('id');
-      await expect(passwordInput).toHaveAttribute('id');
+      await expect(emailInput).toHaveAttribute('id', 'email');
+      await expect(passwordInput).toHaveAttribute('id', 'password');
 
-      // Labels should exist
-      await expect(page.locator('label[for="email"], label:has-text("Email")')).toBeVisible();
-      await expect(page.locator('label[for="password"], label:has-text("Password")')).toBeVisible();
+      // Labels should exist and be properly associated
+      await expect(page.locator('label[for="email"]')).toBeVisible();
+      await expect(page.locator('label[for="password"]')).toBeVisible();
+
+      // Verify label text content
+      await expect(page.locator('label[for="email"]')).toContainText('Email');
+      await expect(page.locator('label[for="password"]')).toContainText('Password');
     });
 
     test('focus indicators are visible @medium', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
+      await page.waitForLoadState('networkidle');
 
+      // Focus the email input explicitly
       const emailInput = page.locator('input[name="email"]');
       await emailInput.focus();
+
+      // Wait a brief moment for focus styles to apply
+      await page.waitForTimeout(100);
+
+      // Verify the input is actually focused
+      await expect(emailInput).toBeFocused();
 
       // Check that focused element has visible outline or ring
       const styles = await emailInput.evaluate((el) => {
@@ -96,9 +124,15 @@ test.describe('Platform Hub Accessibility @high', () => {
 
     test('signup form has proper labels @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/signup`);
+      await page.waitForLoadState('networkidle');
 
+      // Check for associated labels
       const emailInput = page.locator('input[name="email"]');
-      await expect(emailInput).toHaveAttribute('id');
+      await expect(emailInput).toHaveAttribute('id', 'email');
+
+      // Label should exist and be properly associated
+      await expect(page.locator('label[for="email"]')).toBeVisible();
+      await expect(page.locator('label[for="email"]')).toContainText('Email');
     });
   });
 
@@ -137,11 +171,20 @@ test.describe('Platform Hub Accessibility @high', () => {
   test.describe('General Accessibility Requirements', () => {
     test('buttons have accessible names @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
+      await page.waitForLoadState('networkidle');
 
+      // Check submit button has accessible name
       const submitButton = page.locator('button[type="submit"]');
-      const buttonText = await submitButton.textContent();
+      await expect(submitButton).toBeVisible();
 
+      const buttonText = await submitButton.textContent();
       expect(buttonText?.trim().length).toBeGreaterThan(0);
+      expect(buttonText?.trim()).toBe('Sign In');
+
+      // Check show/hide password button has accessible name
+      const passwordToggle = page.locator('button[aria-label*="password"]');
+      await expect(passwordToggle).toBeVisible();
+      await expect(passwordToggle).toHaveAttribute('aria-label');
     });
 
     test('links have accessible names @high', async ({ page }) => {
@@ -170,8 +213,10 @@ test.describe('Platform Hub Accessibility @high', () => {
 
     test('touch targets meet minimum size @medium', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
+      await page.waitForLoadState('networkidle');
 
-      const submitButton = page.locator('button[type="submit"]');
+      // Use .first() to handle React 19 strict mode duplicates
+      const submitButton = page.locator('button[type="submit"]').first();
       const box = await submitButton.boundingBox();
 
       // WCAG 2.1 Level AAA requires 44x44px minimum

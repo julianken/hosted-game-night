@@ -50,6 +50,7 @@ export default function PlayPage() {
   // Offline mode state
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
+  const [offlineRecoveryAttempted, setOfflineRecoveryAttempted] = useState(false);
 
   // PIN state
   const [currentPin, setCurrentPin] = useState<string | null>(null);
@@ -137,9 +138,13 @@ export default function PlayPage() {
   }, [isRecovered, recoveredRoomCode]);
 
   // Determine if modal should be shown
+  // Show modal if:
+  // 1. Explicitly requested via showCreateModal state
+  // 2. No active session (roomCode or offline mode) after BOTH online AND offline recovery complete AND user hasn't dismissed it
+  // 3. Recovery failed with an error that hasn't been dismissed
   const shouldShowModal =
     showCreateModal ||
-    (!userDismissedModal && !isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
+    (!userDismissedModal && !roomCode && !isOfflineMode && recoveryAttempted && offlineRecoveryAttempted) ||
     (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database (only in online mode)
@@ -213,6 +218,8 @@ export default function PlayPage() {
     };
 
     recoverOfflineSession();
+    // Mark offline recovery as attempted
+    setOfflineRecoveryAttempted(true);
   }, []);
 
   // Save offline session state to localStorage

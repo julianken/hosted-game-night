@@ -191,3 +191,49 @@ export async function waitForRoomSetupModal(page: Page, timeout = 10000): Promis
     await expect(dialog).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout });
 }
+
+/**
+ * Wait for dual-screen sync to be established between presenter and display.
+ * Checks for the green sync indicator (bg-success or bg-green-500) to appear.
+ *
+ * @param displayPage - The display window page
+ * @param timeout - Maximum time to wait in milliseconds
+ */
+export async function waitForDualScreenSync(displayPage: Page, timeout = 10000): Promise<void> {
+  await expect(async () => {
+    const syncIndicator = displayPage.locator('[class*="bg-success"], [class*="bg-green-500"]').first();
+    await expect(syncIndicator).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout });
+}
+
+/**
+ * Wait for a specific condition to be true with polling.
+ * Uses .toPass() pattern to retry until condition is met.
+ *
+ * @param condition - Async function that throws if condition not met
+ * @param timeout - Maximum time to wait in milliseconds
+ */
+export async function waitForCondition(condition: () => Promise<void>, timeout = 10000): Promise<void> {
+  await expect(async () => {
+    await condition();
+  }).toPass({ timeout });
+}
+
+/**
+ * Wait for sync state change by checking for specific content on display.
+ * Polls until the expected content appears.
+ *
+ * @param displayPage - The display window page
+ * @param pattern - Text pattern to wait for
+ * @param timeout - Maximum time to wait in milliseconds
+ */
+export async function waitForSyncedContent(
+  displayPage: Page,
+  pattern: string | RegExp,
+  timeout = 10000
+): Promise<void> {
+  await expect(async () => {
+    const content = displayPage.getByText(pattern);
+    await expect(content.first()).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout });
+}
