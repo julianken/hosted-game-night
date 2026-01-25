@@ -76,6 +76,14 @@ mcp__linear-server__get_issue { id: "issue-id" }
 - Dependencies (blockedBy, blocks)
 - Project (for broader context)
 
+**ALSO read app-specific CLAUDE.md files for context:**
+- `apps/bingo/CLAUDE.md` - 75-ball bingo, 29 patterns, keyboard shortcuts
+- `apps/trivia/CLAUDE.md` - Team trivia, rounds, scoring, keyboard shortcuts
+- `apps/platform-hub/CLAUDE.md` - Auth, game selector, dashboard
+- `CLAUDE.md` (root) - Project-wide patterns, E2E testing requirements
+
+These files contain critical patterns that MUST be followed.
+
 ## If You Can't Access Linear
 
 ❌ **STOP immediately**
@@ -281,14 +289,33 @@ Task({
 
     **Your responsibilities:**
     1. Read Linear issue BEA-330 for FULL context (description, comments, linked PRs)
-    2. Implement the ENTIRE issue in this worktree
-    3. Write tests for all functionality
-    4. Run E2E tests (see CLAUDE.md "E2E Testing" section) - MUST pass before PR
-    5. Commit changes with Linear reference: feat(auth): add login form (BEA-330)
-    6. Self-review your code
-    7. Push branch and create draft PR (one PR for entire issue)
-    8. Update Linear issue with comment when done
-    9. Mark task status as completed
+    2. Read app-specific CLAUDE.md for patterns (apps/bingo/CLAUDE.md, apps/trivia/CLAUDE.md, etc.)
+    3. Implement the ENTIRE issue in this worktree
+    4. Write tests for all functionality
+    5. **RUN E2E TESTS LOCALLY** (MANDATORY - GitHub Actions disabled):
+       ```bash
+       # Start dev servers first (in separate terminal)
+       pnpm dev
+
+       # Run E2E tests for affected features
+       pnpm exec playwright test e2e/<feature>.spec.ts
+
+       # Run FULL E2E suite before PR
+       pnpm exec playwright test
+       ```
+       **BLOCKING:** DO NOT create PR if ANY E2E tests fail. Fix failures first.
+    6. **CLEANUP DEBUG ARTIFACTS**:
+       - Remove any debug-*.spec.ts files you created
+       - Remove any *.bak files
+       - Remove any console.log debugging
+       - Run: `git status` and verify no unintended files
+    7. Commit changes with Linear reference: feat(auth): add login form (BEA-330)
+    8. Self-review your code
+    9. Push branch and create draft PR (one PR for entire issue)
+       - Use PR template at .github/PULL_REQUEST_TEMPLATE.md
+       - **CHECK the E2E test checkbox** ONLY if tests actually pass
+    10. Update Linear issue with comment including E2E test results
+    11. Mark task status as completed
 
     **Commit message format:**
     feat(scope): description (BEA-330)
@@ -297,6 +324,7 @@ Task({
     - This is ONE PR for the ENTIRE Linear issue
     - Do NOT split into multiple PRs
     - Handle ALL acceptance criteria in BEA-330
+    - E2E tests MUST pass before marking complete
   `
 })
 
@@ -329,6 +357,48 @@ Each implementer MUST:
 7. ✅ **Create ONE draft PR** - Entire issue in one PR, use PR template
 8. ✅ **Update Linear issue** - Comment when implementation complete
 9. ✅ **Update task status** - Mark as completed when done
+
+## Pre-PR Gate (BLOCKING)
+
+Before creating a PR, the implementer MUST verify:
+
+```bash
+# 1. All tests pass
+pnpm test:run
+pnpm exec playwright test
+
+# 2. No lint errors
+pnpm lint
+
+# 3. Types check
+pnpm typecheck
+
+# 4. No debug artifacts
+git status --porcelain | grep -E "debug-|\.bak$" && echo "FAIL: Debug artifacts found" && exit 1
+
+# 5. All E2E tests pass (0 failures)
+pnpm exec playwright test 2>&1 | grep -E "failed" && echo "FAIL: E2E tests failing" && exit 1
+```
+
+**If ANY check fails:**
+1. DO NOT create PR
+2. Fix the issues first
+3. Re-run all checks
+4. Only proceed when ALL pass
+
+**Evidence requirement:** Include test output in Linear comment:
+```markdown
+🤖 Implementation complete.
+
+**Pre-PR Verification:**
+- ✅ `pnpm test:run` - X tests passed
+- ✅ `pnpm lint` - No errors
+- ✅ `pnpm typecheck` - No errors
+- ✅ `pnpm exec playwright test` - X tests passed, 0 failed
+- ✅ `git status --porcelain` - No debug artifacts
+
+Ready for spec review.
+```
 
 ## Monitoring Progress
 
@@ -502,11 +572,17 @@ Task({
     2. No security vulnerabilities (XSS, injection, etc.)
     3. Proper error handling
     4. Performance considerations
-    5. Accessibility (WCAG 2.1 AA)
+    5. Accessibility (WCAG 2.1 AA, 44x44px touch targets)
     6. Test quality and coverage
-    7. E2E tests pass (full suite if touching shared code)
+    7. **E2E tests pass** - Run: `pnpm exec playwright test`
     8. Documentation/comments where needed
     9. No code duplication
+    10. **NO DEBUG ARTIFACTS**:
+        - No debug-*.spec.ts files
+        - No *.bak files
+        - No console.log debugging left in code
+        - No TODO comments for completed work
+        - Run: `git status --porcelain` and verify clean
 
     **Approval criteria:**
     - ✅ Code follows established patterns
@@ -607,6 +683,29 @@ mcp__linear-server__update_issue {
 Merging PR...
 ```
 
+## Pre-Merge Verification
+
+Before merging, verify PR template is complete:
+
+1. **Check PR Testing section:**
+   - ALL checkboxes should be `[x]` checked
+   - Especially: `[x] pnpm exec playwright test` (E2E tests)
+
+2. **If E2E checkbox is unchecked:**
+   - DO NOT merge
+   - Dispatch implementer to run E2E tests
+   - Update PR with passing results
+   - Only merge when checkbox is checked with evidence
+
+3. **Verify Five-Level Explanation:**
+   - All 5 levels completed (not just placeholders)
+   - Technical levels (4-5) have implementation details
+
+**Merge blockers:**
+- ❌ Unchecked E2E test checkbox
+- ❌ Missing Five-Level Explanation
+- ❌ "N/A" in Testing section without justification
+
 ## Merge PRs
 
 Use GitHub MCP to merge (one PR per Linear issue):
@@ -699,6 +798,12 @@ Backlog → Todo → In Progress → In Review → Done
 15. ❌ Forget to update Linear status at transitions
 16. ❌ Skip E2E tests before marking implementation complete
 17. ❌ Approve reviews without verifying E2E tests pass
+18. ❌ Create PR with unchecked E2E test checkbox in template
+19. ❌ Leave debug-*.spec.ts files in codebase
+20. ❌ Leave *.bak files in codebase
+21. ❌ Skip reading app-specific CLAUDE.md files
+22. ❌ Reference "see CLAUDE.md" without embedding the actual commands
+23. ❌ Merge without verifying ALL PR template checkboxes are checked
 
 ---
 
@@ -719,6 +824,10 @@ If you think ANY of these thoughts, STOP:
 - "This issue has 3 features, I'll make 3 PRs" → ❌ NO, all features in one PR for the issue
 - "E2E tests are slow, I'll skip them" → ❌ NO, E2E tests are mandatory (no GitHub Actions)
 - "Unit tests pass, that's good enough" → ❌ NO, E2E tests validate the full system
+- "I'll leave this debug file, someone else will clean it up" → ❌ NO, clean up YOUR artifacts
+- "The PR checkbox says E2E but I didn't run them" → ❌ NO, only check boxes for tests you actually ran
+- "I'll fix the E2E tests in a follow-up PR" → ❌ NO, fix them BEFORE this PR merges
+- "This is just a test file change, doesn't need E2E" → ❌ NO, E2E tests validate test files too
 
 ---
 
