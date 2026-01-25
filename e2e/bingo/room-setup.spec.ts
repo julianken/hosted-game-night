@@ -11,20 +11,34 @@
  * - BroadcastChannel message delivery
  */
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration, clickButton } from '../utils/helpers';
+import { waitForHydration, clickButton, waitForRoomSetupModal } from '../utils/helpers';
 
 test.describe('Room Setup Flow', () => {
   test.beforeEach(async ({ authenticatedBingoPage: page }) => {
-    // Clear localStorage before each test
-    await page.evaluate(() => localStorage.clear());
+    // Clear ALL bingo-related localStorage keys before each test
+    await page.evaluate(() => {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('bingo_') || key.includes('session'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      sessionStorage.clear();
+    });
     await page.reload();
     await waitForHydration(page);
+
+    // Wait for recovery to complete and modal to appear
+    await waitForRoomSetupModal(page);
   });
 
   test.describe('Online Room Creation', () => {
     test('should show room setup modal on first visit', async ({ authenticatedBingoPage: page }) => {
-      // Modal should be visible
-      await expect(page.getByRole('dialog')).toBeVisible();
+      // Modal should be visible (already waited in beforeEach)
+      const modal = page.getByRole('dialog');
+      await expect(modal).toBeVisible();
       await expect(page.getByText('Room Setup')).toBeVisible();
 
       // All three options should be visible
@@ -284,8 +298,10 @@ test.describe('Room Setup Flow', () => {
       const createNewButton = page.getByRole('button', { name: /create new game/i });
       await createNewButton.click();
 
-      // Modal should be shown again
-      await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
+      // Modal should be shown again - wait for it to appear
+      await waitForRoomSetupModal(page, 5000);
+
+      await expect(page.getByRole('dialog')).toBeVisible();
       await expect(page.getByText('Room Setup')).toBeVisible();
     });
 
@@ -443,8 +459,9 @@ test.describe('Room Setup Flow', () => {
 
   test.describe('Accessibility', () => {
     test('room setup modal should be keyboard accessible', async ({ authenticatedBingoPage: page }) => {
-      // Modal should have proper focus management
-      await expect(page.getByRole('dialog')).toBeVisible();
+      // Modal should have proper focus management (already visible from beforeEach)
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
 
       // Tab through the modal
       await page.keyboard.press('Tab');
@@ -455,7 +472,9 @@ test.describe('Room Setup Flow', () => {
     });
 
     test('modal should have proper ARIA labels', async ({ authenticatedBingoPage: page }) => {
-      await expect(page.getByRole('dialog')).toBeVisible();
+      // Modal already visible from beforeEach
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
 
       // Check for accessible labels
       await expect(page.getByRole('button', { name: /create a new game room/i })).toHaveAttribute('aria-label');

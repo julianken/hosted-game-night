@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures/auth';
+import { waitForRoomSetupModal } from '../utils/helpers';
 
 /**
  * Tests for Issue #112 - Fix Modal Timing and Recovery Error Handling
@@ -14,7 +15,15 @@ test.describe('Room Setup Modal Timing', () => {
     // Clear any stored session data before each test
     await page.goto('/');
     await page.evaluate(() => {
-      localStorage.clear();
+      // Clear ALL bingo-related storage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('bingo_') || key.includes('session'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       sessionStorage.clear();
     });
   });
@@ -25,7 +34,10 @@ test.describe('Room Setup Modal Timing', () => {
     // Wait for the page to load and recovery to complete
     await page.waitForLoadState('networkidle');
 
-    // Modal should be visible on first visit
+    // Wait for recovery to complete and modal to appear
+    await waitForRoomSetupModal(page);
+
+    // Modal should now be visible
     const modal = page.getByRole('dialog', { name: /room setup/i });
     await expect(modal).toBeVisible();
 
@@ -48,7 +60,9 @@ test.describe('Room Setup Modal Timing', () => {
 
     // Wait for recovery to attempt and fail
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // Give recovery time to complete
+
+    // Wait for recovery to complete and modal to appear
+    await waitForRoomSetupModal(page);
 
     // Modal should be visible due to recovery error
     const modal = page.getByRole('dialog', { name: /room setup/i });
@@ -63,6 +77,9 @@ test.describe('Room Setup Modal Timing', () => {
   test('should NOT show modal on successful recovery', async ({ authenticatedBingoPage: page }) => {
     // First, create a valid session by playing offline
     await page.waitForLoadState('networkidle');
+
+    // Wait for modal to appear on first visit
+    await waitForRoomSetupModal(page);
 
     // Click "Play Offline" button in the modal
     const modal = page.getByRole('dialog', { name: /room setup/i });
@@ -81,6 +98,9 @@ test.describe('Room Setup Modal Timing', () => {
     await page.reload();
     await page.waitForLoadState('networkidle');
 
+    // Wait for recovery to complete
+    await page.waitForTimeout(2000);
+
     // Modal should NOT be visible after successful recovery
     await expect(modal).not.toBeVisible();
 
@@ -98,7 +118,9 @@ test.describe('Room Setup Modal Timing', () => {
     // Reload to trigger recovery
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+
+    // Wait for recovery to complete and modal to appear
+    await waitForRoomSetupModal(page);
 
     // Modal should be visible with error
     const modal = page.getByRole('dialog', { name: /room setup/i });
@@ -122,7 +144,9 @@ test.describe('Room Setup Modal Timing', () => {
     // Reload to trigger recovery
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+
+    // Wait for recovery to complete and modal to appear
+    await waitForRoomSetupModal(page);
 
     // Verify modal is visible with error
     const modal = page.getByRole('dialog', { name: /room setup/i });

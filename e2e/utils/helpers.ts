@@ -176,3 +176,18 @@ export async function getAllVisibleText(page: Page, selector: string): Promise<s
 
   return texts;
 }
+
+/**
+ * Wait for room setup modal to appear after session recovery completes.
+ * The modal appears after recoveryAttempted state is set to true, which happens
+ * in a useEffect AFTER isRecovering becomes false. This creates a timing window
+ * where the modal may not be immediately visible.
+ *
+ * Uses .toPass() pattern to retry until modal is visible or timeout.
+ */
+export async function waitForRoomSetupModal(page: Page, timeout = 10000): Promise<void> {
+  await expect(async () => {
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout });
+}
