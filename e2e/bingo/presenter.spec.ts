@@ -69,9 +69,8 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('can toggle auto-call setting @medium', async ({ authenticatedBingoPage: page }) => {
-    // Find the auto-call switch in settings section
-    const settingsSection = page.locator('section, div').filter({ has: page.getByText(/auto.call/i) });
-    const autoCallToggle = settingsSection.locator('[role="switch"], [type="checkbox"]');
+    // Find the auto-call switch by its specific name to avoid matching multiple switches
+    const autoCallToggle = page.getByRole('switch', { name: /auto.call/i });
 
     if (await autoCallToggle.isVisible()) {
       const initialState = await autoCallToggle.getAttribute('aria-checked');

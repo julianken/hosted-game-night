@@ -85,7 +85,7 @@ test.describe('Trivia Session Flow', () => {
       await page.waitForTimeout(500);
 
       // Verify game is playing
-      await expect(page.getByText(/playing|round 1/i)).toBeVisible();
+      await expect(page.getByText(/playing - round 1/i).first()).toBeVisible();
 
       // Get current state before refresh
       const teamCountBefore = await page.locator('text=/table \\d+/i').count();
@@ -105,7 +105,7 @@ test.describe('Trivia Session Flow', () => {
       expect(teamCountAfter).toBe(teamCountBefore);
 
       // Game state should be restored
-      await expect(page.getByText(/playing|round 1/i)).toBeVisible();
+      await expect(page.getByText(/playing - round 1/i).first()).toBeVisible();
     });
 
     test('should restore current question after refresh', async ({ authenticatedTriviaPage: page }) => {
