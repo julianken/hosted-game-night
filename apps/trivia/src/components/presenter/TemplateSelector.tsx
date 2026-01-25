@@ -78,7 +78,7 @@ export function TemplateSelector({
       } catch (err) {
         console.error('Error fetching templates:', err);
         setError('Failed to load templates');
-        errorToast('Failed to load templates');
+        // Toast removed - inline error message is sufficient (BEA-347)
       } finally {
         setIsLoading(false);
       }
