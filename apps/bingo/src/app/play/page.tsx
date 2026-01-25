@@ -48,6 +48,7 @@ export default function PlayPage() {
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const [recoveryErrorMessage, setRecoveryErrorMessage] = useState<string | null>(null);
   const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
+  const [userDismissedModal, setUserDismissedModal] = useState(false);
   const recoveryInitialized = useRef(false);
 
   // Offline mode state
@@ -178,11 +179,11 @@ export default function PlayPage() {
   // Determine if modal should be shown
   // Show modal if:
   // 1. Explicitly requested via showCreateModal state
-  // 2. No active session (roomCode or offline mode) after recovery completes
+  // 2. No active session (roomCode or offline mode) after recovery completes AND user hasn't dismissed it
   // 3. Recovery failed with an error that hasn't been dismissed
   const shouldShowModal =
     showCreateModal ||
-    (!roomCode && !isOfflineMode && recoveryAttempted) ||
+    (!userDismissedModal && !roomCode && !isOfflineMode && recoveryAttempted) ||
     (recoveryErrorMessage !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database (only in online mode)
@@ -415,6 +416,7 @@ export default function PlayPage() {
 
     // Show modal for new room setup
     setShowCreateModal(true);
+    setUserDismissedModal(false);
   }, [game, clearToken]);
 
   // Room Setup Modal handlers
@@ -464,6 +466,7 @@ export default function PlayPage() {
     } else {
       // No session: show create modal
       setShowCreateModal(true);
+      setUserDismissedModal(false);
     }
   }, [roomCode, isOfflineMode, offlineSessionId]);
 
@@ -726,6 +729,7 @@ export default function PlayPage() {
           setSessionError(null);
           setRecoveryErrorMessage(null);
           setDismissedRecoveryError(true);
+          setUserDismissedModal(true);
         }}
         onCreateRoom={handleModalCreateRoom}
         onJoinRoom={handleModalJoinRoom}

@@ -45,6 +45,7 @@ export default function PlayPage() {
   // Recovery state tracking
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const [dismissedRecoveryError, setDismissedRecoveryError] = useState(false);
+  const [userDismissedModal, setUserDismissedModal] = useState(false);
 
   // Offline mode state
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -138,7 +139,7 @@ export default function PlayPage() {
   // Determine if modal should be shown
   const shouldShowModal =
     showCreateModal ||
-    (!isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
+    (!userDismissedModal && !isRecovering && recoveryAttempted && !isRecovered && !roomCode && !isOfflineMode) ||
     (!isRecovering && recoveryError !== null && !dismissedRecoveryError);
 
   // Auto-sync game state to database (only in online mode)
@@ -450,6 +451,7 @@ export default function PlayPage() {
 
     // Show modal for new room setup
     setShowCreateModal(true);
+    setUserDismissedModal(false);
   }, [game, clearToken]);
 
   // Room Setup Modal handlers
@@ -499,6 +501,7 @@ export default function PlayPage() {
     } else {
       // No session: show create modal
       setShowCreateModal(true);
+      setUserDismissedModal(false);
     }
   }, [roomCode, isOfflineMode, offlineSessionId]);
 
@@ -1110,6 +1113,7 @@ export default function PlayPage() {
         setShowCreateModal(false);
         setSessionError(null);
         setDismissedRecoveryError(true);
+        setUserDismissedModal(true);
       }}
       onCreateRoom={handleModalCreateRoom}
       onJoinRoom={handleModalJoinRoom}
