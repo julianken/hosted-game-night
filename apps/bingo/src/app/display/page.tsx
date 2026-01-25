@@ -95,14 +95,23 @@ function DisplayContent() {
   // Parse room code or session ID from URL
   const searchParams = useSearchParams();
   const roomCode = searchParams.get('room');
+  const offlineSessionId = searchParams.get('offline'); // offline mode session ID
   const sessionId = searchParams.get('session'); // backward compatibility
 
-  // Validate room code first (preferred), then fall back to session ID
+  // Validate room code first (preferred for online mode)
   if (roomCode) {
     if (!isValidRoomCode(roomCode)) {
       return <InvalidSessionError type="room" />;
     }
     return <AudienceDisplay roomCode={roomCode} />;
+  }
+
+  // Check for offline session ID
+  if (offlineSessionId) {
+    if (!isValidSessionId(offlineSessionId)) {
+      return <InvalidSessionError type="session" />;
+    }
+    return <AudienceDisplay sessionId={offlineSessionId} />;
   }
 
   // Fall back to session ID for backward compatibility

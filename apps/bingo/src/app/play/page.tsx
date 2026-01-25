@@ -314,6 +314,9 @@ export default function PlayPage() {
     setRoomCode(null);
     setSessionToken(null);
 
+    // Store the new session ID (updates both the primary key and session-specific key)
+    storeOfflineSessionId(newSessionId);
+
     // Initialize offline session in localStorage
     try {
       const sessionKey = `bingo_offline_session_${newSessionId}`;
