@@ -58,6 +58,9 @@ function shouldRateLimit(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // Check if running in E2E test environment
+  const isE2ETesting = process.env.E2E_TESTING === 'true' || process.env.NODE_ENV === 'test';
+
   // 1. Check body size for POST, PUT, PATCH requests
   // This prevents DoS attacks via large payloads
   if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
@@ -93,8 +96,8 @@ export async function middleware(request: NextRequest) {
     // Continue processing with CORS headers
     let response = NextResponse.next();
 
-    // Apply rate limiting if needed
-    if (shouldRateLimit(pathname)) {
+    // Apply rate limiting if needed (skip for E2E tests)
+    if (shouldRateLimit(pathname) && !isE2ETesting) {
       const rateLimitResponse = await applyRateLimit(request, response);
       if (rateLimitResponse.status === 429) {
         return addCorsHeaders(rateLimitResponse, validOrigin);
@@ -110,7 +113,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Apply rate limiting to OAuth endpoints (non-API)
-  if (shouldRateLimit(pathname)) {
+  // Skip rate limiting for E2E tests to allow parallel test execution
+  if (shouldRateLimit(pathname) && !isE2ETesting) {
     // Check rate limit before processing request
     const rateLimitResponse = await applyRateLimit(
       request,
