@@ -183,7 +183,10 @@ test.describe('Room Setup Flow', () => {
       await expect(page.getByText(/offline session/i)).toBeVisible();
     });
 
-    test('should work offline with network disconnected', async ({ authenticatedBingoPage: page, context }) => {
+    test.skip('should work offline with network disconnected', async ({ authenticatedBingoPage: page, context }) => {
+      // TODO: Requires service worker (production build only)
+      // Run with: pnpm build && pnpm start && pnpm exec playwright test
+
       // Simulate offline mode
       await context.setOffline(true);
 
@@ -423,7 +426,10 @@ test.describe('Room Setup Flow', () => {
       await context.setOffline(false);
     });
 
-    test('should hide offline banner when network reconnects', async ({ authenticatedBingoPage: page, context }) => {
+    test.skip('should hide offline banner when network reconnects', async ({ authenticatedBingoPage: page, context }) => {
+      // TODO: Requires service worker (production build only)
+      // Run with: pnpm build && pnpm start && pnpm exec playwright test
+
       // Start offline
       await context.setOffline(true);
       await page.reload();

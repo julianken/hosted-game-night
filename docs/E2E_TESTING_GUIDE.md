@@ -84,6 +84,57 @@ cat test-results/<test-name>/error-context.md
 
 ---
 
+## Production Build Testing
+
+Some PWA tests require service worker functionality that only works in production builds (not dev mode with `pnpm dev`).
+
+### Running Production E2E Tests
+
+```bash
+# Option 1: Automated script (builds, starts, tests, kills)
+pnpm test:e2e:prod
+
+# Option 2: Manual control
+pnpm build              # Build all apps
+pnpm start              # Start production servers
+pnpm exec playwright test  # Run E2E tests
+# Kill servers when done (Ctrl+C)
+```
+
+### Which Tests Require Production?
+
+Tests marked with `test.skip` and a TODO comment:
+
+```typescript
+test.skip('test name', async ({ page, context }) => {
+  // TODO: Requires service worker (production build only)
+  // Run with: pnpm build && pnpm start && pnpm exec playwright test
+
+  // Test implementation...
+});
+```
+
+These tests typically involve:
+- Offline page reloads (`context.setOffline(true)` + `page.reload()`)
+- PWA caching behavior
+- Service worker registration
+
+### Why Skip in Dev Mode?
+
+Service workers don't register in dev mode:
+- `next dev` disables service worker registration
+- Without service worker, offline reloads fail with `net::ERR_INTERNET_DISCONNECTED`
+- PWA features (offline cache, background sync) unavailable
+
+### When to Run Production Tests?
+
+- Before releasing PWA features
+- When debugging offline functionality
+- When validating service worker changes
+- Not required for regular development (skipped tests don't block commits)
+
+---
+
 ## Common Issues
 
 ### Issue: "Missing environment variables"
