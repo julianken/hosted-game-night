@@ -21,6 +21,10 @@ test.describe('Bingo Display Page', () => {
     // First go to presenter view
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     // Open display window
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -37,6 +41,10 @@ test.describe('Bingo Display Page', () => {
     // Open presenter first
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     // Open display
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -52,6 +60,10 @@ test.describe('Bingo Display Page', () => {
   test('displays current ball when game is active', async ({ authenticatedBingoPage: page }) => {
     // Open presenter
     await waitForHydration(page);
+
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
 
     // Open display
     const popupPromise = page.waitForEvent('popup');
@@ -75,6 +87,10 @@ test.describe('Bingo Display Page', () => {
     // Setup presenter
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     // Open display
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -96,6 +112,10 @@ test.describe('Bingo Display Page', () => {
   test('shows connection status indicator', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -112,6 +132,10 @@ test.describe('Bingo Display Page', () => {
 
   test('displays winning pattern', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
+
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
 
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -131,6 +155,10 @@ test.describe('Bingo Display Page', () => {
   test('has fullscreen button', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -145,6 +173,10 @@ test.describe('Bingo Display Page', () => {
   test('has help button for keyboard shortcuts', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
+
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -158,6 +190,10 @@ test.describe('Bingo Display Page', () => {
 
   test('footer shows fullscreen hint', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
+
+    // Create offline session to dismiss Room Setup modal
+    await page.getByRole('dialog').getByRole('button', { name: /play offline/i }).click();
+    await page.waitForTimeout(500); // Wait for modal to close
 
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
