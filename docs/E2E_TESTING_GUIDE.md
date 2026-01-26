@@ -69,6 +69,66 @@ pnpm test:e2e --headed
 pnpm test:e2e --ui
 ```
 
+### Anti-Pattern: Fixed Timeouts (waitForTimeout)
+
+#### ❌ DO NOT USE Fixed Delays
+
+Fixed timeouts with `page.waitForTimeout()` are an anti-pattern that makes tests:
+- **Slower:** Always wait the full duration, even when condition is already met
+- **Flakier:** May timeout before condition is met on slower systems
+- **Non-deterministic:** Timing assumptions may break across environments
+
+**Bad example:**
+```typescript
+// ❌ BAD: Fixed delay - always waits 500ms
+await page.waitForTimeout(500);
+await expect(element).toBeVisible();
+```
+
+#### ✅ USE Deterministic Waits
+
+Replace fixed timeouts with one of these patterns:
+
+**Pattern 1: Wait for Element Visibility**
+
+Use when waiting for UI elements to appear after an action.
+
+```typescript
+// ✅ GOOD: Waits only until element appears (or timeout)
+await expect(page.getByText(/table 1/i)).toBeVisible();
+```
+
+**Pattern 2: Wait for State Change Indicators**
+
+Use when waiting for app state to change (game status, UI labels).
+
+```typescript
+// ✅ GOOD: Wait for game state to update
+await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
+```
+
+**Pattern 3: Use .toPass() for Complex Conditions**
+
+Use when condition requires multiple checks or retry logic.
+
+```typescript
+// ✅ GOOD: Retry until condition is met
+await expect(async () => {
+  const count = await page.locator('[data-testid="team-count"]').textContent();
+  expect(parseInt(count || '0')).toBeGreaterThan(0);
+}).toPass({ timeout: 10000 });
+```
+
+#### Benefits of Deterministic Waits
+
+- **Faster:** Returns immediately when condition is met
+- **More reliable:** Automatically retries until condition or timeout
+- **Self-documenting:** Code clearly shows what you're waiting for
+
+**Reference:** See Linear issue BEA-383 for refactoring details.
+
+---
+
 ### Understanding Test Results
 
 **CRITICAL:** Always run the summary command to see failure counts clearly:

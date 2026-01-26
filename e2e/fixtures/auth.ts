@@ -178,12 +178,20 @@ async function loginViaPlatformHub(
       });
 
       // Also wait for potential rate limit error on the page
+      // Pattern 3 (BEA-383): Use .toPass() instead of fixed waitForTimeout
       const rateLimitCheckPromise = (async () => {
-        await page.waitForTimeout(1000); // Wait 1s for error to appear
-        // Only check if still on login page (avoids false positives on destination pages)
-        if (page.url().includes('/login') && (await isRateLimitError(page))) {
-          throw new Error('Rate limit error detected on login page');
-        }
+        // Poll for rate limit error with retry logic
+        await playwrightExpect(async () => {
+          // Only check if still on login page (avoids false positives on destination pages)
+          if (page.url().includes('/login') && (await isRateLimitError(page))) {
+            throw new Error('Rate limit error detected on login page');
+          }
+          // If no rate limit error, return true (check passes)
+          playwrightExpect(true).toBe(true);
+        }).toPass({
+          timeout: 1000,
+          intervals: [100, 200, 300, 400], // Poll every 100-400ms
+        });
       })();
 
       // Race: either we redirect to dashboard OR we detect a rate limit error
@@ -376,12 +384,20 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         });
 
         // Also check for rate limit errors
+        // Pattern 3 (BEA-383): Use .toPass() instead of fixed waitForTimeout
         const rateLimitCheckPromise = (async () => {
-          await page.waitForTimeout(1000);
-          // Only check if still on login page (avoids false positives on destination pages)
-          if (page.url().includes('/login') && (await isRateLimitError(page))) {
-            throw new Error('Rate limit error detected on login page');
-          }
+          // Poll for rate limit error with retry logic
+          await playwrightExpect(async () => {
+            // Only check if still on login page (avoids false positives on destination pages)
+            if (page.url().includes('/login') && (await isRateLimitError(page))) {
+              throw new Error('Rate limit error detected on login page');
+            }
+            // If no rate limit error, return true (check passes)
+            playwrightExpect(true).toBe(true);
+          }).toPass({
+            timeout: 1000,
+            intervals: [100, 200, 300, 400], // Poll every 100-400ms
+          });
         })();
 
         await Promise.race([dashboardPromise, rateLimitCheckPromise]);

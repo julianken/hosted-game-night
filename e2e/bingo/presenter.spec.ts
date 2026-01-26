@@ -1,3 +1,11 @@
+/**
+ * Bingo Presenter View E2E Tests
+ *
+ * ⚠️ REFACTORED (BEA-383): Replaced all 9 waitForTimeout() calls with deterministic waits
+ * - Pattern 1: Wait for element visibility after actions (e.g., ball called, counter updated)
+ * - Pattern 2: Wait for state change indicators (e.g., button states, board highlighting)
+ * - Pattern 3: Use .toPass() for complex conditions requiring retry logic
+ */
 import { test, expect } from '../fixtures/auth';
 import { waitForHydration } from '../utils/helpers';
 
@@ -77,11 +85,12 @@ test.describe('Bingo Presenter View', () => {
     if (await autoCallToggle.isVisible()) {
       const initialState = await autoCallToggle.getAttribute('aria-checked');
       await autoCallToggle.click();
-      await page.waitForTimeout(100);
 
-      // State should have toggled
-      const newState = await autoCallToggle.getAttribute('aria-checked');
-      expect(newState).not.toBe(initialState);
+      // Wait for toggle state change (Pattern 3: use .toPass() for attribute change)
+      await expect(async () => {
+        const newState = await autoCallToggle.getAttribute('aria-checked');
+        expect(newState).not.toBe(initialState);
+      }).toPass({ timeout: 5000 });
     }
   });
 
@@ -98,13 +107,17 @@ test.describe('Bingo Presenter View', () => {
     // Click to start the game and call first ball
     await rollButton.click();
 
-    // Wait for animation and state update
-    await page.waitForTimeout(2000);
+    // Wait for ball to be called and counter to update (Pattern 3: complex condition)
+    await expect(async () => {
+      // Ball counter should show at least 1 called
+      // Use tabular-nums class to target the counter specifically (avoids matching bingo gridcells)
+      const calledCount = page.locator('[class*="tabular-nums"]').filter({ hasText: /^\d+$/ }).first();
+      await expect(calledCount).toBeVisible({ timeout: 1000 });
 
-    // Ball counter should show at least 1 called
-    // Use tabular-nums class to target the counter specifically (avoids matching bingo gridcells)
-    const calledCount = page.locator('[class*="tabular-nums"]').filter({ hasText: /^\d+$/ }).first();
-    await expect(calledCount).toBeVisible();
+      const countText = await calledCount.textContent();
+      const count = parseInt(countText || '0');
+      expect(count).toBeGreaterThan(0);
+    }).toPass({ timeout: 10000 });
   });
 
   test('displays current ball after calling @high', async ({ authenticatedBingoPage: page }) => {
@@ -112,12 +125,9 @@ test.describe('Bingo Presenter View', () => {
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click();
 
-    // Wait for the ball to be displayed
-    await page.waitForTimeout(2000);
-
-    // Look for ball display (B-15 format)
+    // Wait for the ball to be displayed (Pattern 1: element visibility)
     const currentBallSection = page.locator('text="Current Ball"').locator('..');
-    await expect(currentBallSection).toBeVisible();
+    await expect(currentBallSection).toBeVisible({ timeout: 10000 });
   });
 
   test('board updates when ball is called @high', async ({ authenticatedBingoPage: page }) => {
@@ -126,19 +136,23 @@ test.describe('Bingo Presenter View', () => {
 
     // Call a ball - "Start Game" initially, then "Roll [Space]"
     await page.getByRole('button', { name: /start game|roll/i }).click();
-    await page.waitForTimeout(2000);
 
-    // Board should have a highlighted cell
-    const newHighlighted = await page.locator('[class*="called"], [class*="highlighted"]').count();
-
-    // Should have one more highlighted cell (or same if we're counting differently)
-    expect(newHighlighted).toBeGreaterThanOrEqual(initialHighlighted);
+    // Wait for board to update (Pattern 3: use .toPass() for count change)
+    await expect(async () => {
+      const newHighlighted = await page.locator('[class*="called"], [class*="highlighted"]').count();
+      expect(newHighlighted).toBeGreaterThanOrEqual(initialHighlighted + 1);
+    }).toPass({ timeout: 10000 });
   });
 
   test('can pause and resume the game @medium', async ({ authenticatedBingoPage: page }) => {
     // Start the game first - "Start Game" initially
     await page.getByRole('button', { name: /start game|roll/i }).click();
-    await page.waitForTimeout(1000);
+
+    // Wait for game to start (Pattern 2: button text changes to "Roll")
+    await expect(async () => {
+      const rollButton = page.getByRole('button', { name: /roll/i });
+      await expect(rollButton).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 5000 });
 
     // Look for pause button
     const pauseButton = page.getByRole('button', { name: /pause/i });
@@ -146,7 +160,7 @@ test.describe('Bingo Presenter View', () => {
     if (await pauseButton.isVisible()) {
       await pauseButton.click();
 
-      // Should show resume option now
+      // Should show resume option now (Pattern 2: state change)
       await expect(page.getByRole('button', { name: /resume/i })).toBeVisible();
 
       // Resume
@@ -157,10 +171,24 @@ test.describe('Bingo Presenter View', () => {
   test('undo removes the last called ball @high', async ({ authenticatedBingoPage: page }) => {
     // Call two balls first - "Start Game" initially, then "Roll [Space]"
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
+
     await rollButton.click();
-    await page.waitForTimeout(2000);
+
+    // Wait for first ball (Pattern 3)
+    await expect(async () => {
+      const calledSection = page.getByText('Called').locator('..');
+      const count = await calledSection.getByText(/^\d+$/).textContent();
+      expect(parseInt(count || '0')).toBeGreaterThanOrEqual(1);
+    }).toPass({ timeout: 10000 });
+
     await rollButton.click();
-    await page.waitForTimeout(2000);
+
+    // Wait for second ball (Pattern 3)
+    await expect(async () => {
+      const calledSection = page.getByText('Called').locator('..');
+      const count = await calledSection.getByText(/^\d+$/).textContent();
+      expect(parseInt(count || '0')).toBeGreaterThanOrEqual(2);
+    }).toPass({ timeout: 10000 });
 
     // Find undo button
     const undoButton = page.getByRole('button', { name: /undo/i });
@@ -171,14 +199,14 @@ test.describe('Bingo Presenter View', () => {
       const countBefore = await calledSection.getByText(/^\d+$/).textContent();
 
       await undoButton.click();
-      await page.waitForTimeout(500);
 
-      const countAfter = await calledSection.getByText(/^\d+$/).textContent();
-
-      const before = parseInt(countBefore || '0');
-      const after = parseInt(countAfter || '0');
-
-      expect(after).toBeLessThan(before);
+      // Wait for undo to complete (Pattern 3: count decreases)
+      await expect(async () => {
+        const countAfter = await calledSection.getByText(/^\d+$/).textContent();
+        const before = parseInt(countBefore || '0');
+        const after = parseInt(countAfter || '0');
+        expect(after).toBeLessThan(before);
+      }).toPass({ timeout: 5000 });
     }
   });
 
@@ -186,7 +214,13 @@ test.describe('Bingo Presenter View', () => {
     // Call some balls first - "Start Game" initially
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click();
-    await page.waitForTimeout(2000);
+
+    // Wait for ball to be called (Pattern 3)
+    await expect(async () => {
+      const calledSection = page.getByText('Called').locator('..');
+      const count = await calledSection.getByText(/^\d+$/).textContent();
+      expect(parseInt(count || '0')).toBeGreaterThan(0);
+    }).toPass({ timeout: 10000 });
 
     // Find reset button
     const resetButton = page.getByRole('button', { name: /reset/i });
@@ -200,8 +234,7 @@ test.describe('Bingo Presenter View', () => {
         await confirmButton.click();
       }
 
-      await page.waitForTimeout(500);
-
+      // Wait for reset to complete (Pattern 2: counter back to 0)
       // Counter should be back to 0 - check number and "Called" separately
       // Use exact match to avoid matching "Called Numbers" heading and other text
       await expect(page.getByText('0').first()).toBeVisible();

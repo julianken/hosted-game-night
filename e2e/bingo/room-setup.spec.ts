@@ -338,9 +338,6 @@ test.describe('Room Setup Flow', () => {
       // Click Create New Game
       const createNewButton = page.getByRole('button', { name: /create new game/i });
       await createNewButton.click();
-
-      // Wait a bit for dialog to be triggered
-      await page.waitForTimeout(500);
     });
   });
 
@@ -407,19 +404,18 @@ test.describe('Room Setup Flow', () => {
 
       await displayPage.waitForLoadState('networkidle');
 
-      // Wait for sync to establish
-      await page.waitForTimeout(1000);
-
       // Both pages should be connected via BroadcastChannel
-      // We can verify this by checking that both pages have the same session ID in their state
-      const presenterSessionId = await page.evaluate(() =>
-        localStorage.getItem('bingo_offline_session_id')
-      );
-      const displaySessionId = await displayPage.evaluate(() =>
-        localStorage.getItem('bingo_offline_session_id')
-      );
-
-      expect(presenterSessionId).toBe(displaySessionId);
+      // Use .toPass() to wait for sync to establish
+      await expect(async () => {
+        const presenterSessionId = await page.evaluate(() =>
+          localStorage.getItem('bingo_offline_session_id')
+        );
+        const displaySessionId = await displayPage.evaluate(() =>
+          localStorage.getItem('bingo_offline_session_id')
+        );
+        expect(presenterSessionId).toBe(displaySessionId);
+        expect(presenterSessionId).toBeTruthy();
+      }).toPass({ timeout: 5000 });
     });
   });
 
@@ -431,7 +427,6 @@ test.describe('Room Setup Flow', () => {
 
       // Disconnect network
       await context.setOffline(true);
-      await page.waitForTimeout(1000);
 
       // Offline banner should appear
       await expect(page.getByText(/offline|no connection/i)).toBeVisible({ timeout: 5000 });
@@ -464,7 +459,6 @@ test.describe('Room Setup Flow', () => {
 
       // Reconnect
       await context.setOffline(false);
-      await page.waitForTimeout(1000);
 
       // Banner should disappear
       await expect(page.getByText(/offline|no connection/i)).not.toBeVisible({ timeout: 5000 });

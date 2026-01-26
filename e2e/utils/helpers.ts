@@ -2,12 +2,17 @@ import { Page, expect } from '@playwright/test';
 
 /**
  * Wait for the Next.js app to fully hydrate.
- * Waits for network idle and a reasonable timeout.
+ * Waits for network idle and checks for React hydration markers.
+ * Pattern 1: Wait for element visibility (React hydration complete)
  */
 export async function waitForHydration(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
-  // Give React time to hydrate
-  await page.waitForTimeout(500);
+  // Wait for React hydration by checking for interactive elements
+  // The page should have at least one button or interactive element when hydrated
+  await expect(async () => {
+    const hasInteractiveElement = await page.locator('button, input, [role="button"]').first().isVisible({ timeout: 1000 });
+    expect(hasInteractiveElement).toBe(true);
+  }).toPass({ timeout: 5000 });
 }
 
 /**
@@ -89,11 +94,14 @@ export async function hasFocus(page: Page, selector: string): Promise<boolean> {
 }
 
 /**
- * Press a keyboard shortcut and wait briefly for effect.
+ * Press a keyboard shortcut.
+ * Pattern 2: No wait needed - caller should check for state change
+ * Keyboard events are synchronous in Playwright
  */
 export async function pressKey(page: Page, key: string): Promise<void> {
   await page.keyboard.press(key);
-  await page.waitForTimeout(100);
+  // No wait needed - keyboard events are processed immediately
+  // Caller should use expect().toBeVisible() or other deterministic waits
 }
 
 /**
