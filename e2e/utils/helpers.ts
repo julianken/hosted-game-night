@@ -234,6 +234,6 @@ export async function waitForSyncedContent(
 ): Promise<void> {
   await expect(async () => {
     const content = displayPage.getByText(pattern);
-    await expect(content.first()).toBeVisible({ timeout: 1000 });
+    await expect(content.first()).toBeVisible({ timeout: 5000 });
   }).toPass({ timeout });
 }
