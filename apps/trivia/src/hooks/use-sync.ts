@@ -143,6 +143,9 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     [role]
   );
 
+  // Track whether we've received state from presenter (for retry logic)
+  const hasReceivedStateRef = useRef(false);
+
   // Initialize broadcast channel
   useEffect(() => {
     if (isInitializedRef.current) return;
@@ -157,26 +160,52 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
     useSyncStore.getState().setRole(role);
     isInitializedRef.current = true;
+    hasReceivedStateRef.current = false; // Reset state received flag
 
     // Subscribe to messages
     const router = createMessageRouter({
-      onStateUpdate: handleStateUpdate,
+      onStateUpdate: (state) => {
+        hasReceivedStateRef.current = true; // Mark that we received state
+        handleStateUpdate(state);
+      },
       onSyncRequest: handleSyncRequest,
       onDisplayThemeChanged: handleDisplayThemeChanged,
     });
 
     const unsubscribe = sync.subscribe(router);
 
-    // If audience, request initial sync
-    if (role === 'audience') {
+    // If audience, request initial sync with retry logic
+    // This handles the race condition where presenter may not be ready yet
+    let retryCount = 0;
+    const maxRetries = 5;
+    let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    function requestSyncWithRetry() {
       sync.requestSync();
+
+      // Schedule retry if we haven't received state yet
+      retryTimeoutId = setTimeout(() => {
+        if (!hasReceivedStateRef.current && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`[Display] REQUEST_SYNC retry ${retryCount}/${maxRetries}`);
+          requestSyncWithRetry();
+        }
+      }, 100 * Math.pow(2, retryCount)); // Exponential backoff: 100ms, 200ms, 400ms, 800ms, 1600ms
+    }
+
+    if (role === 'audience') {
+      requestSyncWithRetry();
     }
 
     return () => {
       unsubscribe();
+      if (retryTimeoutId) {
+        clearTimeout(retryTimeoutId);
+      }
       sync.close();
       useSyncStore.getState().reset();
       isInitializedRef.current = false;
+      hasReceivedStateRef.current = false;
     };
   }, [
     role,
