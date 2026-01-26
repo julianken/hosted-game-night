@@ -7,6 +7,19 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }));
 
+// Mock Next.js headers (cookies)
+const mockCookieStore = {
+  get: vi.fn(),
+  getAll: vi.fn(() => []),
+  set: vi.fn(),
+  delete: vi.fn(),
+  has: vi.fn(),
+};
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => Promise.resolve(mockCookieStore)),
+}));
+
 // Mock Supabase client
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -15,6 +28,8 @@ vi.mock('@/lib/supabase/server', () => ({
 describe('DashboardLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: no E2E cookies (trigger normal Supabase auth flow)
+    mockCookieStore.get.mockReturnValue(undefined);
   });
 
   it('should redirect to login when user is not authenticated', async () => {
@@ -84,5 +99,33 @@ describe('DashboardLayout', () => {
 
     // Should render children (result should contain the children)
     expect(result).toBeDefined();
+  });
+
+  it('should render children when E2E auth cookies are present', async () => {
+    // Mock E2E cookies present
+    mockCookieStore.get.mockImplementation((name: string) => {
+      if (name === 'beak_access_token') {
+        return { name: 'beak_access_token', value: 'e2e-test-token' };
+      }
+      if (name === 'beak_user_id') {
+        return { name: 'beak_user_id', value: 'e2e-test-user-id' };
+      }
+      return undefined;
+    });
+
+    // Render layout (should NOT call Supabase)
+    const result = await DashboardLayout({
+      children: <div>Test Content</div>,
+    });
+
+    // Should NOT redirect
+    expect(redirect).not.toHaveBeenCalled();
+
+    // Should render children
+    expect(result).toBeDefined();
+
+    // Should NOT call Supabase auth (E2E bypass)
+    const { createClient } = await import('@/lib/supabase/server');
+    expect(createClient).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import {
   WelcomeHeader,
@@ -10,6 +11,9 @@ import type { GameSession } from '@/components/dashboard/RecentSessions';
 
 // Force dynamic rendering to avoid build-time Supabase initialization
 export const dynamic = 'force-dynamic';
+
+// E2E Testing constants (must match login API route)
+const E2E_TEST_EMAIL = 'e2e-test@beak-gaming.test';
 
 /**
  * Fetch recent game sessions for a user from the database
@@ -55,9 +59,7 @@ function calculateGameStats(sessions: GameSession[]) {
   return {
     bingo: {
       lastPlayed:
-        bingoSessions.length > 0
-          ? new Date(bingoSessions[0].startedAt)
-          : null,
+        bingoSessions.length > 0 ? new Date(bingoSessions[0].startedAt) : null,
       timesPlayed: bingoSessions.length,
     },
     trivia: {
@@ -146,11 +148,62 @@ function getGamesConfig(stats: ReturnType<typeof calculateGameStats>) {
 
 export const metadata = {
   title: 'Dashboard | Beak Gaming Platform',
-  description: 'Your Beak Gaming dashboard - quick access to games, recent sessions, and settings',
+  description:
+    'Your Beak Gaming dashboard - quick access to games, recent sessions, and settings',
 };
 
 export default async function DashboardPage() {
-  // Check authentication
+  // Check for E2E auth via custom SSO cookie (set by /api/auth/login in E2E mode)
+  // This allows E2E tests to bypass real Supabase auth and avoid rate limits
+  const cookieStore = await cookies();
+  const e2eToken = cookieStore.get('beak_access_token');
+  const e2eUserId = cookieStore.get('beak_user_id');
+
+  // E2E Testing Mode: beak_access_token is set by E2E login API
+  // Check for E2E cookie BEFORE Supabase auth to avoid unnecessary API calls
+  if (e2eToken && e2eUserId) {
+    // E2E user is authenticated - use mock user data
+    const recentSessions: GameSession[] = [];
+    const gameStats = calculateGameStats(recentSessions);
+    const games = getGamesConfig(gameStats);
+    const userName = E2E_TEST_EMAIL.split('@')[0];
+
+    return (
+      <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
+          <WelcomeHeader userName={userName} userEmail={E2E_TEST_EMAIL} />
+          <section aria-labelledby="games-heading">
+            <h2
+              id="games-heading"
+              className="text-2xl md:text-3xl font-bold text-foreground mb-6"
+            >
+              Quick Play
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+              {games.map((game) => (
+                <DashboardGameCard
+                  key={game.id}
+                  title={game.title}
+                  description={game.description}
+                  href={game.href}
+                  icon={game.icon}
+                  colorClass={game.colorClass}
+                  lastPlayed={game.lastPlayed}
+                  timesPlayed={game.timesPlayed}
+                />
+              ))}
+            </div>
+          </section>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
+            <RecentSessions sessions={recentSessions} maxSessions={4} />
+            <UserPreferences />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Normal flow: Check Supabase authentication
   const supabase = await createClient();
   const {
     data: { user },
@@ -242,7 +295,8 @@ export default async function DashboardPage() {
                 Need Help Getting Started?
               </h2>
               <p className="text-lg text-muted-foreground mb-4">
-                Check out our quick start guides for running games, or contact support if you need assistance.
+                Check out our quick start guides for running games, or contact
+                support if you need assistance.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a
