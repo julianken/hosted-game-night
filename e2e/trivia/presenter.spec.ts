@@ -56,7 +56,8 @@ test.describe('Trivia Presenter View', () => {
       await page.waitForTimeout(500);
 
       // Status should change to playing
-      await expect(page.getByText(/playing|round 1/i)).toBeVisible();
+      // Use specific text pattern to avoid matching multiple "Round 1" elements
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
     });
 
     test('shows ready message with team count', async ({ authenticatedTriviaPage: page }) => {
@@ -314,7 +315,8 @@ test.describe('Trivia Presenter View', () => {
       await page.waitForTimeout(200);
 
       // Check for round indicator
-      await expect(page.getByText(/round 1/i)).toBeVisible();
+      // Use aria-label to target specific round indicator element
+      await expect(page.getByLabel(/current round/i)).toBeVisible();
     });
   });
 

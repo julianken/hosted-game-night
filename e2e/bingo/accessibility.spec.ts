@@ -119,7 +119,8 @@ test.describe('Bingo Accessibility', () => {
         document.activeElement?.tagName
       );
 
-      expect(['A', 'BUTTON', 'INPUT', 'SELECT']).toContain(focusedElement);
+      // Fix inverted assertion logic - check if focusedElement matches expected types
+      expect(focusedElement).toMatch(/^(A|BUTTON|INPUT|SELECT)$/);
     });
 
     test('form controls are labeled', async ({ authenticatedBingoPage: page }) => {

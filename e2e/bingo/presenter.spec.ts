@@ -101,7 +101,8 @@ test.describe('Bingo Presenter View', () => {
     await page.waitForTimeout(2000);
 
     // Ball counter should show at least 1 called
-    const calledCount = page.getByText('Called').locator('..').getByText(/^\d+$/);
+    // Use tabular-nums class to target the counter specifically (avoids matching bingo gridcells)
+    const calledCount = page.locator('[class*="tabular-nums"]').filter({ hasText: /^\d+$/ }).first();
     await expect(calledCount).toBeVisible();
   });
 

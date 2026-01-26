@@ -307,7 +307,8 @@ test.describe('Trivia Session Flow', () => {
       await expect(page.getByLabel(/room code/i)).toBeVisible();
       await expect(page.getByLabel(/room pin/i)).toBeVisible();
       await expect(page.getByRole('button', { name: /join game/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
+      // Scope cancel button to the form to avoid matching multiple cancel buttons
+      await expect(page.locator('form').getByRole('button', { name: /cancel/i })).toBeVisible();
     });
 
     test('should validate PIN format (4 digits)', async ({ authenticatedTriviaPage: page }) => {
