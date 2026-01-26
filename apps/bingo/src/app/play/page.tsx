@@ -225,23 +225,19 @@ export default function PlayPage() {
     // Try to recover offline session from localStorage
     const recoverOfflineSession = () => {
       try {
-        // Check all offline session keys
-        const keys = Object.keys(localStorage).filter(key =>
-          key.startsWith('bingo_offline_session_')
-        );
-
-        if (keys.length > 0) {
-          // Get the most recent session (last in array)
-          const lastKey = keys[keys.length - 1];
-          const sessionId = lastKey.replace('bingo_offline_session_', '');
-
-          // Validate session ID format (6 uppercase alphanumeric characters)
-          if (typeof sessionId === 'string' && /^[A-Z0-9]{6}$/.test(sessionId)) {
-            const stored = localStorage.getItem(lastKey);
-            if (stored) {
+        // Use the stored session ID directly instead of filtering localStorage keys
+        // This avoids the bug where 'bingo_offline_session_id' key could be picked up
+        // and result in an invalid session ID of 'id'
+        const storedId = getStoredOfflineSessionId();
+        if (storedId && /^[A-Z0-9]{6}$/.test(storedId)) {
+          const sessionKey = `bingo_offline_session_${storedId}`;
+          const stored = localStorage.getItem(sessionKey);
+          if (stored) {
+            try {
               const data = JSON.parse(stored);
-              if (data.isOffline && data.sessionId === sessionId) {
-                setOfflineSessionId(sessionId);
+              // Validate sessionId matches and session was offline
+              if (data.isOffline && data.sessionId === storedId) {
+                setOfflineSessionId(storedId);
                 setIsOfflineMode(true);
                 // Hydrate game state if available
                 if (data.gameState) {
@@ -249,6 +245,8 @@ export default function PlayPage() {
                   useGameStore.setState(partialState);
                 }
               }
+            } catch (parseError) {
+              console.error('Failed to parse offline session:', parseError);
             }
           }
         }
