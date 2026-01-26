@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration, waitForDualScreenSync, waitForSyncedContent, waitForRoomSetupModal } from '../utils/helpers';
+import { waitForHydration, waitForDualScreenSync, waitForSyncedContent } from '../utils/helpers';
 
 test.describe('Bingo Dual-Screen Synchronization', () => {
   test('presenter and display sync on connection', async ({ authenticatedBingoPage: page }) => {
@@ -57,13 +57,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('multiple balls sync correctly', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
-    // Close Room Setup modal if present
-    await waitForRoomSetupModal(page);
-    const closeButton = page.getByRole('button', { name: /close/i });
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
-    }
-
+    // Modal already dismissed by authenticatedBingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -99,13 +93,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('pattern change syncs to display', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
-    // Close Room Setup modal if present
-    await waitForRoomSetupModal(page);
-    const closeButton = page.getByRole('button', { name: /close/i });
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
-    }
-
+    // Modal already dismissed by authenticatedBingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -231,13 +219,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
   test('closing display does not affect presenter', async ({ authenticatedBingoPage: page }) => {
     await waitForHydration(page);
 
-    // Close Room Setup modal if present
-    await waitForRoomSetupModal(page);
-    const closeButton = page.getByRole('button', { name: /close/i });
-    if (await closeButton.isVisible()) {
-      await closeButton.click();
-    }
-
+    // Modal already dismissed by authenticatedBingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;

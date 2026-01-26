@@ -10,6 +10,9 @@ import { waitForRoomSetupModal } from '../utils/helpers';
  * 3. Does NOT show on successful recovery
  */
 
+// Prevent fixture from auto-dismissing modal - these tests need to test the modal itself
+test.use({ skipModalDismissal: true });
+
 test.describe('Room Setup Modal Timing', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any stored session data before each test
