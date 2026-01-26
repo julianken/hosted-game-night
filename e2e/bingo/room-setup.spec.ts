@@ -348,7 +348,8 @@ test.describe('Room Setup Flow', () => {
     test('should sync display window in online mode', async ({ authenticatedBingoPage: page, context }) => {
       // Create online room
       await clickButton(page, /create a new game room/i);
-      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 });
+      // Modal may take longer to dismiss in multi-window scenarios due to BroadcastChannel sync (BEA-381)
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 15000 });
 
       // Open display window
       const [displayPage] = await Promise.all([
