@@ -1,4 +1,4 @@
-import { test as base, type Page } from '@playwright/test';
+import { test as base, expect as playwrightExpect, type Page } from '@playwright/test';
 
 // URL Constants
 const HUB_URL = 'http://localhost:3002';
@@ -152,11 +152,16 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
       await Promise.race([dashboardPromise, rateLimitCheckPromise]);
 
       // If we get here, we successfully navigated to dashboard
-      // Verify SSO cookies exist
-      const cookies = await page.context().cookies();
-      if (!cookies.some((c) => c.name === 'beak_access_token')) {
-        throw new Error('OAuth login failed: beak_access_token cookie not set');
-      }
+      // Wait for SSO cookie with polling (cookie storage is async)
+      // Using expect.toPass() for automatic retry with exponential backoff
+      await playwrightExpect(async () => {
+        const cookies = await page.context().cookies();
+        const hasToken = cookies.some((c) => c.name === 'beak_access_token');
+        playwrightExpect(hasToken).toBe(true);
+      }).toPass({
+        timeout: 5000,
+        intervals: [100, 250, 500, 1000], // Exponential backoff polling
+      });
 
       // Success! Exit the retry loop
       return;
