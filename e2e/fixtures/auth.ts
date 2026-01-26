@@ -62,6 +62,14 @@ export interface GameAuthFixtures {
    * Use this when testing the modal itself.
    */
   skipModalDismissal: boolean;
+
+  /**
+   * Navigation timeout for game app pages in milliseconds.
+   * Mobile viewports may need longer timeouts due to slower rendering
+   * and potential auth redirect race conditions (BEA-375).
+   * Default: 5000ms. Override in project config for mobile: 15000ms.
+   */
+  navigationTimeout: number;
 }
 
 /**
@@ -97,6 +105,16 @@ async function isRateLimitError(page: Page): Promise<boolean> {
 }
 
 /**
+ * Options for loginViaPlatformHub function.
+ */
+interface LoginOptions {
+  /** Target URL to copy SSO cookies to after login */
+  targetUrl?: string;
+  /** Navigation timeout in ms (default: 5000) */
+  navigationTimeout?: number;
+}
+
+/**
  * Helper function to login via Platform Hub and verify SSO cookies.
  * Used by game app fixtures (Bingo, Trivia) for cross-app authentication.
  *
@@ -108,12 +126,19 @@ async function isRateLimitError(page: Page): Promise<boolean> {
  * 1. Add random stagger delay (0-1000ms) BEFORE first attempt to spread parallel requests
  * 2. Retry up to 3 times with exponential backoff (2s, 4s, 8s)
  * 3. Detect rate limit errors quickly via page content check
+ * 4. Copy SSO cookies to target domain (different ports = different origins)
  *
  * @param page - Playwright page instance
  * @param testUser - Test user credentials
+ * @param options - Optional login options (targetUrl, navigationTimeout)
  * @throws Error if OAuth login fails after all retries
  */
-async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void> {
+async function loginViaPlatformHub(
+  page: Page,
+  testUser: TestUser,
+  options: LoginOptions = {}
+): Promise<void> {
+  const { targetUrl, navigationTimeout = 5000 } = options;
   // Add random stagger delay BEFORE first attempt to prevent thundering herd
   // This spreads out parallel login requests across a 1-second window
   const staggerDelay = Math.random() * AUTH_STAGGER_MAX_MS;
@@ -159,9 +184,15 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
         const hasToken = cookies.some((c) => c.name === 'beak_access_token');
         playwrightExpect(hasToken).toBe(true);
       }).toPass({
-        timeout: 5000,
+        timeout: navigationTimeout,
         intervals: [100, 250, 500, 1000], // Exponential backoff polling
       });
+
+      // Copy SSO cookies to target domain if specified
+      // (different ports = different origins, cookies don't propagate automatically)
+      if (targetUrl) {
+        await copySSOCookiesToDomain(page, targetUrl);
+      }
 
       // Success! Exit the retry loop
       return;
@@ -200,6 +231,36 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
 }
 
 /**
+ * Helper function to copy SSO cookies from Platform Hub to a target domain.
+ * Browsers treat different ports as different origins, so cookies set on
+ * localhost:3002 don't automatically apply to localhost:3000.
+ *
+ * @param page - Playwright page instance
+ * @param targetUrl - The target URL to copy cookies to (e.g., 'http://localhost:3000')
+ */
+async function copySSOCookiesToDomain(page: Page, targetUrl: string): Promise<void> {
+  const cookies = await page.context().cookies();
+  const ssoCookies = cookies.filter((c) =>
+    ['beak_access_token', 'beak_refresh_token', 'beak_user_id'].includes(c.name)
+  );
+
+  if (ssoCookies.length > 0) {
+    // Add cookies to target domain using url property (not domain)
+    await page.context().addCookies(
+      ssoCookies.map((c) => ({
+        name: c.name,
+        value: c.value,
+        url: targetUrl,
+        httpOnly: c.httpOnly,
+        secure: c.secure,
+        sameSite: c.sameSite,
+        expires: c.expires,
+      }))
+    );
+  }
+}
+
+/**
  * Helper function to dismiss the Room Setup modal on Bingo/Trivia /play pages.
  * The modal auto-opens when the user is authenticated but has no active session.
  * This helper clicks "Play Offline" to create an offline session and dismiss the modal.
@@ -208,34 +269,29 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
  * @param timeout - Maximum time to wait for modal (default: 5000ms)
  */
 async function dismissRoomSetupModal(page: Page, timeout = 5000): Promise<void> {
+  const modal = page.getByRole('dialog', { name: /room setup/i });
+
+  // First, check if modal appears - if not, user might already have a session
   try {
-    // Wait for the modal to appear (with specific name matcher)
-    const modal = page.getByRole('dialog', { name: /room setup/i });
-    await modal.waitFor({ state: 'visible', timeout });
-
-    // Wait for modal content to be fully rendered
-    const playOfflineButton = modal.getByRole('button', { name: /play offline/i });
-    await playOfflineButton.waitFor({ state: 'visible', timeout: 2000 });
-
-    // Click "Play Offline" button
-    await playOfflineButton.click();
-
-    // Verify modal closed
-    await modal.waitFor({ state: 'hidden', timeout });
-  } catch (error) {
-    // If modal doesn't appear within timeout, that's fine - user might already have a session
-    // Only throw if the error is NOT a timeout waiting for the modal to appear
-    if (error instanceof Error && !error.message.includes('Timeout')) {
-      throw error;
-    }
-    // If the modal appeared but didn't close properly, that's a real error
-    // Check if modal is still visible
-    const modal = page.getByRole('dialog', { name: /room setup/i });
-    const isVisible = await modal.isVisible().catch(() => false);
-    if (isVisible) {
-      throw new Error('Room Setup modal failed to close after clicking Play Offline');
-    }
+    await modal.waitFor({ state: 'visible', timeout: 3000 });
+  } catch {
+    // Modal didn't appear - that's fine, user might already have an active session
+    return;
   }
+
+  // Modal is visible - we need to dismiss it
+  // Wait for modal content to be fully rendered and click Play Offline
+  // Use the button's aria-label for precise selection
+  const playOfflineButton = modal.getByRole('button', {
+    name: 'Play offline without network connection',
+  });
+  await playOfflineButton.waitFor({ state: 'visible', timeout: 2000 });
+
+  // Click "Play Offline" button
+  await playOfflineButton.click();
+
+  // Wait for modal to close with generous timeout for animation
+  await modal.waitFor({ state: 'hidden', timeout });
 }
 
 /**
@@ -257,9 +313,15 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    * Defaults to false (modal IS dismissed automatically).
    * Set to true in tests that need to test the modal itself.
    */
-  skipModalDismissal: async ({}, use) => {
-    await use(false);
-  },
+  skipModalDismissal: [false, { option: true }],
+
+  /**
+   * Navigation timeout for game app pages.
+   * Mobile viewports may need longer timeouts due to slower rendering
+   * and potential auth redirect race conditions (BEA-375).
+   * Default: 5000ms. Override in project config for mobile: 15000ms.
+   */
+  navigationTimeout: [5000, { option: true }],
 
   /**
    * Default test user credentials.
@@ -356,16 +418,54 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    * Logs in via Platform Hub OAuth, then navigates to Bingo /play.
    * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedBingoPage: async ({ page, testUser, skipModalDismissal }, use) => {
+  authenticatedBingoPage: async ({ page, testUser, skipModalDismissal, navigationTimeout }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
-    await loginViaPlatformHub(page, testUser);
+    // Copy cookies to Bingo domain (different ports = different origins)
+    await loginViaPlatformHub(page, testUser, {
+      targetUrl: BINGO_URL,
+      navigationTimeout,
+    });
 
     // 2. Navigate to Bingo /play with SSO cookies
-    await page.goto(`${BINGO_URL}/play`);
+    // Handle potential navigation interruption from middleware auth redirect
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await page.goto(`${BINGO_URL}/play`, {
+          waitUntil: 'load',
+          timeout: navigationTimeout,
+        });
+
+        // If we got redirected to login, wait and retry (auth race condition)
+        if (page.url().includes('/login')) {
+          // Wait for any in-flight redirects to settle
+          await page.waitForTimeout(500);
+          retries--;
+          continue;
+        }
+
+        // Successfully on /play page
+        break;
+      } catch (error) {
+        // Handle navigation interruption errors (middleware redirect race condition)
+        if (
+          error instanceof Error &&
+          error.message.includes('Navigation') &&
+          error.message.includes('interrupted')
+        ) {
+          // Wait for redirect to complete
+          await page.waitForTimeout(1000);
+          retries--;
+          if (retries === 0) throw error;
+          continue;
+        }
+        throw error;
+      }
+    }
 
     // 3. Dismiss Room Setup modal (unless test opts out)
     if (!skipModalDismissal) {
-      await dismissRoomSetupModal(page);
+      await dismissRoomSetupModal(page, navigationTimeout);
     }
 
     // Provide authenticated Bingo page to test
@@ -379,16 +479,54 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    * Logs in via Platform Hub OAuth, then navigates to Trivia /play.
    * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal }, use) => {
+  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal, navigationTimeout }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
-    await loginViaPlatformHub(page, testUser);
+    // Copy cookies to Trivia domain (different ports = different origins)
+    await loginViaPlatformHub(page, testUser, {
+      targetUrl: TRIVIA_URL,
+      navigationTimeout,
+    });
 
     // 2. Navigate to Trivia /play with SSO cookies
-    await page.goto(`${TRIVIA_URL}/play`);
+    // Handle potential navigation interruption from middleware auth redirect
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await page.goto(`${TRIVIA_URL}/play`, {
+          waitUntil: 'load',
+          timeout: navigationTimeout,
+        });
+
+        // If we got redirected to login, wait and retry (auth race condition)
+        if (page.url().includes('/login')) {
+          // Wait for any in-flight redirects to settle
+          await page.waitForTimeout(500);
+          retries--;
+          continue;
+        }
+
+        // Successfully on /play page
+        break;
+      } catch (error) {
+        // Handle navigation interruption errors (middleware redirect race condition)
+        if (
+          error instanceof Error &&
+          error.message.includes('Navigation') &&
+          error.message.includes('interrupted')
+        ) {
+          // Wait for redirect to complete
+          await page.waitForTimeout(1000);
+          retries--;
+          if (retries === 0) throw error;
+          continue;
+        }
+        throw error;
+      }
+    }
 
     // 3. Dismiss Room Setup modal (unless test opts out)
     if (!skipModalDismissal) {
-      await dismissRoomSetupModal(page);
+      await dismissRoomSetupModal(page, navigationTimeout);
     }
 
     // Provide authenticated Trivia page to test
