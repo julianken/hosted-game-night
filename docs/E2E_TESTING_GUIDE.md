@@ -33,7 +33,11 @@ SESSION_TOKEN_SECRET=<64-character-hex-string-from-openssl>
 ### Running E2E Tests
 
 ```bash
-# 1. Start all dev servers (in separate terminal or background)
+# 1. Start all dev servers with E2E testing mode (IMPORTANT!)
+# This enables auth bypass to avoid Supabase rate limits
+pnpm dev:e2e
+
+# OR regular dev (without E2E auth bypass):
 pnpm dev
 
 # OR start individually:

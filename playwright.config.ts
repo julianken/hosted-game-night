@@ -17,6 +17,10 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+// Set E2E testing flag - this signals to Platform Hub to bypass Supabase auth
+// and generate JWTs locally to avoid rate limits
+process.env.E2E_TESTING = 'true';
+
 const isCI = !!process.env.CI;
 
 /**
@@ -127,6 +131,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
+          env: { E2E_TESTING: 'true' },
         },
         {
           command: 'pnpm --filter @beak-gaming/trivia start',
@@ -135,6 +140,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
+          env: { E2E_TESTING: 'true' },
         },
         {
           command: 'pnpm --filter @beak-gaming/platform-hub start',
@@ -143,6 +149,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
+          env: { E2E_TESTING: 'true' },
         },
       ]
     : undefined,

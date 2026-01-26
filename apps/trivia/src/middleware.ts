@@ -11,9 +11,18 @@ import { jwtVerify, createRemoteJWKSet } from 'jose';
  * - / (home page)
  * - /display (audience view)
  * - /auth/* (OAuth callback, login)
+ *
+ * E2E Testing Mode:
+ * When E2E_TESTING=true, accepts tokens signed with the E2E test secret
+ * to avoid hitting Supabase rate limits during test execution.
  */
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+// E2E Testing: Same secret used by Platform Hub login API
+const E2E_JWT_SECRET = new TextEncoder().encode(
+  'e2e-test-secret-key-that-is-at-least-32-characters-long'
+);
 
 /**
  * Routes that require authentication
@@ -42,10 +51,27 @@ function isProtectedRoute(pathname: string): boolean {
 
 /**
  * Verify JWT access token from httpOnly cookie
+ * Supports both Supabase tokens (production) and E2E test tokens
  */
 async function verifyAccessToken(token: string): Promise<boolean> {
+  const isE2ETesting = process.env.E2E_TESTING === 'true';
+
+  // E2E Testing Mode: Try E2E secret first
+  if (isE2ETesting) {
+    try {
+      await jwtVerify(token, E2E_JWT_SECRET, {
+        issuer: 'e2e-test',
+        audience: 'authenticated',
+      });
+      return true;
+    } catch {
+      // E2E token verification failed, fall through to Supabase verification
+      // This allows real Supabase tokens to still work during E2E tests
+    }
+  }
+
+  // Production Mode (or E2E fallback): Verify with Supabase JWKS
   try {
-    // Verify JWT signature using JWKS
     await jwtVerify(token, getJWKS(), {
       issuer: `${SUPABASE_URL}/auth/v1`,
       audience: 'authenticated',

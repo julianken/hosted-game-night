@@ -6,6 +6,7 @@
   "description": "A unified gaming platform for retirement communities - Bingo, Trivia, and more",
   "scripts": {
     "dev": "turbo dev",
+    "dev:e2e": "E2E_TESTING=true turbo dev",
     "build": "turbo build",
     "test": "turbo test",
     "test:run": "turbo test:run",
