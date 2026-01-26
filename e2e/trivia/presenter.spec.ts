@@ -102,50 +102,57 @@ test.describe('Trivia Presenter View', () => {
       // Add a team
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
-      await page.waitForTimeout(300);
 
-      await expect(page.getByText(/table 1/i)).toBeVisible();
+      // Wait for team to appear using proper role-based locator
+      const team1Item = page.getByRole('listitem', { name: /team: table 1/i });
+      await expect(team1Item).toBeVisible();
 
-      // Remove the team - scope to Table 1 team card
-      const team1Card = page.locator('[class*="team"], [data-testid*="team"]').filter({ hasText: /table 1/i });
-      const removeBtn = team1Card.getByRole('button', { name: /remove/i });
+      // Remove the team using the accessible button name
+      const removeBtn = page.getByRole('button', { name: /remove team table 1/i });
       await removeBtn.click();
-      await page.waitForTimeout(300);
 
-      // Team should be gone
-      await expect(page.getByText(/no teams added yet/i)).toBeVisible();
+      // Wait for team removal to complete - use toPass for retry logic
+      await expect(async () => {
+        await expect(page.getByText(/no teams added yet/i)).toBeVisible();
+      }).toPass({ timeout: 10000 });
     });
 
     test('can rename a team', async ({ authenticatedTriviaPage: page }) => {
       // Add a team
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
-      await page.waitForTimeout(300);
 
-      // Click rename button - scope to Table 1 team card
-      const team1Card = page.locator('[class*="team"], [data-testid*="team"]').filter({ hasText: /table 1/i });
-      const renameBtn = team1Card.getByRole('button', { name: /rename/i });
+      // Wait for team to appear using proper role-based locator
+      await expect(page.getByRole('listitem', { name: /team: table 1/i })).toBeVisible();
+
+      // Click rename button using accessible button name
+      const renameBtn = page.getByRole('button', { name: /rename team table 1/i });
       await renameBtn.click();
-      await page.waitForTimeout(200);
 
-      // Find the edit input and change name
-      const input = page.locator('input[aria-label="Edit team name"]');
+      // Wait for and fill the edit input
+      const input = page.getByLabel('Edit team name');
+      await expect(input).toBeVisible();
       await input.fill('Champions');
       await input.press('Enter');
-      await page.waitForTimeout(300);
 
-      // Team name should be updated
-      await expect(page.getByText('Champions')).toBeVisible();
+      // Wait for team rename to complete - use toPass for retry logic
+      await expect(async () => {
+        await expect(page.getByRole('listitem', { name: /team: champions/i })).toBeVisible();
+      }).toPass({ timeout: 10000 });
     });
 
     test('shows team count limit', async ({ authenticatedTriviaPage: page }) => {
       // Check for the counter showing current/max teams
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
-      await page.waitForTimeout(200);
 
-      // Should show 1/20
-      await expect(page.getByText(/1\/20/)).toBeVisible();
+      // Wait for team to be added
+      await expect(page.getByRole('listitem', { name: /team: table 1/i })).toBeVisible();
+
+      // Should show 1/20 - use exact text to avoid matching question numbers like "Q1/"
+      // The team counter is within the Team management region
+      const teamSection = page.getByRole('region', { name: /team management/i });
+      await expect(teamSection.getByText('1/20', { exact: true })).toBeVisible();
     });
   });
 
