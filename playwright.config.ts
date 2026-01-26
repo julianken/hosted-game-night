@@ -104,6 +104,9 @@ export default defineConfig({
       use: {
         ...devices['iPhone 13'],
         baseURL: 'http://localhost:3000',
+        // Mobile viewports have slower auth navigation due to smaller viewport rendering
+        // and potential auth redirect race conditions (BEA-375)
+        navigationTimeout: 15000,
       },
     },
   ],
