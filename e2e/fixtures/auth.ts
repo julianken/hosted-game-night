@@ -1,9 +1,22 @@
 import { test as base, expect as playwrightExpect, type Page } from '@playwright/test';
+import { portConfig } from '../../playwright.config';
 
-// URL Constants
-const HUB_URL = 'http://localhost:3002';
-const BINGO_URL = 'http://localhost:3000';
-const TRIVIA_URL = 'http://localhost:3001';
+// -----------------------------------------------------------------------------
+// Dynamic URL Constants for Worktree Isolation
+// -----------------------------------------------------------------------------
+// URLs are derived from the port configuration in playwright.config.ts.
+// This enables parallel E2E testing across multiple git worktrees.
+//
+// Main repo: Uses default ports 3000, 3001, 3002
+// Worktrees: Use hash-based port offsets derived from their path
+// Environment variables can override: E2E_PORT_BASE, E2E_*_PORT
+//
+// See playwright.config.ts and e2e/utils/port-isolation.ts for details.
+// -----------------------------------------------------------------------------
+
+const HUB_URL = `http://localhost:${portConfig.hubPort}`;
+const BINGO_URL = `http://localhost:${portConfig.bingoPort}`;
+const TRIVIA_URL = `http://localhost:${portConfig.triviaPort}`;
 
 // Timeout Constants
 const AUTH_TIMEOUT_MS = 10000; // OAuth login can be slow in CI

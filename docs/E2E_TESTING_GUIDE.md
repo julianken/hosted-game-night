@@ -259,25 +259,65 @@ pnpm test:e2e  # ALL tests must pass
 # 3. Re-run review cycle
 ```
 
-### Parallel Task Execution
+### Parallel Task Execution with Port Isolation
 
-Each agent in separate worktree can run E2E tests independently:
+Each agent in a separate worktree can run E2E tests **truly in parallel** using automatic port isolation.
+
+**How Port Isolation Works:**
+
+1. **Main repo**: Uses default ports 3000, 3001, 3002
+2. **Worktrees**: Use hash-based port offsets derived from the worktree path
+3. **Environment variables**: Can override ports manually if needed
+
+**Setup for Parallel Testing:**
 
 ```bash
-# Worktree A: Agent fixing BEA-334
-cd .worktrees/BEA-334-room-setup-modal
-pnpm dev:bingo &
+# In a worktree (e.g., .worktrees/wt-BEA-334)
+cd .worktrees/wt-BEA-334
+
+# Run the setup script (creates .env.e2e and helper scripts)
+./scripts/setup-worktree-e2e.sh
+
+# Start servers with isolated ports
+./start-e2e-servers.sh
+
+# Run E2E tests (Playwright auto-detects ports)
+pnpm test:e2e
+```
+
+**Or manually:**
+
+```bash
+# The Playwright config auto-detects worktree and calculates ports
+# Just run tests - ports are determined by the worktree path hash
+
+# Worktree A: Agent fixing BEA-334 (gets ports like 3156, 3157, 3158)
+cd .worktrees/wt-BEA-334
+source .env.e2e  # If setup script was run
+./start-e2e-servers.sh
 pnpm test:e2e e2e/bingo/room-setup.spec.ts
 
-# Worktree B: Agent fixing BEA-335 (different feature)
-cd .worktrees/BEA-335-other-feature
-pnpm dev:trivia &
+# Worktree B: Agent fixing BEA-335 (gets different ports like 3279, 3280, 3281)
+cd .worktrees/wt-BEA-335
+source .env.e2e
+./start-e2e-servers.sh
 pnpm test:e2e e2e/trivia/other-feature.spec.ts
 ```
 
-**Port conflicts**: Each worktree shares the same ports (3000, 3001, 3002). Only ONE set of dev servers can run at a time.
+**Port Allocation:**
+- Ports are calculated deterministically from the worktree path
+- Same worktree always gets the same ports
+- Different worktrees get different ports (with high probability)
+- Port range: 3000-3999 (supports up to 333 concurrent worktrees)
 
-**Solution**: Run E2E tests sequentially, or use different ports per worktree (requires config changes).
+**Environment Variable Overrides:**
+```bash
+# Override all ports with a base
+E2E_PORT_BASE=3100 pnpm test:e2e  # Uses 3100, 3101, 3102
+
+# Override individual ports
+E2E_BINGO_PORT=3100 E2E_TRIVIA_PORT=3101 E2E_HUB_PORT=3102 pnpm test:e2e
+```
 
 ---
 
@@ -398,10 +438,50 @@ Since GitHub Actions are disabled:
 
 ## Port Reference
 
+### Default Ports (Main Repo)
+
 | Service | Port | URL |
 |---------|------|-----|
 | Bingo | 3000 | http://localhost:3000 |
 | Trivia | 3001 | http://localhost:3001 |
 | Platform Hub | 3002 | http://localhost:3002 |
 
-All E2E tests expect these ports. Do not change without updating playwright.config.ts.
+### Dynamic Ports (Worktrees)
+
+When running in a git worktree, ports are automatically calculated based on the worktree path:
+
+| Scenario | Bingo | Trivia | Hub | How Determined |
+|----------|-------|--------|-----|----------------|
+| Main repo | 3000 | 3001 | 3002 | Default |
+| Worktree A | 3XXX | 3XXX+1 | 3XXX+2 | Hash of path |
+| Worktree B | 3YYY | 3YYY+1 | 3YYY+2 | Hash of path |
+| E2E_PORT_BASE=3100 | 3100 | 3101 | 3102 | Environment |
+
+**Playwright auto-detects ports** based on whether you're in a worktree or main repo.
+
+### Checking Current Ports
+
+```bash
+# Playwright logs the port configuration on startup:
+pnpm test:e2e
+
+# Output:
+# [Playwright Config] E2E Port Configuration:
+#   Source: hash-based  (or "default" for main repo)
+#   Is Worktree: true
+#   Worktree Path: /path/to/.worktrees/wt-BEA-XXX
+#   Bingo: http://localhost:3156
+#   Trivia: http://localhost:3157
+#   Hub: http://localhost:3158
+```
+
+### Implementation Details
+
+See `playwright.config.ts` and `e2e/utils/port-isolation.ts` for the full implementation.
+
+Port calculation formula:
+1. SHA-256 hash the worktree path
+2. Take first 8 hex characters (32 bits)
+3. Map to range 0-332: `offset_index = hash % 333`
+4. Multiply by 3: `port_offset = offset_index * 3`
+5. Final ports: `3000 + offset`, `3001 + offset`, `3002 + offset`
