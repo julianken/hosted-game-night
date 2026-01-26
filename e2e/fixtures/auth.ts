@@ -142,7 +142,8 @@ async function loginViaPlatformHub(page: Page, testUser: TestUser): Promise<void
       // Also wait for potential rate limit error on the page
       const rateLimitCheckPromise = (async () => {
         await page.waitForTimeout(1000); // Wait 1s for error to appear
-        if (await isRateLimitError(page)) {
+        // Only check if still on login page (avoids false positives on destination pages)
+        if (page.url().includes('/login') && (await isRateLimitError(page))) {
           throw new Error('Rate limit error detected on login page');
         }
       })();
@@ -276,8 +277,6 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
     const staggerDelay = Math.random() * AUTH_STAGGER_MAX_MS;
     await sleep(staggerDelay);
 
-    let lastError: Error | null = null;
-
     // Retry login if rate limited
     for (let attempt = 1; attempt <= AUTH_RETRY_ATTEMPTS; attempt++) {
       try {
@@ -299,7 +298,8 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         // Also check for rate limit errors
         const rateLimitCheckPromise = (async () => {
           await page.waitForTimeout(1000);
-          if (await isRateLimitError(page)) {
+          // Only check if still on login page (avoids false positives on destination pages)
+          if (page.url().includes('/login') && (await isRateLimitError(page))) {
             throw new Error('Rate limit error detected on login page');
           }
         })();
@@ -310,8 +310,6 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         await page.context().storageState({ path: '.auth/user.json' });
         break;
       } catch (error) {
-        lastError = error as Error;
-
         const errorMessage = error instanceof Error ? error.message : String(error);
         // Only check page content for rate limit errors if still on login page
         // After successful navigation to /dashboard, "try again" text on other pages
