@@ -64,9 +64,10 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Toggle display for question
       await page.keyboard.press('KeyD');
 
-      // Display should show the question
-      await waitForSyncedContent(displayPage, /round 1/i);
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should show the question - look for question text which is continuous
+      // Note: "Round 1" is split across DOM elements so use question content instead
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
     });
 
     test('game status changes sync to display', async ({ authenticatedTriviaPage: page }) => {
@@ -93,9 +94,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Display question
       await page.keyboard.press('KeyD');
 
-      // Display should transition to showing question
-      await waitForSyncedContent(displayPage, /round 1/i);
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should transition to showing question (check for question text)
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
     });
 
     test('question navigation syncs display index', async ({ authenticatedTriviaPage: page }) => {
@@ -116,9 +117,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Display first question
       await page.keyboard.press('KeyD');
 
-      // Should show question 1
-      await waitForSyncedContent(displayPage, /question 1 of/i);
-      await expect(displayPage.getByText(/question 1 of/i)).toBeVisible();
+      // Should show question 1 (check for question text - first question is about "Respect")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
 
       // Hide question
       await page.keyboard.press('KeyD');
@@ -129,9 +130,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Display next question
       await page.keyboard.press('KeyD');
 
-      // Should show question 2
-      await waitForSyncedContent(displayPage, /question 2 of/i);
-      await expect(displayPage.getByText(/question 2 of/i)).toBeVisible();
+      // Should show question 2 (second question is about "Wizard of Oz")
+      await waitForSyncedContent(displayPage, /wizard of oz/i);
+      await expect(displayPage.getByText(/wizard of oz/i)).toBeVisible();
     });
 
     test('pause state syncs to display', async ({ authenticatedTriviaPage: page }) => {
@@ -149,14 +150,15 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       await page.getByRole('button', { name: /start game/i }).click();
       await page.keyboard.press('KeyD');
-      await waitForSyncedContent(displayPage, /round 1/i);
+      // Wait for question to display (use question text instead of split "round 1")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
 
       // Pause the game
       await page.keyboard.press('KeyP');
 
-      // Display should show paused state
+      // Display should show paused state (may have multiple "paused" elements)
       await waitForSyncedContent(displayPage, /paused/i);
-      await expect(displayPage.getByText(/paused/i)).toBeVisible();
+      await expect(displayPage.getByText(/paused/i).first()).toBeVisible();
     });
 
     test('emergency pause blanks display', async ({ authenticatedTriviaPage: page }) => {
@@ -174,14 +176,21 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       await page.getByRole('button', { name: /start game/i }).click();
       await page.keyboard.press('KeyD');
-      await waitForSyncedContent(displayPage, /round 1/i);
+      // Wait for question to display (use question text instead of split "round 1")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
 
       // Emergency pause
       await page.keyboard.press('KeyE');
 
-      // Display should show blank/emergency state
-      await waitForSyncedContent(displayPage, /please wait/i);
-      await expect(displayPage.getByText(/please wait/i)).toBeVisible();
+      // Display should be blanked - question text should be hidden
+      // Emergency blank shows only an aria-label element with "Display blanked for emergency"
+      await expect(async () => {
+        const questionText = displayPage.getByText(/which artist recorded/i);
+        await expect(questionText).not.toBeVisible({ timeout: 2000 });
+      }).toPass({ timeout: 10000 });
+
+      // Verify the blank overlay is present via aria-label
+      await expect(displayPage.locator('[aria-label*="blanked"]')).toBeVisible();
     });
   });
 
@@ -341,9 +350,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
           // Display question in round 2
           await page.keyboard.press('KeyD');
 
-          // Display should show round 2
-          await waitForSyncedContent(displayPage, /round 2/i);
-          await expect(displayPage.getByText(/round 2/i)).toBeVisible();
+          // Display should show round 2 question (first round 2 question is about Scarlett O'Hara)
+          await waitForSyncedContent(displayPage, /scarlett o'hara|gone with the wind/i);
+          await expect(displayPage.getByText(/scarlett o'hara|gone with the wind/i)).toBeVisible();
         }
       }
     });
@@ -388,7 +397,8 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Display question
       await page.keyboard.press('KeyD');
-      await waitForSyncedContent(displayPage, /round 1/i);
+      // Wait for question to display (use question text instead of split "round 1")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
 
       // Reset game
       await page.keyboard.press('KeyR');
@@ -511,9 +521,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(displayPage);
       await waitForDualScreenSync(displayPage);
 
-      // Display should show the current question
-      await waitForSyncedContent(displayPage, /round 1/i);
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should show the current question (first question is about "Respect")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
     });
   });
 
@@ -595,9 +605,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(displayPage);
       await waitForDualScreenSync(displayPage);
 
-      // Display should request and receive current state
-      await waitForSyncedContent(displayPage, /round 1/i);
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should request and receive current state (first question is about "Respect")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
     });
   });
 
@@ -649,9 +659,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await page.getByRole('button', { name: /start game/i }).click();
       await page.keyboard.press('KeyD');
 
-      // Display should now show question
-      await waitForSyncedContent(displayPage, /round 1/i);
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should now show question (first question is about "Respect")
+      await waitForSyncedContent(displayPage, /which artist recorded/i);
+      await expect(displayPage.getByText(/which artist recorded/i)).toBeVisible();
     });
   });
 });

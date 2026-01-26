@@ -212,18 +212,6 @@ function AudienceDisplay({
   const timer = useGameStore((state) => state.timer);
   const settings = useGameStore((state) => state.settings);
 
-  // Debug: Log when state changes
-  useEffect(() => {
-    console.log('[Display Page] State updated:', {
-      displayQuestionIndex,
-      questionsCount: questions.length,
-      teamsCount: teams.length,
-      currentRound,
-      totalRounds,
-      status,
-    });
-  }, [displayQuestionIndex, questions, teams, currentRound, totalRounds, status]);
-
   // Get computed selectors
   const { teamsSortedByScore, displayQuestion } = useGameSelectors();
 
