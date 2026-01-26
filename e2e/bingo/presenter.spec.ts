@@ -48,8 +48,9 @@ test.describe('Bingo Presenter View', () => {
 
   test('shows ball counter at zero initially @high', async ({ authenticatedBingoPage: page }) => {
     // Ball counter shows number and "Called" as separate elements
+    // Use exact match to avoid matching "Called Numbers" heading and other text
     await expect(page.getByText('0').first()).toBeVisible();
-    await expect(page.getByText('Called')).toBeVisible();
+    await expect(page.getByText('Called', { exact: true })).toBeVisible();
   });
 
   test('can select a pattern @high', async ({ authenticatedBingoPage: page }) => {
@@ -202,8 +203,9 @@ test.describe('Bingo Presenter View', () => {
       await page.waitForTimeout(500);
 
       // Counter should be back to 0 - check number and "Called" separately
+      // Use exact match to avoid matching "Called Numbers" heading and other text
       await expect(page.getByText('0').first()).toBeVisible();
-      await expect(page.getByText('Called')).toBeVisible();
+      await expect(page.getByText('Called', { exact: true })).toBeVisible();
     }
   });
 });
