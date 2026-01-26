@@ -71,7 +71,7 @@ test.describe('Room Setup Modal Timing', () => {
     const modal = page.getByRole('dialog', { name: /room setup/i });
     await expect(modal).toBeVisible();
 
-    // Verify error message is displayed - scope to modal to avoid Next.js route announcer
+    // Verify error message is displayed - scope to the modal to avoid Next.js route announcer
     const errorAlert = modal.getByRole('alert');
     await expect(errorAlert).toBeVisible();
     await expect(errorAlert).toContainText(/error|failed/i);
