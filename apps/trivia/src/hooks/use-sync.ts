@@ -32,8 +32,9 @@ class TriviaBroadcastSync extends BroadcastSync<TriviaSyncPayload> {
  */
 function createTriviaBroadcastSync(sessionId: string): TriviaBroadcastSync {
   const channelName = getChannelName(sessionId);
-  // Enable debug mode to trace message flow
-  return new TriviaBroadcastSync(channelName, { debug: true });
+  // Enable debug mode in development/E2E only to trace message flow
+  const isDebug = process.env.NODE_ENV === 'development' || process.env.E2E_TESTING === 'true';
+  return new TriviaBroadcastSync(channelName, { debug: isDebug });
 }
 
 type MessageHandler = (message: SyncMessage<TriviaSyncPayload>) => void;
