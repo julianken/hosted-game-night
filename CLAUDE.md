@@ -94,6 +94,21 @@ Before marking ANY task complete or creating a PR:
 
 **If E2E tests fail: DO NOT COMMIT. Fix the code first.**
 
+### Port Isolation for Worktrees
+
+**When running E2E tests in a git worktree (parallel development), you MUST use port isolation:**
+
+```bash
+# In your worktree directory
+./scripts/setup-worktree-e2e.sh    # Creates .env.e2e with isolated ports
+./start-e2e-servers.sh             # Starts servers on isolated ports
+pnpm test:e2e                       # Playwright auto-detects ports
+```
+
+**Why:** Default ports 3000-3002 conflict with main repo dev servers.
+
+**See:** `docs/E2E_TESTING_GUIDE.md` section "Parallel Task Execution with Port Isolation" for details.
+
 ### E2E Test Output Format
 
 **CRITICAL:** Always check the JSON summary after running tests.

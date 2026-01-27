@@ -345,7 +345,7 @@ describe('Room Creation Flow', () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockClear();
 
       // Click "Play Offline" button
-      const offlineButton = screen.getByRole('button', { name: /play offline without network/i });
+      const offlineButton = screen.getByRole('button', { name: /play offline/i });
       await user.click(offlineButton);
 
       // Modal should close
@@ -366,7 +366,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const offlineButton = screen.getByRole('button', { name: /play offline without network/i });
+      const offlineButton = screen.getByRole('button', { name: /play offline/i });
       await user.click(offlineButton);
 
       await waitFor(() => {
@@ -390,7 +390,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const offlineButton = screen.getByRole('button', { name: /play offline without network/i });
+      const offlineButton = screen.getByRole('button', { name: /play offline/i });
       await user.click(offlineButton);
 
       await waitFor(() => {
@@ -693,7 +693,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const offlineButton = screen.getByRole('button', { name: /play offline without network/i });
+      const offlineButton = screen.getByRole('button', { name: /play offline/i });
       await user.click(offlineButton);
 
       await waitFor(() => {

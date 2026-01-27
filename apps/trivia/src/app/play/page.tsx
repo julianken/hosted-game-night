@@ -204,6 +204,10 @@ export default function PlayPage() {
                   const partialState = deserializeTriviaState(data.gameState);
                   useGameStore.setState(partialState);
                 }
+                // Mark offline recovery as attempted AFTER state restoration completes
+                // This prevents the modal from appearing during the recovery process
+                setOfflineRecoveryAttempted(true);
+                return; // Early return after successful recovery
               }
             } catch (parseError) {
               console.error('Failed to parse offline session:', parseError);
@@ -213,11 +217,12 @@ export default function PlayPage() {
       } catch (error) {
         console.error('Failed to recover offline session:', error);
       }
+      // Mark offline recovery as attempted even if no session was found
+      // This ensures the modal can appear if needed
+      setOfflineRecoveryAttempted(true);
     };
 
     recoverOfflineSession();
-    // Mark offline recovery as attempted
-    setOfflineRecoveryAttempted(true);
   }, []);
 
   // Save offline session state to localStorage
@@ -529,7 +534,7 @@ export default function PlayPage() {
     <>
       {/* Skip links for keyboard navigation */}
       <a
-        href="#main-content"
+        href="#main"
         className="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-medium"
       >
         Skip to main content
@@ -541,7 +546,7 @@ export default function PlayPage() {
         Skip to game controls
       </a>
 
-      <main id="main-content" className="min-h-screen bg-background p-4 md:p-6">
+      <main id="main" className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

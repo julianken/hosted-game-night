@@ -64,7 +64,7 @@ export function QuestionList({
                 `}
                 aria-current={isCurrentRound ? 'true' : undefined}
               >
-                <span>Round {roundIndex + 1}</span>
+                <h3 className="text-sm font-medium">Round {roundIndex + 1}</h3>
                 <span className="text-xs">
                   {roundQuestions.length} questions
                   {isPastRound && ' (completed)'}

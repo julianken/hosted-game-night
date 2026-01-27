@@ -136,6 +136,8 @@ export function Modal({
         className="
           relative z-10
           w-full max-w-lg
+          max-h-[90vh]
+          flex flex-col
           bg-background rounded-xl
           shadow-2xl
           border-2 border-border
@@ -143,7 +145,7 @@ export function Modal({
         "
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-border">
           <h2
             id="modal-title"
             className="text-2xl font-bold text-foreground"
@@ -182,13 +184,13 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="p-6 text-lg">
+        <div className="flex-1 overflow-y-auto p-6 text-lg">
           {children}
         </div>
 
         {/* Footer */}
         {showFooter && (
-          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-border">
+          <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3 p-6 border-t border-border">
             <Button
               variant="secondary"
               onClick={onClose}

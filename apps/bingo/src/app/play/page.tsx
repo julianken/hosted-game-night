@@ -496,13 +496,14 @@ export default function PlayPage() {
     <>
       {/* Skip link for keyboard navigation */}
       <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded"
+        href="#main"
+        className="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-medium"
       >
         Skip to main content
       </a>
+
       <OfflineBanner />
-      <main id="main-content" className="min-h-screen bg-background p-4 md:p-6">
+      <main id="main" className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

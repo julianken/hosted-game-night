@@ -217,18 +217,35 @@ Examples:
 
 ## Create Worktrees
 
-For each independent LINEAR ISSUE, create a worktree:
+For each independent LINEAR ISSUE, create a worktree AND set up E2E port isolation:
 
 ```bash
-# One worktree for BEA-330 (entire issue)
+# Create worktree for BEA-330
 git worktree add ../wt-BEA-330-login-form -b feat/BEA-330-login-form
 
-# One worktree for BEA-331 (different issue)
+# IMMEDIATELY set up E2E port isolation
+cd ../wt-BEA-330-login-form
+./scripts/setup-worktree-e2e.sh
+cd -
+
+# Create worktree for BEA-331
 git worktree add ../wt-BEA-331-trivia-fix -b fix/BEA-331-trivia-scoring
 
-# One worktree for BEA-332 (different issue)
+# Set up E2E port isolation
+cd ../wt-BEA-331-trivia-fix
+./scripts/setup-worktree-e2e.sh
+cd -
+
+# Create worktree for BEA-332
 git worktree add ../wt-BEA-332-theme-colors -b feat/BEA-332-theme-colors
+
+# Set up E2E port isolation
+cd ../wt-BEA-332-theme-colors
+./scripts/setup-worktree-e2e.sh
+cd -
 ```
+
+**CRITICAL:** Run `./scripts/setup-worktree-e2e.sh` in EACH worktree to prevent port conflicts.
 
 **Verification:**
 ```bash
@@ -294,15 +311,23 @@ Task({
     4. Write tests for all functionality
     5. **RUN E2E TESTS LOCALLY** (MANDATORY - GitHub Actions disabled):
        ```bash
-       # Start dev servers first (in separate terminal)
-       pnpm dev
+       # WORKTREE SETUP (run once per worktree) - MANDATORY
+       ./scripts/setup-worktree-e2e.sh
 
-       # Run E2E tests for affected features
+       # Start servers with isolated ports
+       ./start-e2e-servers.sh
+       # OR: source .env.e2e && pnpm dev
+
+       # Run E2E tests (Playwright auto-detects ports)
        pnpm test:e2e e2e/<feature>.spec.ts
 
        # Run FULL E2E suite before PR
        pnpm test:e2e
        ```
+       **CRITICAL:** In a worktree, you MUST run `./scripts/setup-worktree-e2e.sh` first.
+       This prevents port conflicts with other worktrees and the main repo.
+       See `docs/E2E_TESTING_GUIDE.md` section "Parallel Task Execution with Port Isolation".
+
        **BLOCKING:** DO NOT create PR if ANY E2E tests fail. Fix failures first.
     6. **CLEANUP DEBUG ARTIFACTS**:
        - Remove any debug-*.spec.ts files you created
@@ -376,7 +401,18 @@ pnpm typecheck
 # 4. No debug artifacts
 git status --porcelain | grep -E "debug-|\.bak$" && echo "FAIL: Debug artifacts found" && exit 1
 
-# 5. E2E tests pass - MANDATORY TWO-STEP VERIFICATION
+# 5. Verify port isolation (for worktrees only)
+if [ -f .git ]; then
+  # .git is a file = worktree (not a directory = main repo)
+  if [ ! -f .env.e2e ]; then
+    echo "FAIL: Worktree detected but .env.e2e missing"
+    echo "Run: ./scripts/setup-worktree-e2e.sh"
+    exit 1
+  fi
+  echo "✅ Port isolation configured (.env.e2e exists)"
+fi
+
+# 6. E2E tests pass - MANDATORY TWO-STEP VERIFICATION
 pnpm test:e2e                # Step 1: Run tests (generates JSON)
 pnpm test:e2e:summary        # Step 2: View results - MUST show "0 failed"
 ```

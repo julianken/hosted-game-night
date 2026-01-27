@@ -224,7 +224,7 @@ export function RoomSetupModal({
             size="lg"
             onClick={onCreateRoom}
             className="w-full"
-            aria-label="Create a new game room"
+            aria-label="Create new game"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -378,7 +378,7 @@ export function RoomSetupModal({
               size="lg"
               onClick={toggleJoinForm}
               className="w-full"
-              aria-label="Show form to join existing game"
+              aria-label="Join with room code"
             >
               Join with Room Code
             </Button>
@@ -422,7 +422,7 @@ export function RoomSetupModal({
             size="lg"
             onClick={onPlayOffline}
             className="w-full"
-            aria-label="Play offline without network connection"
+            aria-label="Play offline"
           >
             Play Offline
           </Button>
