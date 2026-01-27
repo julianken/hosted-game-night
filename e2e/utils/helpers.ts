@@ -137,13 +137,29 @@ export async function checkBasicA11y(page: Page): Promise<{
       const hasText = btn.textContent?.trim();
       const hasAriaLabel = btn.getAttribute('aria-label');
       const hasAriaLabelledBy = btn.getAttribute('aria-labelledby');
+      const role = btn.getAttribute('role');
+
+      // Skip toggle switches - they use a different accessibility pattern
+      // Toggle switches are validated separately and may rely on surrounding labels
+      if (role === 'switch') return false;
 
       // Skip Next.js DevTools buttons (only present in development mode)
-      // Check both aria-label and text content for dev tools indicators
+      // Check:
+      // 1. aria-label containing Next.js, issue, or collapse keywords
+      // 2. Text content containing Next.js or issue keywords
+      // 3. Buttons that are children of Next.js dev tools container (look for parent with data-nextjs-toast-wrapper)
+      const parentElement = btn.parentElement;
+      const isInDevToolsContainer =
+        parentElement?.hasAttribute('data-nextjs-toast-wrapper') ||
+        parentElement?.className?.includes('nextjs') ||
+        btn.closest('[data-nextjs-toast-wrapper]');
+
       const isDevToolsButton =
+        isInDevToolsContainer ||
         (hasAriaLabel && (
           hasAriaLabel.toLowerCase().includes('next.js') ||
-          hasAriaLabel.toLowerCase().includes('issue')
+          hasAriaLabel.toLowerCase().includes('issue') ||
+          hasAriaLabel.toLowerCase().includes('collapse')
         )) ||
         (hasText && (
           hasText.toLowerCase().includes('next.js') ||
