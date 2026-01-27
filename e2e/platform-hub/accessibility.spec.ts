@@ -8,7 +8,8 @@ import { checkBasicA11y } from '../utils/helpers';
  * Following patterns from e2e/bingo/accessibility.spec.ts
  */
 
-const BASE_URL = 'http://localhost:3002';
+// Use Playwright's baseURL from config (adapts to port isolation in worktrees)
+const BASE_URL = ''; // Use relative URLs with Playwright baseURL
 
 test.describe('Platform Hub Accessibility @high', () => {
   test.describe('Login Page Accessibility', () => {

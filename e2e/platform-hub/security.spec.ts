@@ -6,7 +6,8 @@ import { test, expect } from '@playwright/test';
  * Tests verify security edge cases and protections.
  */
 
-const BASE_URL = 'http://localhost:3002';
+// Use Playwright's baseURL from config (adapts to port isolation in worktrees)
+const BASE_URL = ''; // Use relative URLs with Playwright baseURL
 
 test.describe('Platform Hub Security @high', () => {
   test.describe('Rate Limiting', () => {

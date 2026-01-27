@@ -26,7 +26,9 @@ import {
  * at the browser level. Those tests should be run against a real Supabase instance.
  */
 
-const BASE_URL = 'http://localhost:3002';
+// Use Playwright's baseURL from config (adapts to port isolation in worktrees)
+// const BASE_URL = 'http://localhost:3002'; // Old hardcoded URL
+const BASE_URL = ''; // Use relative URLs with Playwright baseURL
 
 /**
  * Generate unique email for each test run to avoid conflicts
@@ -104,13 +106,19 @@ test.describe('@critical Platform Hub Authentication', () => {
       await expect(page.locator('[role="alert"]').first()).toBeVisible({ timeout: 5000 });
     });
 
-    // Skipped: Submit button is disabled when form is empty, so cannot be clicked
-    // This test needs rework to validate via field blur or native validation
-    test.skip('empty form shows validation errors @high', async ({ page }) => {
+    test('empty form shows validation errors @high', async ({ page }) => {
       await page.goto(`${BASE_URL}/login`);
 
-      // Click submit without filling form
-      await page.locator('button[type="submit"]').first().click({ force: true });
+      // Wait for the form to be fully loaded and interactive
+      await page.waitForLoadState('networkidle');
+      const submitButton = page.locator('button[type="submit"]').first();
+      await submitButton.waitFor({ state: 'visible' });
+
+      // Ensure button is not in loading state
+      await expect(submitButton).not.toHaveAttribute('aria-busy', 'true');
+
+      // Try to submit empty form
+      await submitButton.click({ force: true });
 
       // Should show validation errors
       await expect(page.locator('#email-error').first()).toBeVisible();
@@ -194,7 +202,7 @@ test.describe('@critical Platform Hub Authentication', () => {
       await expect(submitButton).not.toHaveAttribute('aria-busy', 'true');
 
       // Try to submit empty form
-      await submitButton.click();
+      await submitButton.click({ force: true });
 
       // Should show validation errors for required fields
       await expect(page.locator('#email-error').first()).toBeVisible();
