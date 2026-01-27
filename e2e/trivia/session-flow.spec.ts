@@ -49,6 +49,9 @@ test.describe('Trivia Session Flow', () => {
   });
 
   test.describe('Create Game with PIN', () => {
+    // Prevent fixture from auto-dismissing modal - these tests need to interact with it
+    test.use({ skipModalDismissal: true });
+
     test('should show room setup modal on first visit', async ({ authenticatedTriviaPage: page }) => {
       // Modal should be visible
       await expect(page.getByRole('dialog')).toBeVisible();

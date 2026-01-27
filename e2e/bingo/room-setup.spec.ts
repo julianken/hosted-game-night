@@ -14,6 +14,9 @@ import { test, expect } from '../fixtures/auth';
 import { waitForHydration, clickButton, waitForRoomSetupModal } from '../utils/helpers';
 
 test.describe('Room Setup Flow', () => {
+  // Prevent fixture from auto-dismissing modal - these tests need to interact with it
+  test.use({ skipModalDismissal: true });
+
   test.beforeEach(async ({ authenticatedBingoPage: page }) => {
     // Clear ALL bingo-related localStorage keys before each test
     await page.evaluate(() => {
