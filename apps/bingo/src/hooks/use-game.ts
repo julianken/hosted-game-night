@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
 import { BingoPattern } from '@/types';
@@ -16,6 +16,8 @@ export function useGame() {
 
   // Ref to track if a ball call is currently processing (prevents race conditions)
   const isProcessingRef = useRef(false);
+  // Reactive state for UI to disable buttons during processing
+  const [isProcessing, setIsProcessing] = useState(false);
   // Ref to track the auto-call timeout for proper cleanup
   const autoCallTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -47,6 +49,7 @@ export function useGame() {
     }
 
     isProcessingRef.current = true;
+    setIsProcessing(true);
     try {
       if (audioEnabled) {
         await audioStore.playRollSound();  // Roll sound plays first
@@ -59,6 +62,7 @@ export function useGame() {
       return ball;
     } finally {
       isProcessingRef.current = false;
+      setIsProcessing(false);
     }
   }, [gameStore, audioStore, audioEnabled]);
 
@@ -135,6 +139,7 @@ export function useGame() {
           state.remainingBalls.length > 0
         ) {
           isProcessingRef.current = true;
+          setIsProcessing(true);
           try {
             const audioStoreState = useAudioStore.getState();
 
@@ -149,6 +154,7 @@ export function useGame() {
             }
           } finally {
             isProcessingRef.current = false;
+            setIsProcessing(false);
           }
 
           // Schedule next call only if game is still active
@@ -175,6 +181,7 @@ export function useGame() {
 
   return {
     // State
+    isProcessing,
     status,
     currentBall,
     previousBall,

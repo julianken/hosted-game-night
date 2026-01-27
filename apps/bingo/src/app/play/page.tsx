@@ -557,6 +557,7 @@ export default function PlayPage() {
             {/* Control Panel */}
             <div className="bg-background border border-border rounded-xl p-3 md:p-4 shadow-sm">
               <ControlPanel
+                isProcessing={game.isProcessing}
                 status={game.status}
                 canCall={game.canCall}
                 canStart={game.canStart}

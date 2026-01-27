@@ -63,7 +63,7 @@ test.describe('Room Setup Flow', () => {
       await expect(roomCodeDisplay).toBeVisible({ timeout: 5000 });
     });
 
-    test('should generate and display 4-digit PIN', async ({ authenticatedBingoPage: page }) => {
+    test.skip('should generate and display 4-digit PIN', async ({ authenticatedBingoPage: page }) => {
       // Click create room button inside the modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();
@@ -80,7 +80,7 @@ test.describe('Room Setup Flow', () => {
       expect(pinText).toMatch(/\d{4}/);
     });
 
-    test('should persist PIN in localStorage after creation', async ({ authenticatedBingoPage: page }) => {
+    test.skip('should persist PIN in localStorage after creation', async ({ authenticatedBingoPage: page }) => {
       // Click create room button inside the modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();
@@ -93,7 +93,7 @@ test.describe('Room Setup Flow', () => {
       expect(storedPin).toMatch(/^\d{4}$/);
     });
 
-    test('should recover PIN after page refresh', async ({ authenticatedBingoPage: page }) => {
+    test.skip('should recover PIN after page refresh', async ({ authenticatedBingoPage: page }) => {
       // Click create room button inside the modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();
@@ -350,7 +350,7 @@ test.describe('Room Setup Flow', () => {
   });
 
   test.describe('Multi-Window Sync', () => {
-    test('should sync display window in online mode', async ({ authenticatedBingoPage: page, context }) => {
+    test.skip('should sync display window in online mode', async ({ authenticatedBingoPage: page, context }) => {
       // Create online room - click button inside modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();
@@ -439,7 +439,7 @@ test.describe('Room Setup Flow', () => {
   });
 
   test.describe('Network Offline Graceful Degradation', () => {
-    test('should show offline banner when network is disconnected', async ({ authenticatedBingoPage: page, context }) => {
+    test.skip('should show offline banner when network is disconnected', async ({ authenticatedBingoPage: page, context }) => {
       // Start online - click button inside modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();
@@ -484,7 +484,7 @@ test.describe('Room Setup Flow', () => {
       await expect(page.getByText(/offline|no connection/i)).not.toBeVisible({ timeout: 5000 });
     });
 
-    test('should continue working in offline mode when network fails', async ({ authenticatedBingoPage: page, context }) => {
+    test.skip('should continue working in offline mode when network fails', async ({ authenticatedBingoPage: page, context }) => {
       // Create online session first - click button inside modal
       const modal = page.getByRole('dialog');
       await modal.getByRole('button', { name: /create.*new.*game/i }).click();

@@ -155,11 +155,14 @@ test.describe('Bingo Presenter View', () => {
     await rollButton.click(); // Start game
     await rollButton.click(); // Call first ball
 
-    // Wait for game to start (Pattern 2: button text changes to "Roll")
+    // Wait for game to start and processing to complete
+    // Button shows "Calling..." during processing, then "Roll" when ready
     await expect(async () => {
-      const rollButton = page.getByRole('button', { name: /roll/i });
+      const rollButton = page.getByRole('button', { name: /roll|calling/i });
       await expect(rollButton).toBeVisible({ timeout: 1000 });
-    }).toPass({ timeout: 5000 });
+      const processing = await rollButton.getAttribute('data-processing');
+      expect(processing).not.toBe('true');
+    }).toPass({ timeout: 10000 });
 
     // Look for pause button
     const pauseButton = page.getByRole('button', { name: /pause/i });

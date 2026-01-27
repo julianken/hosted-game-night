@@ -6,6 +6,7 @@ import { GameStatus } from '@/types';
 import { SaveTemplateModal } from './SaveTemplateModal';
 
 export interface ControlPanelProps {
+  isProcessing?: boolean;
   status: GameStatus;
   canCall: boolean;
   canStart: boolean;
@@ -21,6 +22,7 @@ export interface ControlPanelProps {
 }
 
 export function ControlPanel({
+  isProcessing,
   status,
   canCall,
   canStart,
@@ -58,10 +60,11 @@ export function ControlPanel({
             variant="primary"
             size="lg"
             onClick={onCallBall}
-            disabled={!canCall}
+            disabled={!canCall || isProcessing}
+            data-processing={isProcessing}
             className="w-full"
           >
-            Roll
+            {isProcessing ? 'Calling...' : 'Roll'}
             <span className="ml-2 text-base opacity-75">[Space]</span>
           </Button>
         )}
