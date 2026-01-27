@@ -12,7 +12,7 @@
 
 import { test, expect } from '../fixtures/auth';
 
-test.describe.skip('Platform Hub Dashboard @high', () => {
+test.describe('Platform Hub Dashboard @high', () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     // Navigate to dashboard - user is already authenticated via fixture
     await authenticatedPage.goto('http://localhost:3002/dashboard');
@@ -207,7 +207,7 @@ test.describe.skip('Platform Hub Dashboard @high', () => {
   });
 });
 
-test.describe.skip('Dashboard Protection @critical', () => {
+test.describe('Dashboard Protection @critical', () => {
   // Skipped: Requires real server-side session to test redirect behavior
   test('dashboard redirects to login when not authenticated', async ({
     page,

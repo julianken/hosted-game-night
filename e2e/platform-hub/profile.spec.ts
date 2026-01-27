@@ -12,7 +12,7 @@
 
 import { test, expect } from '../fixtures/auth';
 
-test.describe.skip('Profile & Settings Management @high', () => {
+test.describe('Profile & Settings Management @high', () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     // Navigate to settings page - user is already authenticated via fixture
     await authenticatedPage.goto('http://localhost:3002/settings');
@@ -208,7 +208,7 @@ test.describe.skip('Profile & Settings Management @high', () => {
   });
 });
 
-test.describe.skip('Settings Protection @critical', () => {
+test.describe('Settings Protection @critical', () => {
   // Skipped: Requires real server-side session to test redirect behavior
   test('settings page redirects to login when not authenticated', async ({
     page,

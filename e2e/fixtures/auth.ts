@@ -402,6 +402,19 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
 
         await Promise.race([dashboardPromise, rateLimitCheckPromise]);
 
+        // Wait for SSO cookies to be set (required for Platform Hub pages)
+        // The login API sets beak_access_token and beak_user_id cookies
+        await playwrightExpect(async () => {
+          const cookies = await page.context().cookies();
+          const hasAccessToken = cookies.some((c) => c.name === 'beak_access_token');
+          const hasUserId = cookies.some((c) => c.name === 'beak_user_id');
+          playwrightExpect(hasAccessToken).toBe(true);
+          playwrightExpect(hasUserId).toBe(true);
+        }).toPass({
+          timeout: 5000,
+          intervals: [100, 250, 500, 1000], // Exponential backoff polling
+        });
+
         // Success! Store auth state and break out of retry loop
         await page.context().storageState({ path: '.auth/user.json' });
         break;
