@@ -63,8 +63,8 @@ test.describe('Bingo Display Page', () => {
     // Call a ball from presenter
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
 
-    // Wait for ball to appear on display (with sync time)
-    await page.waitForTimeout(3000);
+    // Wait for ball to sync to display
+    await expect(displayPage.locator('main')).toBeVisible();
 
     // Display should show the ball or board
     const displayContent = displayPage.locator('main');
@@ -85,10 +85,8 @@ test.describe('Bingo Display Page', () => {
     // Call a few balls
     const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
     await rollButton.click();
-    await page.waitForTimeout(2000);
+    await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     await rollButton.click();
-    await page.waitForTimeout(2000);
-
     // Display should show the bingo board section
     await expect(displayPage.getByText(/called numbers/i)).toBeVisible();
   });
@@ -103,8 +101,7 @@ test.describe('Bingo Display Page', () => {
 
     await waitForHydration(displayPage);
 
-    // Wait for connection
-    await page.waitForTimeout(1000);
+    // Wait for sync connection
 
     // Should show sync status
     const syncIndicator = displayPage.locator('[class*="bg-success"], [class*="bg-green"]').first();
@@ -123,7 +120,6 @@ test.describe('Bingo Display Page', () => {
 
     // Start game to get pattern synced
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-    await page.waitForTimeout(2000);
 
     // Pattern display section should be visible
     const patternSection = displayPage.getByText(/pattern|winning/i);

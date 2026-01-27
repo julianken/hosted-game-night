@@ -259,7 +259,7 @@ test.describe('Bingo Accessibility', () => {
 
       // Call a ball to see ball display
       await page.getByRole('button', { name: /roll|call|start/i }).first().click();
-      await page.waitForTimeout(3000);
+      await expect(displayPage.locator('main')).toBeVisible();
 
       // Ball display should have accessible content
       const ballDisplay = displayPage.locator('[class*="current-ball"], h2:has-text("Current Ball")');

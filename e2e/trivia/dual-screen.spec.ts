@@ -48,7 +48,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Add team
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       // Open display
       const popupPromise = page.waitForEvent('popup');
@@ -75,7 +75,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Add team
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       // Open display
       const popupPromise = page.waitForEvent('popup');
@@ -103,7 +103,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -139,7 +139,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -165,7 +165,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -200,7 +200,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Add teams
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       // Open display
       const popupPromise = page.waitForEvent('popup');
@@ -216,14 +216,11 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Adjust score on presenter
       const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
       await plusBtn.click();
-      await page.waitForTimeout(200);
       await plusBtn.click();
-      await page.waitForTimeout(200);
 
       // Complete round to show scoreboard on display
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
@@ -241,11 +238,11 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Add multiple teams
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(100);
+      await expect(page.getByText(/table 1/i)).toBeVisible();
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(100);
+      await expect(page.getByText(/table 2/i)).toBeVisible();
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -259,16 +256,12 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Add different scores to different teams
       const plusBtns = page.getByRole('button', { name: /add 1 point/i });
       await plusBtns.first().click();
-      await page.waitForTimeout(100);
       await plusBtns.first().click();
-      await page.waitForTimeout(100);
       await plusBtns.first().click();
-      await page.waitForTimeout(200);
 
       // Complete round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
@@ -289,7 +282,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -303,7 +296,6 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Navigate to end of round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
 
       // Complete round
@@ -321,7 +313,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -335,7 +327,6 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // Complete first round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
@@ -363,7 +354,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -372,7 +363,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       // Timer state should be synced (if visible)
       // The actual timer value sync is handled by the game state
@@ -384,7 +375,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -420,7 +411,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -446,7 +437,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -478,7 +469,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       // Open and close display
       const popupPromise = page.waitForEvent('popup');
@@ -506,7 +497,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       await page.getByRole('button', { name: /start game/i }).click();
 
@@ -536,8 +527,6 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
-      await page.waitForTimeout(500);
-
       // Theme selector interaction (if available)
       const themeSelector = page.locator('[aria-label*="theme"], [class*="theme"]').first();
       if (await themeSelector.isVisible()) {
@@ -572,7 +561,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -592,7 +581,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       await page.getByRole('button', { name: /start game/i }).click();
       await page.keyboard.press('KeyD');
@@ -616,7 +605,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -631,7 +620,6 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
       for (let i = 0; i < 5; i++) {
         await plusBtn.click();
-        await page.waitForTimeout(50);
       }
 
       // Final state should be synced correctly
@@ -655,7 +643,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
 
       // Now add team and start
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
       await page.getByRole('button', { name: /start game/i }).click();
       await page.keyboard.press('KeyD');
 

@@ -69,7 +69,7 @@ test.describe.skip('Profile & Settings Management @high', () => {
     await saveButton.click();
 
     // Wait for success indication
-    await authenticatedPage.waitForTimeout(1000); // Wait for API call
+    // API call completed - verify form is still visible
 
     // Form should still be visible (not redirected)
     await expect(
@@ -104,7 +104,7 @@ test.describe.skip('Profile & Settings Management @high', () => {
 
     // Should show error (either browser validation or toast)
     // The form won't submit due to minLength validation
-    await authenticatedPage.waitForTimeout(500);
+    
 
     // Page should still be on settings (not submitted)
     await expect(

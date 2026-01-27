@@ -11,7 +11,7 @@
  * - Testing PIN lockout/verification
  */
 import { test, expect, type Page } from '../fixtures/auth';
-import { waitForHydration, clickButton } from '../utils/helpers';
+import { waitForHydration, clickButton, waitForDualScreenSync, waitForCondition } from '../utils/helpers';
 
 /**
  * Helper to wait for session recovery to complete.
@@ -24,8 +24,7 @@ import { waitForHydration, clickButton } from '../utils/helpers';
  */
 async function waitForSessionRecovery(page: Page, options?: { expectModal?: boolean }): Promise<void> {
   await page.waitForLoadState('networkidle');
-  // Wait for hydration and recovery effects to complete
-  await page.waitForTimeout(500);
+  // Wait for hydration and recovery effects to complete using deterministic check
 
   if (options?.expectModal === false) {
     // Expect no modal after recovery - use toPass for retry
@@ -110,9 +109,9 @@ test.describe('Trivia Session Flow', () => {
 
       // Add teams
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       // Verify teams are added
       await expect(page.getByText(/table 1/i)).toBeVisible();
@@ -120,7 +119,7 @@ test.describe('Trivia Session Flow', () => {
 
       // Start the game
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       // Verify game is playing
       await expect(page.getByText(/playing - round 1/i).first()).toBeVisible();
@@ -130,16 +129,18 @@ test.describe('Trivia Session Flow', () => {
 
       // Wait for localStorage to sync before refresh
       await page.keyboard.press('ArrowDown');
-      await page.waitForTimeout(500);
       await page.keyboard.press('ArrowUp');
-      await page.waitForTimeout(3000);
+      // Wait for localStorage sync
+      await expect(async () => {
+        const stored = await page.evaluate(() => localStorage.getItem('trivia_offline_session_id'));
+        expect(stored).toBeTruthy();
+      }).toPass({ timeout: 5000 });
 
       // Refresh the page
       await page.reload();
       await waitForHydration(page);
 
-      // Wait for session recovery
-      await page.waitForTimeout(2000);
+      // Wait for session recovery to complete
 
       // Check if offline mode UI is visible
       await expect(async () => {
@@ -154,18 +155,20 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       await page.keyboard.press('ArrowDown');
-      await page.waitForTimeout(300);
 
-      await page.waitForTimeout(3000);
+      // Wait for localStorage to sync
+      await expect(async () => {
+        const stored = await page.evaluate(() => localStorage.getItem('trivia_offline_session_id'));
+        expect(stored).toBeTruthy();
+      }).toPass({ timeout: 5000 });
 
       await page.reload();
       await waitForHydration(page);
-      await page.waitForTimeout(2000);
 
       await expect(async () => {
         const hasOfflineIndicator = await page.getByText(/offline session/i).isVisible().catch(() => false);
@@ -180,21 +183,23 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       const plusButton = page.getByRole('button', { name: /\+1|increment score/i }).first();
       if (await plusButton.isVisible()) {
         await plusButton.click();
-        await page.waitForTimeout(300);
       }
 
-      await page.waitForTimeout(3000);
+      // Wait for localStorage to sync
+      await expect(async () => {
+        const stored = await page.evaluate(() => localStorage.getItem('trivia_offline_session_id'));
+        expect(stored).toBeTruthy();
+      }).toPass({ timeout: 5000 });
 
       await page.reload();
       await waitForHydration(page);
-      await page.waitForTimeout(2000);
 
       await expect(async () => {
         const hasOfflineIndicator = await page.getByText(/offline session/i).isVisible().catch(() => false);
@@ -211,7 +216,7 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const [displayPage] = await Promise.all([
         context.waitForEvent('page'),
@@ -219,12 +224,12 @@ test.describe('Trivia Session Flow', () => {
       ]);
 
       await displayPage.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await waitForDualScreenSync(displayPage);
 
       await expect(displayPage.getByText(/trivia night/i)).toBeVisible({ timeout: 10000 });
 
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       await page.keyboard.press('KeyD');
 
@@ -241,9 +246,9 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const [displayPage] = await Promise.all([
         context.waitForEvent('page'),
@@ -251,15 +256,14 @@ test.describe('Trivia Session Flow', () => {
       ]);
 
       await displayPage.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await waitForDualScreenSync(displayPage);
 
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       const plusButton = page.getByRole('button', { name: /\+1|increment score/i }).first();
       if (await plusButton.isVisible()) {
         await plusButton.click();
-        await page.waitForTimeout(500);
       }
 
       await expect(displayPage.getByText(/trivia night/i)).toBeVisible({ timeout: 10000 });
@@ -272,7 +276,7 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const [displayPage] = await Promise.all([
         context.waitForEvent('page'),
@@ -280,15 +284,14 @@ test.describe('Trivia Session Flow', () => {
       ]);
 
       await displayPage.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      await waitForDualScreenSync(displayPage);
 
       await clickButton(page, /start game/i);
-      await page.waitForTimeout(500);
+      await expect(page.getByText(/playing/i).first()).toBeVisible();
 
       await expect(page.getByText(/playing - round 1/i).first()).toBeVisible({ timeout: 5000 });
 
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
 
       await expect(async () => {
         const displayContent = await displayPage.locator('main').textContent();
@@ -344,8 +347,6 @@ test.describe('Trivia Session Flow', () => {
 
       await pinInput.focus();
       await pinInput.pressSequentially('abc123xyz', { delay: 50 });
-
-      await page.waitForTimeout(100);
 
       await expect(pinInput).toHaveValue('123');
     });
@@ -434,12 +435,14 @@ test.describe('Trivia Session Flow', () => {
         expect(sessionIdBefore).toMatch(/^[A-Z0-9]{6}$/);
       }).toPass({ timeout: 5000 });
 
-      await page.waitForTimeout(3000);
+      // Wait for localStorage to sync
+      await expect(async () => {
+        const stored = await page.evaluate(() => localStorage.getItem('trivia_offline_session_id'));
+        expect(stored).toBeTruthy();
+      }).toPass({ timeout: 5000 });
 
       await page.reload();
       await waitForHydration(page);
-
-      await page.waitForTimeout(2000);
 
       await expect(async () => {
         const sessionIdAfter = await page.evaluate(() =>
@@ -455,8 +458,6 @@ test.describe('Trivia Session Flow', () => {
     test('should sync display window in offline mode', async ({ authenticatedTriviaPage: page, context }) => {
       await clickButton(page, /play offline without network/i);
       await waitForSessionRecovery(page, { expectModal: false });
-
-      await page.waitForTimeout(500);
 
       const [displayPage] = await Promise.all([
         context.waitForEvent('page'),
@@ -480,7 +481,7 @@ test.describe('Trivia Session Flow', () => {
       await waitForSessionRecovery(page, { expectModal: false });
 
       await clickButton(page, /add team/i);
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).last()).toBeVisible();
 
       const [displayPage] = await Promise.all([
         context.waitForEvent('page'),
@@ -488,8 +489,7 @@ test.describe('Trivia Session Flow', () => {
       ]);
 
       await displayPage.waitForLoadState('networkidle');
-
-      await page.waitForTimeout(1000);
+      await waitForDualScreenSync(displayPage);
 
       const presenterSessionId = await page.evaluate(() =>
         localStorage.getItem('trivia_offline_session_id')

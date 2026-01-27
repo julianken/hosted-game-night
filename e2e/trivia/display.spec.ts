@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration } from '../utils/helpers';
+import { waitForHydration, waitForDualScreenSync, waitForSyncedContent } from '../utils/helpers';
 
 test.describe('Trivia Audience Display', () => {
   test.describe('Direct Access - Invalid Session', () => {
@@ -74,8 +74,8 @@ test.describe('Trivia Audience Display', () => {
 
       await waitForHydration(displayPage);
 
-      // Wait for connection
-      await page.waitForTimeout(1000);
+      // Wait for sync connection to establish
+      await waitForDualScreenSync(displayPage);
 
       // Should show green sync indicator
       const syncIndicator = displayPage.locator('[class*="bg-success"], [class*="bg-green"]').first();
@@ -90,7 +90,7 @@ test.describe('Trivia Audience Display', () => {
     const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
-      await page.waitForTimeout(1000);
+      await waitForDualScreenSync(displayPage);
 
       // Should show "Synced at" timestamp
       await expect(displayPage.getByText(/synced at/i)).toBeVisible();
@@ -103,7 +103,7 @@ test.describe('Trivia Audience Display', () => {
 
       // Add team and open display
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -113,11 +113,11 @@ test.describe('Trivia Audience Display', () => {
 
       // Start game
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Display question using D key
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1500);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Display should show question content - use more specific region aria-label
       await expect(displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i })).toBeVisible();
@@ -127,7 +127,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -136,9 +136,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1500);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Should show "Round X - Question Y of Z" format - use specific region aria-label
       const roundInfoRegion = displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i });
@@ -149,7 +149,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -158,9 +158,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Should show category badge (music, movies, tv, history)
       const categoryBadge = displayPage.locator('[aria-label*="Category"]');
@@ -171,7 +171,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -180,9 +180,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Should show answer options list
       const optionsList = displayPage.locator('[role="list"][aria-label="Answer options"]');
@@ -195,7 +195,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -204,15 +204,15 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Display question
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      // Wait for state change to propagate
 
       // Hide question
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      // Wait for state change to propagate
 
       // Should show waiting/ready state
       await expect(displayPage.getByText(/get ready/i)).toBeVisible();
@@ -226,7 +226,6 @@ test.describe('Trivia Audience Display', () => {
       // Add multiple teams
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: /add team/i }).click();
-        await page.waitForTimeout(100);
       }
 
       const popupPromise = page.waitForEvent('popup');
@@ -236,19 +235,17 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Navigate to end of round (5 questions per round default)
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
-      await page.waitForTimeout(300);
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1000);
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
 
         // Display should show scoreboard
         await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
@@ -259,9 +256,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(100);
+      await expect(page.getByText(/table 1/i)).toBeVisible();
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -270,19 +267,17 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Navigate to end of round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
-      await page.waitForTimeout(300);
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1000);
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
 
         // Should show team names
         await expect(displayPage.getByText(/table 1/i)).toBeVisible();
@@ -295,7 +290,6 @@ test.describe('Trivia Audience Display', () => {
       // Add 4 teams to see medals
       for (let i = 0; i < 4; i++) {
         await page.getByRole('button', { name: /add team/i }).click();
-        await page.waitForTimeout(100);
       }
 
       const popupPromise = page.waitForEvent('popup');
@@ -305,19 +299,17 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Navigate to end and complete round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
-      await page.waitForTimeout(300);
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1000);
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
 
         // Should show medal ranks
         await expect(displayPage.getByText(/1st/i)).toBeVisible();
@@ -330,7 +322,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -339,26 +331,22 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Add some points
       const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
       await plusBtn.click();
-      await page.waitForTimeout(100);
       await plusBtn.click();
-      await page.waitForTimeout(200);
 
       // Complete round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
-      await page.waitForTimeout(300);
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1000);
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
 
         // Should show scores
         const scoreDisplay = displayPage.locator('[aria-label*="points"]');
@@ -370,7 +358,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -379,19 +367,17 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Navigate to end of round
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(100);
       }
-      await page.waitForTimeout(300);
 
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1500);
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
 
         // Should show next round indicator - use more specific selector to avoid strict mode violation
         await expect(displayPage.getByText('Next round starting soon...', { exact: true })).toBeVisible();
@@ -404,7 +390,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -413,7 +399,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
 
       // Timer visibility is controlled by settings
       // This test verifies the display can show timer when enabled
@@ -425,7 +411,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -434,13 +420,13 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Pause the game
       await page.keyboard.press('KeyP');
-      await page.waitForTimeout(1000);
+      await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible();
 
       // Display should show pause overlay - use heading to avoid strict mode violation
       await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible();
@@ -450,7 +436,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -459,13 +445,13 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Emergency pause
       await page.keyboard.press('KeyE');
-      await page.waitForTimeout(1000);
+      await expect(displayPage.getByRole('alert', { name: /display blanked for emergency/i })).toBeVisible();
 
       // Display should show emergency blank (aria-label for screen readers, no visible text)
       await expect(displayPage.getByRole('alert', { name: /display blanked for emergency/i })).toBeInViewport();
@@ -475,7 +461,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -484,16 +470,13 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await waitForSyncedContent(displayPage, /round.*question/i);
 
       // Pause and resume
       await page.keyboard.press('KeyP');
-      await page.waitForTimeout(500);
       await page.keyboard.press('KeyP');
-      await page.waitForTimeout(1500);
-
       // Should return to normal display - use specific region aria-label
       await expect(displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i })).toBeVisible();
     });
@@ -504,7 +487,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -583,7 +566,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -592,9 +575,9 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
 
       await page.getByRole('button', { name: /start game/i }).click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      // Wait for state change to propagate
 
       // Check for animation classes
       const animatedElement = displayPage.locator('[class*="animate-in"], [class*="fade-in"]');
@@ -607,7 +590,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
-      await page.waitForTimeout(200);
+      await expect(page.getByText(/table \d+/i).first()).toBeVisible();
 
       const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
@@ -635,7 +618,6 @@ test.describe('Trivia Audience Display', () => {
 
       // Set large viewport
       await displayPage.setViewportSize({ width: 1920, height: 1080 });
-      await page.waitForTimeout(300);
 
       // Content should be visible
       await expect(displayPage.getByRole('heading', { name: /trivia night/i })).toBeVisible();
@@ -652,7 +634,6 @@ test.describe('Trivia Audience Display', () => {
 
       // Set medium viewport
       await displayPage.setViewportSize({ width: 1024, height: 768 });
-      await page.waitForTimeout(300);
 
       // Content should be visible
       await expect(displayPage.getByRole('heading', { name: /trivia night/i })).toBeVisible();

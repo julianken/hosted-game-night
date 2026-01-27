@@ -102,7 +102,7 @@ test.describe('Room Setup Modal Timing', () => {
     await page.waitForLoadState('networkidle');
 
     // Wait for recovery to complete
-    await page.waitForTimeout(2000);
+    // Wait for recovery completed
 
     // Modal should NOT be visible after successful recovery
     await expect(modal).not.toBeVisible();

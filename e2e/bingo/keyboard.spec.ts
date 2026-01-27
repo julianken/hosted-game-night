@@ -7,7 +7,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
 
     // Wait for keyboard event handlers to be registered
     // The useGameKeyboard hook registers listeners in a useEffect
-    await page.waitForTimeout(500);
+    await expect(page.getByRole('button', { name: /start game|roll/i })).toBeVisible();
 
     // Ensure page is focused (not any specific element)
     // This allows keyboard shortcuts to work properly
@@ -24,7 +24,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
+      await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     }
 
     // Get initial ball count
@@ -47,7 +47,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
+      await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     }
 
     // Get initial ball count
@@ -84,7 +84,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
+      await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     }
 
     // Get initial ball count
@@ -102,9 +102,8 @@ test.describe('Bingo Keyboard Shortcuts', () => {
       expect(num).toBe(initialNum + 1);
     }).toPass({ timeout: 5000 });
 
-    // Wait for audio processing to complete before second call
-    // Ball calls include: roll sound + reveal chime + voice (~2-3s total)
-    await page.waitForTimeout(3000);
+    // Wait for roll button to be enabled (indicates audio processing complete)
+    await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 10000 });
 
     // Call second ball
     await page.keyboard.press('Space');
@@ -135,7 +134,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
+      await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     }
 
     // Get initial ball count
@@ -152,9 +151,8 @@ test.describe('Bingo Keyboard Shortcuts', () => {
       expect(num).toBe(initialNum + 1);
     }).toPass({ timeout: 5000 });
 
-    // Wait for audio processing to complete before second call
-    // Ball calls include: roll sound + reveal chime + voice (~2-3s total)
-    await page.waitForTimeout(3000);
+    // Wait for roll button to be enabled (indicates audio processing complete)
+    await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 10000 });
 
     // Call second ball
     await page.keyboard.press('Space');
@@ -196,7 +194,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
 
     // Press M to toggle audio
     await page.keyboard.press('KeyM');
-    await page.waitForTimeout(300);
 
     // State should have changed
     if (await audioToggle.isVisible()) {
@@ -205,7 +202,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
 
       // Toggle back
       await page.keyboard.press('KeyM');
-      await page.waitForTimeout(300);
 
       const finalState = await audioToggle.getAttribute('aria-checked');
       expect(finalState).toBe(initialState);
@@ -232,12 +228,11 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await waitForHydration(displayPage);
 
     // Wait for keyboard event handlers to be registered on display page
-    await displayPage.waitForTimeout(500);
+    await expect(displayPage.getByRole('button', { name: /fullscreen|help/i })).toBeVisible({ timeout: 5000 });
 
     // Note: Fullscreen API may not work in headless mode
     // Just verify the key handler exists by checking for UI response
     await displayPage.keyboard.press('KeyF');
-    await displayPage.waitForTimeout(500);
 
     // If fullscreen indicator appears, it worked
     // Otherwise, just verify no error occurred
@@ -261,7 +256,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await waitForHydration(displayPage);
 
     // Wait for keyboard event handlers to be registered on display page
-    await displayPage.waitForTimeout(500);
+    await expect(displayPage.getByRole('button', { name: /fullscreen|help/i })).toBeVisible({ timeout: 5000 });
 
     // Press ? to open help
     await displayPage.keyboard.press('Shift+/'); // ? is Shift+/
@@ -281,7 +276,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
+      await expect(page.getByRole('button', { name: /roll/i })).toBeEnabled({ timeout: 5000 });
     }
 
     // Get initial count
@@ -291,9 +286,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     // Press Space rapidly 3 times
     // The hook has a guard (isProcessingRef) to prevent race conditions
     await page.keyboard.press('Space');
-    await page.waitForTimeout(100);
     await page.keyboard.press('Space');
-    await page.waitForTimeout(100);
     await page.keyboard.press('Space');
 
     // Wait for all balls to be called using event-driven assertion

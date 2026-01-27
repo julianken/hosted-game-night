@@ -80,8 +80,7 @@ test.describe('Platform Hub Accessibility @high', () => {
       await emailInput.focus();
 
       // Wait a brief moment for focus styles to apply
-      await page.waitForTimeout(100);
-
+      
       // Verify the input is actually focused
       await expect(emailInput).toBeFocused();
 
@@ -234,8 +233,6 @@ test.describe('Platform Hub Accessibility @high', () => {
       await page.click('button[type="submit"]');
 
       // Wait for error message
-      await page.waitForTimeout(500);
-
       // Error should be visible and have role="alert" or aria-live
       const errorElement = page.locator('[role="alert"], [aria-live="polite"], [aria-live="assertive"]').first();
 
