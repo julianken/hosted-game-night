@@ -3,19 +3,20 @@
  *
  * Note: These tests use Playwright auth fixtures to create authenticated sessions.
  *
- * IMPORTANT: All tests in this file are currently SKIPPED because they require real
- * server-side session handling which cannot be fully mocked at the browser level.
- * MSW (Mock Service Worker) can intercept API calls but cannot create the server-side
- * session state needed for protected routes like /settings. These tests should be
- * run against a real Supabase instance with proper authentication.
+ * The auth fixture handles login and sets required SSO cookies (beak_access_token,
+ * beak_user_id) for Platform Hub protected routes.
  */
 
 import { test, expect } from '../fixtures/auth';
+import { portConfig } from '../../playwright.config';
+
+// Dynamic URL based on port configuration (supports worktree isolation)
+const HUB_URL = `http://localhost:${portConfig.hubPort}`;
 
 test.describe('Profile & Settings Management @high', () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     // Navigate to settings page - user is already authenticated via fixture
-    await authenticatedPage.goto('http://localhost:3002/settings');
+    await authenticatedPage.goto(`${HUB_URL}/settings`);
     await authenticatedPage.waitForLoadState('networkidle');
   });
 
@@ -214,7 +215,7 @@ test.describe('Settings Protection @critical', () => {
     page,
   }) => {
     // Try to access settings without authentication
-    await page.goto('http://localhost:3002/settings');
+    await page.goto(`${HUB_URL}/settings`);
 
     // Should be redirected to login
     await expect(page).toHaveURL(/\/login/, { timeout: 5000 });

@@ -3,19 +3,20 @@
  *
  * Note: These tests use Playwright auth fixtures to create authenticated sessions.
  *
- * IMPORTANT: All tests in this file are currently SKIPPED because they require real
- * server-side session handling which cannot be fully mocked at the browser level.
- * MSW (Mock Service Worker) can intercept API calls but cannot create the server-side
- * session state needed for protected routes like /dashboard. These tests should be
- * run against a real Supabase instance with proper authentication.
+ * The auth fixture handles login and sets required SSO cookies (beak_access_token,
+ * beak_user_id) for Platform Hub protected routes.
  */
 
 import { test, expect } from '../fixtures/auth';
+import { portConfig } from '../../playwright.config';
+
+// Dynamic URL based on port configuration (supports worktree isolation)
+const HUB_URL = `http://localhost:${portConfig.hubPort}`;
 
 test.describe('Platform Hub Dashboard @high', () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     // Navigate to dashboard - user is already authenticated via fixture
-    await authenticatedPage.goto('http://localhost:3002/dashboard');
+    await authenticatedPage.goto(`${HUB_URL}/dashboard`);
     await authenticatedPage.waitForLoadState('networkidle');
   });
 
@@ -103,7 +104,7 @@ test.describe('Platform Hub Dashboard @high', () => {
     await expect(bingoLink).toBeVisible();
 
     // Verify link has correct href
-    await expect(bingoLink).toHaveAttribute('href', /localhost:3000\/play/);
+    await expect(bingoLink).toHaveAttribute('href', new RegExp(`localhost:${portConfig.bingoPort}/play`));
   });
 
   test('can navigate to trivia from dashboard @critical', async ({
@@ -116,7 +117,7 @@ test.describe('Platform Hub Dashboard @high', () => {
     await expect(triviaLink).toBeVisible();
 
     // Verify link has correct href
-    await expect(triviaLink).toHaveAttribute('href', /localhost:3001\/play/);
+    await expect(triviaLink).toHaveAttribute('href', new RegExp(`localhost:${portConfig.triviaPort}/play`));
   });
 
   test('dashboard shows recent activity section @high', async ({
@@ -176,7 +177,7 @@ test.describe('Platform Hub Dashboard @high', () => {
   test('loading states render correctly @medium', async ({ page }) => {
     // Use unauthenticated page to test loading state
     // Navigate to login first, then to dashboard to see loading
-    await page.goto('http://localhost:3002/login');
+    await page.goto(`${HUB_URL}/login`);
 
     // Fill credentials
     await page.fill('input[name="email"]', 'e2e-test@beak-gaming.test');
@@ -186,7 +187,7 @@ test.describe('Platform Hub Dashboard @high', () => {
     await page.click('button[type="submit"]');
 
     // Dashboard should eventually load
-    await page.waitForURL('http://localhost:3002/dashboard', {
+    await page.waitForURL(`${HUB_URL}/dashboard`, {
       timeout: 10000,
     });
 
@@ -213,7 +214,7 @@ test.describe('Dashboard Protection @critical', () => {
     page,
   }) => {
     // Try to access dashboard without authentication
-    await page.goto('http://localhost:3002/dashboard');
+    await page.goto(`${HUB_URL}/dashboard`);
 
     // Should be redirected to login
     await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
