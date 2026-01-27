@@ -109,9 +109,8 @@ test.describe('Bingo Presenter View', () => {
 
     // Wait for ball to be called and counter to update (Pattern 3: complex condition)
     await expect(async () => {
-      // Ball counter should show at least 1 called
-      // Use tabular-nums class to target the counter specifically (avoids matching bingo gridcells)
-      const calledCount = page.locator('[class*="tabular-nums"]').filter({ hasText: /^\d+$/ }).first();
+      // Ball counter should show at least 1 called - use data-testid for precise targeting
+      const calledCount = page.getByTestId('balls-called-count');
       await expect(calledCount).toBeVisible({ timeout: 1000 });
 
       const countText = await calledCount.textContent();
@@ -174,35 +173,35 @@ test.describe('Bingo Presenter View', () => {
 
     await rollButton.click();
 
-    // Wait for first ball (Pattern 3)
+    // Wait for first ball (Pattern 3) - use data-testid for precise targeting
     await expect(async () => {
-      const calledSection = page.getByText('Called').locator('..');
-      const count = await calledSection.getByText(/^\d+$/).textContent();
-      expect(parseInt(count || '0')).toBeGreaterThanOrEqual(1);
+      const calledCount = page.getByTestId('balls-called-count');
+      const countText = await calledCount.textContent();
+      expect(parseInt(countText || '0')).toBeGreaterThanOrEqual(1);
     }).toPass({ timeout: 10000 });
 
     await rollButton.click();
 
-    // Wait for second ball (Pattern 3)
+    // Wait for second ball (Pattern 3) - use data-testid for precise targeting
     await expect(async () => {
-      const calledSection = page.getByText('Called').locator('..');
-      const count = await calledSection.getByText(/^\d+$/).textContent();
-      expect(parseInt(count || '0')).toBeGreaterThanOrEqual(2);
+      const calledCount = page.getByTestId('balls-called-count');
+      const countText = await calledCount.textContent();
+      expect(parseInt(countText || '0')).toBeGreaterThanOrEqual(2);
     }).toPass({ timeout: 10000 });
 
     // Find undo button
     const undoButton = page.getByRole('button', { name: /undo/i });
 
     if (await undoButton.isVisible() && await undoButton.isEnabled()) {
-      // Get count from ball counter - number is sibling of "Called" text
-      const calledSection = page.getByText('Called').locator('..');
-      const countBefore = await calledSection.getByText(/^\d+$/).textContent();
+      // Get count from ball counter - use data-testid for precise targeting
+      const calledCount = page.getByTestId('balls-called-count');
+      const countBefore = await calledCount.textContent();
 
       await undoButton.click();
 
       // Wait for undo to complete (Pattern 3: count decreases)
       await expect(async () => {
-        const countAfter = await calledSection.getByText(/^\d+$/).textContent();
+        const countAfter = await calledCount.textContent();
         const before = parseInt(countBefore || '0');
         const after = parseInt(countAfter || '0');
         expect(after).toBeLessThan(before);
@@ -215,11 +214,11 @@ test.describe('Bingo Presenter View', () => {
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click();
 
-    // Wait for ball to be called (Pattern 3)
+    // Wait for ball to be called (Pattern 3) - use data-testid for precise targeting
     await expect(async () => {
-      const calledSection = page.getByText('Called').locator('..');
-      const count = await calledSection.getByText(/^\d+$/).textContent();
-      expect(parseInt(count || '0')).toBeGreaterThan(0);
+      const calledCount = page.getByTestId('balls-called-count');
+      const countText = await calledCount.textContent();
+      expect(parseInt(countText || '0')).toBeGreaterThan(0);
     }).toPass({ timeout: 10000 });
 
     // Find reset button
@@ -234,10 +233,9 @@ test.describe('Bingo Presenter View', () => {
         await confirmButton.click();
       }
 
-      // Wait for reset to complete (Pattern 2: counter back to 0)
-      // Counter should be back to 0 - check number and "Called" separately
-      // Use exact match to avoid matching "Called Numbers" heading and other text
-      await expect(page.getByText('0').first()).toBeVisible();
+      // Wait for reset to complete (Pattern 2: counter back to 0) - use data-testid for precise targeting
+      const calledCount = page.getByTestId('balls-called-count');
+      await expect(calledCount).toHaveText('0');
       await expect(page.getByText('Called', { exact: true })).toBeVisible();
     }
   });
