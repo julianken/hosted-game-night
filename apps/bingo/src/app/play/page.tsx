@@ -448,6 +448,10 @@ export default function PlayPage() {
       setCurrentPin(pin);
       storePin(pin);
     }
+    // Dismiss modal BEFORE creating session to avoid race condition
+    // where modal visibility check runs before all state updates complete
+    setShowCreateModal(false);
+    setUserDismissedModal(true);
     handleCreateSession(pin);
   }, [currentPin, handleCreateSession]);
 
