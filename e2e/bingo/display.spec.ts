@@ -89,8 +89,8 @@ test.describe('Bingo Display Page', () => {
     await rollButton.click();
     await page.waitForTimeout(2000);
 
-    // Display should show the bingo board section
-    await expect(displayPage.getByText(/called numbers/i)).toBeVisible();
+    // Display should show the bingo board section using data-testid
+    await expect(displayPage.getByTestId('called-numbers-board')).toBeVisible();
   });
 
   test('shows connection status indicator', async ({ authenticatedBingoPage: page }) => {
@@ -106,8 +106,8 @@ test.describe('Bingo Display Page', () => {
     // Wait for connection
     await page.waitForTimeout(1000);
 
-    // Should show sync status
-    const syncIndicator = displayPage.locator('[class*="bg-success"], [class*="bg-green"]').first();
+    // Should show sync status - check for connected sync indicator 
+    const syncIndicator = displayPage.locator('[class*="bg-success"]').first();
     await expect(syncIndicator).toBeVisible({ timeout: 10000 });
   });
 

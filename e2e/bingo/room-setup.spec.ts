@@ -140,10 +140,8 @@ test.describe('Room Setup Flow', () => {
       const offlineHeading = page.getByRole('heading', { name: /offline session id/i });
       await expect(offlineHeading).toBeVisible();
 
-      // Look for 6-character alphanumeric session ID within the offline section
-      // The heading's parent status element contains the session ID
-      const offlineSection = offlineHeading.locator('..');
-      const sessionIdDisplay = offlineSection.locator('.text-2xl').first();
+      // Look for 6-character alphanumeric session ID using data-testid attribute
+      const sessionIdDisplay = page.getByTestId('offline-session-id');
       await expect(sessionIdDisplay).toBeVisible();
 
       const sessionIdText = await sessionIdDisplay.textContent();

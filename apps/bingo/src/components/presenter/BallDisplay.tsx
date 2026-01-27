@@ -51,6 +51,7 @@ export function BallDisplay({ ball, size = 'lg' }: BallDisplayProps) {
       `}
       role="img"
       aria-label={`Ball ${ball.label}`}
+      data-testid={`ball-display-${ball.label}`}
     >
       <span className="flex flex-col items-center leading-none">
         <span className="text-[0.4em] font-semibold">{ball.column}</span>

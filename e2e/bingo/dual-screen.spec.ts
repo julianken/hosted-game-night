@@ -42,8 +42,8 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     // Wait for sync to update display with called ball
     await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
-    // Get the ball from presenter (looking for B-XX, I-XX, etc. format)
-    const presenterBallArea = page.locator('text="Current Ball"').locator('..').locator('[class*="ball-"]');
+    // Get the ball from presenter using data-testid
+    const presenterBallArea = page.getByTestId('current-ball-section').locator('[role="img"]');
     const presenterBallCount = await presenterBallArea.count();
 
     // If presenter shows a ball, display should also
@@ -261,8 +261,8 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
 
     // Connection should still be active
     await waitForDualScreenSync(displayPage);
-    const syncIndicator = displayPage.locator('[class*="bg-success"]').first();
-    await expect(syncIndicator).toBeVisible({ timeout: 5000 });
+    // Check sync is active using data-testid
+    await expect(displayPage.locator('[class*="bg-success"]').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('closing display does not affect presenter', async ({ authenticatedBingoPage: page }) => {

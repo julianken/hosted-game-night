@@ -498,7 +498,7 @@ export default function PlayPage() {
           {/* Display controls */}
           <div className="flex items-center gap-4">
             {/* Connection status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" data-testid="sync-indicator">
               <div
                 className={`
                   w-3 h-3 rounded-full
@@ -539,7 +539,7 @@ export default function PlayPage() {
           {/* Center column on mobile (moved up for better UX): Current Ball + Controls */}
           <section className="md:col-span-2 lg:col-span-4 lg:order-2 space-y-4 md:space-y-6">
             {/* Current Ball Display */}
-            <div className="bg-background border border-border rounded-xl p-4 md:p-6 shadow-sm flex flex-col items-center gap-3 md:gap-4">
+            <div className="bg-background border border-border rounded-xl p-4 md:p-6 shadow-sm flex flex-col items-center gap-3 md:gap-4" data-testid="current-ball-section">
               <h2 className="text-lg md:text-xl font-semibold">Current Ball</h2>
               <BallDisplay ball={game.currentBall} size="xl" />
               {game.previousBall && (
@@ -655,7 +655,7 @@ export default function PlayPage() {
             </div>
 
             {/* Keyboard shortcuts reference - hidden on mobile (not relevant for touch) */}
-            <div className="hidden md:block bg-background border border-border rounded-xl p-4 shadow-sm">
+            <div className="hidden md:block bg-background border border-border rounded-xl p-4 shadow-sm" data-testid="keyboard-shortcuts-section">
               <h2 className="text-xl font-semibold mb-3">Keyboard Shortcuts</h2>
               <ul className="space-y-2 text-base">
                 <li className="flex justify-between">

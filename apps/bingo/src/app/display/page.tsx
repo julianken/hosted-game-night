@@ -453,7 +453,7 @@ function AudienceDisplay({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
               {/* Left section: Bingo Board */}
               <section className="lg:col-span-5 xl:col-span-4" aria-label="Bingo board">
-                <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
+                <div className="bg-background border border-border rounded-xl p-4 shadow-sm" data-testid="called-numbers-board">
                   <h2 className="text-xl md:text-2xl font-semibold mb-4 text-center">
                     Called Numbers
                   </h2>

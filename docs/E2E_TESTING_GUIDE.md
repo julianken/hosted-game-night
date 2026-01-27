@@ -433,6 +433,25 @@ test.describe('Feature Name', () => {
 5. **Take screenshots**: Failures auto-capture, but add manual ones for key states
 6. **Test both happy and error paths**
 
+### Using data-testid Attributes
+
+Use data-testid when semantic selectors are inadequate:
+- No semantic role exists
+- DOM structure is complex
+- Need to distinguish similar elements
+
+| Component | data-testid | Purpose |
+|-----------|-------------|---------|
+| RoomStatus | offline-session-id | Offline session ID display |
+| RoomStatus | online-room-code | Online room code display |
+| RoomStatus | room-pin-display | PIN display |
+| GameSelector | game-card-bingo | Bingo card |
+| GameSelector | game-card-trivia | Trivia card |
+| PatternSelector | pattern-preview | Pattern preview |
+| BallDisplay | current-ball | Current ball |
+
+**Reference:** See BEA-394 for full refactoring.
+
 ---
 
 ## Debugging Failed Tests

@@ -47,8 +47,8 @@ test.describe('Bingo Presenter View', () => {
 
   test('displays keyboard shortcuts reference @medium', async ({ authenticatedBingoPage: page }) => {
     await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
-    // Look for keyboard shortcuts section specifically (not settings labels)
-    const shortcutsSection = page.locator('text=/keyboard shortcuts/i').locator('..');
+    // Look for keyboard shortcuts section using data-testid
+    const shortcutsSection = page.getByTestId('keyboard-shortcuts-section');
     await expect(shortcutsSection.getByText('Roll', { exact: true })).toBeVisible();
     await expect(shortcutsSection.getByText(/pause/i)).toBeVisible();
     await expect(shortcutsSection.getByText(/undo/i)).toBeVisible();
@@ -129,7 +129,7 @@ test.describe('Bingo Presenter View', () => {
     await rollButton.click(); // Call first ball
 
     // Wait for the ball to be displayed (Pattern 1: element visibility)
-    const currentBallSection = page.locator('text="Current Ball"').locator('..');
+    const currentBallSection = page.getByTestId('current-ball-section');
     await expect(currentBallSection).toBeVisible({ timeout: 10000 });
   });
 

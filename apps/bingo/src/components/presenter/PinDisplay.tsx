@@ -58,7 +58,7 @@ export function PinDisplay({ pin, offlineSessionId, className = '' }: PinDisplay
         <h3 className="text-lg font-semibold text-foreground mb-2">
           Offline Session ID
         </h3>
-        <div className="text-2xl font-mono font-bold text-muted-foreground">
+        <div className="text-2xl font-mono font-bold text-muted-foreground" data-testid="offline-session-id">
           {offlineSessionId}
         </div>
         <p className="text-sm text-muted-foreground mt-2">
