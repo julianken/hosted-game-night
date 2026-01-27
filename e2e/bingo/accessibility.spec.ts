@@ -117,7 +117,7 @@ test.describe('Bingo Accessibility', () => {
 
       if (isMobile) {
         // On mobile: verify skip link exists and is programmatically focusable
-        const skipLink = page.locator('a[href="#main-content"]');
+        const skipLink = page.locator('a[href="#main"]');
         await expect(skipLink).toHaveCount(1);
 
         // Verify it can be focused programmatically (for external keyboard users)

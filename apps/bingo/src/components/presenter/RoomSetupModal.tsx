@@ -49,6 +49,8 @@ export function RoomSetupModal({
         try {
           const response = await fetch('/api/templates');
           if (!response || !response.ok) {
+            // Mark as loaded even on failure to prevent retries
+            setHasLoadedDefaultTemplate(true);
             return; // Silently fail - not critical
           }
 
@@ -71,11 +73,13 @@ export function RoomSetupModal({
 
             // Load voice pack
             setVoicePack(defaultTemplate.voice_pack as VoicePackId);
-
-            setHasLoadedDefaultTemplate(true);
           }
+
+          setHasLoadedDefaultTemplate(true);
         } catch (err) {
           console.error('Error loading default template:', err);
+          // Mark as loaded even on error to prevent retries
+          setHasLoadedDefaultTemplate(true);
           // Silently fail - not critical to modal functionality
         }
       };

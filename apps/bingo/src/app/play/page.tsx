@@ -441,18 +441,16 @@ export default function PlayPage() {
   }, [game, clearToken]);
 
   // Room Setup Modal handlers
-  const handleModalCreateRoom = useCallback(() => {
+  const handleModalCreateRoom = useCallback(async () => {
     // Use the current PIN or generate a new one
     const pin = currentPin || generateSecurePin();
     if (!currentPin) {
       setCurrentPin(pin);
       storePin(pin);
     }
-    // Dismiss modal BEFORE creating session to avoid race condition
-    // where modal visibility check runs before all state updates complete
-    setShowCreateModal(false);
-    setUserDismissedModal(true);
-    handleCreateSession(pin);
+    // Wait for session creation to complete
+    // handleCreateSession will dismiss modal on success (line 372) or keep it open on error
+    await handleCreateSession(pin);
   }, [currentPin, handleCreateSession]);
 
   const handleModalJoinRoom = useCallback((roomCode: string, pin: string) => {

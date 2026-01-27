@@ -112,6 +112,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
         value={selectedTemplateId}
         onChange={handleChange}
         disabled={disabled || isLoading}
+        tabIndex={-1}
         className={`
           min-h-[56px] px-4 py-3
           text-lg rounded-lg

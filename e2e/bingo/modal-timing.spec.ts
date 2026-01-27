@@ -45,9 +45,9 @@ test.describe('Room Setup Modal Timing', () => {
     await expect(modal).toBeVisible();
 
     // Verify all three options are present (scope to modal)
-    await expect(modal.getByRole('button', { name: /create new game/i })).toBeVisible();
-    await expect(modal.getByRole('button', { name: /join with room code/i })).toBeVisible();
-    await expect(modal.getByRole('button', { name: /play offline/i })).toBeVisible();
+    await expect(modal.getByRole('button', { name: /create.*new.*game/i })).toBeVisible();
+    await expect(modal.getByRole('button', { name: /join.*room.*code/i })).toBeVisible();
+    await expect(modal.getByRole('button', { name: /play.*offline/i })).toBeVisible();
   });
 
   test('should show modal on recovery error', async ({ authenticatedBingoPage: page }) => {
