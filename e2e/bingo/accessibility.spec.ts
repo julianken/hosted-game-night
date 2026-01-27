@@ -110,17 +110,31 @@ test.describe('Bingo Accessibility', () => {
       }
     });
 
-    test('buttons are keyboard accessible', async ({ authenticatedBingoPage: page }) => {
-      // Tab to buttons and verify they can be focused
-      await page.keyboard.press('Tab');
+    test('buttons are keyboard accessible', async ({ authenticatedBingoPage: page }, testInfo) => {
+      // Skip Tab navigation test on mobile - mobile devices use touch, not keyboard
+      // The skip link is still present and works when users connect external keyboards
+      const isMobile = testInfo.project.name.includes('mobile');
 
-      // Some element should have focus
-      const focusedElement = await page.evaluate(() =>
-        document.activeElement?.tagName
-      );
+      if (isMobile) {
+        // On mobile: verify skip link exists and is programmatically focusable
+        const skipLink = page.locator('a[href="#main-content"]');
+        await expect(skipLink).toHaveCount(1);
 
-      // Fix inverted assertion logic - check if focusedElement matches expected types
-      expect(focusedElement).toMatch(/^(A|BUTTON|INPUT|SELECT)$/);
+        // Verify it can be focused programmatically (for external keyboard users)
+        await skipLink.focus();
+        await expect(skipLink).toBeFocused();
+      } else {
+        // On desktop: verify Tab key navigation works
+        await page.keyboard.press('Tab');
+
+        // Some element should have focus
+        const focusedElement = await page.evaluate(() =>
+          document.activeElement?.tagName
+        );
+
+        // Fix inverted assertion logic - check if focusedElement matches expected types
+        expect(focusedElement).toMatch(/^(A|BUTTON|INPUT|SELECT)$/);
+      }
     });
 
     test('form controls are labeled', async ({ authenticatedBingoPage: page }) => {

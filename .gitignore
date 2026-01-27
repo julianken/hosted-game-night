@@ -49,3 +49,5 @@ pnpm-debug.log*
 .env*.local
 .env.vercel
 test-results/
+.env.e2e
+start-e2e-servers.sh
