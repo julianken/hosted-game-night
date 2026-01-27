@@ -159,7 +159,7 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create a new game room/i })
+          screen.getByRole('button', { name: /Create new game/i })
         ).toBeInTheDocument();
       });
     });
@@ -171,11 +171,11 @@ describe('RoomSetupModal', () => {
       );
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create a new game room/i })
+          screen.getByRole('button', { name: /Create new game/i })
         ).toBeInTheDocument();
       });
       fireEvent.click(
-        screen.getByRole('button', { name: /Create a new game room/i })
+        screen.getByRole('button', { name: /Create new game/i })
       );
       expect(handleCreateRoom).toHaveBeenCalledTimes(1);
     });
@@ -186,7 +186,7 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
     });
@@ -195,11 +195,11 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
       await waitFor(() => {
         expect(screen.getByLabelText('Room PIN')).toBeInTheDocument();
@@ -210,13 +210,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
       await waitFor(() => {
         expect(screen.getByLabelText('Room PIN')).toBeInTheDocument();
@@ -233,13 +233,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -252,13 +252,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -271,13 +271,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -290,13 +290,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -310,13 +310,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const roomCodeInput = await screen.findByLabelText('Room Code');
@@ -334,13 +334,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const roomCodeInput = await screen.findByLabelText('Room Code');
@@ -359,13 +359,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const roomCodeInput = await screen.findByLabelText('Room Code');
@@ -390,13 +390,13 @@ describe('RoomSetupModal', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form and enter a PIN
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -410,7 +410,7 @@ describe('RoomSetupModal', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
@@ -425,7 +425,7 @@ describe('RoomSetupModal', () => {
       await waitFor(() => {
         expect(
           screen.getByRole('button', {
-            name: /Play offline without network connection/i,
+            name: /Play offline/i,
           })
         ).toBeInTheDocument();
       });
@@ -439,13 +439,13 @@ describe('RoomSetupModal', () => {
       await waitFor(() => {
         expect(
           screen.getByRole('button', {
-            name: /Play offline without network connection/i,
+            name: /Play offline/i,
           })
         ).toBeInTheDocument();
       });
       fireEvent.click(
         screen.getByRole('button', {
-          name: /Play offline without network connection/i,
+          name: /Play offline/i,
         })
       );
       expect(handlePlayOffline).toHaveBeenCalledTimes(1);
@@ -471,14 +471,14 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create a new game room/i })
+          screen.getByRole('button', { name: /Create new game/i })
         ).toBeInTheDocument();
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
         expect(
           screen.getByRole('button', {
-            name: /Play offline without network connection/i,
+            name: /Play offline/i,
           })
         ).toBeInTheDocument();
       });
@@ -488,13 +488,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const input = await screen.findByLabelText('Room PIN');
@@ -525,13 +525,13 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} onJoinRoom={handleJoinRoom} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Show form to join existing game/i })
+          screen.getByRole('button', { name: /Join with room code/i })
         ).toBeInTheDocument();
       });
 
       // Show the form
       fireEvent.click(
-        screen.getByRole('button', { name: /Show form to join existing game/i })
+        screen.getByRole('button', { name: /Join with room code/i })
       );
 
       const roomCodeInput = await screen.findByLabelText('Room Code');
