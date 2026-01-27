@@ -44,10 +44,10 @@ test.describe('Room Setup Flow', () => {
       await expect(modal).toBeVisible();
       await expect(page.getByText('Room Setup')).toBeVisible();
 
-      // All three options should be visible
-      await expect(page.getByRole('button', { name: /create.*new.*game/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /join with room code/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /play offline/i })).toBeVisible();
+      // All three options should be visible inside the modal
+      await expect(modal.getByRole('button', { name: /create.*new.*game/i })).toBeVisible();
+      await expect(modal.getByRole('button', { name: /join with room code/i })).toBeVisible();
+      await expect(modal.getByRole('button', { name: /play offline/i })).toBeVisible();
     });
 
     test('should create online room and display room code', async ({ authenticatedBingoPage: page }) => {
@@ -524,7 +524,7 @@ test.describe('Room Setup Flow', () => {
       await expect(dialog).toBeVisible();
 
       // Check for accessible labels - buttons can have accessible names via text content or aria-label
-      const createButton = page.getByRole('button', { name: /create.*new.*game/i });
+      const createButton = dialog.getByRole('button', { name: /create.*new.*game/i });
       await expect(createButton).toBeVisible();
       // Verify button has an accessible name (found by role + name, so it must have one)
       expect(await createButton.count()).toBeGreaterThan(0);

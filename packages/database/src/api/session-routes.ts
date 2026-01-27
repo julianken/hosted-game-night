@@ -76,29 +76,65 @@ export function createSessionRoutes(config: SessionRouteConfig) {
       // Hash PIN
       const { hash, salt } = await createPinHash(body.pin);
 
-      // Generate room code using database function (handles collisions)
-      const { data: roomCode, error: rpcError } = await client
-        .rpc('generate_room_code');
+      // Retry logic for handling room code collisions during parallel execution
+      // PostgreSQL error 23505 (unique constraint violation) can occur when
+      // multiple tests/requests generate the same room code simultaneously
+      const MAX_RETRIES = 3;
+      let session;
+      let lastError;
 
-      if (rpcError || !roomCode) {
-        console.error('Failed to generate room code:', rpcError);
-        return NextResponse.json(
-          { error: 'Failed to generate room code' },
-          { status: 500 }
-        );
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          // Generate room code using database function
+          const { data: roomCode, error: rpcError } = await client
+            .rpc('generate_room_code');
+
+          if (rpcError || !roomCode) {
+            console.error('Failed to generate room code:', rpcError);
+            return NextResponse.json(
+              { error: 'Failed to generate room code' },
+              { status: 500 }
+            );
+          }
+
+          // Create session
+          session = await createGameSession(client, {
+            room_code: roomCode,
+            session_id: generateSessionId(),
+            game_type: gameType,
+            pin_hash: hash,
+            pin_salt: salt,
+            game_state: body.initialState || {},
+            status: 'active',
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          });
+
+          // Success - break out of retry loop
+          break;
+        } catch (error: unknown) {
+          lastError = error;
+          // Check if this is a duplicate key error (PostgreSQL error code 23505)
+          const isDuplicateError =
+            error &&
+            typeof error === 'object' &&
+            'code' in error &&
+            (error.code === 'DUPLICATE' || error.code === '23505');
+
+          // If it's a duplicate key error and we have retries left, try again
+          if (isDuplicateError && attempt < MAX_RETRIES - 1) {
+            console.warn(`Room code collision detected (attempt ${attempt + 1}/${MAX_RETRIES}), retrying...`);
+            continue;
+          }
+
+          // Otherwise, throw the error to be caught by outer try-catch
+          throw error;
+        }
       }
 
-      // Create session
-      const session = await createGameSession(client, {
-        room_code: roomCode,
-        session_id: generateSessionId(),
-        game_type: gameType,
-        pin_hash: hash,
-        pin_salt: salt,
-        game_state: body.initialState || {},
-        status: 'active',
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-      });
+      // If session wasn't created after retries, throw the last error
+      if (!session) {
+        throw lastError || new Error('Failed to create session after retries');
+      }
 
       // Create HMAC-signed token
       const token = createSessionToken(
