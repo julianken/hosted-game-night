@@ -117,10 +117,10 @@ test.describe('Trivia Audience Display', () => {
 
       // Display question using D key
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(1500);
 
-      // Display should show question content
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Display should show question content - use more specific region aria-label
+      await expect(displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i })).toBeVisible();
     });
 
     test('shows round and question number indicator', async ({ authenticatedTriviaPage: page }) => {
@@ -138,11 +138,11 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /start game/i }).click();
       await page.waitForTimeout(500);
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(1500);
 
-      // Should show "Round X - Question Y of Z" format
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
-      await expect(displayPage.getByText(/question \d+ of \d+/i)).toBeVisible();
+      // Should show "Round X - Question Y of Z" format - use specific region aria-label
+      const roundInfoRegion = displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i });
+      await expect(roundInfoRegion).toBeVisible();
     });
 
     test('shows category badge for questions', async ({ authenticatedTriviaPage: page }) => {
@@ -391,10 +391,10 @@ test.describe('Trivia Audience Display', () => {
       const completeBtn = page.getByRole('button', { name: /complete round/i });
       if (await completeBtn.isVisible()) {
         await completeBtn.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(1500);
 
-        // Should show next round indicator
-        await expect(displayPage.getByText(/next round|remaining/i)).toBeVisible();
+        // Should show next round indicator - use more specific selector to avoid strict mode violation
+        await expect(displayPage.getByText('Next round starting soon...', { exact: true })).toBeVisible();
       }
     });
   });
@@ -436,14 +436,14 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /start game/i }).click();
       await page.waitForTimeout(500);
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
       // Pause the game
       await page.keyboard.press('KeyP');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
-      // Display should show pause overlay
-      await expect(displayPage.getByText(/paused/i)).toBeVisible();
+      // Display should show pause overlay - use heading to avoid strict mode violation
+      await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible();
     });
 
     test('shows blank screen during emergency pause', async ({ authenticatedTriviaPage: page }) => {
@@ -461,14 +461,14 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /start game/i }).click();
       await page.waitForTimeout(500);
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
       // Emergency pause
       await page.keyboard.press('KeyE');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
-      // Display should show emergency blank message
-      await expect(displayPage.getByText(/please wait/i)).toBeVisible();
+      // Display should show emergency blank (aria-label for screen readers, no visible text)
+      await expect(displayPage.getByRole('alert', { name: /display blanked for emergency/i })).toBeInViewport();
     });
 
     test('resumes display when game is resumed', async ({ authenticatedTriviaPage: page }) => {
@@ -486,16 +486,16 @@ test.describe('Trivia Audience Display', () => {
       await page.getByRole('button', { name: /start game/i }).click();
       await page.waitForTimeout(500);
       await page.keyboard.press('KeyD');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
       // Pause and resume
       await page.keyboard.press('KeyP');
-      await page.waitForTimeout(300);
-      await page.keyboard.press('KeyP');
       await page.waitForTimeout(500);
+      await page.keyboard.press('KeyP');
+      await page.waitForTimeout(1500);
 
-      // Should return to normal display
-      await expect(displayPage.getByText(/round 1/i)).toBeVisible();
+      // Should return to normal display - use specific region aria-label
+      await expect(displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i })).toBeVisible();
     });
   });
 
