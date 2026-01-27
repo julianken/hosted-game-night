@@ -204,6 +204,10 @@ export default function PlayPage() {
                   const partialState = deserializeTriviaState(data.gameState);
                   useGameStore.setState(partialState);
                 }
+                // Mark offline recovery as attempted AFTER state restoration completes
+                // This prevents the modal from appearing during the recovery process
+                setOfflineRecoveryAttempted(true);
+                return; // Early return after successful recovery
               }
             } catch (parseError) {
               console.error('Failed to parse offline session:', parseError);
@@ -213,11 +217,12 @@ export default function PlayPage() {
       } catch (error) {
         console.error('Failed to recover offline session:', error);
       }
+      // Mark offline recovery as attempted even if no session was found
+      // This ensures the modal can appear if needed
+      setOfflineRecoveryAttempted(true);
     };
 
     recoverOfflineSession();
-    // Mark offline recovery as attempted
-    setOfflineRecoveryAttempted(true);
   }, []);
 
   // Save offline session state to localStorage
