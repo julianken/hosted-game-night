@@ -159,7 +159,7 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create new game/i })
+          screen.getByRole('button', { name: /Create a new game room/i })
         ).toBeInTheDocument();
       });
     });
@@ -171,11 +171,11 @@ describe('RoomSetupModal', () => {
       );
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create new game/i })
+          screen.getByRole('button', { name: /Create a new game room/i })
         ).toBeInTheDocument();
       });
       fireEvent.click(
-        screen.getByRole('button', { name: /Create new game/i })
+        screen.getByRole('button', { name: /Create a new game room/i })
       );
       expect(handleCreateRoom).toHaveBeenCalledTimes(1);
     });
@@ -471,7 +471,7 @@ describe('RoomSetupModal', () => {
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Create new game/i })
+          screen.getByRole('button', { name: /Create a new game room/i })
         ).toBeInTheDocument();
         expect(
           screen.getByRole('button', { name: /Join with room code/i })

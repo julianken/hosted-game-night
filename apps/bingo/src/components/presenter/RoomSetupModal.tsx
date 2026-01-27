@@ -224,7 +224,7 @@ export function RoomSetupModal({
             size="lg"
             onClick={onCreateRoom}
             className="w-full"
-            aria-label="Create new game"
+            aria-label="Create a new game room"
             disabled={isLoading}
           >
             {isLoading ? (

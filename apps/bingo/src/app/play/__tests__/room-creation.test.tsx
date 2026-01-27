@@ -428,7 +428,7 @@ describe('Room Creation Flow', () => {
       });
 
       // Click "Join with Room Code" button
-      const joinButton = screen.getByRole('button', { name: /show form to join existing game/i });
+      const joinButton = screen.getByRole('button', { name: /join with room code/i });
       await user.click(joinButton);
 
       // Form should be visible
@@ -471,7 +471,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const joinButton = screen.getByRole('button', { name: /show form to join existing game/i });
+      const joinButton = screen.getByRole('button', { name: /join with room code/i });
       await user.click(joinButton);
 
       // Fill in the form
@@ -514,7 +514,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const joinButton = screen.getByRole('button', { name: /show form to join existing game/i });
+      const joinButton = screen.getByRole('button', { name: /join with room code/i });
       await user.click(joinButton);
 
       // Fill in with invalid PIN
@@ -547,7 +547,7 @@ describe('Room Creation Flow', () => {
         expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      const joinButton = screen.getByRole('button', { name: /show form to join existing game/i });
+      const joinButton = screen.getByRole('button', { name: /join with room code/i });
       await user.click(joinButton);
 
       const roomCodeInput = screen.getByLabelText(/enter room code/i);

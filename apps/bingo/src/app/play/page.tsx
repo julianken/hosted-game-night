@@ -542,6 +542,7 @@ export default function PlayPage() {
                 onClick={handlePlayOffline}
                 variant="secondary"
                 size="md"
+                aria-label="Quick offline play"
               >
                 Play Offline
               </Button>

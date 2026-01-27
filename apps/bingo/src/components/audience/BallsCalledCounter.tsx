@@ -16,8 +16,8 @@ export function BallsCalledCounter({ called, remaining }: BallsCalledCounterProp
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
       {/* Main counter display */}
       <div className="flex items-center justify-center gap-8 md:gap-12">
-        <div className="flex flex-col items-center">
-          <span className="text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums text-foreground">
+        <div className="flex flex-col items-center" data-testid="balls-called">
+          <span className="text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums text-foreground" data-testid="balls-called-count">
             {called}
           </span>
           <span className="text-xl md:text-2xl text-muted-foreground font-medium">
@@ -27,8 +27,8 @@ export function BallsCalledCounter({ called, remaining }: BallsCalledCounterProp
 
         <div className="text-4xl md:text-5xl text-muted-foreground font-light">/</div>
 
-        <div className="flex flex-col items-center">
-          <span className="text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums text-foreground">
+        <div className="flex flex-col items-center" data-testid="balls-remaining">
+          <span className="text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums text-foreground" data-testid="balls-remaining-count">
             {remaining}
           </span>
           <span className="text-xl md:text-2xl text-muted-foreground font-medium">
