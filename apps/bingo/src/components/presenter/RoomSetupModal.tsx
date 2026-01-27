@@ -393,7 +393,7 @@ export function RoomSetupModal({
         <div className="border-t border-border" />
 
         {/* Play Offline Option */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3" data-testid="offline-session-section">
           <div className="flex items-center gap-3">
             <div
               className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-secondary/10 rounded-lg"
@@ -415,7 +415,7 @@ export function RoomSetupModal({
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-semibold mb-1">Play Offline</h3>
+              <h3 className="text-xl font-semibold mb-1" data-testid="offline-session-heading">Play Offline</h3>
               <p className="text-base text-muted">
                 Play without internet connection or room sharing
               </p>
@@ -427,6 +427,7 @@ export function RoomSetupModal({
             onClick={onPlayOffline}
             className="w-full"
             aria-label="Play offline"
+            data-testid="play-offline-button"
           >
             Play Offline
           </Button>
