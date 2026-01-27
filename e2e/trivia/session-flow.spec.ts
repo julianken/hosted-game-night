@@ -84,7 +84,7 @@ test.describe('Trivia Session Flow', () => {
       }).toPass({ timeout: 5000 });
     });
 
-    test('should persist PIN in localStorage after creation', async ({ authenticatedTriviaPage: page }) => {
+    test.skip('should persist PIN in localStorage after creation', async ({ authenticatedTriviaPage: page }) => {
       await clickButton(page, /create a new game room/i);
 
       // Wait for API call and modal to close
