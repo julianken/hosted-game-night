@@ -32,6 +32,7 @@ import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { OfflineBanner, InstallPrompt } from '@/components/pwa';
 import { serializeBingoState, deserializeBingoState } from '@/lib/session/serializer';
+import { createDebouncedStorageWriter, createOfflineSession } from '@/lib/session/storage';
 import { useGameStore } from '@/stores/game-store';
 
 export default function PlayPage() {
@@ -59,6 +60,10 @@ export default function PlayPage() {
   // PIN state
   const [currentPin, setCurrentPin] = useState<string | null>(null);
   const pinGeneratedRef = useRef(false);
+
+  // Debounced storage writer for offline session persistence
+  // Reduces localStorage writes from 75+ (one per ball) to <15 per game
+  const storageWriterRef = useRef<ReturnType<typeof createDebouncedStorageWriter> | null>(null);
 
   // Session ID calculation: prioritize Supabase session, fallback to offline session
   const sessionId = roomCode || offlineSessionId || '';
@@ -260,37 +265,22 @@ export default function PlayPage() {
     setOfflineRecoveryAttempted(true);
   }, []);
 
-  // Save offline session state to localStorage
+  // Initialize and cleanup debounced storage writer
   useEffect(() => {
-    if (isOfflineMode && offlineSessionId) {
-      try {
-        const sessionKey = `bingo_offline_session_${offlineSessionId}`;
+    storageWriterRef.current = createDebouncedStorageWriter();
+    return () => {
+      storageWriterRef.current?.cleanup();
+      storageWriterRef.current = null;
+    };
+  }, []);
 
-        // Read existing session to preserve createdAt
-        let createdAt = new Date().toISOString();
-        try {
-          const existing = localStorage.getItem(sessionKey);
-          if (existing) {
-            const existingData = JSON.parse(existing);
-            if (existingData.createdAt) {
-              createdAt = existingData.createdAt;
-            }
-          }
-        } catch {
-          // If parsing fails, use new timestamp
-        }
-
-        const sessionData = {
-          sessionId: offlineSessionId,
-          isOffline: true,
-          gameState: serializeBingoState(gameState),
-          createdAt,
-          lastUpdated: new Date().toISOString(),
-        };
-        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-      } catch (error) {
-        console.error('Failed to save offline session:', error);
-      }
+  // Save offline session state to localStorage (debounced)
+  // Instead of writing on every state change (75+ writes per game),
+  // we debounce writes to occur at most every 30 seconds.
+  // The writer automatically flushes on page unload or visibility change.
+  useEffect(() => {
+    if (isOfflineMode && offlineSessionId && storageWriterRef.current) {
+      storageWriterRef.current.scheduleWrite(offlineSessionId, gameState);
     }
   }, [isOfflineMode, offlineSessionId, gameState]);
 
@@ -335,21 +325,8 @@ export default function PlayPage() {
     // Store the new session ID (updates both the primary key and session-specific key)
     storeOfflineSessionId(newSessionId);
 
-    // Initialize offline session in localStorage
-    try {
-      const sessionKey = `bingo_offline_session_${newSessionId}`;
-      const now = new Date().toISOString();
-      const sessionData = {
-        sessionId: newSessionId,
-        isOffline: true,
-        gameState: serializeBingoState(gameState),
-        createdAt: now,
-        lastUpdated: now,
-      };
-      localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-    } catch (error) {
-      console.error('Failed to create offline session:', error);
-    }
+    // Initialize offline session in localStorage (single write)
+    createOfflineSession(newSessionId, gameState);
   }, [gameState]);
 
   const handleCreateSession = useCallback(async (pin: string) => {
