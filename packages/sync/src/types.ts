@@ -15,6 +15,8 @@ export interface SyncMessage<TPayload = unknown> {
   timestamp: number;
   /** Unique identifier of the sender instance to prevent echo/loop issues */
   originId?: string;
+  /** Monotonically increasing sequence number to ensure message uniqueness */
+  sequenceNumber?: number;
 }
 
 /**
