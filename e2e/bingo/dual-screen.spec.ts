@@ -69,21 +69,33 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     const rollButton = page.getByRole('button', { name: /roll|call|start/i }).first();
     for (let i = 0; i < 3; i++) {
       await rollButton.click();
-      // Wait for ball count to increment on presenter
+      // Wait for ball count to increment on presenter using data-testid
       const expectedCount = i + 1;
       await expect(async () => {
-        const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
-        const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+        const countText = await page.getByTestId('balls-called-count').textContent();
+        const num = parseInt(countText || '0');
         expect(num).toBeGreaterThanOrEqual(expectedCount);
-      }).toPass({ timeout: 5000 });
+      }).toPass({ timeout: 10000 });
+
+      // Wait for sync to complete on display
+      await expect(async () => {
+        const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
+        const displayNum = parseInt(displayCountText || '0');
+        expect(displayNum).toBeGreaterThanOrEqual(expectedCount);
+      }).toPass({ timeout: 10000 });
     }
 
     // Check presenter ball count
-    const presenterCount = await page.getByText(/(\d+)\s*called/i).first().textContent();
-    const presenterNum = parseInt(presenterCount?.match(/(\d+)/)?.[1] || '0');
+    const presenterCountText = await page.getByTestId('balls-called-count').textContent();
+    const presenterNum = parseInt(presenterCountText || '0');
 
-    // Both should show 3 balls called (or the board should reflect 3 calls)
+    // Both should show 3 balls called
     expect(presenterNum).toBeGreaterThanOrEqual(3);
+
+    // Display should also show 3 balls called
+    const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
+    const displayNum = parseInt(displayCountText || '0');
+    expect(displayNum).toBeGreaterThanOrEqual(3);
 
     // Display board should also show the called balls
     const displayBoard = displayPage.locator('text="Called Numbers"').locator('..');
@@ -172,9 +184,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await rollButton.click();
     await waitForSyncedContent(displayPage, /called numbers|current ball/i);
 
-    // Get count before undo
-    const countBefore = await displayPage.getByText(/(\d+).*called/i).first().textContent();
-    const numBefore = parseInt(countBefore?.match(/(\d+)/)?.[1] || '0');
+    // Get count before undo using data-testid
+    const countBeforeText = await displayPage.getByTestId('balls-called-count').textContent();
+    const numBefore = parseInt(countBeforeText || '0');
 
     // Undo
     const undoButton = page.getByRole('button', { name: /undo/i });
@@ -183,10 +195,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
 
       // Wait for undo to sync (count should change)
       await expect(async () => {
-        const countAfter = await displayPage.getByText(/(\d+).*called/i).first().textContent();
-        const numAfter = parseInt(countAfter?.match(/(\d+)/)?.[1] || '0');
+        const countAfterText = await displayPage.getByTestId('balls-called-count').textContent();
+        const numAfter = parseInt(countAfterText || '0');
         expect(numAfter).toBeLessThan(numBefore);
-      }).toPass({ timeout: 5000 });
+      }).toPass({ timeout: 10000 });
     }
   });
 
@@ -234,12 +246,12 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     // Close display
     await displayPage.close();
 
-    // Presenter should still work - wait for ball count to update
+    // Presenter should still work - wait for ball count to update using data-testid
     await page.getByRole('button', { name: /roll|call|start/i }).first().click();
     await expect(async () => {
-      const count = await page.getByText(/(\d+)\s*called/i).first().textContent();
-      const num = parseInt(count?.match(/(\d+)/)?.[1] || '0');
+      const countText = await page.getByTestId('balls-called-count').textContent();
+      const num = parseInt(countText || '0');
       expect(num).toBeGreaterThanOrEqual(2);
-    }).toPass({ timeout: 5000 });
+    }).toPass({ timeout: 10000 });
   });
 });

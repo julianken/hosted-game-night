@@ -96,13 +96,13 @@ export interface BallCounterProps {
 export function BallCounter({ called, remaining }: BallCounterProps) {
   return (
     <div className="flex gap-6 text-center">
-      <div className="flex flex-col">
-        <span className="text-3xl font-bold tabular-nums">{called}</span>
+      <div className="flex flex-col" data-testid="balls-called">
+        <span className="text-3xl font-bold tabular-nums" data-testid="balls-called-count">{called}</span>
         <span className="text-base text-muted-foreground">Called</span>
       </div>
       <div className="w-px bg-border" />
-      <div className="flex flex-col">
-        <span className="text-3xl font-bold tabular-nums">{remaining}</span>
+      <div className="flex flex-col" data-testid="balls-remaining">
+        <span className="text-3xl font-bold tabular-nums" data-testid="balls-remaining-count">{remaining}</span>
         <span className="text-base text-muted-foreground">Remaining</span>
       </div>
     </div>
