@@ -48,9 +48,10 @@ export async function openDisplayWindow(page: Page): Promise<Page> {
 
 /**
  * Click a button by its accessible name (role-based).
+ * Uses force: true to bypass Next.js DevTools overlay that intercepts pointer events in dev mode.
  */
 export async function clickButton(page: Page, name: string | RegExp): Promise<void> {
-  await page.getByRole('button', { name }).click();
+  await page.getByRole('button', { name }).click({ force: true });
 }
 
 /**
@@ -136,6 +137,21 @@ export async function checkBasicA11y(page: Page): Promise<{
       const hasText = btn.textContent?.trim();
       const hasAriaLabel = btn.getAttribute('aria-label');
       const hasAriaLabelledBy = btn.getAttribute('aria-labelledby');
+
+      // Skip Next.js DevTools buttons (only present in development mode)
+      // Check both aria-label and text content for dev tools indicators
+      const isDevToolsButton =
+        (hasAriaLabel && (
+          hasAriaLabel.toLowerCase().includes('next.js') ||
+          hasAriaLabel.toLowerCase().includes('issue')
+        )) ||
+        (hasText && (
+          hasText.toLowerCase().includes('next.js') ||
+          hasText.toLowerCase().includes('issue')
+        ));
+
+      if (isDevToolsButton) return false;
+
       return !hasText && !hasAriaLabel && !hasAriaLabelledBy;
     });
 
