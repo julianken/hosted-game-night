@@ -217,17 +217,14 @@ test.describe('Bingo Keyboard Shortcuts', () => {
   // If text inputs are added in the future, this test can be restored to verify keyboard shortcuts
   // don't trigger while typing in input fields.
 
-  test.fixme('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
-    // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
-    // The popup window times out at 30s before we can test keyboard shortcuts
-    // Re-enable this test once BEA-333 is resolved
+  test('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page }) => {
+    // BEA-393: Fixed popup handling - use page.waitForEvent('popup') instead of context.waitForEvent('page')
 
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
@@ -246,17 +243,14 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(await fullscreenIndicator.count()).toBeGreaterThanOrEqual(0);
   });
 
-  test.fixme('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
-    // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
-    // The popup window times out at 30s before we can test keyboard shortcuts
-    // Re-enable this test once BEA-333 is resolved
+  test('display page ? key opens help modal', async ({ authenticatedBingoPage: page }) => {
+    // BEA-393: Fixed popup handling - use page.waitForEvent('popup') instead of context.waitForEvent('page')
 
     await waitForHydration(page);
 
-    const [displayPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.getByRole('button', { name: /open display/i }).click(),
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /open display/i }).click();
+    const displayPage = await popupPromise;
 
     await waitForHydration(displayPage);
 
