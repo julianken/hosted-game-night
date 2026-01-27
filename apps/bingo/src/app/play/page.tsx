@@ -456,9 +456,11 @@ export default function PlayPage() {
   }, [handleJoinSession]);
 
   const handleModalPlayOffline = useCallback(() => {
-    handlePlayOffline();
+    // Dismiss modal BEFORE initiating offline mode to avoid race condition
+    // where modal visibility check runs before all state updates complete
     setShowCreateModal(false);
     setUserDismissedModal(true);
+    handlePlayOffline();
   }, [handlePlayOffline]);
 
   // Open display window with room code or offline session ID in URL
