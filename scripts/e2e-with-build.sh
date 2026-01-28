@@ -13,6 +13,11 @@
 #   ./scripts/e2e-with-build.sh e2e/bingo         # Run bingo tests only
 #   ./scripts/e2e-with-build.sh --headed           # Run with browser UI
 #
+# Smart Server Detection:
+#   - If dev servers are already running on ports 3000-3002, they will be used
+#   - If no servers are running, production servers are started and cleaned up
+#   - Your manually-started dev servers are PRESERVED (not killed)
+#
 # Prerequisites:
 #   - .env.local files must exist in apps/bingo, apps/trivia, apps/platform-hub
 #   - SESSION_TOKEN_SECRET must be set in all .env.local files
@@ -76,58 +81,78 @@ fi
 echo -e "${GREEN}✓ Apps built successfully${NC}"
 echo ""
 
-# Step 3: Kill any existing dev servers
-echo -e "${YELLOW}[3/5] Cleaning up existing servers...${NC}"
+# Step 3: Check for existing servers
+echo -e "${YELLOW}[3/5] Checking for existing servers...${NC}"
 
-# Kill any next-server processes on ports 3000-3002
+SERVERS_ALREADY_RUNNING=false
+BINGO_PID=""
+TRIVIA_PID=""
+HUB_PID=""
+
+# Check if servers are already running and responsive
 for port in 3000 3001 3002; do
-  PID=$(lsof -ti:$port 2>/dev/null || true)
-  if [ -n "$PID" ]; then
-    echo "  Killing process on port $port (PID: $PID)"
-    kill -9 $PID 2>/dev/null || true
-    sleep 1
+  if curl -s -f "http://localhost:$port" > /dev/null 2>&1; then
+    case $port in
+      3000) app="Bingo" ;;
+      3001) app="Trivia" ;;
+      3002) app="Platform Hub" ;;
+    esac
+    PID=$(lsof -ti:$port 2>/dev/null || true)
+    echo "  ✓ $app already running on port $port (PID: $PID)"
+    SERVERS_ALREADY_RUNNING=true
   fi
 done
 
-echo -e "${GREEN}✓ Cleanup complete${NC}"
-echo ""
+if [ "$SERVERS_ALREADY_RUNNING" = true ]; then
+  echo ""
+  echo -e "${GREEN}✓ Using existing servers (dev servers preserved)${NC}"
+  echo ""
 
-# Step 4: Start production servers in background
-echo -e "${YELLOW}[4/5] Starting production servers...${NC}"
+  # Step 4: Skip server startup
+  echo -e "${YELLOW}[4/5] Servers already running (skipped)${NC}"
+  echo -e "${GREEN}✓ All servers ready${NC}"
+else
+  echo "  No responsive servers found"
+  echo -e "${GREEN}✓ Check complete${NC}"
+  echo ""
 
-# Set E2E_TESTING flag for all servers
-export E2E_TESTING=true
+  # Step 4: Start production servers in background
+  echo -e "${YELLOW}[4/5] Starting production servers...${NC}"
 
-# Start servers in background, redirecting output to log files
-pnpm --filter @beak-gaming/bingo start > /tmp/e2e-bingo.log 2>&1 &
-BINGO_PID=$!
-echo "  Bingo server started (PID: $BINGO_PID, port 3000)"
+  # Set E2E_TESTING flag for all servers
+  export E2E_TESTING=true
 
-pnpm --filter @beak-gaming/trivia start > /tmp/e2e-trivia.log 2>&1 &
-TRIVIA_PID=$!
-echo "  Trivia server started (PID: $TRIVIA_PID, port 3001)"
+  # Start servers in background, redirecting output to log files
+  pnpm --filter @beak-gaming/bingo start > /tmp/e2e-bingo.log 2>&1 &
+  BINGO_PID=$!
+  echo "  Bingo server started (PID: $BINGO_PID, port 3000)"
 
-pnpm --filter @beak-gaming/platform-hub start > /tmp/e2e-hub.log 2>&1 &
-HUB_PID=$!
-echo "  Platform Hub server started (PID: $HUB_PID, port 3002)"
+  pnpm --filter @beak-gaming/trivia start > /tmp/e2e-trivia.log 2>&1 &
+  TRIVIA_PID=$!
+  echo "  Trivia server started (PID: $TRIVIA_PID, port 3001)"
 
-# Wait for servers to be ready
-echo ""
-echo "  Waiting for servers to be ready..."
-sleep 5
+  pnpm --filter @beak-gaming/platform-hub start > /tmp/e2e-hub.log 2>&1 &
+  HUB_PID=$!
+  echo "  Platform Hub server started (PID: $HUB_PID, port 3002)"
 
-# Health check
-for port in 3000 3001 3002; do
-  if ! curl -s -f "http://localhost:$port" > /dev/null 2>&1; then
-    echo -e "${RED}✗ Server on port $port is not responding${NC}"
-    echo "  Check /tmp/e2e-*.log files for errors"
-    # Kill all servers
-    kill $BINGO_PID $TRIVIA_PID $HUB_PID 2>/dev/null || true
-    exit 1
-  fi
-done
+  # Wait for servers to be ready
+  echo ""
+  echo "  Waiting for servers to be ready..."
+  sleep 5
 
-echo -e "${GREEN}✓ All servers ready${NC}"
+  # Health check
+  for port in 3000 3001 3002; do
+    if ! curl -s -f "http://localhost:$port" > /dev/null 2>&1; then
+      echo -e "${RED}✗ Server on port $port is not responding${NC}"
+      echo "  Check /tmp/e2e-*.log files for errors"
+      # Kill all servers we started
+      kill $BINGO_PID $TRIVIA_PID $HUB_PID 2>/dev/null || true
+      exit 1
+    fi
+  done
+
+  echo -e "${GREEN}✓ All servers ready${NC}"
+fi
 echo ""
 
 # Step 5: Run E2E tests
@@ -136,10 +161,15 @@ echo ""
 
 # Function to cleanup servers on exit
 cleanup() {
-  echo ""
-  echo -e "${YELLOW}Cleaning up servers...${NC}"
-  kill $BINGO_PID $TRIVIA_PID $HUB_PID 2>/dev/null || true
-  echo -e "${GREEN}✓ Cleanup complete${NC}"
+  # Only kill servers if we started them (PIDs are set)
+  if [ -n "$BINGO_PID" ] || [ -n "$TRIVIA_PID" ] || [ -n "$HUB_PID" ]; then
+    echo ""
+    echo -e "${YELLOW}Cleaning up servers started by script...${NC}"
+    [ -n "$BINGO_PID" ] && kill $BINGO_PID 2>/dev/null || true
+    [ -n "$TRIVIA_PID" ] && kill $TRIVIA_PID 2>/dev/null || true
+    [ -n "$HUB_PID" ] && kill $HUB_PID 2>/dev/null || true
+    echo -e "${GREEN}✓ Cleanup complete${NC}"
+  fi
 }
 
 # Register cleanup on script exit

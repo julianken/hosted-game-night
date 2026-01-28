@@ -53,10 +53,11 @@ pnpm test:e2e:summary
 
 **What happens:**
 1. Script builds all 3 apps (`pnpm build`)
-2. Kills any existing dev servers
-3. Starts production servers on ports 3000-3002
-4. Runs Playwright tests
-5. Cleans up servers on exit
+2. **Checks if servers are already running** (NEW: preserves dev servers!)
+3. If servers found: Uses existing servers (dev or production)
+4. If no servers: Starts production servers on ports 3000-3002
+5. Runs Playwright tests
+6. Cleans up ONLY servers started by script (preserves dev servers)
 
 **Pros:**
 - Stable (no server crashes from resource exhaustion)

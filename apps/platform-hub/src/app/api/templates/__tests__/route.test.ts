@@ -9,6 +9,11 @@ import { GET } from '../route';
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+// Helper to create mock Request objects
+function createMockRequest(url: string = 'http://localhost:3002/api/templates'): Request {
+  return new Request(url);
+}
+
 describe('GET /api/templates', () => {
   beforeEach(() => {
     mockFetch.mockClear();
@@ -64,7 +69,7 @@ describe('GET /api/templates', () => {
         json: async () => ({ templates: triviaTemplates }),
       });
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
@@ -119,7 +124,7 @@ describe('GET /api/templates', () => {
         json: async () => ({ templates: triviaTemplates }),
       });
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(1);
@@ -154,7 +159,7 @@ describe('GET /api/templates', () => {
         statusText: 'Service Unavailable',
       });
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(1);
@@ -174,7 +179,7 @@ describe('GET /api/templates', () => {
         statusText: 'Service Unavailable',
       });
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(0);
@@ -187,7 +192,7 @@ describe('GET /api/templates', () => {
     // Mock network error
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(response.status).toBe(500);
@@ -248,7 +253,7 @@ describe('GET /api/templates', () => {
         json: async () => ({ templates: triviaTemplates }),
       });
 
-    const response = await GET();
+    const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(3);
