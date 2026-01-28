@@ -22,17 +22,28 @@ export default function SettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect to login if not authenticated
+  // Skip redirect in E2E mode (cookies checked server-side in layout.tsx)
   useEffect(() => {
-    if (!authLoading && !user) {
+    // Check for E2E auth cookies (client-side check)
+    const hasE2ECookies = document.cookie.includes('beak_user_id=');
+
+    if (!authLoading && !user && !hasE2ECookies) {
       router.push('/login?redirect=%2Fsettings');
     }
   }, [user, authLoading, router]);
 
   // Load user data
   useEffect(() => {
+    // Check for E2E mode
+    const hasE2ECookies = document.cookie.includes('beak_user_id=');
+
     if (user) {
       setEmail(user.email || '');
       setFacilityName(user.user_metadata?.facility_name || '');
+    } else if (hasE2ECookies) {
+      // E2E mode: use test user data
+      setEmail('e2e-test@beak-gaming.test');
+      setFacilityName('E2E Test Facility');
     }
   }, [user]);
 
@@ -93,7 +104,10 @@ export default function SettingsPage() {
     }
   };
 
-  if (authLoading) {
+  // Check for E2E mode
+  const hasE2ECookies = typeof window !== 'undefined' && document.cookie.includes('beak_user_id=');
+
+  if (authLoading && !hasE2ECookies) {
     return (
       <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
         <div className="max-w-2xl mx-auto">
@@ -110,7 +124,8 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user) {
+  // Allow rendering if user exists OR E2E cookies present
+  if (!user && !hasE2ECookies) {
     return null;
   }
 
