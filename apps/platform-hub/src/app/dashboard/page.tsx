@@ -168,6 +168,21 @@ export default async function DashboardPage() {
     const games = getGamesConfig(gameStats);
     const userName = E2E_TEST_EMAIL.split('@')[0];
 
+    // Fetch profile data for notification preferences (BEA-323)
+    let profileData = null;
+    try {
+      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002'}/api/profile`, {
+        headers: {
+          Cookie: `beak_access_token=${e2eToken.value}; beak_user_id=${e2eUserId.value}`,
+        },
+      });
+      if (profileResponse.ok) {
+        profileData = await profileResponse.json();
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile for E2E mode:', error);
+    }
+
     return (
       <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
         <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
@@ -196,7 +211,14 @@ export default async function DashboardPage() {
           </section>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
             <RecentSessions sessions={recentSessions} maxSessions={4} />
-            <UserPreferences />
+            <UserPreferences
+              preferences={profileData ? {
+                emailNotificationsEnabled: profileData.email_notifications_enabled,
+                gameRemindersEnabled: profileData.game_reminders_enabled,
+                weeklySummaryEnabled: profileData.weekly_summary_enabled,
+                marketingEmailsEnabled: profileData.marketing_emails_enabled,
+              } : undefined}
+            />
           </div>
         </div>
       </main>
@@ -225,6 +247,13 @@ export default async function DashboardPage() {
     user.user_metadata?.full_name ||
     user.email?.split('@')[0] ||
     'Activity Director';
+
+  // Fetch profile data for notification preferences (BEA-323)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email_notifications_enabled, game_reminders_enabled, weekly_summary_enabled, marketing_emails_enabled')
+    .eq('id', user.id)
+    .single();
 
   return (
     <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
@@ -262,7 +291,14 @@ export default async function DashboardPage() {
           <RecentSessions sessions={recentSessions} maxSessions={4} />
 
           {/* User Preferences */}
-          <UserPreferences />
+          <UserPreferences
+            preferences={profile ? {
+              emailNotificationsEnabled: profile.email_notifications_enabled ?? true,
+              gameRemindersEnabled: profile.game_reminders_enabled ?? false,
+              weeklySummaryEnabled: profile.weekly_summary_enabled ?? false,
+              marketingEmailsEnabled: profile.marketing_emails_enabled ?? false,
+            } : undefined}
+          />
         </div>
 
         {/* Help Section */}

@@ -49,45 +49,50 @@ test.describe('Notification Preferences (BEA-323)', () => {
     await expect(gameRemindersToggle).not.toBeChecked();
     await expect(weeklySummaryToggle).not.toBeChecked();
 
-    // Click to enable
+    // Click to enable (auto-saves immediately)
     await gameRemindersToggle.click();
     await expect(gameRemindersToggle).toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
 
     await weeklySummaryToggle.click();
     await expect(weeklySummaryToggle).toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
 
-    // Click to disable
+    // Click to disable (auto-saves immediately)
     await gameRemindersToggle.click();
     await expect(gameRemindersToggle).not.toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('should save notification preferences', async ({ authenticatedPage: page }) => {
-    // Enable game reminders
+  test('should auto-save notification preferences immediately', async ({ authenticatedPage: page }) => {
+    // Enable game reminders (auto-saves immediately)
     const gameRemindersToggle = page.locator('label:has-text("Game Reminders") input[type="checkbox"]');
     await gameRemindersToggle.click();
     await expect(gameRemindersToggle).toBeChecked();
 
-    // Enable weekly summary
+    // Wait for auto-save toast
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
+
+    // Enable weekly summary (auto-saves immediately)
     const weeklySummaryToggle = page.locator('label:has-text("Weekly Activity Summary") input[type="checkbox"]');
     await weeklySummaryToggle.click();
     await expect(weeklySummaryToggle).toBeChecked();
 
-    // Save changes
-    await page.getByRole('button', { name: 'Save Changes' }).click();
-
-    // Wait for success toast
-    await expect(page.getByText('Profile updated successfully')).toBeVisible({ timeout: 5000 });
+    // Wait for auto-save toast
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('should persist notification preferences after save and reload', async ({ authenticatedPage: page }) => {
-    // Enable marketing emails
+  test('should persist notification preferences after auto-save and reload', async ({ authenticatedPage: page }) => {
+    // Enable marketing emails (auto-saves immediately)
     const marketingToggle = page.locator('label:has-text("Newsletter & Promotions") input[type="checkbox"]');
     await marketingToggle.click();
     await expect(marketingToggle).toBeChecked();
 
-    // Save
-    await page.getByRole('button', { name: 'Save Changes' }).click();
-    await expect(page.getByText('Profile updated successfully')).toBeVisible({ timeout: 5000 });
+    // Wait for auto-save toast
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
+
+    // Wait for network to be idle (ensure save completed)
+    await page.waitForLoadState('networkidle');
 
     // Reload page
     await page.reload();
@@ -123,13 +128,22 @@ test.describe('Notification Preferences (BEA-323)', () => {
     const facilityInput = page.getByLabel('Facility Name');
     await facilityInput.fill('Updated Test Facility');
 
-    // Change notification preference
+    // Change notification preference (auto-saves immediately)
     const gameRemindersToggle = page.locator('label:has-text("Game Reminders") input[type="checkbox"]');
     await gameRemindersToggle.click();
 
-    // Save
+    // Wait for notification auto-save toast
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
+
+    // Wait for the toast to disappear before clicking Save Changes
+    await page.waitForTimeout(1000);
+
+    // Save facility name with "Save Changes" button
     await page.getByRole('button', { name: 'Save Changes' }).click();
-    await expect(page.getByText('Profile updated successfully')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Profile updated successfully').first()).toBeVisible({ timeout: 5000 });
+
+    // Wait for network to be idle
+    await page.waitForLoadState('networkidle');
 
     // Reload and verify both saved
     await page.reload();
@@ -151,24 +165,28 @@ test.describe('Notification Preferences (BEA-323)', () => {
     await expect(gameRemindersToggle).not.toBeChecked();
     await expect(weeklySummaryToggle).not.toBeChecked();
 
-    // Focus and toggle email notifications checkbox directly
+    // Focus and toggle email notifications checkbox directly (auto-saves)
     await emailToggle.focus();
     await page.keyboard.press('Space');
     await expect(emailToggle).not.toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
 
-    // Focus and toggle game reminders checkbox
+    // Focus and toggle game reminders checkbox (auto-saves)
     await gameRemindersToggle.focus();
     await page.keyboard.press('Space');
     await expect(gameRemindersToggle).toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
 
-    // Focus and toggle weekly summary checkbox
+    // Focus and toggle weekly summary checkbox (auto-saves)
     await weeklySummaryToggle.focus();
     await page.keyboard.press('Space');
     await expect(weeklySummaryToggle).toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
 
-    // Verify we can toggle back
+    // Verify we can toggle back (auto-saves)
     await emailToggle.focus();
     await page.keyboard.press('Space');
     await expect(emailToggle).toBeChecked();
+    await expect(page.getByText('Notification preferences updated').first()).toBeVisible({ timeout: 5000 });
   });
 });

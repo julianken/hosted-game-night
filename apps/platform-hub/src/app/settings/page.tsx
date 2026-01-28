@@ -65,6 +65,27 @@ export default function SettingsPage() {
     }
   }, [user]);
 
+  // Handler for immediate notification preference save (BEA-323)
+  const handleNotificationToggle = async (field: string, value: boolean, revertFn: (prevValue: boolean) => void) => {
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update notification preferences');
+      }
+      toast.success('Notification preferences updated');
+    } catch (error) {
+      console.error('Notification preference update error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update notification preferences');
+      // Revert optimistic update on error
+      revertFn(!value);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,10 +119,6 @@ export default function SettingsPage() {
           email,
           currentPassword: newPassword ? currentPassword : undefined,
           newPassword: newPassword || undefined,
-          emailNotificationsEnabled,
-          gameRemindersEnabled,
-          weeklySummaryEnabled,
-          marketingEmailsEnabled,
         }),
       });
 
@@ -244,13 +261,16 @@ export default function SettingsPage() {
               Notification Preferences
             </h2>
             <p className="text-base text-muted-foreground mb-6">
-              Control which email notifications you receive
+              Control which email notifications you receive. Changes save automatically.
             </p>
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-muted/5">
                 <Toggle
                   checked={emailNotificationsEnabled}
-                  onChange={setEmailNotificationsEnabled}
+                  onChange={(value) => {
+                    setEmailNotificationsEnabled(value);
+                    handleNotificationToggle('emailNotificationsEnabled', value, setEmailNotificationsEnabled);
+                  }}
                   label="Important Account Updates"
                 />
                 <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
@@ -261,7 +281,10 @@ export default function SettingsPage() {
               <div className="p-4 rounded-xl bg-muted/5">
                 <Toggle
                   checked={gameRemindersEnabled}
-                  onChange={setGameRemindersEnabled}
+                  onChange={(value) => {
+                    setGameRemindersEnabled(value);
+                    handleNotificationToggle('gameRemindersEnabled', value, setGameRemindersEnabled);
+                  }}
                   label="Game Reminders"
                 />
                 <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
@@ -272,7 +295,10 @@ export default function SettingsPage() {
               <div className="p-4 rounded-xl bg-muted/5">
                 <Toggle
                   checked={weeklySummaryEnabled}
-                  onChange={setWeeklySummaryEnabled}
+                  onChange={(value) => {
+                    setWeeklySummaryEnabled(value);
+                    handleNotificationToggle('weeklySummaryEnabled', value, setWeeklySummaryEnabled);
+                  }}
                   label="Weekly Activity Summary"
                 />
                 <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
@@ -283,7 +309,10 @@ export default function SettingsPage() {
               <div className="p-4 rounded-xl bg-muted/5">
                 <Toggle
                   checked={marketingEmailsEnabled}
-                  onChange={setMarketingEmailsEnabled}
+                  onChange={(value) => {
+                    setMarketingEmailsEnabled(value);
+                    handleNotificationToggle('marketingEmailsEnabled', value, setMarketingEmailsEnabled);
+                  }}
                   label="Newsletter & Promotions"
                 />
                 <p className="text-sm text-muted-foreground mt-2 ml-[95px]">

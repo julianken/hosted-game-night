@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { getE2EProfile } from '@/lib/e2e-profile-store';
+import { getE2EProfile, updateE2EProfile } from '@/lib/e2e-profile-store';
 
 /**
  * GET /api/profile
@@ -75,6 +75,153 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Profile API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/profile
+ *
+ * Partially updates the current user's profile.
+ * Used for immediate-save notification preferences (BEA-323).
+ *
+ * E2E Testing:
+ * - Detects E2E mode via cookies: beak_access_token, beak_user_id
+ * - Updates profile data in in-memory store in E2E mode
+ *
+ * @param {Request} request - Request with partial profile updates
+ * @returns {Object} Success status and message
+ */
+export async function PATCH(request: Request) {
+  try {
+    // Parse request body
+    const body = await request.json();
+    const {
+      emailNotificationsEnabled,
+      gameRemindersEnabled,
+      weeklySummaryEnabled,
+      marketingEmailsEnabled,
+    } = body;
+
+    // Check for E2E auth via custom SSO cookie (set by /api/auth/login in E2E mode)
+    const cookieStore = await cookies();
+    const e2eToken = cookieStore.get('beak_access_token');
+    const e2eUserId = cookieStore.get('beak_user_id');
+
+    // E2E Testing Mode: Use in-memory profile store
+    const isE2ETesting =
+      process.env.E2E_TESTING === 'true' ||
+      (process.env.NODE_ENV !== 'production' && e2eToken && e2eUserId);
+
+    if (isE2ETesting && e2eToken && e2eUserId) {
+      console.log('[Profile PATCH API] E2E testing mode: using in-memory store');
+
+      // Build update object (only notification preferences)
+      const updates: Record<string, unknown> = {};
+
+      if (emailNotificationsEnabled !== undefined) {
+        updates.email_notifications_enabled = emailNotificationsEnabled;
+      }
+      if (gameRemindersEnabled !== undefined) {
+        updates.game_reminders_enabled = gameRemindersEnabled;
+      }
+      if (weeklySummaryEnabled !== undefined) {
+        updates.weekly_summary_enabled = weeklySummaryEnabled;
+      }
+      if (marketingEmailsEnabled !== undefined) {
+        updates.marketing_emails_enabled = marketingEmailsEnabled;
+      }
+
+      // Update in-memory store
+      updateE2EProfile(e2eUserId.value, updates);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Notification preferences updated',
+      });
+    }
+
+    // Normal flow: Check Supabase authentication
+    const supabase = await createClient();
+
+    // Get current user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Build update object for profiles table (only notification preferences)
+    const profileUpdates: Record<string, unknown> = {};
+
+    if (emailNotificationsEnabled !== undefined) {
+      if (typeof emailNotificationsEnabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'emailNotificationsEnabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+      profileUpdates.email_notifications_enabled = emailNotificationsEnabled;
+    }
+
+    if (gameRemindersEnabled !== undefined) {
+      if (typeof gameRemindersEnabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'gameRemindersEnabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+      profileUpdates.game_reminders_enabled = gameRemindersEnabled;
+    }
+
+    if (weeklySummaryEnabled !== undefined) {
+      if (typeof weeklySummaryEnabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'weeklySummaryEnabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+      profileUpdates.weekly_summary_enabled = weeklySummaryEnabled;
+    }
+
+    if (marketingEmailsEnabled !== undefined) {
+      if (typeof marketingEmailsEnabled !== 'boolean') {
+        return NextResponse.json(
+          { error: 'marketingEmailsEnabled must be a boolean' },
+          { status: 400 }
+        );
+      }
+      profileUpdates.marketing_emails_enabled = marketingEmailsEnabled;
+    }
+
+    // Update profile in profiles table
+    if (Object.keys(profileUpdates).length > 0) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        return NextResponse.json(
+          { error: 'Failed to update profile' },
+          { status: 500 }
+        );
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Notification preferences updated',
+    });
+  } catch (error) {
+    console.error('Profile PATCH error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
