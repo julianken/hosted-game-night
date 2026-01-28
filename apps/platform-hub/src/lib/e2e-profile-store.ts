@@ -8,11 +8,6 @@
 interface E2EProfile {
   facility_name: string;
   email: string;
-  avatar_url: string | null;
-  email_notifications_enabled: boolean;
-  game_reminders_enabled: boolean;
-  weekly_summary_enabled: boolean;
-  marketing_emails_enabled: boolean;
 }
 
 // In-memory store (server-side only, persists across requests during dev server lifetime)
@@ -22,11 +17,6 @@ const e2eProfileStore = new Map<string, E2EProfile>();
 const DEFAULT_E2E_PROFILE: E2EProfile = {
   facility_name: 'E2E Test Facility',
   email: 'e2e-test@beak-gaming.test',
-  avatar_url: null,
-  email_notifications_enabled: true,
-  game_reminders_enabled: false,
-  weekly_summary_enabled: false,
-  marketing_emails_enabled: false,
 };
 
 export function getE2EProfile(userId: string): E2EProfile {

@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { getE2EProfile } from '@/lib/e2e-profile-store';
 import {
   WelcomeHeader,
   DashboardGameCard,
@@ -82,54 +81,13 @@ async function fetchRecentSessions(userId: string): Promise<GameSession[]> {
  * Uses E2E profile store for E2E testing, database for production
  */
 async function fetchProfile(
-  userId: string,
-  isE2E: boolean = false
-): Promise<{
-  avatarUrl: string | null;
-  emailNotificationsEnabled: boolean;
-  gameRemindersEnabled: boolean;
-  weeklySummaryEnabled: boolean;
-  marketingEmailsEnabled: boolean;
-}> {
-  // E2E mode: Use in-memory profile store (BEA-322)
-  if (isE2E) {
-    const e2eProfile = getE2EProfile(userId);
-    return {
-      avatarUrl: e2eProfile.avatar_url,
-      emailNotificationsEnabled: e2eProfile.email_notifications_enabled,
-      gameRemindersEnabled: e2eProfile.game_reminders_enabled,
-      weeklySummaryEnabled: e2eProfile.weekly_summary_enabled,
-      marketingEmailsEnabled: e2eProfile.marketing_emails_enabled,
-    };
-  }
-
-  // Production mode: Fetch from database
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('avatar_url, email_notifications_enabled, game_reminders_enabled, weekly_summary_enabled, marketing_emails_enabled')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching profile:', error);
-    return {
-      avatarUrl: null,
-      emailNotificationsEnabled: true,
-      gameRemindersEnabled: false,
-      weeklySummaryEnabled: false,
-      marketingEmailsEnabled: false,
-    };
-  }
-
-  return {
-    avatarUrl: data?.avatar_url || null,
-    emailNotificationsEnabled: data?.email_notifications_enabled ?? true,
-    gameRemindersEnabled: data?.game_reminders_enabled ?? false,
-    weeklySummaryEnabled: data?.weekly_summary_enabled ?? false,
-    marketingEmailsEnabled: data?.marketing_emails_enabled ?? false,
-  };
+  _userId: string,
+  _isE2E: boolean = false
+): Promise<Record<string, never>> {
+  // E2E mode: Profile data comes from in-memory store but is not used
+  // Production mode: Profile data comes from database but is not used
+  // This function is kept for future profile-related features
+  return {};
 }
 
 /**
@@ -261,7 +219,6 @@ export default async function DashboardPage() {
           <WelcomeHeader
             userName={userName}
             userEmail={E2E_TEST_EMAIL}
-            avatarUrl={profile.avatarUrl}
           />
           <section aria-labelledby="games-heading">
             <h2
@@ -336,7 +293,6 @@ export default async function DashboardPage() {
         <WelcomeHeader
           userName={userName}
           userEmail={user.email || ''}
-          avatarUrl={profile.avatarUrl}
         />
 
         {/* Quick Access Games Section */}

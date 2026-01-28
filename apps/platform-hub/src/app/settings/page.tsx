@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@beak-gaming/auth';
-import { Button, Input, Toggle } from '@beak-gaming/ui';
+import { Button, Input } from '@beak-gaming/ui';
 import { useToast } from '@beak-gaming/ui';
 import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store';
 import { ThemeMode } from '@/types';
-import { AvatarUpload } from '@/components/profile/AvatarUpload';
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -17,17 +16,10 @@ export default function SettingsPage() {
 
   const [facilityName, setFacilityName] = useState('');
   const [email, setEmail] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Notification preferences state
-  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
-  const [gameRemindersEnabled, setGameRemindersEnabled] = useState(false);
-  const [weeklySummaryEnabled, setWeeklySummaryEnabled] = useState(false);
-  const [marketingEmailsEnabled, setMarketingEmailsEnabled] = useState(false);
 
   // Redirect to login if not authenticated
   // Skip redirect in E2E mode (cookies checked server-side in layout.tsx)
@@ -40,7 +32,7 @@ export default function SettingsPage() {
     }
   }, [user, authLoading, router]);
 
-  // Load user data and profile from API (avatar + notification preferences)
+  // Load user data and profile from API
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -49,11 +41,6 @@ export default function SettingsPage() {
           const data = await response.json();
           setEmail(data.email || '');
           setFacilityName(data.facility_name || '');
-          setAvatarUrl(data.avatar_url || null);
-          setEmailNotificationsEnabled(data.email_notifications_enabled ?? true);
-          setGameRemindersEnabled(data.game_reminders_enabled ?? false);
-          setWeeklySummaryEnabled(data.weekly_summary_enabled ?? false);
-          setMarketingEmailsEnabled(data.marketing_emails_enabled ?? false);
         }
       } catch (error) {
         console.error('Failed to load profile:', error);
@@ -67,43 +54,6 @@ export default function SettingsPage() {
       loadProfile();
     }
   }, [user]);
-
-  // Handler for immediate notification preference save (BEA-323)
-  const handleNotificationToggle = async (field: string, value: boolean, revertFn: (prevValue: boolean) => void) => {
-    try {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update notification preferences');
-      }
-      toast.success('Notification preferences updated');
-    } catch (error) {
-      console.error('Notification preference update error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update notification preferences');
-      // Revert optimistic update on error
-      revertFn(!value);
-    }
-  };
-
-  // Avatar upload handlers (BEA-322)
-  const handleAvatarUploadSuccess = (url: string) => {
-    setAvatarUrl(url);
-    toast.success('Avatar uploaded successfully');
-  };
-
-  const handleAvatarUploadError = (error: string) => {
-    toast.error(error);
-  };
-
-  const handleAvatarDelete = () => {
-    setAvatarUrl(null);
-    toast.success('Avatar removed successfully');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,8 +87,6 @@ export default function SettingsPage() {
           email,
           currentPassword: newPassword ? currentPassword : undefined,
           newPassword: newPassword || undefined,
-          // NOTE: notification preferences are NOT included here
-          // They auto-save immediately via PATCH /api/profile
         }),
       });
 
@@ -197,22 +145,6 @@ export default function SettingsPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Avatar Upload (BEA-322) */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Profile Picture
-            </h2>
-            <p className="text-base text-muted-foreground mb-6">
-              Upload a profile picture to personalize your account
-            </p>
-            <AvatarUpload
-              currentAvatarUrl={avatarUrl}
-              onUploadSuccess={handleAvatarUploadSuccess}
-              onUploadError={handleAvatarUploadError}
-              onDelete={handleAvatarDelete}
-            />
-          </section>
-
           {/* Facility Information */}
           <section className="p-6 bg-background rounded-2xl border border-border">
             <h2 className="text-2xl font-semibold text-foreground mb-4">
@@ -288,73 +220,6 @@ export default function SettingsPage() {
                   </div>
                 </label>
               ))}
-            </div>
-          </section>
-
-          {/* Notification Preferences (BEA-323) */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Notification Preferences
-            </h2>
-            <p className="text-base text-muted-foreground mb-6">
-              Control which email notifications you receive. Changes save automatically.
-            </p>
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-muted/5">
-                <Toggle
-                  checked={emailNotificationsEnabled}
-                  onChange={(value) => {
-                    setEmailNotificationsEnabled(value);
-                    handleNotificationToggle('emailNotificationsEnabled', value, setEmailNotificationsEnabled);
-                  }}
-                  label="Important Account Updates"
-                />
-                <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
-                  Security alerts, password changes, and critical account notifications
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-muted/5">
-                <Toggle
-                  checked={gameRemindersEnabled}
-                  onChange={(value) => {
-                    setGameRemindersEnabled(value);
-                    handleNotificationToggle('gameRemindersEnabled', value, setGameRemindersEnabled);
-                  }}
-                  label="Game Reminders"
-                />
-                <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
-                  Reminders about upcoming scheduled games and events
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-muted/5">
-                <Toggle
-                  checked={weeklySummaryEnabled}
-                  onChange={(value) => {
-                    setWeeklySummaryEnabled(value);
-                    handleNotificationToggle('weeklySummaryEnabled', value, setWeeklySummaryEnabled);
-                  }}
-                  label="Weekly Activity Summary"
-                />
-                <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
-                  Weekly recap of your games, scores, and achievements
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-muted/5">
-                <Toggle
-                  checked={marketingEmailsEnabled}
-                  onChange={(value) => {
-                    setMarketingEmailsEnabled(value);
-                    handleNotificationToggle('marketingEmailsEnabled', value, setMarketingEmailsEnabled);
-                  }}
-                  label="Newsletter & Promotions"
-                />
-                <p className="text-sm text-muted-foreground mt-2 ml-[95px]">
-                  New features, tips, and special offers from Beak Gaming
-                </p>
-              </div>
             </div>
           </section>
 
