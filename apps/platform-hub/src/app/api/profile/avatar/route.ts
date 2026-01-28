@@ -66,9 +66,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Derive extension from validated MIME type, not user input (OWASP A03:2021)
+    const extensionMap: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const extension = extensionMap[file.type];
+    if (!extension) {
+      return NextResponse.json(
+        { error: 'Invalid file type' },
+        { status: 400 }
+      );
+    }
+
     // Generate unique filename: {userId}/{timestamp}.{ext}
-    const extension = file.name.split('.').pop();
     const filename = `${user.id}/${Date.now()}.${extension}`;
+
+    // Fetch current avatar URL BEFORE uploading new one
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .single();
 
     // Convert File to ArrayBuffer for upload
     const arrayBuffer = await file.arrayBuffer();
@@ -107,6 +127,21 @@ export async function POST(request: Request) {
         { error: 'Failed to update profile' },
         { status: 500 }
       );
+    }
+
+    // Delete old avatar AFTER successful profile update
+    if (profile?.avatar_url) {
+      const url = new URL(profile.avatar_url);
+      const oldPath = url.pathname.split('/avatars/')[1];
+      if (oldPath) {
+        const { error: deleteError } = await supabase.storage
+          .from('avatars')
+          .remove([oldPath]);
+        // Don't fail the request if cleanup fails (log error instead)
+        if (deleteError) {
+          console.warn('Failed to delete old avatar:', deleteError);
+        }
+      }
     }
 
     return NextResponse.json({
