@@ -7,6 +7,7 @@ import { Button, Input } from '@beak-gaming/ui';
 import { useToast } from '@beak-gaming/ui';
 import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store';
 import { ThemeMode } from '@/types';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -16,6 +17,7 @@ export default function SettingsPage() {
 
   const [facilityName, setFacilityName] = useState('');
   const [email, setEmail] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -46,6 +48,40 @@ export default function SettingsPage() {
       setFacilityName('E2E Test Facility');
     }
   }, [user]);
+
+  // Load profile data (including avatar)
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setAvatarUrl(data.avatar_url || null);
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+      }
+    };
+
+    const hasE2ECookies = document.cookie.includes('beak_user_id=');
+    if (user || hasE2ECookies) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const handleAvatarUploadSuccess = (url: string) => {
+    setAvatarUrl(url);
+    toast.success('Avatar uploaded successfully');
+  };
+
+  const handleAvatarUploadError = (error: string) => {
+    toast.error(error);
+  };
+
+  const handleAvatarDelete = () => {
+    setAvatarUrl(null);
+    toast.success('Avatar removed successfully');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +208,17 @@ export default function SettingsPage() {
                 required
               />
             </div>
+          </section>
+
+          {/* Profile Picture */}
+          <section className="p-6 bg-background rounded-2xl border border-border">
+            <AvatarUpload
+              currentAvatarUrl={avatarUrl}
+              userName={facilityName || email}
+              onUploadSuccess={handleAvatarUploadSuccess}
+              onUploadError={handleAvatarUploadError}
+              onDelete={handleAvatarDelete}
+            />
           </section>
 
           {/* Theme Preference */}
