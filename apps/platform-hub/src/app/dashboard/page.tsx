@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { getE2EProfile } from '@/lib/e2e-profile-store';
 import {
   WelcomeHeader,
   DashboardGameCard,
@@ -78,14 +79,31 @@ async function fetchRecentSessions(userId: string): Promise<GameSession[]> {
 
 /**
  * Fetch user profile data including avatar URL
+ * Uses E2E profile store for E2E testing, database for production
  */
-async function fetchProfile(userId: string): Promise<{
+async function fetchProfile(
+  userId: string,
+  isE2E: boolean = false
+): Promise<{
   avatarUrl: string | null;
   emailNotificationsEnabled: boolean;
   gameRemindersEnabled: boolean;
   weeklySummaryEnabled: boolean;
   marketingEmailsEnabled: boolean;
 }> {
+  // E2E mode: Use in-memory profile store (BEA-322)
+  if (isE2E) {
+    const e2eProfile = getE2EProfile(userId);
+    return {
+      avatarUrl: e2eProfile.avatar_url,
+      emailNotificationsEnabled: e2eProfile.email_notifications_enabled,
+      gameRemindersEnabled: e2eProfile.game_reminders_enabled,
+      weeklySummaryEnabled: e2eProfile.weekly_summary_enabled,
+      marketingEmailsEnabled: e2eProfile.marketing_emails_enabled,
+    };
+  }
+
+  // Production mode: Fetch from database
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -234,8 +252,8 @@ export default async function DashboardPage() {
     const userName = E2E_TEST_EMAIL.split('@')[0];
     const recentTemplates = await fetchRecentTemplates();
 
-    // Fetch profile for E2E user (includes avatar + notification preferences)
-    const profile = await fetchProfile(e2eUserId.value);
+    // Fetch profile from E2E store (includes avatar + notification preferences)
+    const profile = await fetchProfile(e2eUserId.value, true);
 
     return (
       <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
