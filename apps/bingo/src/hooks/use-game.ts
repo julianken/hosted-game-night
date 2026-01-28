@@ -252,7 +252,7 @@ export function useGameKeyboard() {
           game.resetGame();
           break;
         case 'KeyU':
-          if (game.canUndo) {
+          if (game.canUndo && !game.isProcessing) {
             game.undoCall();
           }
           break;
