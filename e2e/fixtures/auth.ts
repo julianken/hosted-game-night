@@ -187,6 +187,10 @@ async function loginViaPlatformHub(
       await page.fill('input[name="email"]', testUser.email);
       await page.fill('input[name="password"]', testUser.password);
 
+      // Verify values were set (guards against hydration reset) - BEA-410 AC2
+      await playwrightExpect(page.locator('input[name="email"]')).toHaveValue(testUser.email);
+      await playwrightExpect(page.locator('input[name="password"]')).toHaveValue(testUser.password);
+
       // Submit login form
       await page.click('button[type="submit"]');
 
@@ -412,6 +416,10 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         // Fill in credentials
         await page.fill('input[name="email"]', testUser.email);
         await page.fill('input[name="password"]', testUser.password);
+
+        // Verify values were set (guards against hydration reset) - BEA-410 AC2
+        await playwrightExpect(page.locator('input[name="email"]')).toHaveValue(testUser.email);
+        await playwrightExpect(page.locator('input[name="password"]')).toHaveValue(testUser.password);
 
         // Submit login form
         await page.click('button[type="submit"]');
