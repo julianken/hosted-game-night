@@ -196,13 +196,14 @@ test.describe('Recent Templates Display (BEA-325)', () => {
     await expect(section).toBeVisible();
 
     // Should show empty state when API fails
-    const emptyState = section.locator(
-      'text=No templates yet, text=No Bingo templates yet, text=No Trivia templates yet'
-    );
+    const overallEmpty = section.locator('text=No templates yet');
+    const bingoEmpty = section.locator('text=No Bingo templates yet');
+    const triviaEmpty = section.locator('text=No Trivia templates yet');
+
     const hasEmptyState = await Promise.all([
-      emptyState.nth(0).isVisible(),
-      emptyState.nth(1).isVisible(),
-      emptyState.nth(2).isVisible(),
+      overallEmpty.isVisible(),
+      bingoEmpty.isVisible(),
+      triviaEmpty.isVisible(),
     ]).then((results) => results.some((v) => v));
     expect(hasEmptyState).toBeTruthy();
   });

@@ -390,7 +390,7 @@ test.describe('Room Setup Flow', () => {
       // Both windows should be synced via BroadcastChannel
       // Verify room code is in URL
       const displayUrl = displayPage.url();
-      expect(displayUrl).toContain('/display?room=');
+      expect(displayUrl).toContain('/display?offline=');
     });
 
     test('should sync display window in offline mode', async ({ authenticatedBingoPage: page, context }) => {

@@ -8,7 +8,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
 
   test('should display avatar upload section', async ({ authenticatedPage: page }) => {
     // Check for Profile Picture heading
-    const heading = page.getByRole('heading', { name: 'Profile Picture' });
+    const heading = page.getByRole('heading', { name: 'Profile Picture', level: 2 });
     await expect(heading).toBeVisible();
 
     // Check for description
