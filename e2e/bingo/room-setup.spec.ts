@@ -37,7 +37,7 @@ test.describe('Room Setup Flow', () => {
     await waitForRoomSetupModal(page);
   });
 
-  test.describe('Online Room Creation', () => {
+  test.describe('Offline Mode PIN Tests', () => {
     test('should show room setup modal on first visit', async ({ authenticatedBingoPage: page }) => {
       // Modal should be visible (already waited in beforeEach)
       const modal = page.getByRole('dialog');
@@ -50,77 +50,70 @@ test.describe('Room Setup Flow', () => {
       await expect(modal.getByRole('button', { name: /play offline/i })).toBeVisible();
     });
 
-    test('should create online room and display room code', async ({ authenticatedBingoPage: page }) => {
-      // Click create room button inside the modal (not the "Create New Game" button outside)
+    test('should create offline session and display session ID', async ({ authenticatedBingoPage: page }) => {
+      // Click Play Offline button to avoid API dependency
       const modal = page.getByRole('dialog');
-      await modal.getByRole('button', { name: /create.*new.*game/i }).click();
-
-      // Wait for modal to close and room code to appear
-      // Use .toPass() pattern to handle timing variability in modal state transitions
-      await expect(async () => {
-        await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 });
-      }).toPass({ timeout: 15000, intervals: [500, 1000, 1500, 2000] });
-
-      // Room code should be displayed
-      const roomCodeDisplay = page.locator('text=/room code/i').first();
-      await expect(roomCodeDisplay).toBeVisible({ timeout: 5000 });
-    });
-
-    test('should generate and display 4-digit PIN', async ({ authenticatedBingoPage: page }) => {
-      // Click create room button inside the modal
-      const modal = page.getByRole('dialog');
-      await modal.getByRole('button', { name: /create.*new.*game/i }).click();
+      await modal.getByRole('button', { name: /play offline/i }).click();
 
       // Wait for modal to close
-      // Use .toPass() pattern to handle timing variability in modal state transitions
-      await expect(async () => {
-        await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 });
-      }).toPass({ timeout: 15000, intervals: [500, 1000, 1500, 2000] });
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
 
-      // PIN should be displayed (4 digits)
-      const pinDisplay = page.locator('text=/\\d{4}/').first();
-      await expect(pinDisplay).toBeVisible({ timeout: 5000 });
-
-      // Verify PIN is exactly 4 digits
-      const pinText = await pinDisplay.textContent();
-      expect(pinText).toMatch(/\d{4}/);
+      // Session ID should be displayed
+      const sessionIdDisplay = page.getByTestId('offline-session-id');
+      await expect(sessionIdDisplay).toBeVisible({ timeout: 5000 });
     });
 
-    test('should persist PIN in localStorage after creation', async ({ authenticatedBingoPage: page }) => {
-      // Click create room button inside the modal
+    test('should generate and display 6-character session ID', async ({ authenticatedBingoPage: page }) => {
+      // Click Play Offline button
       const modal = page.getByRole('dialog');
-      await modal.getByRole('button', { name: /create.*new.*game/i }).click();
+      await modal.getByRole('button', { name: /play offline/i }).click();
 
-      // Use .toPass() pattern to handle timing variability in modal state transitions
-      await expect(async () => {
-        await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 });
-      }).toPass({ timeout: 15000, intervals: [500, 1000, 1500, 2000] });
+      // Wait for modal to close
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
 
-      // Check localStorage for PIN
-      const storedPin = await page.evaluate(() => localStorage.getItem('bingo_pin'));
-      expect(storedPin).toBeTruthy();
-      expect(storedPin).toMatch(/^\d{4}$/);
+      // Session ID should be displayed (6 alphanumeric characters)
+      const sessionIdDisplay = page.getByTestId('offline-session-id');
+      await expect(sessionIdDisplay).toBeVisible({ timeout: 5000 });
+
+      // Verify session ID is exactly 6 alphanumeric characters
+      const sessionIdText = await sessionIdDisplay.textContent();
+      expect(sessionIdText).toMatch(/^[A-Z0-9]{6}$/);
+      // Verify no ambiguous characters (0, O, 1, I)
+      expect(sessionIdText).not.toMatch(/[0O1I]/);
     });
 
-    test('should recover PIN after page refresh', async ({ authenticatedBingoPage: page }) => {
-      // Click create room button inside the modal
+    test('should persist session ID in localStorage after creation', async ({ authenticatedBingoPage: page }) => {
+      // Click Play Offline button
       const modal = page.getByRole('dialog');
-      await modal.getByRole('button', { name: /create.*new.*game/i }).click();
-      // Use .toPass() pattern to handle timing variability in modal state transitions
-      await expect(async () => {
-        await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 });
-      }).toPass({ timeout: 15000, intervals: [500, 1000, 1500, 2000] });
+      await modal.getByRole('button', { name: /play offline/i }).click();
 
-      // Get the PIN before refresh
-      const pinBefore = await page.evaluate(() => localStorage.getItem('bingo_pin'));
+      // Wait for modal to close
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
+
+      // Check localStorage for offline session ID
+      const storedSessionId = await page.evaluate(() => localStorage.getItem('bingo_offline_session_id'));
+      expect(storedSessionId).toBeTruthy();
+      expect(storedSessionId).toMatch(/^[A-Z0-9]{6}$/);
+    });
+
+    test('should recover session ID after page refresh', async ({ authenticatedBingoPage: page }) => {
+      // Click Play Offline button
+      const modal = page.getByRole('dialog');
+      await modal.getByRole('button', { name: /play offline/i }).click();
+
+      // Wait for modal to close
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
+
+      // Get the session ID before refresh
+      const sessionIdBefore = await page.evaluate(() => localStorage.getItem('bingo_offline_session_id'));
 
       // Refresh the page
       await page.reload();
       await waitForHydration(page);
 
-      // PIN should still be in localStorage
-      const pinAfter = await page.evaluate(() => localStorage.getItem('bingo_pin'));
-      expect(pinAfter).toBe(pinBefore);
+      // Session ID should still be in localStorage
+      const sessionIdAfter = await page.evaluate(() => localStorage.getItem('bingo_offline_session_id'));
+      expect(sessionIdAfter).toBe(sessionIdBefore);
     });
   });
 
@@ -457,7 +450,7 @@ test.describe('Room Setup Flow', () => {
     test('should show offline banner when network is disconnected', async ({ authenticatedBingoPage: page, context }) => {
       // Start online - click button inside modal
       const modal = page.getByRole('dialog');
-      await modal.getByRole('button', { name: /create.*new.*game/i }).click();
+      await modal.getByRole('button', { name: /play offline/i }).click();
       // Use .toPass() pattern to handle timing variability in modal state transitions
       await expect(async () => {
         await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 1000 });

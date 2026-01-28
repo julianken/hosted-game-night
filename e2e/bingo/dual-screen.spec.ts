@@ -2,6 +2,18 @@ import { test, expect } from '../fixtures/auth';
 import { waitForHydration, waitForDualScreenSync, waitForSyncedContent } from '../utils/helpers';
 
 test.describe('Bingo Dual-Screen Synchronization', () => {
+  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
+    // Clear any lingering BroadcastChannel state to prevent leakage between tests
+    await page.evaluate(() => {
+      try {
+        const bc = new BroadcastChannel('bingo-sync');
+        bc.close();
+      } catch (e) {
+        // BroadcastChannel may not exist yet, ignore
+      }
+    });
+  });
+
   test('presenter and display sync on connection', async ({ authenticatedBingoPage: page }) => {
     // Open presenter
     await waitForHydration(page);
@@ -81,6 +93,11 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
       const num = parseInt(countText || '0');
       expect(num).toBeGreaterThanOrEqual(1);
     }).toPass({ timeout: 10000 });
+
+    // Wait for display game content to appear (proves BroadcastChannel sync completed)
+    await expect(displayPage.locator('[data-testid="balls-called"]')).toBeVisible({ timeout: 10000 });
+
+    // Now safe to check ball counts on display
     await expect(async () => {
       const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
       const displayNum = parseInt(displayCountText || '0');
@@ -97,6 +114,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
       const num = parseInt(countText || '0');
       expect(num).toBeGreaterThanOrEqual(2);
     }).toPass({ timeout: 10000 });
+
+    // Wait for display game content to be visible before checking counts
+    await expect(displayPage.locator('[data-testid="balls-called"]')).toBeVisible({ timeout: 10000 });
+
     await expect(async () => {
       const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
       const displayNum = parseInt(displayCountText || '0');
@@ -113,6 +134,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
       const num = parseInt(countText || '0');
       expect(num).toBeGreaterThanOrEqual(3);
     }).toPass({ timeout: 10000 });
+
+    // Wait for display game content to be visible before checking counts
+    await expect(displayPage.locator('[data-testid="balls-called"]')).toBeVisible({ timeout: 10000 });
+
     await expect(async () => {
       const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
       const displayNum = parseInt(displayCountText || '0');
@@ -125,6 +150,9 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
 
     // Both should show 3 balls called
     expect(presenterNum).toBeGreaterThanOrEqual(3);
+
+    // Wait for display game content to be visible before final count check
+    await expect(displayPage.locator('[data-testid="balls-called"]')).toBeVisible({ timeout: 10000 });
 
     // Display should also show 3 balls called
     const displayCountText = await displayPage.getByTestId('balls-called-count').textContent();
