@@ -164,6 +164,25 @@ async function loginViaPlatformHub(
       // Navigate to login page
       await page.goto(`${HUB_URL}/login`);
 
+      // Wait for React hydration before filling form
+      // Mobile WebKit completes 'load' event before React attaches event handlers
+      // Filling form on unhydrated inputs causes silent failures (BEA-410)
+      await playwrightExpect(async () => {
+        const emailInput = page.locator('input[name="email"]');
+        const passwordInput = page.locator('input[name="password"]');
+        const submitButton = page.locator('button[type="submit"]');
+
+        await playwrightExpect(emailInput).toBeVisible({ timeout: 1000 });
+        await playwrightExpect(emailInput).toBeEnabled({ timeout: 1000 });
+        await playwrightExpect(passwordInput).toBeVisible({ timeout: 1000 });
+        await playwrightExpect(passwordInput).toBeEnabled({ timeout: 1000 });
+        await playwrightExpect(submitButton).toBeVisible({ timeout: 1000 });
+        await playwrightExpect(submitButton).toBeEnabled({ timeout: 1000 });
+      }).toPass({
+        timeout: navigationTimeout,
+        intervals: [100, 250, 500, 1000],
+      });
+
       // Fill in credentials
       await page.fill('input[name="email"]', testUser.email);
       await page.fill('input[name="password"]', testUser.password);
@@ -370,6 +389,25 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
       try {
         // Navigate to login page with dashboard redirect
         await page.goto(`${HUB_URL}/login?redirect=/dashboard`);
+
+        // Wait for React hydration before filling form
+        // Mobile WebKit completes 'load' event before React attaches event handlers
+        // Filling form on unhydrated inputs causes silent failures (BEA-410)
+        await playwrightExpect(async () => {
+          const emailInput = page.locator('input[name="email"]');
+          const passwordInput = page.locator('input[name="password"]');
+          const submitButton = page.locator('button[type="submit"]');
+
+          await playwrightExpect(emailInput).toBeVisible({ timeout: 1000 });
+          await playwrightExpect(emailInput).toBeEnabled({ timeout: 1000 });
+          await playwrightExpect(passwordInput).toBeVisible({ timeout: 1000 });
+          await playwrightExpect(passwordInput).toBeEnabled({ timeout: 1000 });
+          await playwrightExpect(submitButton).toBeVisible({ timeout: 1000 });
+          await playwrightExpect(submitButton).toBeEnabled({ timeout: 1000 });
+        }).toPass({
+          timeout: 5000, // Platform Hub tests don't use mobile viewports, fixed timeout
+          intervals: [100, 250, 500, 1000],
+        });
 
         // Fill in credentials
         await page.fill('input[name="email"]', testUser.email);
