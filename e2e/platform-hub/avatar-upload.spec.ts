@@ -1,14 +1,12 @@
-import { test, expect } from '@playwright/test';
-import { loginAsTestUser } from '../fixtures/auth';
+import { test, expect } from '../fixtures/auth';
 
 test.describe('Avatar Upload (BEA-322)', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsTestUser(page);
-    await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+  test.beforeEach(async ({ authenticatedPage }) => {
+    await authenticatedPage.goto('/settings');
+    await authenticatedPage.waitForLoadState('networkidle');
   });
 
-  test('should display avatar upload section', async ({ page }) => {
+  test('should display avatar upload section', async ({ authenticatedPage: page }) => {
     // Check for Profile Picture heading
     const heading = page.getByRole('heading', { name: 'Profile Picture' });
     await expect(heading).toBeVisible();
@@ -23,7 +21,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     await expect(uploadButton).toBeVisible();
   });
 
-  test('should display avatar placeholder with initials', async ({ page }) => {
+  test('should display avatar placeholder with initials', async ({ authenticatedPage: page }) => {
     // Avatar component should show initials when no image uploaded
     const avatar = page.locator('[class*="rounded-full"]').first();
     await expect(avatar).toBeVisible();
@@ -34,7 +32,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     expect(initialsText?.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('should validate file type on upload', async ({ page }) => {
+  test('should validate file type on upload', async ({ authenticatedPage: page }) => {
     // Try to upload a non-image file (mock with invalid extension)
     const fileInput = page.locator('input[type="file"]');
 
@@ -52,7 +50,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     ).toBeVisible({ timeout: 3000 });
   });
 
-  test('should validate file size on upload', async ({ page }) => {
+  test('should validate file size on upload', async ({ authenticatedPage: page }) => {
     const fileInput = page.locator('input[type="file"]');
 
     // Create a file larger than 2MB
@@ -69,7 +67,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     ).toBeVisible({ timeout: 3000 });
   });
 
-  test('should upload valid image file', async ({ page }) => {
+  test('should upload valid image file', async ({ authenticatedPage: page }) => {
     const fileInput = page.locator('input[type="file"]');
 
     // Create a small valid JPEG file
@@ -87,7 +85,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test('should show Remove Photo button after upload', async ({ page }) => {
+  test('should show Remove Photo button after upload', async ({ authenticatedPage: page }) => {
     const fileInput = page.locator('input[type="file"]');
 
     // Upload a valid image
@@ -108,7 +106,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     await expect(removeButton).toBeVisible();
   });
 
-  test('should remove avatar when clicking Remove Photo', async ({ page }) => {
+  test('should remove avatar when clicking Remove Photo', async ({ authenticatedPage: page }) => {
     // First upload an image
     const fileInput = page.locator('input[type="file"]');
     const validBuffer = Buffer.from('fake jpeg data');
@@ -144,7 +142,7 @@ test.describe('Avatar Upload (BEA-322)', () => {
     expect(box!.width).toBeGreaterThanOrEqual(44);
   });
 
-  test('should disable buttons during upload', async ({ page }) => {
+  test('should disable buttons during upload', async ({ authenticatedPage: page }) => {
     const uploadButton = page.getByRole('button', { name: 'Upload Photo' });
 
     // Initially enabled
