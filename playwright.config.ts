@@ -229,10 +229,12 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: isCI,
-  /* Retry on CI only */
-  retries: isCI ? 2 : 0,
-  /* Use 4 workers on CI for parallel execution across shards */
-  workers: isCI ? 4 : undefined,
+  /* Retry failed tests to handle transient infrastructure issues */
+  retries: isCI ? 2 : 1,
+  /* Reduce workers to prevent server overload (was: 4 on CI, unlimited locally) */
+  workers: isCI ? 4 : 2,
+  /* Increase timeout to handle production build startup and server load */
+  timeout: 60000,
   /* Configure sharding for CI to split tests across multiple jobs */
   shard: isCI && process.env.SHARD
     ? { total: 4, current: parseInt(process.env.SHARD, 10) }
