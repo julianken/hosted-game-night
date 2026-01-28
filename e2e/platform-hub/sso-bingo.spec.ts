@@ -35,8 +35,8 @@ function generateTestEmail(): string {
 
 test.describe('Bingo → Platform Hub SSO', () => {
   test.describe('@critical OAuth Authorization Flow', () => {
-    // SKIPPED: Requires OAuth flow initiation from Bingo app and real redirect handling
-    test.skip('unauthenticated user redirected to Platform Hub login (SSO-001)', async ({ page }) => {
+    // ENABLED: Testing OAuth flow initiation from Bingo app
+    test('unauthenticated user redirected to Platform Hub login (SSO-001)', async ({ page }) => {
       // Start at Bingo home page
       await page.goto(BINGO_URL);
 
@@ -49,12 +49,13 @@ test.describe('Bingo → Platform Hub SSO', () => {
       // Should then redirect to login page (not authenticated)
       await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
-      // Should have redirect query parameter pointing back to OAuth consent
-      await expect(page).toHaveURL(/redirect=%2Foauth%2Fconsent/);
+      // Should have redirect query parameter pointing back to OAuth authorize endpoint
+      // Note: URL is double-encoded, so %2Fapi%2Foauth%2Fauthorize becomes %252Fapi%252Foauth%252Fauthorize
+      await expect(page).toHaveURL(/redirect=.*oauth.*authorize/);
     });
 
-    // SKIPPED: Requires complete OAuth flow with token exchange and authenticated session
-    test.skip('can complete OAuth flow from Bingo to Platform Hub (SSO-002)', async ({ page }) => {
+    // ENABLED: Testing complete OAuth flow with token exchange
+    test('can complete OAuth flow from Bingo to Platform Hub (SSO-002)', async ({ page }) => {
       // Start at Bingo home page
       await page.goto(BINGO_URL);
 
@@ -414,8 +415,8 @@ test.describe('Bingo → Platform Hub SSO', () => {
   });
 
   test.describe('@medium Error Handling', () => {
-    // SKIPPED: Requires OAuth callback handler and token exchange attempt with invalid code
-    test.skip('invalid authorization code shows error (SSO-008)', async ({ page }) => {
+    // ENABLED: Testing error handling for invalid authorization code
+    test('invalid authorization code shows error (SSO-008)', async ({ page }) => {
       // Manually navigate to callback with invalid code
       await page.goto(`${BINGO_URL}/auth/callback?code=invalid_code_12345&state=test_state`);
 
@@ -426,8 +427,8 @@ test.describe('Bingo → Platform Hub SSO', () => {
       await expect(page).toHaveURL(BINGO_URL, { timeout: 5000 });
     });
 
-    // SKIPPED: Requires OAuth callback handler with expired code detection
-    test.skip('expired authorization code shows error (SSO-009)', async ({ page }) => {
+    // ENABLED: Testing error handling for expired authorization code
+    test('expired authorization code shows error (SSO-009)', async ({ page }) => {
       // This test would require a real expired code from Platform Hub
       // For now, we test the error handling path by providing an invalid code
       // (In a real scenario, this would use a code that's genuinely expired)
