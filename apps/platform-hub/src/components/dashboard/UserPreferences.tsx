@@ -12,6 +12,14 @@ export interface UserPreferencesData {
   autoCallSpeed?: number;
   /** Default trivia category */
   defaultCategory?: string;
+  /** Email notifications enabled */
+  emailNotificationsEnabled?: boolean;
+  /** Game reminders enabled */
+  gameRemindersEnabled?: boolean;
+  /** Weekly summary enabled */
+  weeklySummaryEnabled?: boolean;
+  /** Marketing emails enabled */
+  marketingEmailsEnabled?: boolean;
 }
 
 export interface UserPreferencesProps extends HTMLAttributes<HTMLElement> {
@@ -27,6 +35,10 @@ const defaultPreferences: UserPreferencesData = {
   soundEnabled: true,
   autoCallSpeed: 5,
   defaultCategory: 'General Knowledge',
+  emailNotificationsEnabled: true,
+  gameRemindersEnabled: false,
+  weeklySummaryEnabled: false,
+  marketingEmailsEnabled: false,
 };
 
 /**
@@ -223,6 +235,121 @@ export const UserPreferences = forwardRef<HTMLElement, UserPreferencesProps>(
               }
               label="Trivia Category"
               value={prefs.defaultCategory || 'General Knowledge'}
+            />
+
+            {/* Email Notifications */}
+            <PreferenceItem
+              icon={
+                prefs.emailNotificationsEnabled ? (
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18 8L6 20M6 8l12 12"
+                    />
+                  </svg>
+                )
+              }
+              label="Email Notifications"
+              value={prefs.emailNotificationsEnabled ? 'Enabled' : 'Disabled'}
+              valueColor={prefs.emailNotificationsEnabled ? 'text-success' : 'text-muted-foreground'}
+            />
+
+            {/* Game Reminders */}
+            <PreferenceItem
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+              }
+              label="Game Reminders"
+              value={prefs.gameRemindersEnabled ? 'On' : 'Off'}
+              valueColor={prefs.gameRemindersEnabled ? 'text-success' : 'text-muted-foreground'}
+            />
+
+            {/* Weekly Summary */}
+            <PreferenceItem
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              }
+              label="Weekly Summary"
+              value={prefs.weeklySummaryEnabled ? 'On' : 'Off'}
+              valueColor={prefs.weeklySummaryEnabled ? 'text-success' : 'text-muted-foreground'}
+            />
+
+            {/* Marketing Emails */}
+            <PreferenceItem
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                  />
+                </svg>
+              }
+              label="Newsletter & Promotions"
+              value={prefs.marketingEmailsEnabled ? 'On' : 'Off'}
+              valueColor={prefs.marketingEmailsEnabled ? 'text-success' : 'text-muted-foreground'}
             />
           </div>
         )}

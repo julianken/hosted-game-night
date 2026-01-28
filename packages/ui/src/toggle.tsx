@@ -13,20 +13,30 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
   const id = useId();
 
   return (
-    <div className="flex items-center gap-3">
-      <button
+    <label
+      className={`
+        flex items-center gap-3 min-h-[44px] cursor-pointer
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+      `}
+    >
+      <input
+        type="checkbox"
         id={id}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        disabled={disabled}
+        className="sr-only peer"
+      />
+      <div
         role="switch"
         aria-checked={checked}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
         className={`
           relative inline-flex h-[44px] w-[80px] shrink-0
-          cursor-pointer items-center rounded-full
+          items-center rounded-full
           transition-colors duration-200
-          focus:outline-none focus:ring-4 focus:ring-primary/50
-          disabled:opacity-50 disabled:cursor-not-allowed
+          focus-within:ring-4 focus-within:ring-primary/50
           ${checked ? 'bg-accent' : 'bg-muted'}
+          ${disabled ? '' : 'peer-focus:ring-4 peer-focus:ring-primary/50'}
         `}
       >
         <span
@@ -36,16 +46,10 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
             ${checked ? 'translate-x-[40px]' : 'translate-x-[4px]'}
           `}
         />
-      </button>
-      <label
-        htmlFor={id}
-        className={`
-          text-lg font-medium cursor-pointer select-none
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-        `}
-      >
+      </div>
+      <span className="text-lg font-medium select-none">
         {label}
-      </label>
-    </div>
+      </span>
+    </label>
   );
 }

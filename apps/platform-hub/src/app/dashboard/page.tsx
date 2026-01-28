@@ -79,21 +79,39 @@ async function fetchRecentSessions(userId: string): Promise<GameSession[]> {
 /**
  * Fetch user profile data including avatar URL
  */
-async function fetchProfile(userId: string): Promise<{ avatarUrl: string | null }> {
+async function fetchProfile(userId: string): Promise<{
+  avatarUrl: string | null;
+  emailNotificationsEnabled: boolean;
+  gameRemindersEnabled: boolean;
+  weeklySummaryEnabled: boolean;
+  marketingEmailsEnabled: boolean;
+}> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('avatar_url')
+    .select('avatar_url, email_notifications_enabled, game_reminders_enabled, weekly_summary_enabled, marketing_emails_enabled')
     .eq('id', userId)
     .single();
 
   if (error) {
     console.error('Error fetching profile:', error);
-    return { avatarUrl: null };
+    return {
+      avatarUrl: null,
+      emailNotificationsEnabled: true,
+      gameRemindersEnabled: false,
+      weeklySummaryEnabled: false,
+      marketingEmailsEnabled: false,
+    };
   }
 
-  return { avatarUrl: data?.avatar_url || null };
+  return {
+    avatarUrl: data?.avatar_url || null,
+    emailNotificationsEnabled: data?.email_notifications_enabled ?? true,
+    gameRemindersEnabled: data?.game_reminders_enabled ?? false,
+    weeklySummaryEnabled: data?.weekly_summary_enabled ?? false,
+    marketingEmailsEnabled: data?.marketing_emails_enabled ?? false,
+  };
 }
 
 /**
@@ -216,7 +234,7 @@ export default async function DashboardPage() {
     const userName = E2E_TEST_EMAIL.split('@')[0];
     const recentTemplates = await fetchRecentTemplates();
 
-    // Fetch avatar for E2E user
+    // Fetch profile for E2E user (includes avatar + notification preferences)
     const profile = await fetchProfile(e2eUserId.value);
 
     return (
@@ -252,7 +270,14 @@ export default async function DashboardPage() {
           <RecentTemplates templates={recentTemplates} />
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8">
             <RecentSessions sessions={recentSessions} maxSessions={4} />
-            <UserPreferences />
+            <UserPreferences
+              preferences={{
+                emailNotificationsEnabled: profile.emailNotificationsEnabled,
+                gameRemindersEnabled: profile.gameRemindersEnabled,
+                weeklySummaryEnabled: profile.weeklySummaryEnabled,
+                marketingEmailsEnabled: profile.marketingEmailsEnabled,
+              }}
+            />
           </div>
         </div>
       </main>
@@ -277,7 +302,7 @@ export default async function DashboardPage() {
   const games = getGamesConfig(gameStats);
   const recentTemplates = await fetchRecentTemplates();
 
-  // Fetch user profile (including avatar)
+  // Fetch user profile (including avatar + notification preferences)
   const profile = await fetchProfile(user.id);
 
   // Extract user name from metadata or email
@@ -329,7 +354,14 @@ export default async function DashboardPage() {
           <RecentSessions sessions={recentSessions} maxSessions={4} />
 
           {/* User Preferences */}
-          <UserPreferences />
+          <UserPreferences
+            preferences={{
+              emailNotificationsEnabled: profile.emailNotificationsEnabled,
+              gameRemindersEnabled: profile.gameRemindersEnabled,
+              weeklySummaryEnabled: profile.weeklySummaryEnabled,
+              marketingEmailsEnabled: profile.marketingEmailsEnabled,
+            }}
+          />
         </div>
 
         {/* Help Section */}
