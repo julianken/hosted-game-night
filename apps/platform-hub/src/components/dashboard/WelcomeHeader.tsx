@@ -1,12 +1,15 @@
 'use client';
 
 import { HTMLAttributes, forwardRef } from 'react';
+import { Avatar } from '@/components/profile/Avatar';
 
 export interface WelcomeHeaderProps extends HTMLAttributes<HTMLElement> {
   /** User's display name */
   userName?: string;
   /** User's email (fallback if no display name) */
   userEmail?: string;
+  /** User's avatar URL */
+  avatarUrl?: string | null;
   /** Whether user data is loading */
   isLoading?: boolean;
 }
@@ -16,7 +19,7 @@ export interface WelcomeHeaderProps extends HTMLAttributes<HTMLElement> {
  * Designed for senior users with large, readable text.
  */
 export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
-  ({ userName, userEmail, isLoading = false, className = '', ...props }, ref) => {
+  ({ userName, userEmail, avatarUrl, isLoading = false, className = '', ...props }, ref) => {
     const getGreeting = () => {
       const hour = new Date().getHours();
       if (hour < 12) return 'Good Morning';
@@ -45,17 +48,25 @@ export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
               <div className="h-6 w-96 bg-muted/20 rounded-lg" />
             </div>
           ) : (
-            <>
-              <h1
-                id="welcome-heading"
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3"
-              >
-                {getGreeting()}, {displayName}!
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground">
-                Welcome to your Beak Gaming dashboard. Ready to play?
-              </p>
-            </>
+            <div className="flex items-center gap-6">
+              <Avatar
+                src={avatarUrl}
+                name={displayName}
+                size="xl"
+                alt={`${displayName}'s avatar`}
+              />
+              <div className="flex-1">
+                <h1
+                  id="welcome-heading"
+                  className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3"
+                >
+                  {getGreeting()}, {displayName}!
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground">
+                  Welcome to your Beak Gaming dashboard. Ready to play?
+                </p>
+              </div>
+            </div>
           )}
         </div>
 

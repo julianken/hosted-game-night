@@ -50,6 +50,26 @@ async function fetchRecentSessions(userId: string): Promise<GameSession[]> {
 }
 
 /**
+ * Fetch user profile data including avatar URL
+ */
+async function fetchProfile(userId: string): Promise<{ avatarUrl: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching profile:', error);
+    return { avatarUrl: null };
+  }
+
+  return { avatarUrl: data?.avatar_url || null };
+}
+
+/**
  * Calculate game statistics from recent sessions
  */
 function calculateGameStats(sessions: GameSession[]) {
@@ -168,10 +188,17 @@ export default async function DashboardPage() {
     const games = getGamesConfig(gameStats);
     const userName = E2E_TEST_EMAIL.split('@')[0];
 
+    // Fetch avatar for E2E user
+    const profile = await fetchProfile(e2eUserId.value);
+
     return (
       <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
         <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
-          <WelcomeHeader userName={userName} userEmail={E2E_TEST_EMAIL} />
+          <WelcomeHeader
+            userName={userName}
+            userEmail={E2E_TEST_EMAIL}
+            avatarUrl={profile.avatarUrl}
+          />
           <section aria-labelledby="games-heading">
             <h2
               id="games-heading"
@@ -220,6 +247,9 @@ export default async function DashboardPage() {
   const gameStats = calculateGameStats(recentSessions);
   const games = getGamesConfig(gameStats);
 
+  // Fetch user profile (including avatar)
+  const profile = await fetchProfile(user.id);
+
   // Extract user name from metadata or email
   const userName =
     user.user_metadata?.full_name ||
@@ -230,7 +260,11 @@ export default async function DashboardPage() {
     <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         {/* Welcome Header */}
-        <WelcomeHeader userName={userName} userEmail={user.email || ''} />
+        <WelcomeHeader
+          userName={userName}
+          userEmail={user.email || ''}
+          avatarUrl={profile.avatarUrl}
+        />
 
         {/* Quick Access Games Section */}
         <section aria-labelledby="games-heading">
