@@ -90,7 +90,7 @@ export function ControlPanel({
           variant="secondary"
           size="md"
           onClick={onUndo}
-          disabled={!canUndo}
+          disabled={!canUndo || isProcessing}
         >
           Undo
           <span className="ml-1 text-sm opacity-75">[U]</span>

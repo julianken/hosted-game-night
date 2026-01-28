@@ -210,6 +210,12 @@ test.describe('Bingo Presenter View', () => {
       expect(parseInt(countText || '0')).toBeGreaterThanOrEqual(2);
     }).toPass({ timeout: 10000 });
 
+    // Wait for audio processing to complete before clicking Undo
+    await expect(async () => {
+      const processing = await rollButton.getAttribute('data-processing');
+      expect(processing).toBe('false');
+    }).toPass({ timeout: 10000 });
+
     // Find undo button
     const undoButton = page.getByRole('button', { name: /undo/i });
 
