@@ -74,6 +74,112 @@ describe('parseJsonQuestions', () => {
     expect(result.errors[0].message).toContain('must be an array');
   });
 
+  it('should accept options as alias for optionTexts', () => {
+    const content = JSON.stringify([
+      {
+        text: 'Who directed Oppenheimer?',
+        options: ['Nolan', 'Spielberg', 'Scorsese', 'Tarantino'],
+        correctAnswers: ['A'],
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(true);
+    expect(result.questions).toHaveLength(1);
+    expect(result.questions[0].optionTexts).toEqual(['Nolan', 'Spielberg', 'Scorsese', 'Tarantino']);
+  });
+
+  it('should resolve full-text correct answer to letter label', () => {
+    const content = JSON.stringify([
+      {
+        text: 'Who directed Oppenheimer?',
+        optionTexts: ['Nolan', 'Spielberg', 'Scorsese', 'Tarantino'],
+        correctAnswer: 'Nolan',
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(true);
+    expect(result.questions[0].correctAnswers).toEqual(['A']);
+  });
+
+  it('should resolve full-text correct answer case-insensitively', () => {
+    const content = JSON.stringify([
+      {
+        text: 'Who directed Oppenheimer?',
+        optionTexts: ['Nolan', 'Spielberg', 'Scorsese', 'Tarantino'],
+        correctAnswer: 'nolan',
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(true);
+    expect(result.questions[0].correctAnswers).toEqual(['A']);
+  });
+
+  it('should error on non-matching full-text correct answer', () => {
+    const content = JSON.stringify([
+      {
+        text: 'Who directed Oppenheimer?',
+        optionTexts: ['Nolan', 'Spielberg', 'Scorsese', 'Tarantino'],
+        correctAnswer: 'Kubrick',
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(false);
+    expect(result.errors.some((e) => e.field === 'correctAnswers' && e.message.includes('Kubrick'))).toBe(true);
+  });
+
+  it('should handle mixed letter labels and full-text answers in same batch', () => {
+    const content = JSON.stringify([
+      {
+        text: 'Q1',
+        optionTexts: ['Alpha', 'Beta', 'Gamma', 'Delta'],
+        correctAnswers: ['A'],
+        roundIndex: 0,
+      },
+      {
+        text: 'Q2',
+        optionTexts: ['Red', 'Blue', 'Green', 'Yellow'],
+        correctAnswer: 'Blue',
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(true);
+    expect(result.questions).toHaveLength(2);
+    expect(result.questions[0].correctAnswers).toEqual(['A']);
+    expect(result.questions[1].correctAnswers).toEqual(['B']);
+  });
+
+  it('should accept options alias combined with full-text correct answer', () => {
+    const content = JSON.stringify([
+      {
+        text: 'What color is the sky?',
+        options: ['Red', 'Blue', 'Green', 'Yellow'],
+        correctAnswer: 'Blue',
+        roundIndex: 0,
+      },
+    ]);
+
+    const result = parseJsonQuestions(content);
+
+    expect(result.success).toBe(true);
+    expect(result.questions[0].optionTexts).toEqual(['Red', 'Blue', 'Green', 'Yellow']);
+    expect(result.questions[0].correctAnswers).toEqual(['B']);
+  });
+
   it('should report validation errors', () => {
     const content = JSON.stringify([
       {

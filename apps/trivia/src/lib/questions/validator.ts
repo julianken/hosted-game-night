@@ -112,6 +112,9 @@ function validateSingleJsonQuestion(
 
   if (raw.optionTexts && Array.isArray(raw.optionTexts) && raw.optionTexts.length > 0) {
     optionTexts = raw.optionTexts;
+  } else if (raw.options && Array.isArray(raw.options) && raw.options.length > 0) {
+    // Accept `options` as alias for `optionTexts` (natural for AI-generated output)
+    optionTexts = raw.options;
   } else if (raw.optionA !== undefined) {
     // Support individual option fields
     optionTexts = [
@@ -173,13 +176,31 @@ function validateSingleJsonQuestion(
       value: correctAnswers,
     });
   } else {
-    // Validate each answer is valid
+    // Resolve and validate each answer
+    correctAnswers = correctAnswers.map((answer) => {
+      // If it's already a valid letter label, use as-is
+      if (isValidCorrectAnswer(answer)) {
+        return answer;
+      }
+      // Try to resolve full-text answer against optionTexts (case-insensitive)
+      const lowerAnswer = answer.toLowerCase();
+      const matchIndex = optionTexts.findIndex(
+        (opt) => opt.toLowerCase() === lowerAnswer
+      );
+      if (matchIndex >= 0) {
+        const labels = ['A', 'B', 'C', 'D'];
+        return labels[matchIndex];
+      }
+      // No match found — will be caught by validation below
+      return answer;
+    });
+
     correctAnswers.forEach((answer) => {
       if (!isValidCorrectAnswer(answer)) {
         errors.push({
           row,
           field: 'correctAnswers',
-          message: `Invalid correct answer "${answer}". Must be A, B, C, D, True, or False`,
+          message: `Invalid correct answer "${answer}". Must be A, B, C, D, True, False, or match an option text`,
           value: answer,
         });
       }
