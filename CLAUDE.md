@@ -4,344 +4,100 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-# 🚨 CRITICAL: Workflow 🚨
+## Instructions
 
-## ⚠️ YOU MUST USE `Skill(subagent-workflow)` FOR ALL MULTI-STEP WORK ⚠️
+**Workflow:** Use `Skill(subagent-workflow)` for ALL multi-step work. Skip only for single-line fixes, pure research, or reading files. Full details: `.claude/skills/subagent-workflow/SKILL.md`
 
-**THIS IS NOT OPTIONAL. THIS IS THE CORE WORKFLOW.**
+**Issue Tracking:** This project uses **Linear** (BEA-### format), NOT GitHub Issues. Use `mcp__linear-server__*` tools for all issue operations. Never use GitHub issue tools.
 
-### When to Use (ALWAYS for multi-step work)
+**E2E Testing:** All code must pass E2E tests locally before committing (GitHub Actions are disabled). Run `pnpm test:e2e` and check `pnpm test:e2e:summary`. See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md).
 
-✅ **ANY task with implementation plan**
-✅ **ANY task with multiple steps**
-✅ **ANY coding work beyond trivial single-line fixes**
+**Development Model:** This project is developed exclusively with AI agents. Never include time estimates, effort estimates, team size assumptions, or timeline projections. Focus on dependencies, complexity, scope, and completion status.
 
-### The Workflow Enforces
+**PRs:** All pull requests MUST use the template at `.github/PULL_REQUEST_TEMPLATE.md` (includes Five-Level Explanation).
 
-1. **Linear Integration** - Query Linear for issue context BEFORE starting work
-2. **Parallel Task Execution** - Run independent tasks concurrently in separate worktrees
-3. **Sequential Per-Task Reviews** - Each task goes through: Implementer → Spec Review → Quality Review
-4. **Status Tracking** - Update Linear at every stage (Backlog → Todo → In Progress → In Review → Done)
-5. **PR Mechanics** - Create PRs, get reviews, merge in dependency order
-
-### Skip ONLY for
-
-❌ Single-line typo fixes
-❌ Pure research tasks (no code changes)
-❌ Reading files to answer questions
-
-**Everything else MUST use `Skill(subagent-workflow)`.**
-
-### Quick Reference
-
-```bash
-# Invoke the skill
-Skill(subagent-workflow)
-
-# The skill will guide you through:
-# Step 0: GET WORK FROM LINEAR (mandatory)
-# Step 1: Plan parallel work
-# Step 2: Create git worktrees (isolation)
-# Step 3: Dispatch implementer agents
-# Step 4: Dispatch spec reviewers
-# Step 5: Dispatch quality reviewers
-# Step 6: Merge and integrate
-```
-
-### Why This Matters
-
-- **Quality:** Two-stage review (spec + quality) catches issues early
-- **Traceability:** Linear integration provides full audit trail
-- **Speed:** Parallel execution is faster than sequential
-- **Isolation:** Worktrees prevent conflicts
-- **Discipline:** Prevents rushed, incomplete work
-
-**Full details:** `.claude/skills/subagent-workflow/SKILL.md` (693 lines)
+**Pre-Commit Hooks:** Husky + lint-staged run `pnpm lint`, `pnpm typecheck`, and `pnpm test:run` on changed packages. Bypass with `--no-verify` when needed.
 
 ---
 
-# 🚨 CRITICAL: E2E Testing 🚨
-
-## ⚠️ ALL CODE MUST PASS E2E TESTS LOCALLY BEFORE COMMITTING ⚠️
-
-**GitHub Actions are DISABLED to avoid billing costs. Local E2E validation is MANDATORY.**
-
-```bash
-pnpm test:e2e              # Build apps + run all tests
-pnpm test:e2e:summary      # Show pass/fail counts (ALWAYS check this)
-```
-
-**If E2E tests fail: DO NOT COMMIT. Fix the code first.**
-
-See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md) for full details: commands, checklist, port isolation, troubleshooting, and workflow integration.
-
----
-
-## Project Overview
+## Project Context
 
 **Beak Gaming Platform** - A unified gaming platform for retirement communities, featuring Bingo, Trivia, and future games. Built as a Turborepo monorepo with shared packages.
 
-## ⚠️ CRITICAL: Development Model
+**Design:** Senior-friendly (min 18px body, high contrast, 44x44px touch targets). Audience display optimized for projector/large TV.
 
-**This project is developed EXCLUSIVELY with AI agents (Claude Code).**
-
-**NEVER include:**
-- ❌ Time estimates (weeks, days, hours, sprints)
-- ❌ Effort estimates (man-hours, engineer-days)
-- ❌ Team size assumptions (number of developers)
-- ❌ Timeline projections ("Week 1-2", "Phase 1: 3 weeks")
-- ❌ Resource planning ("1 frontend dev + 1 backend dev")
-
-**Why:** All work is done by AI agents, not human developers on schedules. Time-based planning is meaningless in this context.
-
-**Instead, focus on:**
-- ✅ Dependencies (what blocks what)
-- ✅ Complexity (simple, medium, complex)
-- ✅ Scope (number of tasks)
-- ✅ Critical path (order of execution)
-- ✅ Completion status (done vs. remaining)
-
-## 🚨 CRITICAL: Issue Tracking 🚨
-
-**THIS PROJECT USES LINEAR FOR ISSUE TRACKING - NOT GITHUB ISSUES**
-
-### ❌ NEVER Use GitHub Issues
-
-- ❌ DO NOT search GitHub issues (`mcp__plugin_github_github__search_issues`)
-- ❌ DO NOT create GitHub issues (`mcp__plugin_github_github__issue_write`)
-- ❌ DO NOT list GitHub issues (`mcp__plugin_github_github__list_issues`)
-
-### ✅ ALWAYS Use Linear MCP
-
-When asked about issues, tasks, or work tracking:
-
-```bash
-# List open issues
-mcp__linear-server__list_issues
-
-# Get issue details
-mcp__linear-server__get_issue
-
-# Create new issue
-mcp__linear-server__create_issue
-
-# Update existing issue
-mcp__linear-server__update_issue
-```
-
-### Issue Identifier Format
-
-Linear issues use the format: `BEA-###` (e.g., BEA-319, BEA-320)
-
-**NOT GitHub format:** `#123` or `owner/repo#123`
-
-### Why This Matters
-
-- **All project tracking is in Linear** - GitHub issues are not monitored
-- **Issue references in code** use Linear IDs (BEA-###)
-- **Workflow integration** is with Linear, not GitHub
-
-## Current State
+### Current State
 
 | App/Package | Status | Notes |
 |-------------|--------|-------|
-| `apps/bingo` | **✅ Production Ready (85%)** | Full 75-ball bingo with 29 patterns, audio, themes, dual-screen, PWA, OAuth auth, template CRUD API |
-| `apps/trivia` | **✅ Production Ready (95%)** | Full trivia with 20 questions, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth auth, CSV import |
-| `apps/platform-hub` | **⚠️ Backend Complete (55-60%)** | OAuth 2.1 server complete (3,479 lines), CORS, rate limiting, request size limits, security hardening. Game selector UI complete. Missing features tracked as BEA-319 to BEA-329: password reset token page, session timeout, theme switching, avatar upload, template list/selector UI, PWA support |
-| `packages/sync` | **✅ Complete (100%)** | BroadcastChannel sync, Zustand store, React hook. Actively used in Bingo/Trivia |
-| `packages/ui` | **⚠️ Partial (88%)** | 15 components. Missing from package: Card, Toast (Toast duplicated in apps instead) |
-| `packages/theme` | **✅ Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
-| `packages/game-engine` | **⚠️ Partial (40%)** | Base GameStatus type, transition functions, statistics module |
-| `packages/auth` | **✅ Complete (95%)** | 30 exports: AuthProvider, hooks (useAuth, useSession, useUser), ProtectedRoute, client wrappers. Not integrated in Bingo/Trivia (apps have duplicate OAuth clients) |
-| `packages/database` | **✅ Complete (98%)** | 212 exports: type-safe client, CRUD, pagination, filters, React hooks, session tokens, PIN security (PBKDF2), API factories. Used in Bingo/Trivia |
-| `packages/testing` | **✅ Complete (100%)** | BroadcastChannel and Audio mocks for tests |
-| `packages/types` | **✅ Complete** | Shared TypeScript type definitions |
-| `packages/error-tracking` | **Complete** | Error logging and tracking utilities |
+| `apps/bingo` | **Production Ready (85%)** | 75-ball bingo, 29 patterns, audio, themes, dual-screen, PWA, OAuth |
+| `apps/trivia` | **Production Ready (95%)** | Trivia, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth, CSV import |
+| `apps/platform-hub` | **Backend Complete (55-60%)** | OAuth 2.1 server, CORS, rate limiting, security. Missing: BEA-319 to BEA-329 |
+| `packages/sync` | **Complete (100%)** | BroadcastChannel sync, Zustand store, React hook |
+| `packages/ui` | **Partial (88%)** | 15 components. Missing: Card, Toast |
+| `packages/theme` | **Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
+| `packages/game-engine` | **Partial (40%)** | Base GameStatus type, transition functions, statistics |
+| `packages/auth` | **Complete (95%)** | AuthProvider, hooks, ProtectedRoute. Not integrated in apps yet |
+| `packages/database` | **Complete (98%)** | Type-safe client, CRUD, pagination, hooks, PIN security, API factories |
+| `packages/testing` | **Complete (100%)** | BroadcastChannel and Audio mocks |
+| `packages/types` | **Complete** | Shared TypeScript types |
+| `packages/error-tracking` | **Complete** | Error logging and tracking |
 
-## Monorepo Structure
+### Tech Stack
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full monorepo tree, BFF pattern, dual-screen system, and game engine pattern.
+Turborepo + pnpm 9.15 | Next.js 16 (App Router) | React 19 + Tailwind CSS 4 | Zustand 5 | Supabase (PostgreSQL) | Vitest 4 + Testing Library
 
-## Tech Stack
+---
 
-- **Monorepo:** Turborepo + pnpm 9.15
-- **Framework:** Next.js 16 (App Router)
-- **Frontend:** React 19 + Tailwind CSS 4
-- **State:** Zustand 5
-- **Database:** Supabase (PostgreSQL)
-- **Testing:** Vitest 4 + Testing Library
+## Reference
 
-## AI Assistant Configuration
-
-**Context7 MCP:** Automatically use Context7 for up-to-date documentation when working with these libraries. You don't need to explicitly ask - Context7 should be invoked automatically when you need API references, setup guides, or code examples.
-
-### Core Framework & Frontend
-- **Next.js** (v16.1.3) - App Router, Server Components, API routes, middleware, caching
-- **React** (v19.2.3) - Hooks, Server Components, use client/server directives
-- **React DOM** (v19.2.3) - Client/server rendering
-- **Tailwind CSS** (v4) - Utilities, configuration, plugins
-- **TypeScript** (v5.7.0) - Type system, compiler options
-
-### Database & Auth
-- **Supabase JS** (@supabase/supabase-js v2.90.1) - Database client, auth, realtime
-- **Supabase SSR** (@supabase/ssr v0.8.0) - Server-side auth, cookies, sessions
-- **Supabase PostgREST** (@supabase/postgrest-js v1.19.4) - Query builder, filters
-
-### State Management
-- **Zustand** (v5.0.10) - Store creation, persistence, middleware
-
-### Testing
-- **Vitest** (v4.0.17) - Test runner, mocking, coverage
-- **Testing Library React** (v16.3.1) - Component testing, queries, events
-- **Testing Library Jest DOM** (v6.9.1) - DOM matchers
-- **Playwright** (v1.57.0) - E2E testing, browser automation
-- **vitest-axe** (v0.1.0) - Accessibility testing
-- **jsdom** (v27.4.0) - DOM environment for tests
-
-### PWA & Service Workers
-- **Serwist** (v9.5.0) - Service worker generation, caching strategies
-- **@serwist/next** (v9.5.0) - Next.js integration
-
-### Build Tools & Monorepo
-- **Turborepo** (v2.3.0) - Task orchestration, caching
-- **pnpm** (v9.15.0) - Package manager, workspace protocol
-- **ESLint** (v9) - Linting rules, plugins
-- **@typescript-eslint** (v8.33.0) - TypeScript ESLint rules
-
-### UI Components & Accessibility
-- **React Aria Components** (v1.14.0) - Accessible UI primitives
-
-### Utilities
-- **uuid** (v13.0.0) - UUID generation
-- **web-vitals** (v5.1.0) - Performance metrics
-
-## Commands
+### Commands
 
 ```bash
 pnpm install              # Install dependencies
-pnpm dev                  # Run all apps
-pnpm dev:bingo            # Run bingo only
-pnpm dev:trivia           # Run trivia only
-pnpm dev:hub              # Run platform-hub only
+pnpm dev                  # Run all apps (dev:bingo, dev:trivia, dev:hub for individual)
 pnpm build                # Build all apps and packages
-pnpm test                 # Run all tests
+pnpm test                 # Run all tests (test:run for single run, test:coverage for coverage)
 pnpm lint                 # Lint all apps and packages
 pnpm clean                # Clean all build artifacts
+pnpm test:e2e             # Build + run E2E tests
+pnpm test:e2e:summary     # Show E2E pass/fail counts
 ```
 
-### Running Tests
-
-```bash
-# From app directory (e.g., apps/bingo)
-pnpm test                 # Watch mode
-pnpm test:run             # Single run
-pnpm test:coverage        # With coverage report
-
-# Run specific test file
-pnpm vitest src/lib/game/__tests__/engine.test.ts
-```
-
-### Pre-Commit Hooks
-
-**Automatic Quality Checks:** Husky + lint-staged run checks on every commit to catch issues early.
-
-**What runs automatically:**
-- `pnpm lint` - ESLint checks on changed packages
-- `pnpm typecheck` - TypeScript type checking on changed packages
-- `pnpm test:run` - Unit tests on changed packages
-
-**Why:** GitHub Actions were disabled to avoid billing overages. Pre-commit hooks replace CI checks with local validation.
-
-**Bypass when needed:**
-```bash
-git commit --no-verify -m "WIP: bypass hooks for work-in-progress"
-```
-
-**How it works:**
-- Uses Turborepo's `--filter=[HEAD^1]` to only check changed packages
-- Turbo's caching makes repeated runs instant
-- Build validation still happens in Vercel CI (free unlimited builds)
-
-**Configuration:**
-- Hooks: `.husky/pre-commit`
-- Lint-staged: `.lintstagedrc.js`
-- Installed via: `prepare` script in `package.json` (runs automatically on `pnpm install`)
-
-## Architecture
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for BFF pattern, dual-screen system, game engine pattern, and app structure.
-
-See [docs/APP_STRUCTURE.md](docs/APP_STRUCTURE.md) for canonical `lib/` layout with common vs app-specific directories.
-
-## Middleware Patterns
-
-See [docs/MIDDLEWARE_PATTERNS.md](docs/MIDDLEWARE_PATTERNS.md) for critical Next.js middleware rules (lazy initialization, JWKS caching).
-
-## Design Requirements
-
-- **Senior-friendly:** Large fonts (min 18px body), high contrast, large click targets (min 44x44px)
-- **Audience display:** Optimized for projector/large TV, readable from back of room
-- **Keyboard shortcuts:** See app-specific CLAUDE.md files for keyboard shortcuts
-
-## Keyboard Shortcuts
-
-### Bingo
-| Key | Action |
-|-----|--------|
-| Space | Roll next ball |
-| P | Pause/Resume |
-| R | Reset game |
-| U | Undo last call |
-| M | Mute audio |
-
-### Trivia
-| Key | Action |
-|-----|--------|
-| Arrow Up/Down | Navigate questions |
-| Space | Peek answer (local only) |
-| D | Toggle display question |
-| P | Pause/Resume |
-| E | Emergency pause |
-| R | Reset game |
-
-## Environment Variables
+### Environment Variables
 
 Create `.env.local` in each app:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Session Token Secret (for HMAC-signed JWT tokens)
-# Generate with: openssl rand -hex 32
-SESSION_TOKEN_SECRET=your-64-character-hex-string
-
-# Redis (Optional - platform-hub only, for production rate limiting)
-# Required for multi-instance deployments to share rate limit state
-# If not set, rate limiting falls back to in-memory (single instance only)
-# Get from: https://console.upstash.com/
-REDIS_URL=https://your-redis-instance.upstash.io
-REDIS_TOKEN=your-redis-token
+SESSION_TOKEN_SECRET=your-64-character-hex-string  # openssl rand -hex 32
+# Optional (platform-hub only): REDIS_URL, REDIS_TOKEN (Upstash, for production rate limiting)
 ```
 
-## Pull Request Template
+### AI Assistant Configuration
 
-**IMPORTANT:** All pull requests MUST use the template at `.github/PULL_REQUEST_TEMPLATE.md`.
+**Context7 MCP:** Automatically use Context7 for up-to-date documentation. Key libraries and versions:
 
-When creating PRs:
-1. Read the template file first: `.github/PULL_REQUEST_TEMPLATE.md`
-2. Fill in all required sections (Five-Level Explanation is mandatory)
-3. Complete the Testing checklist
-4. Add diagrams/screenshots if relevant
+- **Next.js** (v16.1.3) - App Router, Server Components, API routes, middleware
+- **React** (v19.2.3) / **React DOM** (v19.2.3) - Hooks, Server Components
+- **Tailwind CSS** (v4) - Utilities, configuration, plugins
+- **TypeScript** (v5.7.0) - Type system, compiler options
+- **Supabase JS** (v2.90.1) / **SSR** (v0.8.0) / **PostgREST** (v1.19.4)
+- **Zustand** (v5.0.10) - Store creation, persistence, middleware
+- **Vitest** (v4.0.17) / **Testing Library React** (v16.3.1) / **Playwright** (v1.57.0)
+- **Serwist** (v9.5.0) / **@serwist/next** (v9.5.0) - PWA, service workers
+- **React Aria Components** (v1.14.0) - Accessible UI primitives
+- **Turborepo** (v2.3.0) / **pnpm** (v9.15.0) / **ESLint** (v9)
 
-The template includes:
-- Human Summary (2-4 bullets)
-- Five-Level Explanation (required: non-technical → deep technical)
-- Changes, Testing, Risk/Impact, Notes for Reviewers
+---
 
-## App-Specific Context
+## Docs & App-Specific Context
 
-Each app has its own CLAUDE.md with detailed context:
-- `apps/bingo/CLAUDE.md` - 75-ball bingo, 29 patterns, game mechanics
-- `apps/trivia/CLAUDE.md` - Team trivia, rounds, scoring (15 sample questions)
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Monorepo structure, BFF pattern, dual-screen system, game engine
+- [docs/APP_STRUCTURE.md](docs/APP_STRUCTURE.md) - Canonical `lib/` layout
+- [docs/MIDDLEWARE_PATTERNS.md](docs/MIDDLEWARE_PATTERNS.md) - Next.js middleware rules (lazy init, JWKS caching)
+- [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md) - E2E commands, checklist, port isolation, troubleshooting
+- `apps/bingo/CLAUDE.md` - 75-ball bingo, 29 patterns, game mechanics, keyboard shortcuts
+- `apps/trivia/CLAUDE.md` - Team trivia, rounds, scoring, keyboard shortcuts
 - `apps/platform-hub/CLAUDE.md` - Auth, game selector, dashboard
