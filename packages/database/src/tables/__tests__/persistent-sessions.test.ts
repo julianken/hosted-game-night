@@ -23,7 +23,6 @@ function createMockSession(overrides: Partial<GameSession> = {}): GameSession {
     room_code: 'ABC123',
     session_id: 'sess_abc123',
     game_type: 'bingo',
-    template_id: null,
     preset_id: null,
     question_set_id: null,
     pin_hash: 'hashed-pin',
@@ -144,7 +143,6 @@ describe('Persistent Sessions CRUD', () => {
 
     it('creates a session with optional fields', async () => {
       const mockSession = createMockSession({
-        template_id: 'template-123',
         user_id: 'user-456',
         game_state: { currentBall: 42 },
       });
@@ -156,14 +154,12 @@ describe('Persistent Sessions CRUD', () => {
         game_type: 'bingo',
         pin_hash: 'hashed-pin',
         pin_salt: 'salt-value',
-        template_id: 'template-123',
         user_id: 'user-456',
         game_state: { currentBall: 42 },
       };
 
       const result = await createGameSession(mockClient, insertData);
 
-      expect(result.template_id).toBe('template-123');
       expect(result.user_id).toBe('user-456');
       expect(result.game_state).toEqual({ currentBall: 42 });
     });

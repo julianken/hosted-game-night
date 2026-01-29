@@ -40,15 +40,7 @@ export {
   type ProfileInsert,
   type ProfileUpdate,
 
-  // Bingo template types
-  type BingoTemplate,
-  type BingoTemplateInsert,
-  type BingoTemplateUpdate,
-
-  // Trivia template types
-  type TriviaTemplate,
-  type TriviaTemplateInsert,
-  type TriviaTemplateUpdate,
+  // Trivia question type (shared by question sets)
   type TriviaQuestion,
 
   // Bingo preset types
@@ -73,8 +65,6 @@ export {
 
   // Type guards
   isProfile,
-  isBingoTemplate,
-  isTriviaTemplate,
   isGameSession,
 
   // Preset type guards
@@ -205,48 +195,9 @@ export {
   hasProfile,
   type ProfileWithStats,
 
-  // Bingo Templates
-  getBingoTemplate,
-  listBingoTemplates,
-  listAllBingoTemplates,
-  getDefaultBingoTemplate,
-  createBingoTemplate,
-  updateBingoTemplate,
-  deleteBingoTemplate,
-  setDefaultBingoTemplate,
-  duplicateBingoTemplate,
-  userOwnsBingoTemplate,
-  countBingoTemplates,
-  BINGO_TEMPLATE_SEARCH_COLUMNS,
+  // Bingo Presets
   AUTO_CALL_INTERVAL_MIN,
   AUTO_CALL_INTERVAL_MAX,
-
-  // Trivia Templates
-  getTriviaTemplate,
-  listTriviaTemplates,
-  listAllTriviaTemplates,
-  getDefaultTriviaTemplate,
-  createTriviaTemplate,
-  updateTriviaTemplate,
-  deleteTriviaTemplate,
-  setDefaultTriviaTemplate,
-  duplicateTriviaTemplate,
-  addQuestions,
-  removeQuestion,
-  updateQuestion,
-  reorderQuestions,
-  userOwnsTriviaTemplate,
-  countTriviaTemplates,
-  getTotalQuestionCount,
-  TRIVIA_TEMPLATE_SEARCH_COLUMNS,
-  ROUNDS_COUNT_MIN,
-  ROUNDS_COUNT_MAX,
-  QUESTIONS_PER_ROUND_MIN,
-  QUESTIONS_PER_ROUND_MAX,
-  TIMER_DURATION_MIN,
-  TIMER_DURATION_MAX,
-
-  // Bingo Presets
   getBingoPreset,
   listBingoPresets,
   listAllBingoPresets,

@@ -24,8 +24,8 @@ import type { PaginatedResult } from '../pagination';
 
 export const BINGO_PRESET_SEARCH_COLUMNS = ['name', 'pattern_id', 'voice_pack'];
 
-const AUTO_CALL_INTERVAL_MIN = 1000;
-const AUTO_CALL_INTERVAL_MAX = 30000;
+export const AUTO_CALL_INTERVAL_MIN = 1000;
+export const AUTO_CALL_INTERVAL_MAX = 30000;
 
 // =============================================================================
 // Validation

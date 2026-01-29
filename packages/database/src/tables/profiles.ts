@@ -12,8 +12,8 @@ import { getById, update as genericUpdate } from '../queries';
 // =============================================================================
 
 export interface ProfileWithStats extends Profile {
-  bingo_templates_count?: number;
-  trivia_templates_count?: number;
+  bingo_presets_count?: number;
+  trivia_presets_count?: number;
 }
 
 // =============================================================================
@@ -50,7 +50,7 @@ export async function getProfile(
 }
 
 /**
- * Gets a profile with template counts
+ * Gets a profile with preset counts
  */
 export async function getProfileWithStats(
   client: TypedSupabaseClient,
@@ -62,12 +62,12 @@ export async function getProfileWithStats(
     const [profile, bingoCount, triviaCount] = await Promise.all([
       getById(client, 'profiles', id),
       client
-        .from('bingo_templates')
+        .from('bingo_presets')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id)
         .then(({ count }) => count ?? 0),
       client
-        .from('trivia_templates')
+        .from('trivia_presets')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id)
         .then(({ count }) => count ?? 0),
@@ -75,8 +75,8 @@ export async function getProfileWithStats(
 
     return {
       ...profile,
-      bingo_templates_count: bingoCount,
-      trivia_templates_count: triviaCount,
+      bingo_presets_count: bingoCount,
+      trivia_presets_count: triviaCount,
     };
   });
 }

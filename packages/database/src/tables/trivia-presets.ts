@@ -17,18 +17,16 @@ import {
 } from '../queries';
 import { filters } from '../filters';
 import type { PaginatedResult } from '../pagination';
-import {
-  ROUNDS_COUNT_MIN,
-  ROUNDS_COUNT_MAX,
-  QUESTIONS_PER_ROUND_MIN,
-  QUESTIONS_PER_ROUND_MAX,
-  TIMER_DURATION_MIN,
-  TIMER_DURATION_MAX,
-} from './trivia-templates';
-
 // =============================================================================
 // Constants
 // =============================================================================
+
+export const ROUNDS_COUNT_MIN = 1;
+export const ROUNDS_COUNT_MAX = 20;
+export const QUESTIONS_PER_ROUND_MIN = 1;
+export const QUESTIONS_PER_ROUND_MAX = 50;
+export const TIMER_DURATION_MIN = 5;
+export const TIMER_DURATION_MAX = 300;
 
 export const TRIVIA_PRESET_SEARCH_COLUMNS = ['name'];
 

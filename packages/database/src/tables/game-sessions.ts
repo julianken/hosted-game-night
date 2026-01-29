@@ -43,7 +43,6 @@ export type SessionStatus = 'pending' | 'active' | 'paused' | 'completed' | 'can
 export interface GameSession {
   id: string;
   game_type: GameType;
-  template_id: string | null;
   user_id: string;
   status: SessionStatus;
   started_at: string | null;
@@ -55,7 +54,6 @@ export interface GameSession {
 
 export interface GameSessionInsert {
   game_type: GameType;
-  template_id?: string | null;
   user_id: string;
   status?: SessionStatus;
   metadata?: Record<string, unknown>;
@@ -114,7 +112,6 @@ export function createLocalSession(data: GameSessionInsert): GameSession {
   const session: GameSession = {
     id: generateSessionId(),
     game_type: data.game_type,
-    template_id: data.template_id ?? null,
     user_id: data.user_id,
     status: data.status ?? 'pending',
     started_at: null,

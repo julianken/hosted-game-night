@@ -38,7 +38,6 @@ function createMockSession(overrides: Partial<GameSession> = {}): GameSession {
     room_code: 'ABC123',
     session_id: 'sess_abc123',
     game_type: 'bingo',
-    template_id: null,
     preset_id: null,
     question_set_id: null,
     pin_hash: 'a'.repeat(64),
@@ -464,11 +463,9 @@ describe('Type Safety', () => {
       game_type: 'bingo',
       pin_hash: 'hash',
       pin_salt: 'salt',
-      template_id: 'template-123',
       user_id: 'user-456',
       game_state: { customField: true },
     };
-    expect(insert.template_id).toBe('template-123');
     expect(insert.user_id).toBe('user-456');
     expect(insert.game_state).toEqual({ customField: true });
   });

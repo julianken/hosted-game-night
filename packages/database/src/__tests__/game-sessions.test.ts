@@ -61,12 +61,10 @@ describe('local session store', () => {
       const session = createLocalSession({
         game_type: 'trivia',
         user_id: 'user-123',
-        template_id: 'template-456',
         status: 'active',
         metadata: { custom: 'data' },
       });
 
-      expect(session.template_id).toBe('template-456');
       expect(session.status).toBe('active');
       expect(session.metadata).toEqual({ custom: 'data' });
     });
@@ -165,7 +163,6 @@ describe('session state transitions', () => {
   const createTestSession = (): GameSession => ({
     id: 'test-123',
     game_type: 'bingo',
-    template_id: null,
     user_id: 'user-123',
     status: 'pending',
     started_at: null,
@@ -228,7 +225,6 @@ describe('session metadata', () => {
   const createTestSession = (): GameSession => ({
     id: 'test-123',
     game_type: 'bingo',
-    template_id: null,
     user_id: 'user-123',
     status: 'active',
     started_at: '2024-01-01T10:00:00Z',
@@ -305,8 +301,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'pending',
         started_at: null,
         ended_at: null,
@@ -322,8 +317,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'completed',
         started_at: '2024-01-01T10:00:00.000Z',
         ended_at: '2024-01-01T10:30:00.000Z',
@@ -343,8 +337,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'pending',
         started_at: null,
         ended_at: null,
@@ -360,8 +353,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'completed',
         started_at: '2024-01-01T10:00:00.000Z',
         ended_at: '2024-01-01T10:00:45.000Z',
@@ -377,8 +369,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'completed',
         started_at: '2024-01-01T10:00:00.000Z',
         ended_at: '2024-01-01T10:15:30.000Z',
@@ -394,8 +385,7 @@ describe('session duration', () => {
       const session: GameSession = {
         id: 'test',
         game_type: 'bingo',
-        template_id: null,
-        user_id: 'user-123',
+            user_id: 'user-123',
         status: 'completed',
         started_at: '2024-01-01T10:00:00.000Z',
         ended_at: '2024-01-01T12:30:00.000Z',
