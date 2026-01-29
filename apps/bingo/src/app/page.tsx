@@ -1,8 +1,13 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { StatsDisplay } from '@/components/stats';
 import { LoginButton } from '@/components/auth/LoginButton';
 
-export default function Home() {
+export default async function Home() {
+  // Check authentication state via cookie
+  const cookieStore = await cookies();
+  const isSignedIn = !!cookieStore.get('beak_access_token')?.value;
+
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -28,37 +33,28 @@ export default function Home() {
               Large fonts, high contrast, and audio announcements make every game accessible and fun.
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons - Conditional based on auth state */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <LoginButton />
-              <Link
-                href="/play"
-                className="
-                  inline-flex items-center justify-center
-                  min-h-[64px] px-12 py-4
-                  text-2xl font-bold
-                  bg-primary text-primary-foreground
-                  rounded-xl shadow-lg
-                  hover:bg-primary/90 transition-colors
-                  focus:outline-none focus:ring-4 focus:ring-primary/50
-                "
-              >
-                Play Now
-              </Link>
-              <Link
-                href="/play"
-                className="
-                  inline-flex items-center justify-center
-                  min-h-[56px] px-8 py-3
-                  text-xl font-medium
-                  bg-secondary text-secondary-foreground
-                  rounded-xl
-                  hover:bg-secondary/90 transition-colors
-                  focus:outline-none focus:ring-4 focus:ring-secondary/50
-                "
-              >
-                Presenter Mode
-              </Link>
+              {isSignedIn ? (
+                // Signed In: Show only "Play" button
+                <Link
+                  href="/play"
+                  className="
+                    inline-flex items-center justify-center
+                    min-h-[64px] px-12 py-4
+                    text-2xl font-bold
+                    bg-primary text-primary-foreground
+                    rounded-xl shadow-lg
+                    hover:bg-primary/90 transition-colors
+                    focus:outline-none focus:ring-4 focus:ring-primary/50
+                  "
+                >
+                  Play
+                </Link>
+              ) : (
+                // Not Signed In: Show only "Sign in with Beak Gaming" button
+                <LoginButton />
+              )}
             </div>
           </div>
         </div>
