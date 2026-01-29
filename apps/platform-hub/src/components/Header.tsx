@@ -81,7 +81,17 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
             </div>
           </Link>
 
-          {/* Navigation */}
+          {/* Greeting + Navigation */}
+          <div className="flex items-center gap-6">
+            {!isLoading && user && (
+              <span
+                className="text-lg font-medium text-foreground"
+                data-testid="facility-greeting"
+              >
+                Welcome{user.user_metadata?.facility_name ? `, ${user.user_metadata.facility_name}` : ''}
+              </span>
+            )}
+
           <nav aria-label="Main navigation">
             <ul className="flex items-center gap-4">
               <li>
@@ -166,6 +176,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
               )}
             </ul>
           </nav>
+          </div>
         </div>
       </header>
     );
