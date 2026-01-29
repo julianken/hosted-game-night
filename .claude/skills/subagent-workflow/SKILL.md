@@ -173,19 +173,14 @@ Linear Issue BEA-330: "Add user authentication"
 
 ## Create Task List
 
-Use `TaskCreate` to track each LINEAR ISSUE:
+Use `TodoWrite` to track each LINEAR ISSUE:
 
 ```javascript
-TaskCreate({
-  subject: "BEA-330: Add login form UI",
-  description: "Implement complete login form per Linear issue BEA-330",
-  activeForm: "Implementing BEA-330"
-})
-
-TaskCreate({
-  subject: "BEA-331: Fix trivia scoring bug",
-  description: "Fix scoring calculation per Linear issue BEA-331",
-  activeForm: "Implementing BEA-331"
+TodoWrite({
+  todos: [
+    { id: "BEA-330", content: "BEA-330: Add login form UI", status: "in_progress" },
+    { id: "BEA-331", content: "BEA-331: Fix trivia scoring bug", status: "in_progress" }
+  ]
 })
 ```
 
@@ -195,7 +190,7 @@ TaskCreate({
 
 **🚨 MANDATORY: One worktree per Linear issue**
 
-Use the `Skill(superpowers:using-git-worktrees)` skill to create isolated workspaces.
+Use the `Skill(using-git-worktrees)` skill to create isolated workspaces.
 
 ## Why Worktrees?
 
@@ -457,7 +452,7 @@ While agents work, periodically check:
 
 ```bash
 # Check task list
-TaskList
+TodoRead
 
 # Check worktree status
 git worktree list
@@ -895,14 +890,14 @@ If you think ANY of these thoughts, STOP:
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 1: Plan Parallel Work                                  │
-│ - Break issue into independent tasks                        │
-│ - Create task list (TaskCreate)                             │
+│ - Identify parallel Linear issues                           │
+│ - Create task list                                          │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 2: Create Git Worktrees                                │
-│ - One worktree per independent task                         │
+│ - One worktree per Linear issue                             │
 │ - Naming: ../wt-BEA-###-task-slug                          │
 └────────────────────┬────────────────────────────────────────┘
                      │
