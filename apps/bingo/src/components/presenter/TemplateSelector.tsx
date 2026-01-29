@@ -39,7 +39,11 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
         const response = await fetch('/api/templates');
 
         if (!response || !response.ok) {
-          throw new Error('Failed to fetch templates');
+          // Gracefully handle missing/unavailable template API (BEA-419)
+          // Template API may not be available (e.g., no database connection)
+          console.warn('Templates unavailable:', response?.status);
+          setTemplates([]);
+          return;
         }
 
         const data = await response.json();
