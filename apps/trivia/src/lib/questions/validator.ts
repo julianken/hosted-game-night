@@ -125,9 +125,7 @@ function validateSingleJsonQuestion(
     ].filter(Boolean);
   }
 
-  if (raw.options && Array.isArray(raw.options) && raw.options.length > 0) {
-    options = raw.options;
-  } else if (type === 'true_false') {
+  if (type === 'true_false') {
     options = ['True', 'False'];
     if (optionTexts.length === 0) {
       optionTexts = ['True', 'False'];

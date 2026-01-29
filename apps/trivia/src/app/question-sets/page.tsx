@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import type { TriviaQuestionSet, TriviaQuestion } from '@beak-gaming/database/types';
 import { QuestionSetImporter } from '@/components/presenter/QuestionSetImporter';
@@ -60,7 +60,7 @@ export default function QuestionSetsPage() {
         prev.map((qs) => (qs.id === id ? { ...qs, name: editingName.trim() } : qs))
       );
     } catch {
-      // Silently fail, name reverts
+      setError('Failed to rename question set');
     } finally {
       setEditingId(null);
     }
@@ -107,6 +107,15 @@ export default function QuestionSetsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const categoryStatsMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof getCategoryStatistics>>();
+    for (const qs of questionSets) {
+      const appQuestions = triviaQuestionsToQuestions(qs.questions);
+      map.set(qs.id, getCategoryStatistics(appQuestions));
+    }
+    return map;
+  }, [questionSets]);
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -116,7 +125,7 @@ export default function QuestionSetsPage() {
   };
 
   return (
-    <main className="min-h-screen p-6 max-w-5xl mx-auto">
+    <main className="min-h-screen p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold">My Question Sets</h1>
@@ -225,18 +234,14 @@ export default function QuestionSetsPage() {
                 </span>
 
                 {/* Category badges */}
-                {(() => {
-                  const appQuestions = triviaQuestionsToQuestions(qs.questions);
-                  const stats = getCategoryStatistics(appQuestions);
-                  return stats.slice(0, 4).map((stat) => (
-                    <span
-                      key={stat.categoryId}
-                      className={`text-xs px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(stat.categoryId)}`}
-                    >
-                      {stat.categoryName} ({stat.questionCount})
-                    </span>
-                  ));
-                })()}
+                {(categoryStatsMap.get(qs.id) ?? []).slice(0, 4).map((stat) => (
+                  <span
+                    key={stat.categoryId}
+                    className={`text-xs px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(stat.categoryId)}`}
+                  >
+                    {stat.categoryName} ({stat.questionCount})
+                  </span>
+                ))}
               </div>
 
               {/* Created date */}

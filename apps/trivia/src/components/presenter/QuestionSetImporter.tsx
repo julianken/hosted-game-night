@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ImportResult } from '@/lib/questions/types';
 import { parseJsonQuestions, readFileContent } from '@/lib/questions/parser';
+import { getCategoryBadgeClasses } from '@/lib/categories';
 
 interface QuestionSetImporterProps {
   onImportSuccess: () => void;
@@ -418,10 +419,15 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
                 {result.questions.slice(0, 5).map((q, i) => (
                   <div
                     key={q.id}
-                    className="px-3 py-2 text-sm border-b border-border last:border-0"
+                    className="px-3 py-2 text-sm border-b border-border last:border-0 flex items-center gap-2"
                   >
-                    <span className="text-muted-foreground">Q{i + 1}:</span>
-                    <span className="ml-2 truncate">{q.text}</span>
+                    <span className="text-muted-foreground shrink-0">Q{i + 1}:</span>
+                    <span className="truncate">{q.text}</span>
+                    {q.category && (
+                      <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(q.category)}`}>
+                        {q.category.replace('_', ' ')}
+                      </span>
+                    )}
                   </div>
                 ))}
                 {result.questions.length > 5 && (
