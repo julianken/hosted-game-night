@@ -29,6 +29,10 @@ import { SettingsPanel } from '@/components/presenter/SettingsPanel';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
 import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
+import { PresetSelector } from '@/components/presenter/PresetSelector';
+import { QuestionSetSelector } from '@/components/presenter/QuestionSetSelector';
+import { SavePresetModal } from '@/components/presenter/SavePresetModal';
+import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
 import { Button } from '@beak-gaming/ui';
 import { serializeTriviaState, deserializeTriviaState } from '@/lib/state/serializer';
 
@@ -278,6 +282,10 @@ export default function PlayPage() {
 
   // Save template modal state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+
+  // Save preset/question set modal state
+  const [showSavePresetModal, setShowSavePresetModal] = useState(false);
+  const [showSaveQuestionSetModal, setShowSaveQuestionSetModal] = useState(false);
 
   // Get settings from settings store
   const {
@@ -889,24 +897,33 @@ export default function PlayPage() {
 
         {/* Setup mode - shown below main content */}
         {game.status === 'setup' && (
-          <div className="mt-4 md:mt-6 bg-background border border-border rounded-xl p-3 md:p-4 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div>
-                <h2 className="text-base md:text-lg font-semibold text-foreground">
-                  Ready to Start?
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {game.teams.length === 0
-                    ? 'Add at least one team to begin'
-                    : `${game.teams.length} team${game.teams.length === 1 ? '' : 's'} ready`}
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="mt-4 md:mt-6 space-y-4">
+            {/* Two-column layout: Game Settings + Question Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left: Game Settings */}
+              <div className="bg-background border border-border rounded-xl p-4 shadow-sm space-y-4">
+                <h2 className="text-lg font-semibold text-foreground">Game Settings</h2>
+                <PresetSelector disabled={game.status !== 'setup'} />
                 <button
-                  onClick={() => setShowSaveTemplateModal(true)}
+                  onClick={() => setShowSavePresetModal(true)}
+                  className="w-full px-4 py-3 rounded-xl text-base font-medium
+                    bg-blue-600 hover:bg-blue-700 text-white
+                    transition-colors duration-200 min-h-[48px]"
+                  title="Save current settings as a preset"
+                >
+                  Save Settings as Preset
+                </button>
+              </div>
+
+              {/* Right: Question Content */}
+              <div className="bg-background border border-border rounded-xl p-4 shadow-sm space-y-4">
+                <h2 className="text-lg font-semibold text-foreground">Question Content</h2>
+                <QuestionSetSelector disabled={game.status !== 'setup'} />
+                <button
+                  onClick={() => setShowSaveQuestionSetModal(true)}
                   disabled={game.questions.length === 0}
                   className={`
-                    w-full sm:w-auto px-4 py-3 rounded-xl text-base font-medium
+                    w-full px-4 py-3 rounded-xl text-base font-medium
                     transition-colors duration-200 min-h-[48px]
                     ${
                       game.questions.length > 0
@@ -914,25 +931,59 @@ export default function PlayPage() {
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }
                   `}
-                  title="Save current questions as a template"
+                  title="Save current questions as a question set"
                 >
-                  Save Question Set
+                  Save Questions as Set
                 </button>
-                <button
-                  onClick={game.startGame}
-                  disabled={!game.canStart}
-                  className={`
-                    w-full sm:w-auto px-6 py-3 rounded-xl text-base md:text-lg font-semibold
-                    transition-colors duration-200 min-h-[48px]
-                    ${
-                      game.canStart
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }
-                  `}
-                >
-                  Start Game
-                </button>
+              </div>
+            </div>
+
+            {/* Full width: Legacy template save + Start Game */}
+            <div className="bg-background border border-border rounded-xl p-3 md:p-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div>
+                  <h2 className="text-base md:text-lg font-semibold text-foreground">
+                    Ready to Start?
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {game.teams.length === 0
+                      ? 'Add at least one team to begin'
+                      : `${game.teams.length} team${game.teams.length === 1 ? '' : 's'} ready`}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => setShowSaveTemplateModal(true)}
+                    disabled={game.questions.length === 0}
+                    className={`
+                      w-full sm:w-auto px-4 py-3 rounded-xl text-base font-medium
+                      transition-colors duration-200 min-h-[48px]
+                      ${
+                        game.questions.length > 0
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }
+                    `}
+                    title="Save current questions as a template"
+                  >
+                    Save Template (Legacy)
+                  </button>
+                  <button
+                    onClick={game.startGame}
+                    disabled={!game.canStart}
+                    className={`
+                      w-full sm:w-auto px-6 py-3 rounded-xl text-base md:text-lg font-semibold
+                      transition-colors duration-200 min-h-[48px]
+                      ${
+                        game.canStart
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }
+                    `}
+                  >
+                    Start Game
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1138,6 +1189,18 @@ export default function PlayPage() {
     <SaveTemplateModal
       isOpen={showSaveTemplateModal}
       onClose={() => setShowSaveTemplateModal(false)}
+    />
+
+    {/* Save Preset Modal */}
+    <SavePresetModal
+      isOpen={showSavePresetModal}
+      onClose={() => setShowSavePresetModal(false)}
+    />
+
+    {/* Save Question Set Modal */}
+    <SaveQuestionSetModal
+      isOpen={showSaveQuestionSetModal}
+      onClose={() => setShowSaveQuestionSetModal(false)}
     />
     </>
   );

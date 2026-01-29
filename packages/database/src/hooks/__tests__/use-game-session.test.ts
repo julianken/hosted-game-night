@@ -39,6 +39,8 @@ function createMockSession(overrides: Partial<GameSession> = {}): GameSession {
     session_id: 'sess_abc123',
     game_type: 'bingo',
     template_id: null,
+    preset_id: null,
+    question_set_id: null,
     pin_hash: 'a'.repeat(64),
     pin_salt: 'test-salt-uuid',
     failed_pin_attempts: 0,
