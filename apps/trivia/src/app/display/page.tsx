@@ -185,8 +185,11 @@ function AudienceDisplay({
     };
   }, [roomCode, dbSessionId]);
 
-  // Determine which session ID to use
-  const effectiveSessionId = dbSessionId || sessionId;
+  // Determine which session ID to use for BroadcastChannel sync
+  // CRITICAL: Must match presenter's channel name logic (roomCode || offlineSessionId || '')
+  // Using dbSessionId (a database UUID) would create a different channel name than the
+  // presenter uses, causing sync to fail in online mode (BEA-414, BEA-416, BEA-420)
+  const effectiveSessionId = roomCode || sessionId;
 
   // Initialize sync as audience role with session-scoped channel
   const { isConnected, connectionError, requestSync } = useSync({
