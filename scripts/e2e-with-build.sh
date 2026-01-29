@@ -176,10 +176,11 @@ cleanup() {
 trap cleanup EXIT
 
 # Run Playwright with any additional args passed to script
+# Temporarily disable set -e so we can capture the exit code on failure
+set +e
 pnpm playwright test "$@"
-
-# Exit code from playwright test
 EXIT_CODE=$?
+set -e
 
 echo ""
 if [ $EXIT_CODE -eq 0 ]; then
@@ -190,8 +191,11 @@ else
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${RED}✗ E2E tests failed${NC}"
   echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo ""
-  echo "View detailed results with: pnpm test:e2e:summary"
 fi
+
+# Always show the test summary (even on failure)
+echo ""
+echo -e "${YELLOW}Generating test summary...${NC}"
+node "$SCRIPT_DIR/test-summary.js" || true
 
 exit $EXIT_CODE
