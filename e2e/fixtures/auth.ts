@@ -1,18 +1,20 @@
 import { test as base, expect as playwrightExpect, type Page } from '@playwright/test';
-import { portConfig } from '../../playwright.config';
+import { getE2EPortConfig } from '../utils/port-config';
 
 // -----------------------------------------------------------------------------
 // Dynamic URL Constants for Worktree Isolation
 // -----------------------------------------------------------------------------
-// URLs are derived from the port configuration in playwright.config.ts.
+// URLs are derived from the shared port configuration in e2e/utils/port-config.ts.
 // This enables parallel E2E testing across multiple git worktrees.
 //
 // Main repo: Uses default ports 3000, 3001, 3002
 // Worktrees: Use hash-based port offsets derived from their path
 // Environment variables can override: E2E_PORT_BASE, E2E_*_PORT
 //
-// See playwright.config.ts and e2e/utils/port-isolation.ts for details.
+// See e2e/utils/port-config.ts for the full implementation.
 // -----------------------------------------------------------------------------
+
+const portConfig = getE2EPortConfig();
 
 const HUB_URL = `http://localhost:${portConfig.hubPort}`;
 const BINGO_URL = `http://localhost:${portConfig.bingoPort}`;

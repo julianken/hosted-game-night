@@ -9,6 +9,7 @@
  */
 
 import { waitForServers } from './helpers/wait-for-server';
+import { getE2EPortConfig } from './utils/port-config';
 
 async function globalSetup() {
   console.log('[E2E Setup] Initializing test environment...');
@@ -30,21 +31,19 @@ async function globalSetup() {
   console.log('[E2E Setup] ✓ Test user expected: e2e-test@beak-gaming.test');
 
   // Health check servers before running tests
-  // Port detection: Uses HUB_PORT from env (or default 3002) and calculates other ports
-  const basePort = parseInt(process.env.HUB_PORT || process.env.E2E_HUB_PORT || '3002', 10);
-  const bingoPort = basePort - 2;
-  const triviaPort = basePort - 1;
-  const hubPort = basePort;
+  // Port config is shared with playwright.config.ts via e2e/utils/port-config.ts
+  const portConfig = getE2EPortConfig();
 
   console.log('[E2E Setup] Checking server health...');
-  console.log(`[E2E Setup]   Bingo:  http://localhost:${bingoPort}`);
-  console.log(`[E2E Setup]   Trivia: http://localhost:${triviaPort}`);
-  console.log(`[E2E Setup]   Hub:    http://localhost:${hubPort}`);
+  console.log(`[E2E Setup]   Source: ${portConfig.source}`);
+  console.log(`[E2E Setup]   Bingo:  http://localhost:${portConfig.bingoPort}`);
+  console.log(`[E2E Setup]   Trivia: http://localhost:${portConfig.triviaPort}`);
+  console.log(`[E2E Setup]   Hub:    http://localhost:${portConfig.hubPort}`);
 
   await waitForServers([
-    `http://localhost:${bingoPort}`,
-    `http://localhost:${triviaPort}`,
-    `http://localhost:${hubPort}`,
+    `http://localhost:${portConfig.bingoPort}`,
+    `http://localhost:${portConfig.triviaPort}`,
+    `http://localhost:${portConfig.hubPort}`,
   ]);
 
   console.log('[E2E Setup] ✓ All servers ready');

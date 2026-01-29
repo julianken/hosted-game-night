@@ -6,7 +6,7 @@ import { Page, expect } from '@playwright/test';
  * Pattern 1: Wait for element visibility (React hydration complete)
  */
 export async function waitForHydration(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   // Wait for React hydration by checking for interactive elements
   // The page should have at least one button or interactive element when hydrated
   await expect(async () => {
@@ -42,7 +42,14 @@ export async function openDisplayWindow(page: Page): Promise<Page> {
     page.getByRole('button', { name: /open display/i }).click(),
   ]);
 
-  await displayPage.waitForLoadState('networkidle');
+  await displayPage.waitForLoadState('domcontentloaded');
+  // Wait for display page to hydrate with interactive content
+  await expect(async () => {
+    const hasContent = await displayPage.locator('body').evaluate(
+      (body) => body.children.length > 0
+    );
+    expect(hasContent).toBe(true);
+  }).toPass({ timeout: 5000 });
   return displayPage;
 }
 

@@ -148,6 +148,50 @@ await expect(async () => {
 
 ---
 
+## Quick Reference for Test Authors
+
+### Writing a Bingo Test
+
+```typescript
+import { test } from '../fixtures/auth';
+
+test('my bingo test', async ({ authenticatedBingoPage: page }) => {
+  // Page is already authenticated and on /play with modal dismissed
+  await expect(page.getByRole('button', { name: /roll/i })).toBeVisible();
+});
+```
+
+### Writing a Trivia Test
+
+```typescript
+import { test } from '../fixtures/auth';
+
+test('my trivia test', async ({ authenticatedTriviaPage: page }) => {
+  // Page is already authenticated and on /play with modal dismissed
+  await expect(page.getByRole('button', { name: /start/i })).toBeVisible();
+});
+```
+
+### What the Auth Fixture Does
+
+1. Authenticates via Platform Hub OAuth (`/login` page)
+2. Copies auth cookies from Hub to target app domain
+3. Navigates to `/play` on the target app
+4. Auto-dismisses any startup modal (room setup, etc.)
+5. Retries up to 3x on rate limit errors (exponential backoff)
+
+### Key Imports
+
+| Import | Use For |
+|--------|---------|
+| `test` from `fixtures/auth` | Tests needing authentication |
+| `test` from `@playwright/test` | Tests that do NOT need auth |
+| `waitForHydration` from `utils/helpers` | Waiting for React hydration |
+| `waitForRoomSetupModal` from `utils/helpers` | Waiting for modal after session recovery |
+| `waitForSyncedContent` from `utils/helpers` | Dual-screen sync verification |
+
+---
+
 ### Understanding Test Results
 
 **CRITICAL:** Always run the summary command to see failure counts clearly:
