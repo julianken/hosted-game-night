@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-debug_files=$(git status --short | grep -E '(debug-.*\.spec\.ts|\.bak)' || true)
+debug_files=$(git status --short | grep -E '(debug-.*\.spec\.ts|\.bak$)' || true)
 
 if [ -n "$debug_files" ]; then
   echo "BLOCKED: Debug artifacts detected in working tree. Remove before committing:"
