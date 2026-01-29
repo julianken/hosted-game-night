@@ -1,3 +1,4 @@
+// @canonical - Bingo uses this local OAuth implementation (NOT @beak/auth package)
 /**
  * OAuth 2.1 Client for Bingo App
  * Handles authorization code flow with PKCE

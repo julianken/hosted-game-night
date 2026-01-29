@@ -1,3 +1,4 @@
+// @deprecated-canonical - Bingo uses its own local sync (apps/bingo/src/lib/sync/broadcast.ts). Trivia has no sync module.
 // Types
 export type {
   SyncRole,

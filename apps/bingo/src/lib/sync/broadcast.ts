@@ -1,3 +1,4 @@
+// @canonical - Using local implementation (packages/sync has different API)
 import { GameState, BingoBall, BingoPattern, SyncMessage, SyncMessageType } from '@/types';
 
 const CHANNEL_NAME = 'beak-bingo-sync';

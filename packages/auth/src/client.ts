@@ -1,3 +1,4 @@
+// @deprecated-canonical - This package is NOT used by bingo/trivia. Apps use local implementations.
 import { createBrowserClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AuthConfig } from './types';

@@ -1,3 +1,4 @@
+// @canonical - Trivia uses this local PKCE implementation
 /**
  * PKCE (Proof Key for Code Exchange) utilities for OAuth 2.1
  * Implements RFC 7636 with S256 challenge method

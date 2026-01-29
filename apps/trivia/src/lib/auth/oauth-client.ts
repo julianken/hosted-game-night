@@ -1,3 +1,4 @@
+// @canonical - Trivia uses this local OAuth implementation (NOT @beak/auth package)
 /**
  * OAuth 2.1 Client for Trivia App
  * Handles authorization code flow with PKCE
