@@ -193,13 +193,22 @@ function AudienceDisplay({
     };
   }, [roomCode, dbSessionId]);
 
-  // Determine which session ID to use
-  const effectiveSessionId = dbSessionId || sessionId;
+  // Determine which session ID to use for BroadcastChannel sync
+  // CRITICAL FIX (BEA-413): Must match the presenter's sessionId calculation
+  //
+  // Presenter logic (apps/bingo/src/app/play/page.tsx:69):
+  //   const sessionId = roomCode || offlineSessionId || '';
+  //
+  // Display MUST use the same priority order to ensure channel name matches:
+  // 1. Online mode (room code): Use room code directly (NOT the DB-resolved UUID)
+  // 2. Offline mode: Use the offline session ID from URL
+  // 3. Legacy: Fallback to sessionId param (backward compatibility)
+  const effectiveSessionId = roomCode || offlineSessionId || sessionId || '';
 
   // Initialize sync as audience role with session-scoped channel
   const { isConnected, connectionError, requestSync } = useSync({
     role: 'audience',
-    sessionId: effectiveSessionId || '',
+    sessionId: effectiveSessionId,
   });
 
   // Fullscreen support
