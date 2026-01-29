@@ -19,14 +19,13 @@ import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
 import { ControlPanel } from '@/components/presenter/ControlPanel';
 import { Toggle } from '@/components/ui/Toggle';
-import { Slider, RoomCodeDisplay } from '@beak-gaming/ui';
+import { Slider } from '@beak-gaming/ui';
 import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { Button } from "@beak-gaming/ui";
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
 import { RevealChimeSelector } from '@/components/presenter/RevealChimeSelector';
 import { ThemeSelector } from '@/components/presenter/ThemeSelector';
-import { PinDisplay } from '@/components/presenter/PinDisplay';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
@@ -546,26 +545,26 @@ export default function PlayPage() {
               <p className="text-lg text-muted-foreground">Presenter View</p>
             </div>
 
-            {/* Room information - integrated into header (BEA-418) */}
+            {/* Room information - inline display matching trivia style */}
             {(roomCode || isOfflineMode) && (
-              <div className="flex flex-col sm:flex-row gap-4 items-start flex-1">
+              <div className="flex flex-wrap items-center gap-2 flex-1">
                 {roomCode && !isOfflineMode && (
-                  <>
-                    <RoomCodeDisplay
-                      roomCode={roomCode}
-                      showSyncStatus={false}
-                    />
-                    <PinDisplay
-                      pin={currentPin}
-                      offlineSessionId={null}
-                    />
-                  </>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Room:</span>
+                    <span className="font-mono font-semibold text-foreground">{roomCode}</span>
+                    {currentPin && (
+                      <>
+                        <span className="text-sm text-muted-foreground ml-2">PIN:</span>
+                        <span className="font-mono font-semibold text-foreground">{currentPin}</span>
+                      </>
+                    )}
+                  </div>
                 )}
                 {isOfflineMode && offlineSessionId && (
-                  <PinDisplay
-                    pin={null}
-                    offlineSessionId={offlineSessionId}
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Offline Session:</span>
+                    <span className="font-mono font-semibold text-foreground">{offlineSessionId}</span>
+                  </div>
                 )}
               </div>
             )}

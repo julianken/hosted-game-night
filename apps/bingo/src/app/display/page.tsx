@@ -203,7 +203,7 @@ function AudienceDisplay({
   // 1. Online mode (room code): Use room code directly (NOT the DB-resolved UUID)
   // 2. Offline mode: Use the offline session ID from URL
   // 3. Legacy: Fallback to sessionId param (backward compatibility)
-  const effectiveSessionId = roomCode || offlineSessionId || sessionId || '';
+  const effectiveSessionId = roomCode || sessionId || '';
 
   // Initialize sync as audience role with session-scoped channel
   const { isConnected, connectionError, requestSync } = useSync({
