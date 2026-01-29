@@ -161,11 +161,11 @@ test.describe('Recent Templates Display (BEA-325)', () => {
   });
 
   test('should show loading state while fetching templates', async ({
-    page,
+    authenticatedPage: page,
   }) => {
-    // This test may need network interception to slow down API
-    // For now, verify loading skeleton structure exists in component
-    await page.goto('/dashboard');
+    // beforeEach already navigated to /dashboard with authenticatedPage
+    // Using authenticatedPage avoids a redundant second navigation that causes
+    // a transient DOM state with duplicate sections during page streaming
 
     const section = page.locator('section', {
       has: page.locator('h2:has-text("Recent Templates")'),
