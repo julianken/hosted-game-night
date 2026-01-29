@@ -1,6 +1,7 @@
 ---
 name: using-git-worktrees
 description: Create isolated git worktrees with E2E port isolation for parallel development
+disable-model-invocation: true
 ---
 
 # Using Git Worktrees with E2E Port Isolation
