@@ -113,6 +113,105 @@ export interface TriviaTemplateUpdate {
 }
 
 // =============================================================================
+// Bingo Preset Types
+// =============================================================================
+
+export interface BingoPreset {
+  id: string;
+  user_id: string;
+  name: string;
+  pattern_id: string;
+  voice_pack: string;
+  auto_call_enabled: boolean;
+  auto_call_interval: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BingoPresetInsert {
+  user_id: string;
+  name: string;
+  pattern_id: string;
+  voice_pack?: string;
+  auto_call_enabled?: boolean;
+  auto_call_interval?: number;
+  is_default?: boolean;
+}
+
+export interface BingoPresetUpdate {
+  name?: string;
+  pattern_id?: string;
+  voice_pack?: string;
+  auto_call_enabled?: boolean;
+  auto_call_interval?: number;
+  is_default?: boolean;
+}
+
+// =============================================================================
+// Trivia Preset Types (settings only, no questions)
+// =============================================================================
+
+export interface TriviaPreset {
+  id: string;
+  user_id: string;
+  name: string;
+  rounds_count: number;
+  questions_per_round: number;
+  timer_duration: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TriviaPresetInsert {
+  user_id: string;
+  name: string;
+  rounds_count?: number;
+  questions_per_round?: number;
+  timer_duration?: number;
+  is_default?: boolean;
+}
+
+export interface TriviaPresetUpdate {
+  name?: string;
+  rounds_count?: number;
+  questions_per_round?: number;
+  timer_duration?: number;
+  is_default?: boolean;
+}
+
+// =============================================================================
+// Trivia Question Set Types (questions only, no settings)
+// =============================================================================
+
+export interface TriviaQuestionSet {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  questions: TriviaQuestion[];
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TriviaQuestionSetInsert {
+  user_id: string;
+  name: string;
+  description?: string | null;
+  questions?: TriviaQuestion[];
+  is_default?: boolean;
+}
+
+export interface TriviaQuestionSetUpdate {
+  name?: string;
+  description?: string | null;
+  questions?: TriviaQuestion[];
+  is_default?: boolean;
+}
+
+// =============================================================================
 // Game Session Types (Persistent Sessions)
 // =============================================================================
 
@@ -122,6 +221,8 @@ export interface GameSession {
   session_id: string;
   game_type: 'bingo' | 'trivia';
   template_id: string | null;
+  preset_id: string | null;
+  question_set_id: string | null;
   pin_hash: string;
   pin_salt: string;
   failed_pin_attempts: number;
@@ -141,6 +242,8 @@ export interface GameSessionInsert {
   session_id: string;
   game_type: 'bingo' | 'trivia';
   template_id?: string | null;
+  preset_id?: string | null;
+  question_set_id?: string | null;
   pin_hash: string;
   pin_salt: string;
   status?: 'active' | 'paused' | 'completed' | 'expired';
@@ -178,6 +281,21 @@ export interface Database {
         Row: TriviaTemplate;
         Insert: TriviaTemplateInsert;
         Update: TriviaTemplateUpdate;
+      };
+      bingo_presets: {
+        Row: BingoPreset;
+        Insert: BingoPresetInsert;
+        Update: BingoPresetUpdate;
+      };
+      trivia_presets: {
+        Row: TriviaPreset;
+        Insert: TriviaPresetInsert;
+        Update: TriviaPresetUpdate;
+      };
+      trivia_question_sets: {
+        Row: TriviaQuestionSet;
+        Insert: TriviaQuestionSetInsert;
+        Update: TriviaQuestionSetUpdate;
       };
       game_sessions: {
         Row: GameSession;
@@ -231,6 +349,42 @@ export function isTriviaTemplate(obj: unknown): obj is TriviaTemplate {
     'user_id' in obj &&
     'questions' in obj &&
     'rounds_count' in obj
+  );
+}
+
+export function isBingoPreset(obj: unknown): obj is BingoPreset {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'user_id' in obj &&
+    'pattern_id' in obj &&
+    'voice_pack' in obj &&
+    !('questions' in obj)
+  );
+}
+
+export function isTriviaPreset(obj: unknown): obj is TriviaPreset {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'user_id' in obj &&
+    'rounds_count' in obj &&
+    !('questions' in obj) &&
+    !('pattern_id' in obj)
+  );
+}
+
+export function isTriviaQuestionSet(obj: unknown): obj is TriviaQuestionSet {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'user_id' in obj &&
+    'questions' in obj &&
+    !('rounds_count' in obj) &&
+    !('pattern_id' in obj)
   );
 }
 

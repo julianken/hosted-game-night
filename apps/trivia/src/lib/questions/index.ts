@@ -40,6 +40,14 @@ export {
   readFileContent,
 } from './parser';
 
+// Conversion
+export {
+  questionToTriviaQuestion,
+  triviaQuestionToQuestion,
+  questionsToTriviaQuestions,
+  triviaQuestionsToQuestions,
+} from './conversion';
+
 // Export
 export {
   exportQuestions,

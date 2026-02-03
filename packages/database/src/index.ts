@@ -51,6 +51,21 @@ export {
   type TriviaTemplateUpdate,
   type TriviaQuestion,
 
+  // Bingo preset types
+  type BingoPreset,
+  type BingoPresetInsert,
+  type BingoPresetUpdate,
+
+  // Trivia preset types
+  type TriviaPreset,
+  type TriviaPresetInsert,
+  type TriviaPresetUpdate,
+
+  // Trivia question set types
+  type TriviaQuestionSet,
+  type TriviaQuestionSetInsert,
+  type TriviaQuestionSetUpdate,
+
   // Game session types (persistent)
   type GameSession,
   type GameSessionInsert,
@@ -61,6 +76,11 @@ export {
   isBingoTemplate,
   isTriviaTemplate,
   isGameSession,
+
+  // Preset type guards
+  isBingoPreset,
+  isTriviaPreset,
+  isTriviaQuestionSet,
 } from './types';
 
 // =============================================================================
@@ -225,6 +245,53 @@ export {
   QUESTIONS_PER_ROUND_MAX,
   TIMER_DURATION_MIN,
   TIMER_DURATION_MAX,
+
+  // Bingo Presets
+  getBingoPreset,
+  listBingoPresets,
+  listAllBingoPresets,
+  getDefaultBingoPreset,
+  createBingoPreset,
+  updateBingoPreset,
+  deleteBingoPreset,
+  setDefaultBingoPreset,
+  duplicateBingoPreset,
+  userOwnsBingoPreset,
+  countBingoPresets,
+  BINGO_PRESET_SEARCH_COLUMNS,
+
+  // Trivia Presets
+  getTriviaPreset,
+  listTriviaPresets,
+  listAllTriviaPresets,
+  getDefaultTriviaPreset,
+  createTriviaPreset as createTriviaPresetRecord,
+  updateTriviaPreset as updateTriviaPresetRecord,
+  deleteTriviaPreset,
+  setDefaultTriviaPreset,
+  duplicateTriviaPreset,
+  userOwnsTriviaPreset,
+  countTriviaPresets,
+  TRIVIA_PRESET_SEARCH_COLUMNS,
+
+  // Trivia Question Sets
+  getTriviaQuestionSet,
+  listTriviaQuestionSets,
+  listAllTriviaQuestionSets,
+  getDefaultTriviaQuestionSet,
+  createTriviaQuestionSet,
+  updateTriviaQuestionSet,
+  deleteTriviaQuestionSet,
+  setDefaultTriviaQuestionSet,
+  duplicateTriviaQuestionSet,
+  userOwnsTriviaQuestionSet,
+  countTriviaQuestionSets,
+  addQuestionsToSet,
+  removeQuestionFromSet,
+  updateQuestionInSet,
+  reorderQuestionsInSet,
+  getQuestionSetTotalCount,
+  TRIVIA_QUESTION_SET_SEARCH_COLUMNS,
 
   // Game Sessions (Local/In-Memory)
   generateSessionId,
