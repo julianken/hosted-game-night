@@ -30,8 +30,8 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
-        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
+        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -48,7 +48,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -124,7 +124,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -146,8 +146,8 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
-        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
+        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -169,7 +169,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -240,7 +240,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -257,7 +257,7 @@ describe('RoundEditor', () => {
     const roundWithOneQuestion: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -276,8 +276,8 @@ describe('RoundEditor', () => {
     const roundWithMultipleQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
-        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
+        { id: '2', question: 'Q2', options: ['A', 'B', 'C', 'D'], correctIndex: 1, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -293,7 +293,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 
@@ -321,7 +321,7 @@ describe('RoundEditor', () => {
     const roundWithQuestions: CategoryFormData = {
       ...mockRound,
       questions: [
-        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0 },
+        { id: '1', question: 'Q1', options: ['A', 'B', 'C', 'D'], correctIndex: 0, type: 'multiple_choice' as const, category: 'general_knowledge' as const, explanation: '' },
       ],
     };
 

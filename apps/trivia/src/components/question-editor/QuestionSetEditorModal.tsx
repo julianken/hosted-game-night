@@ -1,21 +1,23 @@
 'use client';
 
-import { useId, useReducer, useState } from 'react';
+import { useId, useReducer, useState, useEffect } from 'react';
 import { Modal } from '@beak-gaming/ui';
 import { useToast } from '@beak-gaming/ui';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
 import type { QuestionCategory } from '@/types';
-import type { TriviaQuestion } from '@beak-gaming/database/types';
+import type { TriviaQuestion, TriviaQuestionSet } from '@beak-gaming/database/types';
 import {
   editorReducer,
   createInitialState,
   type QuestionFormData,
+  type CategoryFormData,
 } from './QuestionSetEditorModal.utils';
 
 export interface QuestionSetEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  questionSetId?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export function QuestionSetEditorModal({
   isOpen,
   onClose,
   onSuccess,
+  questionSetId,
 }: QuestionSetEditorModalProps) {
   const nameId = useId();
   const descriptionId = useId();
@@ -34,8 +37,79 @@ export function QuestionSetEditorModal({
 
   const [state, dispatch] = useReducer(editorReducer, createInitialState());
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+
+  // Load existing question set data when in edit mode
+  useEffect(() => {
+    if (!isOpen || !questionSetId) {
+      return;
+    }
+
+    const loadQuestionSet = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/question-sets/${questionSetId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load question set');
+        }
+
+        const { questionSet }: { questionSet: TriviaQuestionSet } = await response.json();
+
+        // Convert TriviaQuestionSet to EditorState
+        const categoriesMap = new Map<QuestionCategory, CategoryFormData>();
+
+        for (const tq of questionSet.questions) {
+          // Ensure category is a valid QuestionCategory type
+          const rawCategory = tq.category ?? 'general_knowledge';
+          const category = DEFAULT_CATEGORIES.find((c) => c.id === rawCategory);
+          const categoryId: QuestionCategory = category?.id ?? 'general_knowledge';
+
+          if (!categoriesMap.has(categoryId)) {
+            categoriesMap.set(categoryId, {
+              id: categoryId,
+              name: category?.name ?? 'General Knowledge',
+              questions: [],
+            });
+          }
+
+          const questionFormData: QuestionFormData = {
+            id: `q-${Date.now()}-${Math.random()}`,
+            question: tq.question,
+            type: 'multiple_choice',
+            options: [...tq.options],
+            correctIndex: tq.correctIndex,
+            category: categoryId,
+            explanation: tq.explanation ?? '',
+          };
+
+          categoriesMap.get(categoryId)!.questions.push(questionFormData);
+        }
+
+        const loadedState = createInitialState({
+          name: questionSet.name,
+          description: questionSet.description ?? '',
+          categories: Array.from(categoriesMap.values()),
+        });
+
+        dispatch({ type: 'RESET', payload: loadedState });
+
+        // Auto-expand all categories
+        setExpandedCategories(new Set(Array.from({ length: categoriesMap.size }, (_, i) => i)));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load question set';
+        setError(message);
+        errorToast(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadQuestionSet();
+  }, [isOpen, questionSetId, errorToast]);
 
   // Available categories for selection (not yet added)
   const availableCategories = DEFAULT_CATEGORIES.filter(
@@ -118,8 +192,12 @@ export function QuestionSetEditorModal({
         }
       }
 
-      const response = await fetch('/api/question-sets', {
-        method: 'POST',
+      const isEditMode = !!questionSetId;
+      const url = isEditMode ? `/api/question-sets/${questionSetId}` : '/api/question-sets';
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: state.name.trim(),
@@ -134,13 +212,12 @@ export function QuestionSetEditorModal({
         throw new Error(data.error || 'Failed to save question set');
       }
 
-      success(`Question set "${state.name.trim()}" saved successfully`);
+      success(`Question set "${state.name.trim()}" ${isEditMode ? 'updated' : 'created'} successfully`);
       dispatch({ type: 'RESET', payload: createInitialState() });
       setExpandedCategories(new Set());
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error('Error saving question set:', err);
       const message = err instanceof Error ? err.message : 'Failed to save question set';
       setError(message);
       errorToast(message);
@@ -162,7 +239,7 @@ export function QuestionSetEditorModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Create Question Set"
+      title={questionSetId ? 'Edit Question Set' : 'Create Question Set'}
       confirmLabel={isSaving ? 'Saving...' : 'Save'}
       cancelLabel="Cancel"
       onConfirm={handleSave}
@@ -170,8 +247,18 @@ export function QuestionSetEditorModal({
       showFooter
     >
       <div className="flex flex-col gap-6">
-        {/* Name Input */}
-        <div className="flex flex-col gap-2">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <p className="text-lg text-muted-foreground">Loading question set...</p>
+          </div>
+        )}
+
+        {/* Form (hidden when loading) */}
+        {!isLoading && (
+          <>
+            {/* Name Input */}
+            <div className="flex flex-col gap-2">
           <label htmlFor={nameId} className="text-lg font-medium">
             Question Set Name
           </label>
@@ -295,15 +382,17 @@ export function QuestionSetEditorModal({
           </ul>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div
-            id={`${nameId}-error`}
-            role="alert"
-            className="p-4 bg-destructive/10 border border-destructive rounded-lg"
-          >
-            <p className="text-base text-destructive font-medium">{error}</p>
-          </div>
+            {/* Error */}
+            {error && (
+              <div
+                id={`${nameId}-error`}
+                role="alert"
+                className="p-4 bg-destructive/10 border border-destructive rounded-lg"
+              >
+                <p className="text-base text-destructive font-medium">{error}</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Modal>

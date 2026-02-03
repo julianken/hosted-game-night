@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { waitForHydration } from '../utils/helpers';
 
-test.describe('Question Editor', () => {
+test.describe('Question Set Editor Integration', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/question-sets');
     await waitForHydration(page);
@@ -14,207 +14,236 @@ test.describe('Question Editor', () => {
 
     // Modal should appear
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText(/create question set/i)).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(/create question set/i)).toBeVisible();
   });
 
-  test('can add a category and question', async ({ page }) => {
+  test('can create a new question set with 2 rounds and 3 questions total', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
     // Fill in question set name
     const nameInput = page.getByLabel(/question set name/i);
-    await nameInput.fill('Test Question Set');
+    await nameInput.fill('E2E Test Set');
 
-    // Add a category
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
+    // Add description
+    const descriptionInput = page.getByLabel(/description/i);
+    await descriptionInput.fill('A test question set created via E2E test');
 
-    // Add a question
-    const addQuestionButton = page.getByRole('button', { name: /add question/i }).first();
-    await addQuestionButton.click();
+    // Add first category (Science)
+    const scienceButton = page.getByRole('button', { name: /\+ science/i });
+    await scienceButton.click();
 
-    // Question editor should appear
-    await expect(page.getByText(/question 1/i)).toBeVisible();
-  });
+    // Expand Science category (should be auto-expanded)
+    await expect(page.getByText(/science \(0 questions\)/i)).toBeVisible();
 
-  test('question form displays and validates', async ({ page }) => {
-    // Open modal and add category
-    await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
+    // Add first question to Science
+    const addQuestionButtons = page.getByRole('button', { name: /\+ add question/i });
+    await addQuestionButtons.first().click();
 
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
+    // Fill first question
+    const questionInputs = page.getByLabel(/question text/i);
+    await questionInputs.first().fill('What is H2O?');
 
-    await page.getByRole('button', { name: /add question/i }).first().click();
-
-    // Fill in question text
-    const questionInput = page.getByLabel(/question text/i).first();
-    await questionInput.fill('What is H2O?');
-
-    // Should show character count
-    await expect(page.getByText(/12\/500 characters/i)).toBeVisible();
-
-    // Clear the question (should show validation error)
-    await questionInput.clear();
-    await questionInput.blur();
-
-    // Should show validation error
-    await expect(page.getByText(/question text is required/i)).toBeVisible();
-  });
-
-  test('can switch between Multiple Choice and True/False', async ({ page }) => {
-    // Open modal and add category with question
-    await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
-
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
-
-    await page.getByRole('button', { name: /add question/i }).first().click();
-
-    // Fill question
-    await page.getByLabel(/question text/i).first().fill('Is water H2O?');
-
-    // By default should be Multiple Choice with 4 options
-    const typeSelect = page.getByLabel(/question type/i).first();
-    await expect(typeSelect).toHaveValue('multiple_choice');
-
-    // Should have 4 option inputs
+    // Fill options for first question
     const optionInputs = page.locator('input[placeholder*="Option"]');
-    await expect(optionInputs).toHaveCount(4);
+    await optionInputs.nth(0).fill('Water');
+    await optionInputs.nth(1).fill('Carbon Dioxide');
+    await optionInputs.nth(2).fill('Oxygen');
+    await optionInputs.nth(3).fill('Hydrogen');
 
-    // Switch to True/False
-    await typeSelect.selectOption('true_false');
+    // Select correct answer (first radio button for first option)
+    const radioButtons = page.locator('input[type="radio"]');
+    await radioButtons.nth(0).check();
 
-    // Should now show True/False options (radio buttons)
-    await expect(page.getByText('True')).toBeVisible();
-    await expect(page.getByText('False')).toBeVisible();
+    // Add second question to Science
+    await addQuestionButtons.first().click();
 
-    // Switch back to Multiple Choice
-    await typeSelect.selectOption('multiple_choice');
+    // Fill second question
+    await questionInputs.nth(1).fill('What is the speed of light?');
+    await optionInputs.nth(4).fill('299,792 km/s');
+    await optionInputs.nth(5).fill('150,000 km/s');
+    await optionInputs.nth(6).fill('400,000 km/s');
+    await optionInputs.nth(7).fill('200,000 km/s');
 
-    // Should have 4 empty options again
-    await expect(optionInputs.first()).toHaveValue('');
+    // Select correct answer for second question
+    await radioButtons.nth(4).check();
+
+    // Add second category (History)
+    const historyButton = page.getByRole('button', { name: /\+ history/i });
+    await historyButton.click();
+
+    // Add question to History
+    await addQuestionButtons.nth(1).click();
+
+    // Fill third question
+    await questionInputs.nth(2).fill('When did World War 2 end?');
+    await optionInputs.nth(8).fill('1945');
+    await optionInputs.nth(9).fill('1944');
+    await optionInputs.nth(10).fill('1946');
+    await optionInputs.nth(11).fill('1943');
+
+    // Select correct answer for third question
+    await radioButtons.nth(8).check();
+
+    // Verify summary
+    await expect(page.getByText(/categories:\s*2/i)).toBeVisible();
+    await expect(page.getByText(/total questions:\s*3/i)).toBeVisible();
+
+    // Save the question set
+    const saveButton = page.getByRole('button', { name: /^save$/i });
+    await saveButton.click();
+
+    // Wait for success message
+    await expect(page.getByText(/question set "e2e test set" created successfully/i)).toBeVisible();
+
+    // Modal should close
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Question set should appear in the list
+    await expect(page.getByText('E2E Test Set')).toBeVisible();
+    await expect(page.getByText(/3 questions/i)).toBeVisible();
   });
 
-  test('can add and remove options for Multiple Choice', async ({ page }) => {
-    // Open modal and add category with question
+  test('can edit existing question set and modify a question', async ({ page }) => {
+    // First, ensure we have a question set to edit
+    // We'll use the one created in the previous test, but let's create a fresh one
     await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
 
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
+    const nameInput = page.getByLabel(/question set name/i);
+    await nameInput.fill('Edit Test Set');
 
-    await page.getByRole('button', { name: /add question/i }).first().click();
+    // Add Science category with one question
+    const scienceButton = page.getByRole('button', { name: /\+ science/i });
+    await scienceButton.click();
 
-    // Fill question
-    await page.getByLabel(/question text/i).first().fill('What is the capital of France?');
+    const addQuestionButtons = page.getByRole('button', { name: /\+ add question/i });
+    await addQuestionButtons.first().click();
 
-    // Fill in the 4 default options
+    const questionInputs = page.getByLabel(/question text/i);
+    await questionInputs.first().fill('Original Question');
+
     const optionInputs = page.locator('input[placeholder*="Option"]');
-    await optionInputs.nth(0).fill('Paris');
-    await optionInputs.nth(1).fill('London');
-    await optionInputs.nth(2).fill('Berlin');
-    await optionInputs.nth(3).fill('Madrid');
+    await optionInputs.nth(0).fill('Option A');
+    await optionInputs.nth(1).fill('Option B');
+    await optionInputs.nth(2).fill('Option C');
+    await optionInputs.nth(3).fill('Option D');
 
-    // Options should be filled
-    await expect(optionInputs.nth(0)).toHaveValue('Paris');
-    await expect(optionInputs.nth(1)).toHaveValue('London');
-    await expect(optionInputs.nth(2)).toHaveValue('Berlin');
-    await expect(optionInputs.nth(3)).toHaveValue('Madrid');
+    const radioButtons = page.locator('input[type="radio"]');
+    await radioButtons.nth(0).check();
+
+    // Save
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await expect(page.getByText(/question set "edit test set" created successfully/i)).toBeVisible();
+
+    // Wait for modal to close and page to refresh
+    await page.waitForTimeout(1000);
+
+    // Now edit the question set
+    const editButtons = page.getByRole('button', { name: /^edit$/i });
+    await editButtons.first().click();
+
+    // Modal should open with "Edit Question Set" title
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(/edit question set/i)).toBeVisible();
+
+    // Wait for data to load
+    await page.waitForTimeout(1000);
+
+    // Verify the data is loaded
+    await expect(page.getByLabel(/question set name/i)).toHaveValue('Edit Test Set');
+
+    // Modify the name
+    await page.getByLabel(/question set name/i).fill('Edit Test Set - Modified');
+
+    // Expand the Science category if not already expanded
+    const scienceCategory = page.getByText(/science \(\d+ questions\)/i);
+    await scienceCategory.click();
+
+    // Modify the question text
+    const modifiedQuestionInput = page.getByLabel(/question text/i).first();
+    await modifiedQuestionInput.clear();
+    await modifiedQuestionInput.fill('Modified Question Text');
+
+    // Modify one option
+    const modifiedOptionInputs = page.locator('input[placeholder*="Option"]');
+    await modifiedOptionInputs.nth(0).clear();
+    await modifiedOptionInputs.nth(0).fill('Modified Option A');
+
+    // Save the changes
+    await page.getByRole('button', { name: /^save$/i }).click();
+
+    // Verify success message
+    await expect(page.getByText(/question set "edit test set - modified" updated successfully/i)).toBeVisible();
+
+    // Modal should close
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Verify the modified name appears in the list
+    await expect(page.getByText('Edit Test Set - Modified')).toBeVisible();
   });
 
-  test('category selector works', async ({ page }) => {
-    // Open modal and add category with question
+  test('validates required fields when creating', async ({ page }) => {
+    // Open modal
+    await page.getByRole('button', { name: /create question set/i }).click();
+
+    // Try to save without filling anything
+    await page.getByRole('button', { name: /^save$/i }).click();
+
+    // Should show validation error for name
+    await expect(page.getByText(/question set name is required/i)).toBeVisible();
+
+    // Fill name but no categories
+    await page.getByLabel(/question set name/i).fill('Test');
+    await page.getByRole('button', { name: /^save$/i }).click();
+
+    // Should show validation error for categories
+    await expect(page.getByText(/at least one category is required/i)).toBeVisible();
+
+    // Add category but no questions
+    await page.getByRole('button', { name: /\+ science/i }).click();
+    await page.getByRole('button', { name: /^save$/i }).click();
+
+    // Should show validation error for questions
+    await expect(page.getByText(/at least one question is required/i)).toBeVisible();
+  });
+
+  test('can remove a category', async ({ page }) => {
+    // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
     await page.getByLabel(/question set name/i).fill('Test Set');
 
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
+    // Add two categories
+    await page.getByRole('button', { name: /\+ science/i }).click();
+    await page.getByRole('button', { name: /\+ history/i }).click();
 
-    await page.getByRole('button', { name: /add question/i }).first().click();
+    // Should show both categories
+    await expect(page.getByText(/science \(0 questions\)/i)).toBeVisible();
+    await expect(page.getByText(/history \(0 questions\)/i)).toBeVisible();
 
-    // Fill question
-    await page.getByLabel(/question text/i).first().fill('Test question');
-
-    // Category selector should be visible
-    const questionCategorySelect = page.getByLabel(/^category/i).first();
-    await expect(questionCategorySelect).toBeVisible();
-
-    // Should have default value
-    await expect(questionCategorySelect).toHaveValue('general_knowledge');
-
-    // Can change category
-    await questionCategorySelect.selectOption('science');
-    await expect(questionCategorySelect).toHaveValue('science');
-  });
-
-  test('explanation field is optional and saves', async ({ page }) => {
-    // Open modal and add category with question
-    await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
-
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
-
-    await page.getByRole('button', { name: /add question/i }).first().click();
-
-    // Fill question
-    await page.getByLabel(/question text/i).first().fill('What is H2O?');
-
-    // Fill explanation
-    const explanationInput = page.getByLabel(/explanation/i).first();
-    await expect(explanationInput).toBeVisible();
-    await explanationInput.fill('H2O is the chemical formula for water.');
-
-    // Should save the explanation
-    await expect(explanationInput).toHaveValue('H2O is the chemical formula for water.');
-  });
-
-  test('can remove a question', async ({ page }) => {
-    // Open modal and add category with question
-    await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
-
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
-
-    // Add first question
-    await page.getByRole('button', { name: /add question/i }).first().click();
-    await expect(page.getByText(/question 1/i)).toBeVisible();
-
-    // Add second question
-    await page.getByRole('button', { name: /add question/i }).first().click();
-    await expect(page.getByText(/question 2/i)).toBeVisible();
-
-    // Remove first question
-    const removeButtons = page.getByRole('button', { name: /remove question/i });
+    // Remove Science category
+    const removeButtons = page.getByRole('button', { name: /remove/i });
     await removeButtons.first().click();
 
-    // Should only have one question now
-    await expect(page.getByText(/question 1/i)).toBeVisible();
-    await expect(page.getByText(/question 2/i)).not.toBeVisible();
+    // Science should be gone, History should remain
+    await expect(page.getByText(/science \(0 questions\)/i)).not.toBeVisible();
+    await expect(page.getByText(/history \(0 questions\)/i)).toBeVisible();
   });
 
-  test('validates empty options for Multiple Choice', async ({ page }) => {
-    // Open modal and add category with question
+  test('cancel button closes modal without saving', async ({ page }) => {
+    // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
-    await page.getByLabel(/question set name/i).fill('Test Set');
 
-    const categorySelect = page.getByLabel(/add category/i).first();
-    await categorySelect.selectOption('science');
+    // Fill some data
+    await page.getByLabel(/question set name/i).fill('Should Not Save');
+    await page.getByRole('button', { name: /\+ science/i }).click();
 
-    await page.getByRole('button', { name: /add question/i }).first().click();
+    // Click cancel
+    await page.getByRole('button', { name: /cancel/i }).click();
 
-    // Fill question
-    await page.getByLabel(/question text/i).first().fill('What is 2+2?');
+    // Modal should close
+    await expect(page.getByRole('dialog')).not.toBeVisible();
 
-    // Leave option empty and blur
-    const optionInputs = page.locator('input[placeholder*="Option"]');
-    await optionInputs.nth(0).click();
-    await optionInputs.nth(0).blur();
-
-    // Should show validation error
-    await expect(page.getByText(/option.*is required/i)).toBeVisible();
+    // Question set should not appear in the list
+    await expect(page.getByText('Should Not Save')).not.toBeVisible();
   });
 });

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import type { TriviaQuestionSet, TriviaQuestion } from '@beak-gaming/database/types';
 import { QuestionSetImporter } from '@/components/presenter/QuestionSetImporter';
+import { QuestionSetEditorModal } from '@/components/question-editor/QuestionSetEditorModal';
 import {
   getCategoryStatistics,
   getCategoryBadgeClasses,
@@ -15,9 +16,12 @@ export default function QuestionSetsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImporter, setShowImporter] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingQuestionSetId, setEditingQuestionSetId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const fetchQuestionSets = useCallback(async () => {
     try {
@@ -84,6 +88,22 @@ export default function QuestionSetsPage() {
     }
   };
 
+  const handleCreateNew = () => {
+    setEditingQuestionSetId(null);
+    setShowEditor(true);
+  };
+
+  const handleEdit = (id: string) => {
+    setEditingQuestionSetId(id);
+    setShowEditor(true);
+  };
+
+  const handleEditorSuccess = () => {
+    fetchQuestionSets();
+    setToast({ message: 'Question set saved successfully', type: 'success' });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleExport = (qs: TriviaQuestionSet) => {
     const exportData = {
       name: qs.name,
@@ -129,7 +149,14 @@ export default function QuestionSetsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold">My Question Sets</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleCreateNew}
+            className="inline-flex items-center min-h-[44px] px-5 py-2 text-base font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Create Question Set
+          </button>
           <button
             type="button"
             onClick={() => setShowImporter(!showImporter)}
@@ -253,6 +280,15 @@ export default function QuestionSetsPage() {
               <div className="flex gap-2">
                 <button
                   type="button"
+                  onClick={() => handleEdit(qs.id)}
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  aria-label={`Edit ${qs.name}`}
+                  title="Edit"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setEditingId(qs.id);
                     setEditingName(qs.name);
@@ -311,6 +347,32 @@ export default function QuestionSetsPage() {
           ))}
         </div>
       )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-6 right-6 p-4 rounded-lg shadow-lg border ${
+            toast.type === 'success'
+              ? 'bg-green-500/10 border-green-500/20 text-green-600'
+              : 'bg-red-500/10 border-red-500/20 text-red-600'
+          }`}
+        >
+          <p className="text-base font-medium">{toast.message}</p>
+        </div>
+      )}
+
+      {/* Question Set Editor Modal */}
+      <QuestionSetEditorModal
+        isOpen={showEditor}
+        onClose={() => {
+          setShowEditor(false);
+          setEditingQuestionSetId(null);
+        }}
+        onSuccess={handleEditorSuccess}
+        questionSetId={editingQuestionSetId ?? undefined}
+      />
     </main>
   );
 }

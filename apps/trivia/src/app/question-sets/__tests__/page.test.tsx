@@ -18,6 +18,13 @@ vi.mock('@/components/presenter/QuestionSetImporter', () => ({
   ),
 }));
 
+// Mock QuestionSetEditorModal
+vi.mock('@/components/question-editor/QuestionSetEditorModal', () => ({
+  QuestionSetEditorModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
+    isOpen ? <div data-testid="question-set-editor-modal"><button onClick={onClose}>Close</button></div> : null
+  ),
+}));
+
 // Mock uuid used by conversion
 vi.mock('uuid', () => ({
   v4: () => 'test-uuid',
