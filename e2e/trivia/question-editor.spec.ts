@@ -229,7 +229,43 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText(/history \(0 questions\)/i)).toBeVisible();
   });
 
-  test('cancel button closes modal without saving', async ({ page }) => {
+  test('cancel button closes modal without saving (no changes)', async ({ page }) => {
+    // Open modal
+    await page.getByRole('button', { name: /create question set/i }).click();
+
+    // Click cancel without making changes
+    await page.getByRole('button', { name: /cancel/i }).click();
+
+    // Modal should close immediately (no dirty state)
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+  });
+
+  test('shows discard changes dialog when canceling with unsaved changes', async ({ page }) => {
+    // Open modal
+    await page.getByRole('button', { name: /create question set/i }).click();
+
+    // Fill some data to make it dirty
+    await page.getByLabel(/question set name/i).fill('Should Not Save');
+    await page.getByRole('button', { name: /\+ science/i }).click();
+
+    // Click cancel
+    await page.getByRole('button', { name: /cancel/i }).click();
+
+    // Discard dialog should appear
+    await expect(page.getByRole('dialog').getByText(/discard changes\?/i)).toBeVisible();
+
+    // Click "Keep Editing"
+    await page.getByRole('button', { name: /keep editing/i }).click();
+
+    // Should return to editor modal (discard dialog closes, editor modal remains)
+    await expect(page.getByRole('dialog').getByText(/create question set/i)).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(/discard changes\?/i)).not.toBeVisible();
+
+    // Data should still be there
+    await expect(page.getByLabel(/question set name/i)).toHaveValue('Should Not Save');
+  });
+
+  test('discards changes when confirmed in discard dialog', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -240,10 +276,126 @@ test.describe('Question Set Editor Integration', () => {
     // Click cancel
     await page.getByRole('button', { name: /cancel/i }).click();
 
-    // Modal should close
+    // Discard dialog should appear
+    await expect(page.getByRole('dialog').getByText(/discard changes\?/i)).toBeVisible();
+
+    // Click "Discard Changes"
+    await page.getByRole('button', { name: /^discard changes$/i }).click();
+
+    // Both dialogs should close
     await expect(page.getByRole('dialog')).not.toBeVisible();
 
     // Question set should not appear in the list
     await expect(page.getByText('Should Not Save')).not.toBeVisible();
+  });
+
+  test('shows discard dialog when editing and canceling with changes', async ({ page }) => {
+    // First, create a question set to edit
+    await page.getByRole('button', { name: /create question set/i }).click();
+    await page.getByLabel(/question set name/i).fill('Edit Discard Test');
+    await page.getByRole('button', { name: /\+ science/i }).click();
+
+    const addQuestionButtons = page.getByRole('button', { name: /\+ add question/i });
+    await addQuestionButtons.first().click();
+
+    const questionInputs = page.getByLabel(/question text/i);
+    await questionInputs.first().fill('Original Question');
+
+    const optionInputs = page.locator('input[placeholder*="Option"]');
+    await optionInputs.nth(0).fill('Option A');
+    await optionInputs.nth(1).fill('Option B');
+    await optionInputs.nth(2).fill('Option C');
+    await optionInputs.nth(3).fill('Option D');
+
+    const radioButtons = page.locator('input[type="radio"]');
+    await radioButtons.nth(0).check();
+
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await expect(page.getByText(/question set "edit discard test" created successfully/i)).toBeVisible();
+
+    // Wait for modal to close
+    await page.waitForTimeout(1000);
+
+    // Now edit the question set
+    const editButtons = page.getByRole('button', { name: /^edit$/i });
+    await editButtons.first().click();
+
+    // Wait for data to load
+    await page.waitForTimeout(1000);
+
+    // Modify the name (make it dirty)
+    await page.getByLabel(/question set name/i).fill('Edit Discard Test - Modified');
+
+    // Click cancel
+    await page.getByRole('button', { name: /cancel/i }).click();
+
+    // Discard dialog should appear
+    await expect(page.getByRole('dialog').getByText(/discard changes\?/i)).toBeVisible();
+
+    // Click "Discard Changes"
+    await page.getByRole('button', { name: /^discard changes$/i }).click();
+
+    // Both dialogs should close
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    // Original name should still be in the list (changes were discarded)
+    await expect(page.getByText('Edit Discard Test')).toBeVisible();
+    await expect(page.getByText('Edit Discard Test - Modified')).not.toBeVisible();
+  });
+
+  test('edit, modify, save, and verify persisted changes', async ({ page }) => {
+    // First, create a question set to edit
+    await page.getByRole('button', { name: /create question set/i }).click();
+    await page.getByLabel(/question set name/i).fill('Persistence Test');
+    await page.getByRole('button', { name: /\+ science/i }).click();
+
+    const addQuestionButtons = page.getByRole('button', { name: /\+ add question/i });
+    await addQuestionButtons.first().click();
+
+    const questionInputs = page.getByLabel(/question text/i);
+    await questionInputs.first().fill('Original Question');
+
+    const optionInputs = page.locator('input[placeholder*="Option"]');
+    await optionInputs.nth(0).fill('Option A');
+    await optionInputs.nth(1).fill('Option B');
+    await optionInputs.nth(2).fill('Option C');
+    await optionInputs.nth(3).fill('Option D');
+
+    const radioButtons = page.locator('input[type="radio"]');
+    await radioButtons.nth(0).check();
+
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await expect(page.getByText(/question set "persistence test" created successfully/i)).toBeVisible();
+
+    // Wait for modal to close
+    await page.waitForTimeout(1000);
+
+    // Now edit the question set
+    const editButtons = page.getByRole('button', { name: /^edit$/i });
+    await editButtons.first().click();
+
+    // Wait for data to load
+    await page.waitForTimeout(1000);
+
+    // Modify the name
+    await page.getByLabel(/question set name/i).fill('Persistence Test - Updated');
+
+    // Save the changes
+    await page.getByRole('button', { name: /^save$/i }).click();
+    await expect(page.getByText(/question set "persistence test - updated" updated successfully/i)).toBeVisible();
+
+    // Wait for modal to close
+    await page.waitForTimeout(1000);
+
+    // Verify the updated name appears in the list
+    await expect(page.getByText('Persistence Test - Updated')).toBeVisible();
+    await expect(page.getByText(/^persistence test$/i)).not.toBeVisible();
+
+    // Reload the page to verify persistence
+    await page.reload();
+    await waitForHydration(page);
+
+    // Verify the updated name is still there after reload
+    await expect(page.getByText('Persistence Test - Updated')).toBeVisible();
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useReducer, useState, useEffect } from 'react';
+import { useId, useReducer, useState, useEffect, useRef } from 'react';
 import { Modal } from '@beak-gaming/ui';
 import { useToast } from '@beak-gaming/ui';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
@@ -11,7 +11,9 @@ import {
   createInitialState,
   type QuestionFormData,
   type CategoryFormData,
+  type EditorState,
 } from './QuestionSetEditorModal.utils';
+import { DiscardChangesDialog } from './DiscardChangesDialog';
 
 export interface QuestionSetEditorModalProps {
   isOpen: boolean;
@@ -40,6 +42,24 @@ export function QuestionSetEditorModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  // Track initial state for dirty detection
+  const initialStateRef = useRef<EditorState>(createInitialState());
+
+  // Compute dirty state (has changes from initial)
+  const isDirty = JSON.stringify(state) !== JSON.stringify(initialStateRef.current);
+
+  // Reset to fresh state when modal opens in create mode
+  useEffect(() => {
+    if (isOpen && !questionSetId) {
+      const freshState = createInitialState();
+      dispatch({ type: 'RESET', payload: freshState });
+      initialStateRef.current = freshState;
+      setExpandedCategories(new Set());
+      setError(null);
+    }
+  }, [isOpen, questionSetId]);
 
   // Load existing question set data when in edit mode
   useEffect(() => {
@@ -96,6 +116,8 @@ export function QuestionSetEditorModal({
         });
 
         dispatch({ type: 'RESET', payload: loadedState });
+        // Store initial state for dirty detection
+        initialStateRef.current = loadedState;
 
         // Auto-expand all categories
         setExpandedCategories(new Set(Array.from({ length: categoriesMap.size }, (_, i) => i)));
@@ -110,6 +132,25 @@ export function QuestionSetEditorModal({
 
     loadQuestionSet();
   }, [isOpen, questionSetId, errorToast]);
+
+  // Browser beforeunload warning when dirty
+  useEffect(() => {
+    if (!isOpen || !isDirty) {
+      return;
+    }
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Modern browsers require returnValue to be set
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isOpen, isDirty]);
 
   // Available categories for selection (not yet added)
   const availableCategories = DEFAULT_CATEGORIES.filter(
@@ -213,7 +254,9 @@ export function QuestionSetEditorModal({
       }
 
       success(`Question set "${state.name.trim()}" ${isEditMode ? 'updated' : 'created'} successfully`);
-      dispatch({ type: 'RESET', payload: createInitialState() });
+      const freshState = createInitialState();
+      dispatch({ type: 'RESET', payload: freshState });
+      initialStateRef.current = freshState;
       setExpandedCategories(new Set());
       onSuccess?.();
       onClose();
@@ -227,25 +270,56 @@ export function QuestionSetEditorModal({
   };
 
   const handleClose = () => {
-    if (!isSaving) {
-      dispatch({ type: 'RESET', payload: createInitialState() });
-      setExpandedCategories(new Set());
-      setError(null);
-      onClose();
+    if (isSaving) {
+      return;
     }
+
+    // If dirty, show confirmation dialog
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
+
+    // Otherwise, close immediately
+    const freshState = createInitialState();
+    dispatch({ type: 'RESET', payload: freshState });
+    initialStateRef.current = freshState;
+    setExpandedCategories(new Set());
+    setError(null);
+    onClose();
+  };
+
+  const handleDiscard = () => {
+    setShowDiscardDialog(false);
+    const freshState = createInitialState();
+    dispatch({ type: 'RESET', payload: freshState });
+    initialStateRef.current = freshState;
+    setExpandedCategories(new Set());
+    setError(null);
+    onClose();
+  };
+
+  const handleKeepEditing = () => {
+    setShowDiscardDialog(false);
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={questionSetId ? 'Edit Question Set' : 'Create Question Set'}
-      confirmLabel={isSaving ? 'Saving...' : 'Save'}
-      cancelLabel="Cancel"
-      onConfirm={handleSave}
-      variant="default"
-      showFooter
-    >
+    <>
+      <DiscardChangesDialog
+        isOpen={showDiscardDialog}
+        onDiscard={handleDiscard}
+        onKeepEditing={handleKeepEditing}
+      />
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title={questionSetId ? 'Edit Question Set' : 'Create Question Set'}
+        confirmLabel={isSaving ? 'Saving...' : 'Save'}
+        cancelLabel="Cancel"
+        onConfirm={handleSave}
+        variant="default"
+        showFooter
+      >
       <div className="flex flex-col gap-6">
         {/* Loading State */}
         {isLoading && (
@@ -395,7 +469,8 @@ export function QuestionSetEditorModal({
           </>
         )}
       </div>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
