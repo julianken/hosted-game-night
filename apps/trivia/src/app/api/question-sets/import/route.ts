@@ -1,23 +1,37 @@
 /**
  * Import API Route — POST /api/question-sets/import
  *
- * Accepts raw JSON content, parses and validates questions,
- * then creates a new trivia question set.
+ * Accepts raw JSON content with nested categories structure,
+ * parses and validates it, then creates a new trivia question set.
+ *
+ * Expected JSON format:
+ * {
+ *   "name": "Question Set Name",
+ *   "description": "Optional description",
+ *   "categories": [
+ *     {
+ *       "id": "science",
+ *       "name": "Science & Nature",
+ *       "questions": [
+ *         { "question": "...", "options": [...], "correctIndex": 0 }
+ *       ]
+ *     }
+ *   ]
+ * }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { parseJsonQuestions, questionsToTriviaQuestions } from '@/lib/questions';
+import { createServiceClient, getAuthenticatedUserId } from '@/lib/supabase/server';
+import { parseNestedJsonQuestions } from '@/lib/questions';
 import { createTriviaQuestionSet } from '@beak-gaming/database/tables';
 import { isDatabaseError } from '@beak-gaming/database/errors';
 import type { TriviaQuestionSetInsert } from '@beak-gaming/database/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const userId = await getAuthenticatedUserId();
 
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -38,39 +52,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Parse the raw JSON to extract wrapper metadata
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawJson);
-    } catch {
+    // Parse the nested JSON structure with categories
+    const parseResult = parseNestedJsonQuestions(rawJson);
+
+    // ALL categories and questions must be valid
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Invalid JSON in rawJson' },
+        {
+          error: `Validation failed: ${parseResult.errors.length} error(s)`,
+          errors: parseResult.errors,
+          warnings: parseResult.warnings,
+        },
         { status: 400 }
       );
     }
 
-    // Step 2: Extract wrapper name/description if present
-    let wrapperName: string | undefined;
-    let wrapperDescription: string | undefined;
-    let questionsJson: string;
-
-    if (
-      parsed &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed) &&
-      'questions' in parsed
-    ) {
-      const wrapper = parsed as Record<string, unknown>;
-      if (typeof wrapper.name === 'string') wrapperName = wrapper.name;
-      if (typeof wrapper.description === 'string') wrapperDescription = wrapper.description;
-      // Pass just the questions array to the parser
-      questionsJson = JSON.stringify(wrapper.questions);
-    } else {
-      questionsJson = rawJson;
-    }
-
-    // Step 3: Determine final name — body overrides wrapper
-    const finalName = name || wrapperName;
+    // Determine final name — body overrides JSON wrapper
+    const finalName = name || parseResult.name;
     if (!finalName) {
       return NextResponse.json(
         { error: 'Missing required field: name (not provided in body or JSON wrapper)' },
@@ -78,37 +76,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const finalDescription = description ?? wrapperDescription ?? null;
+    const finalDescription = description ?? parseResult.description ?? null;
 
-    // Step 4: Parse questions via parseJsonQuestions
-    const parseResult = parseJsonQuestions(questionsJson);
-
-    // Step 5: ALL questions must be valid
-    if (!parseResult.success || parseResult.totalInvalid > 0) {
-      return NextResponse.json(
-        {
-          error: `Validation failed: ${parseResult.totalInvalid} invalid question(s) out of ${parseResult.totalParsed}`,
-          parseResult,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Step 6: Convert Question[] → TriviaQuestion[]
-    const triviaQuestions = questionsToTriviaQuestions(parseResult.questions);
-
-    // Step 7: Create the question set
+    // Create the question set with nested categories
+    const supabase = createServiceClient();
     const questionSetData: TriviaQuestionSetInsert = {
-      user_id: user.id,
+      user_id: userId,
       name: finalName,
       description: finalDescription,
-      questions: triviaQuestions,
+      categories: parseResult.categories,
       is_default: false,
     };
 
     const questionSet = await createTriviaQuestionSet(supabase, questionSetData);
 
-    return NextResponse.json({ questionSet, parseResult }, { status: 201 });
+    return NextResponse.json(
+      {
+        questionSet,
+        importResult: {
+          totalCategories: parseResult.totalCategories,
+          totalQuestions: parseResult.totalQuestions,
+          warnings: parseResult.warnings,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error importing question set:', error);
 

@@ -2,13 +2,17 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import type { TriviaQuestionSet, TriviaQuestion } from '@beak-gaming/database/types';
+import type { TriviaQuestionSet, TriviaCategory } from '@beak-gaming/database/types';
 import { QuestionSetImporter } from '@/components/presenter/QuestionSetImporter';
+import { QuestionSetEditorModal } from '@/components/question-editor';
 import {
   getCategoryStatistics,
   getCategoryBadgeClasses,
 } from '@/lib/categories';
-import { triviaQuestionsToQuestions } from '@/lib/questions/conversion';
+import {
+  triviaCategoriesToQuestions,
+  getTotalQuestionsFromCategories,
+} from '@/lib/questions/conversion';
 
 export default function QuestionSetsPage() {
   const [questionSets, setQuestionSets] = useState<TriviaQuestionSet[]>([]);
@@ -18,6 +22,10 @@ export default function QuestionSetsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Editor modal state
+  const [showEditor, setShowEditor] = useState(false);
+  const [editorQuestionSet, setEditorQuestionSet] = useState<TriviaQuestionSet | null>(null);
 
   const fetchQuestionSets = useCallback(async () => {
     try {
@@ -85,15 +93,11 @@ export default function QuestionSetsPage() {
   };
 
   const handleExport = (qs: TriviaQuestionSet) => {
+    // Export in nested categories format
     const exportData = {
       name: qs.name,
       description: qs.description ?? '',
-      questions: qs.questions.map((tq: TriviaQuestion) => ({
-        text: tq.question,
-        options: tq.options,
-        correctAnswer: tq.options[tq.correctIndex],
-        category: tq.category ?? 'general_knowledge',
-      })),
+      categories: qs.categories,
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -107,10 +111,64 @@ export default function QuestionSetsPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Open editor for creating a new question set
+  const handleCreateNew = () => {
+    setEditorQuestionSet(null);
+    setShowEditor(true);
+  };
+
+  // Open editor for editing an existing question set
+  const handleEdit = (qs: TriviaQuestionSet) => {
+    setEditorQuestionSet(qs);
+    setShowEditor(true);
+  };
+
+  // Save from editor modal (create or update)
+  const handleEditorSave = async (data: {
+    name: string;
+    description: string;
+    categories: TriviaCategory[];
+  }) => {
+    if (editorQuestionSet) {
+      // Update existing
+      const response = await fetch(`/api/question-sets/${editorQuestionSet.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update question set');
+      }
+
+      // Refresh list
+      await fetchQuestionSets();
+    } else {
+      // Create new
+      const response = await fetch('/api/question-sets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create question set');
+      }
+
+      // Refresh list
+      await fetchQuestionSets();
+    }
+
+    setShowEditor(false);
+    setEditorQuestionSet(null);
+  };
+
   const categoryStatsMap = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getCategoryStatistics>>();
     for (const qs of questionSets) {
-      const appQuestions = triviaQuestionsToQuestions(qs.questions);
+      const appQuestions = triviaCategoriesToQuestions(qs.categories);
       map.set(qs.id, getCategoryStatistics(appQuestions));
     }
     return map;
@@ -129,13 +187,20 @@ export default function QuestionSetsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold">My Question Sets</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleCreateNew}
+            className="inline-flex items-center min-h-[44px] px-5 py-2 text-base font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            + Create New
+          </button>
           <button
             type="button"
             onClick={() => setShowImporter(!showImporter)}
-            className="inline-flex items-center min-h-[44px] px-5 py-2 text-base font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center min-h-[44px] px-5 py-2 text-base font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
           >
-            {showImporter ? 'Hide Importer' : 'Import Questions'}
+            {showImporter ? 'Hide Importer' : 'Import JSON'}
           </button>
           <Link
             href="/"
@@ -230,7 +295,7 @@ export default function QuestionSetsPage() {
               {/* Question count */}
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="text-sm font-medium px-2 py-0.5 rounded-full bg-muted">
-                  {qs.questions.length} question{qs.questions.length !== 1 ? 's' : ''}
+                  {getTotalQuestionsFromCategories(qs.categories)} question{getTotalQuestionsFromCategories(qs.categories) !== 1 ? 's' : ''}
                 </span>
 
                 {/* Category badges */}
@@ -250,7 +315,16 @@ export default function QuestionSetsPage() {
               </p>
 
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleEdit(qs)}
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  aria-label={`Edit ${qs.name}`}
+                  title="Edit questions"
+                >
+                  Edit
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -311,6 +385,17 @@ export default function QuestionSetsPage() {
           ))}
         </div>
       )}
+
+      {/* Question Set Editor Modal */}
+      <QuestionSetEditorModal
+        isOpen={showEditor}
+        onClose={() => {
+          setShowEditor(false);
+          setEditorQuestionSet(null);
+        }}
+        onSave={handleEditorSave}
+        questionSet={editorQuestionSet}
+      />
     </main>
   );
 }

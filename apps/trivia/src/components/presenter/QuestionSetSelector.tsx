@@ -5,7 +5,10 @@ import { useGameStore } from '@/stores/game-store';
 import { useToast } from "@beak-gaming/ui";
 import type { TriviaQuestionSet } from '@beak-gaming/database/types';
 import type { Question } from '@/types';
-import { triviaQuestionToQuestion } from '@/lib/questions/conversion';
+import {
+  triviaCategoriesToQuestions,
+  getTotalQuestionsFromCategories,
+} from '@/lib/questions/conversion';
 
 export interface QuestionSetSelectorProps {
   disabled?: boolean;
@@ -26,7 +29,6 @@ export function QuestionSetSelector({
   // Store actions
   const importQuestions = useGameStore((state) => state.importQuestions);
   const gameStatus = useGameStore((state) => state.status);
-  const questionsPerRound = useGameStore((state) => state.settings.questionsPerRound);
 
   // Component state
   const [questionSets, setQuestionSets] = useState<TriviaQuestionSet[]>([]);
@@ -72,22 +74,20 @@ export function QuestionSetSelector({
     }
 
     try {
-      const convertedQuestions: Question[] = [];
-
-      questionSet.questions.forEach((dbQuestion, index) => {
-        const roundIndex = Math.floor(index / questionsPerRound);
-        convertedQuestions.push(triviaQuestionToQuestion(dbQuestion, roundIndex));
-      });
+      // Convert nested categories to flat Question array
+      // triviaCategoriesToQuestions handles roundIndex (category position = round)
+      const convertedQuestions: Question[] = triviaCategoriesToQuestions(questionSet.categories);
 
       importQuestions(convertedQuestions, 'replace');
 
-      success(`Loaded question set "${questionSet.name}" (${questionSet.questions.length} questions)`);
+      const totalQuestions = getTotalQuestionsFromCategories(questionSet.categories);
+      success(`Loaded question set "${questionSet.name}" (${totalQuestions} questions)`);
       onQuestionSetLoad?.(questionSet);
     } catch (err) {
       console.error('Error loading question set:', err);
       errorToast('Failed to load question set');
     }
-  }, [questionSets, importQuestions, questionsPerRound, success, errorToast, onQuestionSetLoad]);
+  }, [questionSets, importQuestions, success, errorToast, onQuestionSetLoad]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const setId = e.target.value;
@@ -130,7 +130,7 @@ export function QuestionSetSelector({
             {qs.name}
             {qs.is_default ? ' (Default)' : ''}
             {' '}
-            ({qs.questions.length} questions)
+            ({getTotalQuestionsFromCategories(qs.categories)} questions)
           </option>
         ))}
       </select>
