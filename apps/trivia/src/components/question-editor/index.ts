@@ -8,3 +8,7 @@ export {
   type CategoryFormData,
   type QuestionFormData,
 } from './QuestionSetEditorModal.utils';
+export { RoundEditor } from './RoundEditor';
+export type { RoundEditorProps } from './RoundEditor';
+export { RoundHeader } from './RoundHeader';
+export type { RoundHeaderProps } from './RoundHeader';
