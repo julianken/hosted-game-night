@@ -126,6 +126,13 @@ body {
 
 /* Large click targets for interactive elements */
 button,
+a,
+[role="button"],
+[role="link"] {
+  cursor: pointer;
+}
+
+button,
 [role="button"] {
   min-height: var(--size-touch);
   min-width: var(--size-touch);
