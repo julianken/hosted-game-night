@@ -153,10 +153,11 @@ export async function GET(request: NextRequest) {
         .single();
 
       console.log('[OAuth Authorize] DB client lookup result:', {
-        client: dbClient_ ? { id: dbClient_.id, name: dbClient_.name } : null,
+        client: dbClient_ ? { id: dbClient_.id, name: dbClient_.name, redirect_uris: dbClient_.redirect_uris } : null,
         error: clientError?.message,
         code: clientError?.code
       });
+      console.log('[OAuth Authorize] Requested redirect_uri:', JSON.stringify(redirectUri));
 
       if (clientError || !dbClient_) {
         console.error('[OAuth Authorize] Client not found, error:', clientError);
