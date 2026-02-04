@@ -127,9 +127,17 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
 
       if (!response.ok || !data.success) {
         console.log('[LoginForm] Login failed, calling signIn fallback');
-        // Show error via useAuth's error state
-        await signIn(email, password);
-        return; // signIn will update authError state
+        // Show error via useAuth's error state, then redirect if successful
+        try {
+          await signIn(email, password);
+          // If signIn didn't throw, redirect to dashboard as fallback
+          console.log('[LoginForm] Fallback signIn successful, redirecting to dashboard');
+          window.location.href = '/dashboard';
+        } catch {
+          // signIn failed - authError will be set by useAuth
+          console.log('[LoginForm] Fallback signIn failed, staying on login page');
+        }
+        return;
       }
 
       // Success - redirect with preserved authorization_id if present
@@ -146,7 +154,15 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
     } catch (error) {
       console.error('Login API error:', error);
       // Fallback to direct signIn on network errors
-      await signIn(email, password);
+      try {
+        await signIn(email, password);
+        // If signIn didn't throw, redirect to dashboard as fallback
+        console.log('[LoginForm] Fallback signIn successful, redirecting to dashboard');
+        window.location.href = '/dashboard';
+      } catch {
+        // signIn failed - authError will be set by useAuth
+        console.log('[LoginForm] Fallback signIn failed, staying on login page');
+      }
     }
   };
 
