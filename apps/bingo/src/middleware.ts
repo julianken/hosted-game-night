@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
+import {
+  shouldRefreshToken,
+  isTokenExpired,
+  refreshTokens,
+} from '@/lib/auth/token-refresh';
 
 /**
  * Next.js Middleware for Route Protection
@@ -12,12 +17,17 @@ import { jwtVerify, createRemoteJWKSet } from 'jose';
  * - /display (audience view)
  * - /auth/* (OAuth callback, login)
  *
+ * Token Refresh:
+ * Proactively refreshes tokens 5 minutes before expiry to prevent
+ * session interruptions during gameplay.
+ *
  * E2E Testing Mode:
  * When E2E_TESTING=true, accepts tokens signed with the E2E test secret
  * to avoid hitting Supabase rate limits during test execution.
  */
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const PLATFORM_HUB_URL = process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002';
 
 // E2E Testing: Same secret used by Platform Hub login API
 const E2E_JWT_SECRET = new TextEncoder().encode(
@@ -83,6 +93,30 @@ async function verifyAccessToken(token: string): Promise<boolean> {
   }
 }
 
+/**
+ * Cookie options for token storage
+ */
+function getCookieOptions(maxAge: number) {
+  return {
+    path: '/',
+    domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    maxAge,
+  };
+}
+
+/**
+ * Clear all auth cookies
+ */
+function clearAuthCookies(response: NextResponse) {
+  const cookieOptions = getCookieOptions(0);
+  response.cookies.set('beak_access_token', '', cookieOptions);
+  response.cookies.set('beak_refresh_token', '', cookieOptions);
+  response.cookies.set('beak_user_id', '', { ...cookieOptions, httpOnly: false });
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -93,6 +127,7 @@ export async function middleware(request: NextRequest) {
 
   // Check for access token in httpOnly cookie (using cross-app SSO cookie name)
   const accessToken = request.cookies.get('beak_access_token')?.value;
+  const refreshToken = request.cookies.get('beak_refresh_token')?.value;
 
   if (!accessToken) {
     // No token - redirect to login
@@ -100,20 +135,84 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Check if token needs proactive refresh (within 5 minutes of expiry)
+  if (refreshToken && shouldRefreshToken(accessToken)) {
+    console.log('[Middleware] Token approaching expiry, attempting proactive refresh');
+
+    const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL);
+
+    if (result.success && result.accessToken && result.refreshToken) {
+      console.log('[Middleware] Token refresh successful');
+
+      // Create response and set new cookies
+      const response = NextResponse.next();
+      const maxAge = 60 * 60 * 24 * 7; // 7 days
+
+      response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
+      response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));
+
+      return response;
+    } else {
+      console.warn('[Middleware] Proactive refresh failed, falling back to existing token:', result.error);
+      // Continue with existing token - it's still valid, just close to expiry
+    }
+  }
+
+  // Check if token is already expired - try refresh before rejecting
+  if (isTokenExpired(accessToken)) {
+    if (refreshToken) {
+      console.log('[Middleware] Token expired, attempting refresh');
+
+      const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL);
+
+      if (result.success && result.accessToken && result.refreshToken) {
+        console.log('[Middleware] Token refresh successful after expiry');
+
+        // Create response and set new cookies
+        const response = NextResponse.next();
+        const maxAge = 60 * 60 * 24 * 7; // 7 days
+
+        response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
+        response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));
+
+        return response;
+      }
+    }
+
+    // Refresh failed or no refresh token - clear cookies and redirect to login
+    console.log('[Middleware] Token expired and refresh failed, redirecting to login');
+    const response = NextResponse.redirect(new URL('/', request.url));
+    clearAuthCookies(response);
+    return response;
+  }
+
   // Verify token is valid
   const isValid = await verifyAccessToken(accessToken);
 
   if (!isValid) {
-    // Invalid token - clear cookies and redirect to login
+    // Invalid token - try refresh before giving up
+    if (refreshToken) {
+      console.log('[Middleware] Token invalid, attempting refresh');
+
+      const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL);
+
+      if (result.success && result.accessToken && result.refreshToken) {
+        console.log('[Middleware] Token refresh successful after invalid token');
+
+        // Create response and set new cookies
+        const response = NextResponse.next();
+        const maxAge = 60 * 60 * 24 * 7; // 7 days
+
+        response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
+        response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));
+
+        return response;
+      }
+    }
+
+    // Refresh failed - clear cookies and redirect to login
     const response = NextResponse.redirect(new URL('/', request.url));
-    const cookieOptions = {
-      path: '/',
-      domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
-      maxAge: 0,
-    };
-    response.cookies.set('beak_access_token', '', cookieOptions);
-    response.cookies.set('beak_refresh_token', '', cookieOptions);
-    response.cookies.set('beak_user_id', '', cookieOptions);
+    clearAuthCookies(response);
     return response;
   }
 
