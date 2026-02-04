@@ -41,7 +41,7 @@ export interface AuthState {
  * Auth context value with state and actions
  */
 export interface AuthContextValue extends AuthState {
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; session?: AuthSession | null }>;
   signUp: (email: string, password: string, options?: { emailRedirectTo?: string; data?: Record<string, unknown> }) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;

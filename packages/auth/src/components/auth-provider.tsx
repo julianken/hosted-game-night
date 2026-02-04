@@ -121,7 +121,7 @@ export function AuthProvider({
 
   // Sign in with email/password
   const signIn = useCallback(
-    async (email: string, password: string): Promise<{ error: AuthError | null }> => {
+    async (email: string, password: string): Promise<{ error: AuthError | null; session?: Session | null }> => {
       updateState({ isLoading: true, error: null });
 
       try {
@@ -143,7 +143,7 @@ export function AuthProvider({
           error: null,
         });
 
-        return { error: null };
+        return { error: null, session: data.session };
       } catch (error) {
         const authError = mapAuthError(error);
         updateState({ isLoading: false, error: authError });

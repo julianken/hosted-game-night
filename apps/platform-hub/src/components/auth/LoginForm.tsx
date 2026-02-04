@@ -129,7 +129,29 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
         console.log('[LoginForm] Login failed, calling signIn fallback');
         // Show error via useAuth's error state, then redirect if successful
         try {
-          await signIn(email, password);
+          const result = await signIn(email, password);
+          if (result.error) {
+            console.log('[LoginForm] Fallback signIn failed:', result.error);
+            return;
+          }
+
+          // Sync the session to httpOnly cookies for cross-app SSO
+          if (result.session) {
+            console.log('[LoginForm] Syncing session to httpOnly cookies...');
+            try {
+              await fetch('/api/auth/sync-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  accessToken: result.session.access_token,
+                  refreshToken: result.session.refresh_token,
+                }),
+              });
+            } catch (syncError) {
+              console.warn('[LoginForm] Session sync failed (non-fatal):', syncError);
+            }
+          }
+
           // If signIn didn't throw, redirect to original destination or dashboard
           const fallbackUrl = buildRedirectUrl(redirectTo, authorizationId);
           console.log('[LoginForm] Fallback signIn successful, redirecting to:', fallbackUrl);
@@ -156,7 +178,29 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
       console.error('Login API error:', error);
       // Fallback to direct signIn on network errors
       try {
-        await signIn(email, password);
+        const result = await signIn(email, password);
+        if (result.error) {
+          console.log('[LoginForm] Fallback signIn failed:', result.error);
+          return;
+        }
+
+        // Sync the session to httpOnly cookies for cross-app SSO
+        if (result.session) {
+          console.log('[LoginForm] Syncing session to httpOnly cookies...');
+          try {
+            await fetch('/api/auth/sync-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                accessToken: result.session.access_token,
+                refreshToken: result.session.refresh_token,
+              }),
+            });
+          } catch (syncError) {
+            console.warn('[LoginForm] Session sync failed (non-fatal):', syncError);
+          }
+        }
+
         // If signIn didn't throw, redirect to original destination or dashboard
         const fallbackUrl = buildRedirectUrl(redirectTo, authorizationId);
         console.log('[LoginForm] Fallback signIn successful, redirecting to:', fallbackUrl);
