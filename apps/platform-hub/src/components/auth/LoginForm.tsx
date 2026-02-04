@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@beak-gaming/ui';
 import { useAuth } from '@beak-gaming/auth';
@@ -74,7 +73,6 @@ function buildRedirectUrl(redirectTo: string | undefined, authorizationId: strin
  * - Links to signup and password reset
  */
 export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
-  const router = useRouter();
   const { signIn, isLoading, error: authError } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -138,14 +136,13 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
       const redirectUrl = buildRedirectUrl(redirectTo, authorizationId);
       console.log('[LoginForm] Login successful, redirecting to:', redirectUrl);
 
-      // Use window.location for API routes (they return HTTP redirects)
-      // router.push can't follow HTTP 302 redirects from API endpoints
-      if (redirectUrl.startsWith('/api/')) {
-        window.location.href = redirectUrl;
-      } else {
-        router.push(redirectUrl);
-      }
-      console.log('[LoginForm] Redirect initiated');
+      // Always use window.location.href for post-login redirects
+      // This ensures a full page load which:
+      // 1. Properly reads the newly-set authentication cookies
+      // 2. Guarantees the redirect happens (router.push can fail silently)
+      // 3. Handles API routes that return HTTP 302 redirects
+      window.location.href = redirectUrl;
+      console.log('[LoginForm] Redirect initiated via window.location');
     } catch (error) {
       console.error('Login API error:', error);
       // Fallback to direct signIn on network errors
