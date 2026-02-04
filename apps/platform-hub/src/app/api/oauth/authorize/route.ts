@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import {
   E2E_TEST_USER_ID,
   E2E_MOCK_CLIENTS,
   createE2EAuthorization,
   cleanupE2EAuthorizations,
+  updateE2EAuthorization,
 } from '@/lib/oauth/e2e-store';
+import { auditAuthorizationSuccess } from '@/middleware/audit-middleware';
 
 /**
  * OAuth 2.1 Authorization Endpoint
@@ -132,7 +135,7 @@ export async function GET(request: NextRequest) {
     console.log('[OAuth Authorize] User ID:', userId);
 
     // Validate client exists and redirect_uri is registered
-    let client: { id: string; name: string; redirect_uris: string[] } | null = null;
+    let client: { id: string; name: string; redirect_uris: string[]; is_first_party?: boolean } | null = null;
 
     // In E2E mode, try mock clients first (handles case where migration isn't applied)
     if (isE2ETestSession && E2E_MOCK_CLIENTS[clientId]) {
@@ -144,7 +147,7 @@ export async function GET(request: NextRequest) {
     if (!client) {
       const { data: dbClient_, error: clientError } = await dbClient
         .from('oauth_clients')
-        .select('id, name, redirect_uris')
+        .select('id, name, redirect_uris, is_first_party')
         .eq('id', clientId)
         .single();
 
@@ -200,6 +203,26 @@ export async function GET(request: NextRequest) {
         created_at: now.toISOString(),
         expires_at: expiresAt.toISOString(),
       });
+
+      // Check if client is first-party (auto-approve without consent screen)
+      if (client.is_first_party) {
+        console.log('[OAuth Authorize] E2E mode: auto-approving first-party client');
+        const authCode = crypto.randomBytes(32).toString('hex');
+        const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Update E2E authorization with code (approved status)
+        updateE2EAuthorization(authorizationId, {
+          code: authCode,
+          code_expires_at: codeExpiresAt.toISOString(),
+          status: 'approved',
+        });
+
+        // Redirect directly back to app with authorization code
+        const autoApproveRedirectUrl = new URL(redirectUri);
+        autoApproveRedirectUrl.searchParams.set('code', authCode);
+        autoApproveRedirectUrl.searchParams.set('state', state);
+        return NextResponse.redirect(autoApproveRedirectUrl);
+      }
     } else {
       // Normal mode: store in database
       const { error: insertError } = await dbClient
@@ -220,9 +243,48 @@ export async function GET(request: NextRequest) {
         console.error('Failed to create authorization:', insertError);
         return errorRedirect(redirectUri, 'server_error', 'Failed to create authorization', state);
       }
+
+      // Check if client is first-party (auto-approve without consent screen)
+      if (client.is_first_party) {
+        console.log('[OAuth Authorize] Auto-approving first-party client:', client.name);
+        const authCode = crypto.randomBytes(32).toString('hex');
+        const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Update authorization with code (approved status)
+        const { error: updateError } = await dbClient
+          .from('oauth_authorizations')
+          .update({
+            code: authCode,
+            code_expires_at: codeExpiresAt.toISOString(),
+            status: 'approved',
+            approved_at: new Date().toISOString(),
+          })
+          .eq('id', authorizationId);
+
+        if (updateError) {
+          console.error('Failed to auto-approve authorization:', updateError);
+          return errorRedirect(redirectUri, 'server_error', 'Failed to auto-approve authorization', state);
+        }
+
+        // Log auto-approval for audit trail
+        const scopes = scope.split(' ');
+        await auditAuthorizationSuccess(
+          request,
+          userId,
+          clientId,
+          authorizationId,
+          scopes
+        );
+
+        // Redirect directly back to app with authorization code
+        const autoApproveRedirectUrl = new URL(redirectUri);
+        autoApproveRedirectUrl.searchParams.set('code', authCode);
+        autoApproveRedirectUrl.searchParams.set('state', state);
+        return NextResponse.redirect(autoApproveRedirectUrl);
+      }
     }
 
-    // Redirect to consent page
+    // Third-party apps continue to consent screen (existing behavior)
     const consentUrl = new URL('/oauth/consent', request.nextUrl.origin);
     consentUrl.searchParams.set('authorization_id', authorizationId);
     return NextResponse.redirect(consentUrl);
