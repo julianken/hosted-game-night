@@ -130,9 +130,10 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
         // Show error via useAuth's error state, then redirect if successful
         try {
           await signIn(email, password);
-          // If signIn didn't throw, redirect to dashboard as fallback
-          console.log('[LoginForm] Fallback signIn successful, redirecting to dashboard');
-          window.location.href = '/dashboard';
+          // If signIn didn't throw, redirect to original destination or dashboard
+          const fallbackUrl = buildRedirectUrl(redirectTo, authorizationId);
+          console.log('[LoginForm] Fallback signIn successful, redirecting to:', fallbackUrl);
+          window.location.href = fallbackUrl;
         } catch {
           // signIn failed - authError will be set by useAuth
           console.log('[LoginForm] Fallback signIn failed, staying on login page');
@@ -156,9 +157,10 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
       // Fallback to direct signIn on network errors
       try {
         await signIn(email, password);
-        // If signIn didn't throw, redirect to dashboard as fallback
-        console.log('[LoginForm] Fallback signIn successful, redirecting to dashboard');
-        window.location.href = '/dashboard';
+        // If signIn didn't throw, redirect to original destination or dashboard
+        const fallbackUrl = buildRedirectUrl(redirectTo, authorizationId);
+        console.log('[LoginForm] Fallback signIn successful, redirecting to:', fallbackUrl);
+        window.location.href = fallbackUrl;
       } catch {
         // signIn failed - authError will be set by useAuth
         console.log('[LoginForm] Fallback signIn failed, staying on login page');
