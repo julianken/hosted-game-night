@@ -16,8 +16,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
 import { SignJWT } from 'jose';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 // E2E Testing: Same secret used by Bingo/Trivia middleware for token verification
 const E2E_JWT_SECRET = new TextEncoder().encode(
@@ -255,63 +255,166 @@ async function handleAuthorizationCodeGrant(params: {
       });
     }
 
-    // Normal mode: use Supabase
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Normal mode: look up authorization code in database
+    const dbClient = createServiceRoleClient();
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase configuration');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    // Exchange authorization code for tokens
-    // Supabase validates PKCE and issues tokens with refresh token rotation enabled
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (error) {
-      tokenRotationLogger.log({
-        event_type: 'refresh_failure',
+    // Find authorization by code
+    const { data: authData, error: authError } = await dbClient
+      .from('oauth_authorizations')
+      .select(`
+        id,
         client_id,
-        error: error.message,
-        metadata: { grant_type: 'authorization_code' },
-      });
+        user_id,
+        redirect_uri,
+        code_challenge,
+        code_challenge_method,
+        code_expires_at,
+        status
+      `)
+      .eq('code', code)
+      .eq('status', 'approved')
+      .single();
 
+    if (authError || !authData) {
+      console.error('[Token Endpoint] Authorization not found:', authError);
       return NextResponse.json(
         {
           error: 'invalid_grant',
-          error_description: error.message || 'Invalid authorization code',
+          error_description: 'Invalid authorization code',
         },
         { status: 400 }
       );
     }
 
-    if (!data.session) {
+    // Validate PKCE code_verifier against code_challenge
+    const computedChallenge = crypto
+      .createHash('sha256')
+      .update(code_verifier)
+      .digest('base64url');
+
+    if (computedChallenge !== authData.code_challenge) {
+      console.error('[Token Endpoint] PKCE validation failed');
+      return NextResponse.json(
+        {
+          error: 'invalid_grant',
+          error_description: 'Invalid code_verifier',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate client_id matches
+    if (client_id !== authData.client_id) {
+      console.error('[Token Endpoint] Client ID mismatch');
+      return NextResponse.json(
+        {
+          error: 'invalid_grant',
+          error_description: 'Client ID mismatch',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate redirect_uri matches
+    if (redirect_uri !== authData.redirect_uri) {
+      console.error('[Token Endpoint] Redirect URI mismatch');
+      return NextResponse.json(
+        {
+          error: 'invalid_grant',
+          error_description: 'Redirect URI mismatch',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if code has expired
+    if (authData.code_expires_at && new Date(authData.code_expires_at) < new Date()) {
+      console.error('[Token Endpoint] Authorization code expired');
+      return NextResponse.json(
+        {
+          error: 'invalid_grant',
+          error_description: 'Authorization code has expired',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Mark authorization as used (invalidate code)
+    await dbClient
+      .from('oauth_authorizations')
+      .update({
+        code: null,
+        status: 'completed',
+      })
+      .eq('id', authData.id);
+
+    // Get user info using admin API
+    const userId = authData.user_id;
+    let userEmail: string | undefined;
+
+    try {
+      // Use admin API to get user details
+      const { data: userData, error: userError } = await dbClient.auth.admin.getUserById(userId);
+      if (!userError && userData?.user) {
+        userEmail = userData.user.email;
+      }
+    } catch {
+      // If admin API fails, continue without email (user_id is still valid)
+      console.log('[Token Endpoint] Could not fetch user email, continuing without it');
+    }
+
+    // Generate JWT tokens using SESSION_TOKEN_SECRET
+    const sessionSecret = process.env.SESSION_TOKEN_SECRET;
+    if (!sessionSecret) {
+      console.error('[Token Endpoint] SESSION_TOKEN_SECRET not configured');
       return NextResponse.json(
         {
           error: 'server_error',
-          error_description: 'No session returned from code exchange',
+          error_description: 'Server misconfiguration',
         },
         { status: 500 }
       );
     }
 
+    const jwtSecret = new TextEncoder().encode(sessionSecret);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 3600; // 1 hour
+
+    const accessToken = await new SignJWT({
+      sub: userId,
+      email: userEmail,
+      role: 'authenticated',
+      aud: 'authenticated',
+      iss: 'beak-gaming-platform',
+      app_metadata: { provider: 'email', providers: ['email'] },
+      user_metadata: { email: userEmail },
+    })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setIssuedAt(now)
+      .setExpirationTime(now + expiresIn)
+      .sign(jwtSecret);
+
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+
+    // Store refresh token for rotation support (optional: implement refresh token table)
+    // For now, we generate a simple refresh token
+
     tokenRotationLogger.log({
       event_type: 'refresh_success',
       client_id,
-      user_id: data.session.user?.id,
+      user_id: userId,
       metadata: {
         grant_type: 'authorization_code',
-        expires_in: data.session.expires_in,
+        expires_in: expiresIn,
       },
     });
 
     // Return tokens in OAuth 2.1 format
     return NextResponse.json({
-      access_token: data.session.access_token,
+      access_token: accessToken,
       token_type: 'Bearer',
-      expires_in: data.session.expires_in || 3600,
-      refresh_token: data.session.refresh_token,
+      expires_in: expiresIn,
+      refresh_token: refreshToken,
     });
   } catch (error) {
     console.error('[Token Endpoint] Code exchange error:', error);
