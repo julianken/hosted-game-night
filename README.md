@@ -8,7 +8,7 @@ A unified gaming platform for retirement communities, featuring Bingo, Trivia, a
 |-------------|--------|------------|-------------|
 | **[Bingo](./apps/bingo/README.md)** | ✅ Production Ready | 85% | 75-ball bingo with audio, patterns, themes, dual-screen sync, PWA |
 | **[Trivia](./apps/trivia/README.md)** | ✅ Production Ready | 95% | Team trivia with rounds, scoring, TTS, themes, dual-screen sync, PWA |
-| **[Platform Hub](./apps/platform-hub/README.md)** | 🚧 Scaffolded | 10% | Game selection UI (auth planned) |
+| **[Platform Hub](./apps/platform-hub/README.md)** | 🚧 Backend Complete | 55-60% | OAuth 2.1 server, game selector UI, auth forms. Dashboard/profile TODO |
 | **[@beak-gaming/sync](./packages/sync/README.md)** | ✅ Complete | 100% | BroadcastChannel dual-screen synchronization |
 | **[@beak-gaming/ui](./packages/ui/README.md)** | ✅ Complete | 100% | Button, Toggle, Slider, Card, Modal, Toast components |
 | **[@beak-gaming/theme](./packages/theme/README.md)** | ✅ Complete | 100% | Design tokens, 10+ themes, senior-friendly typography |
@@ -43,9 +43,11 @@ A unified gaming platform for retirement communities, featuring Bingo, Trivia, a
 - PWA with offline support
 
 ### Platform Hub
-- Game selection interface
-- Links to Bingo and Trivia apps
-- (Planned: Authentication, user profiles, saved templates)
+- OAuth 2.1 authorization server (PKCE, token exchange, JWKS)
+- Game selection interface with links to Bingo and Trivia
+- Login/registration forms with Supabase authentication
+- CORS configuration, rate limiting, security middleware
+- (Planned: Dashboard, user profiles, template management)
 
 ## Tech Stack
 
