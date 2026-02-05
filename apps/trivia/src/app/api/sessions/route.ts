@@ -1,5 +1,5 @@
 import { createSessionRoutes } from '@beak-gaming/database/api';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 
 const routes = createSessionRoutes({
   gameType: 'trivia',

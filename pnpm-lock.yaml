@@ -441,6 +441,9 @@ importers:
       '@supabase/postgrest-js':
         specifier: ^1.19.4
         version: 1.21.4
+      '@supabase/ssr':
+        specifier: ^0.8.0
+        version: 0.8.0(@supabase/supabase-js@2.90.1)
       '@supabase/supabase-js':
         specifier: ^2.90.1
         version: 2.90.1

@@ -5,7 +5,7 @@
  */
 
 import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 
 interface AuthUser {
   id: string;

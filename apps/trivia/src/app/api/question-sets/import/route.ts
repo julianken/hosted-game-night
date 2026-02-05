@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 import { parseJsonQuestions, questionsToTriviaQuestions } from '@/lib/questions';
 import { createTriviaQuestionSet } from '@beak-gaming/database/tables';
 import { isDatabaseError } from '@beak-gaming/database/errors';

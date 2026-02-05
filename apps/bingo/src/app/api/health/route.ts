@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@beak-gaming/database/server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {

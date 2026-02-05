@@ -3,7 +3,7 @@ import { GET, PATCH, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
 // Mock the Supabase server client
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@beak-gaming/database/server', () => ({
   createClient: vi.fn(),
 }));
 
@@ -18,7 +18,7 @@ vi.mock('@beak-gaming/database/errors', () => ({
   isDatabaseError: vi.fn(),
 }));
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 import {
   getTriviaTemplate,
   updateTriviaTemplate,

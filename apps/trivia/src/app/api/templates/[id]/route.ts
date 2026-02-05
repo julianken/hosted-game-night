@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 import {
   getTriviaTemplate,
   updateTriviaTemplate,

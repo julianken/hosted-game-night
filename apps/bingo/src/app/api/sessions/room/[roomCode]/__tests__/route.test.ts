@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 import type { TypedSupabaseClient } from '@beak-gaming/database/client';
 
 // Mock dependencies
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@beak-gaming/database/server', () => ({
   createClient: vi.fn(),
 }));
 
@@ -12,7 +12,7 @@ vi.mock('@beak-gaming/database/tables', () => ({
   getGameSessionByRoomCode: vi.fn(),
 }));
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 import { getGameSessionByRoomCode } from '@beak-gaming/database/tables';
 
 describe('/api/sessions/room/[roomCode] endpoint', () => {

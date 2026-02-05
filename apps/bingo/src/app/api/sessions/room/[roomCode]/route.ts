@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@beak-gaming/database/server';
 import { getGameSessionByRoomCode } from '@beak-gaming/database/tables';
 
 export async function GET(
