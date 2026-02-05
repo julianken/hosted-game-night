@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
-import { shouldRefreshToken, refreshTokens } from './lib/auth/token-refresh';
+import { shouldRefreshToken, refreshTokens } from '@beak-gaming/auth';
 
 /**
  * Next.js Middleware for Route Protection

@@ -41,3 +41,11 @@ export {
   type ProtectedRouteProps,
   type GuestOnlyProps,
 } from './components/protected-route';
+
+// Token refresh utilities
+export {
+  shouldRefreshToken,
+  isTokenExpired,
+  refreshTokens,
+  type TokenRefreshResult,
+} from './token-refresh';

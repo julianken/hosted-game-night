@@ -4,7 +4,7 @@ import {
   shouldRefreshToken,
   isTokenExpired,
   refreshTokens,
-} from '@/lib/auth/token-refresh';
+} from '@beak-gaming/auth';
 
 /**
  * Next.js Middleware for Route Protection
