@@ -581,7 +581,7 @@ export default function PlayPage() {
               <div
                 className={`
                   w-3 h-3 rounded-full
-                  ${isConnected ? 'bg-green-500' : 'bg-gray-400'}
+                  ${isConnected ? 'bg-success' : 'bg-muted'}
                 `}
                 title={isConnected ? 'Sync active' : 'Sync not active'}
               />
@@ -894,7 +894,7 @@ export default function PlayPage() {
                   <button
                     onClick={game.resetGame}
                     className="w-full px-4 py-3 rounded-xl text-base font-medium
-                      bg-blue-600 hover:bg-blue-700 text-white
+                      bg-primary hover:bg-primary/90 text-primary-foreground
                       transition-colors duration-200 min-h-[48px]"
                   >
                     Start New Game
@@ -917,7 +917,7 @@ export default function PlayPage() {
                 <button
                   onClick={() => setShowSavePresetModal(true)}
                   className="w-full px-4 py-3 rounded-xl text-base font-medium
-                    bg-blue-600 hover:bg-blue-700 text-white
+                    bg-primary hover:bg-primary/90 text-primary-foreground
                     transition-colors duration-200 min-h-[48px]"
                   title="Save current settings as a preset"
                 >
@@ -937,8 +937,8 @@ export default function PlayPage() {
                     transition-colors duration-200 min-h-[48px]
                     ${
                       game.questions.length > 0
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                        : 'bg-muted text-muted-foreground cursor-not-allowed'
                     }
                   `}
                   title="Save current questions as a question set"
@@ -970,8 +970,8 @@ export default function PlayPage() {
                       transition-colors duration-200 min-h-[48px]
                       ${
                         game.questions.length > 0
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground cursor-not-allowed'
                       }
                     `}
                     title="Save current questions as a template"
@@ -986,8 +986,8 @@ export default function PlayPage() {
                       transition-colors duration-200 min-h-[48px]
                       ${
                         game.canStart
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          ? 'bg-success hover:bg-success/90 text-white'
+                          : 'bg-muted text-muted-foreground cursor-not-allowed'
                       }
                     `}
                   >
@@ -1047,7 +1047,7 @@ export default function PlayPage() {
                 <button
                   onClick={handleNextRound}
                   className="w-full sm:w-auto px-4 py-2 rounded-xl text-base font-semibold
-                    bg-green-600 hover:bg-green-700 text-white
+                    bg-success hover:bg-success/90 text-white
                     transition-colors duration-200 min-h-[48px]"
                 >
                   {game.isLastRound ? 'End Game' : 'Next Round'}
@@ -1104,7 +1104,7 @@ export default function PlayPage() {
                   <button
                     onClick={game.emergencyPause}
                     className="w-full sm:w-auto px-4 py-2 rounded-xl text-base font-medium
-                      bg-red-600 hover:bg-red-700 text-white
+                      bg-error hover:bg-error/90 text-white
                       transition-colors duration-200 min-h-[48px]"
                   >
                     Clear Emergency
@@ -1113,7 +1113,7 @@ export default function PlayPage() {
                 <button
                   onClick={game.resumeGame}
                   className="w-full sm:w-auto px-4 py-2 rounded-xl text-base font-semibold
-                    bg-green-600 hover:bg-green-700 text-white
+                    bg-success hover:bg-success/90 text-white
                     transition-colors duration-200 min-h-[48px]"
                 >
                   Resume Game
@@ -1147,8 +1147,8 @@ export default function PlayPage() {
             <button
               onClick={game.emergencyPause}
               className="w-full sm:w-auto px-4 py-2 rounded-xl text-base font-medium
-                bg-red-500/20 hover:bg-red-500/30 text-red-600
-                border border-red-500/30
+                bg-error/20 hover:bg-error/30 text-error
+                border border-error/30
                 transition-colors duration-200 flex items-center justify-center gap-2 min-h-[48px]"
               title="Emergency pause - blanks display (E)"
             >

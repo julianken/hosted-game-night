@@ -160,7 +160,7 @@ export function AudioSettingsPanel({ onClose }: AudioSettingsPanelProps) {
                 w-full px-4 py-3 rounded-xl text-base font-medium
                 transition-colors duration-200
                 ${isSpeaking
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  ? 'bg-error hover:bg-error/90 text-white'
                   : 'bg-primary hover:bg-primary/80 text-primary-foreground'
                 }
               `}

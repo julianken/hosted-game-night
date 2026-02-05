@@ -176,9 +176,9 @@ export function SettingsPanel({
             <button
               onClick={onSaveTeams}
               className="w-full px-4 py-3 rounded-xl text-base font-medium
-                bg-blue-600 hover:bg-blue-700 text-white
+                bg-primary hover:bg-primary/90 text-primary-foreground
                 transition-colors duration-200
-                focus:outline-none focus:ring-4 focus:ring-blue-500/50"
+                focus:outline-none focus:ring-4 focus:ring-primary/50"
               aria-label={`Save current ${currentTeams.length} team${currentTeams.length !== 1 ? 's' : ''} for later`}
             >
               Save Current Teams ({currentTeams.length})
@@ -219,9 +219,9 @@ export function SettingsPanel({
               <button
                 onClick={() => onLoadTeams(lastTeamSetup)}
                 className="w-full px-4 py-3 rounded-xl text-base font-medium
-                  bg-green-600 hover:bg-green-700 text-white
+                  bg-success hover:bg-success/90 text-white
                   transition-colors duration-200
-                  focus:outline-none focus:ring-4 focus:ring-green-500/50"
+                  focus:outline-none focus:ring-4 focus:ring-success/50"
                 aria-label={`Load ${lastTeamSetup.count} saved teams`}
               >
                 Load Teams
@@ -240,7 +240,7 @@ export function SettingsPanel({
 
       {/* Disabled state message */}
       {isDisabled && (
-        <p className="text-sm text-amber-600 text-center py-2">
+        <p className="text-sm text-warning text-center py-2">
           Settings can only be changed during game setup
         </p>
       )}

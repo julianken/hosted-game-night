@@ -113,7 +113,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
         </svg>
         Share
         {counts.total > 1 && (
-          <span className="ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-500/20 text-green-600">
+          <span className="ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-success/20 text-success">
             {counts.total}
           </span>
         )}
@@ -132,7 +132,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
           <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-muted/30">
             <div
               className={`w-3 h-3 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-gray-400'
+                isConnected ? 'bg-success' : 'bg-muted'
               }`}
             />
             <span className="text-sm text-muted-foreground">
@@ -201,13 +201,13 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
             <h4 className="text-sm font-medium mb-2">Connected Participants</h4>
             <div className="flex gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="w-2 h-2 rounded-full bg-primary" />
                 <span className="text-muted-foreground">
                   Presenters: {counts.presenter}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="w-2 h-2 rounded-full bg-success" />
                 <span className="text-muted-foreground">
                   Audience: {counts.audience}
                 </span>
@@ -223,8 +223,8 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                     <span
                       className={`w-2 h-2 rounded-full ${
                         participant.role === 'presenter'
-                          ? 'bg-blue-500'
-                          : 'bg-green-500'
+                          ? 'bg-primary'
+                          : 'bg-success'
                       }`}
                     />
                     <span>
@@ -237,8 +237,8 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
           </div>
 
           {/* Note about current implementation */}
-          <div className="mt-4 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-            <p className="text-xs text-amber-600">
+          <div className="mt-4 p-2 rounded-lg bg-warning/10 border border-warning/30">
+            <p className="text-xs text-warning">
               Note: Session sharing currently works for same-device windows only.
               Cross-device sync coming soon!
             </p>

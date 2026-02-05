@@ -88,8 +88,8 @@ export function TeamScoreInput({
                     onClick={() => onAdjustScore(team.id, -1)}
                     aria-label={`Subtract 1 point from ${team.name}`}
                     title="Subtract 1 point"
-                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-red-500/10 text-red-600
-                      hover:bg-red-500/20 flex items-center justify-center
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-error/10 text-error
+                      hover:bg-error/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
                   >
                     <span aria-hidden="true">-</span>
@@ -107,7 +107,7 @@ export function TeamScoreInput({
                       aria-label={`Edit score for ${team.name}`}
                       className="w-16 min-h-[var(--size-touch)] text-center text-xl font-bold
                         border border-border rounded-lg
-                        focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   ) : (
                     <button
@@ -127,8 +127,8 @@ export function TeamScoreInput({
                     onClick={() => onAdjustScore(team.id, 1)}
                     aria-label={`Add 1 point to ${team.name}`}
                     title="Add 1 point"
-                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-green-500/10 text-green-600
-                      hover:bg-green-500/20 flex items-center justify-center
+                    className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] rounded-lg bg-success/10 text-success
+                      hover:bg-success/20 flex items-center justify-center
                       text-xl font-bold transition-colors"
                   >
                     <span aria-hidden="true">+</span>
@@ -146,7 +146,7 @@ export function TeamScoreInput({
                       className={`
                         px-2 py-0.5 rounded text-xs font-medium
                         ${i === currentRound
-                          ? 'bg-blue-500/20 text-blue-600'
+                          ? 'bg-primary/20 text-primary'
                           : 'bg-muted/50 text-muted-foreground'
                         }
                       `}
