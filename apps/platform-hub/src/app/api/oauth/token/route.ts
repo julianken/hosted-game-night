@@ -6,8 +6,9 @@
  * - Refresh token rotation (grant_type=refresh_token)
  *
  * Features:
+ * - Refresh token persistence with secure hashing (SHA-256)
  * - Automatic refresh token rotation on each refresh
- * - Token reuse detection with automatic revocation
+ * - Token reuse detection with automatic family revocation
  * - Comprehensive error handling and logging
  * - PKCE validation for authorization code exchange
  *
@@ -18,6 +19,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  generateRefreshToken,
+  storeRefreshToken,
+  rotateRefreshToken,
+} from '@/lib/refresh-token-store';
 
 // E2E Testing: Same secret used by Bingo/Trivia middleware for token verification
 const E2E_JWT_SECRET = new TextEncoder().encode(
@@ -25,11 +31,7 @@ const E2E_JWT_SECRET = new TextEncoder().encode(
 );
 const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
 const E2E_TEST_EMAIL = 'e2e-test@beak-gaming.test';
-import {
-  refreshAccessToken,
-  tokenRotationLogger,
-  TokenRefreshError,
-} from '@/lib/token-rotation';
+import { tokenRotationLogger } from '@/lib/token-rotation';
 import {
   getE2EAuthorizationByCode,
   updateE2EAuthorization,
@@ -258,7 +260,7 @@ async function handleAuthorizationCodeGrant(params: {
     // Normal mode: look up authorization code in database
     const dbClient = createServiceRoleClient();
 
-    // Find authorization by code
+    // Find authorization by code (also get scope)
     const { data: authData, error: authError } = await dbClient
       .from('oauth_authorizations')
       .select(`
@@ -266,6 +268,7 @@ async function handleAuthorizationCodeGrant(params: {
         client_id,
         user_id,
         redirect_uri,
+        scope,
         code_challenge,
         code_challenge_method,
         code_expires_at,
@@ -354,7 +357,8 @@ async function handleAuthorizationCodeGrant(params: {
 
     try {
       // Use admin API to get user details
-      const { data: userData, error: userError } = await dbClient.auth.admin.getUserById(userId);
+      const { data: userData, error: userError } =
+        await dbClient.auth.admin.getUserById(userId);
       if (!userError && userData?.user) {
         userEmail = userData.user.email;
       }
@@ -394,10 +398,25 @@ async function handleAuthorizationCodeGrant(params: {
       .setExpirationTime(now + expiresIn)
       .sign(jwtSecret);
 
-    const refreshToken = crypto.randomBytes(32).toString('hex');
+    // Generate and persist refresh token (hashed in database)
+    const refreshToken = generateRefreshToken();
+    const scopes = authData.scope ? authData.scope.split(' ') : [];
 
-    // Store refresh token for rotation support (optional: implement refresh token table)
-    // For now, we generate a simple refresh token
+    const storeResult = await storeRefreshToken(
+      refreshToken,
+      userId,
+      client_id,
+      scopes
+    );
+
+    if (!storeResult.success) {
+      console.error(
+        '[Token Endpoint] Failed to store refresh token:',
+        storeResult.error
+      );
+      // Continue anyway - the token is valid, just won't support rotation
+      // In a stricter implementation, you might return an error here
+    }
 
     tokenRotationLogger.log({
       event_type: 'refresh_success',
@@ -406,6 +425,7 @@ async function handleAuthorizationCodeGrant(params: {
       metadata: {
         grant_type: 'authorization_code',
         expires_in: expiresIn,
+        token_persisted: storeResult.success,
       },
     });
 
@@ -434,8 +454,9 @@ async function handleAuthorizationCodeGrant(params: {
  * Refreshes access token and rotates refresh token
  *
  * Security Features:
+ * - Validates token against persisted hash
  * - Automatic refresh token rotation
- * - Reuse detection with full token revocation
+ * - Reuse detection with full family revocation
  * - Comprehensive audit logging
  */
 async function handleRefreshTokenGrant(params: {
@@ -455,7 +476,7 @@ async function handleRefreshTokenGrant(params: {
     );
   }
 
-  // E2E Testing Mode: Generate new test tokens without calling Supabase
+  // E2E Testing Mode: Generate new test tokens without database
   if (isE2EMode() && refresh_token.startsWith('e2e-refresh-')) {
     console.log('[Token Endpoint] E2E mode: refreshing test tokens');
 
@@ -487,55 +508,127 @@ async function handleRefreshTokenGrant(params: {
   }
 
   try {
-    // Call token rotation utility
-    const result = await refreshAccessToken(refresh_token, client_id);
+    // Rotate token: validates, creates new token, marks old as rotated
+    const rotationResult = await rotateRefreshToken(refresh_token, client_id);
 
-    // Handle token reuse detection
-    if (result.shouldRevokeAll) {
-      // Extract user_id from the old refresh token if possible
-      // In production, you'd look this up from a token mapping table
-      // For now, we return the error and let the client handle re-authentication
+    if (!rotationResult.success || !rotationResult.newToken) {
+      // Check for reuse detection (family revoked)
+      const isReuseDetected = rotationResult.error?.includes('reuse');
+
+      if (isReuseDetected) {
+        tokenRotationLogger.log({
+          event_type: 'reuse_detected',
+          client_id,
+          metadata: { error: rotationResult.error },
+        });
+
+        return NextResponse.json(
+          {
+            error: 'invalid_grant',
+            error_description:
+              'Refresh token reuse detected. All tokens have been revoked. Please re-authenticate.',
+            error_uri: 'https://datatracker.ietf.org/doc/html/rfc6749#section-10.4',
+          },
+          { status: 400 }
+        );
+      }
+
+      tokenRotationLogger.log({
+        event_type: 'refresh_failure',
+        client_id,
+        error: rotationResult.error,
+      });
 
       return NextResponse.json(
         {
           error: 'invalid_grant',
-          error_description:
-            'Refresh token reuse detected. All tokens have been revoked. Please re-authenticate.',
-          error_uri: 'https://datatracker.ietf.org/doc/html/rfc6749#section-10.4',
+          error_description: rotationResult.error || 'Invalid refresh token',
         },
         { status: 400 }
       );
     }
 
-    // Handle other errors
-    if (!result.success || !result.tokens) {
-      const errorMap = {
-        [TokenRefreshError.INVALID_GRANT]: 'invalid_grant',
-        [TokenRefreshError.EXPIRED_TOKEN]: 'invalid_grant',
-        [TokenRefreshError.NETWORK_ERROR]: 'server_error',
-        [TokenRefreshError.UNKNOWN_ERROR]: 'server_error',
-        [TokenRefreshError.TOKEN_REUSE_DETECTED]: 'invalid_grant',
-      };
+    // Get user info from the validated token data
+    // We need to look up the token to get user_id
+    const dbClient = createServiceRoleClient();
+    const { data: tokenData, error: tokenError } = await dbClient
+      .from('refresh_tokens')
+      .select('user_id, scopes')
+      .eq('id', rotationResult.newTokenId)
+      .single();
 
-      const error = result.error
-        ? errorMap[result.error]
-        : 'server_error';
-
+    if (tokenError || !tokenData) {
+      console.error('[Token Endpoint] Could not find new token data:', tokenError);
       return NextResponse.json(
         {
-          error,
-          error_description: result.message || 'Failed to refresh token',
+          error: 'server_error',
+          error_description: 'Failed to refresh token',
         },
-        { status: error === 'server_error' ? 500 : 400 }
+        { status: 500 }
       );
     }
 
+    const userId = tokenData.user_id;
+    let userEmail: string | undefined;
+
+    try {
+      const { data: userData, error: userError } =
+        await dbClient.auth.admin.getUserById(userId);
+      if (!userError && userData?.user) {
+        userEmail = userData.user.email;
+      }
+    } catch {
+      console.log('[Token Endpoint] Could not fetch user email, continuing without it');
+    }
+
+    // Generate new access token
+    const sessionSecret = process.env.SESSION_TOKEN_SECRET;
+    if (!sessionSecret) {
+      console.error('[Token Endpoint] SESSION_TOKEN_SECRET not configured');
+      return NextResponse.json(
+        {
+          error: 'server_error',
+          error_description: 'Server misconfiguration',
+        },
+        { status: 500 }
+      );
+    }
+
+    const jwtSecret = new TextEncoder().encode(sessionSecret);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 3600; // 1 hour
+
+    const accessToken = await new SignJWT({
+      sub: userId,
+      email: userEmail,
+      role: 'authenticated',
+      aud: 'authenticated',
+      iss: 'beak-gaming-platform',
+      app_metadata: { provider: 'email', providers: ['email'] },
+      user_metadata: { email: userEmail },
+    })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setIssuedAt(now)
+      .setExpirationTime(now + expiresIn)
+      .sign(jwtSecret);
+
+    tokenRotationLogger.log({
+      event_type: 'refresh_success',
+      client_id,
+      user_id: userId,
+      metadata: {
+        grant_type: 'refresh_token',
+        expires_in: expiresIn,
+        new_token_id: rotationResult.newTokenId,
+      },
+    });
+
     // Return new tokens in OAuth 2.1 format
     return NextResponse.json({
-      access_token: result.tokens.access_token,
-      token_type: result.tokens.token_type,
-      expires_in: result.tokens.expires_in,
-      refresh_token: result.tokens.refresh_token,
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_in: expiresIn,
+      refresh_token: rotationResult.newToken,
     });
   } catch (error) {
     console.error('[Token Endpoint] Refresh error:', error);

@@ -7,13 +7,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { POST, GET } from '../route';
 import { NextRequest } from 'next/server';
-import * as tokenRotation from '@/lib/token-rotation';
+import * as refreshTokenStore from '@/lib/refresh-token-store';
 import crypto from 'crypto';
 
-// Mock token-rotation module
+// Mock token-rotation module (for logger)
 vi.mock('@/lib/token-rotation', () => ({
-  refreshAccessToken: vi.fn(),
-  revokeAllTokens: vi.fn(),
   tokenRotationLogger: {
     log: vi.fn(),
   },
@@ -25,6 +23,32 @@ vi.mock('@/lib/token-rotation', () => ({
     UNKNOWN_ERROR: 'unknown_error',
   },
 }));
+
+// Mock refresh-token-store module
+vi.mock('@/lib/refresh-token-store', () => ({
+  generateRefreshToken: vi.fn(),
+  storeRefreshToken: vi.fn(),
+  rotateRefreshToken: vi.fn(),
+}));
+
+// Mock jose for JWT signing (avoid issues with TextEncoder in test env)
+vi.mock('jose', () => {
+  class MockSignJWT {
+    setProtectedHeader() {
+      return this;
+    }
+    setIssuedAt() {
+      return this;
+    }
+    setExpirationTime() {
+      return this;
+    }
+    async sign() {
+      return 'mock-access-token-jwt';
+    }
+  }
+  return { SignJWT: MockSignJWT };
+});
 
 // Helper to generate valid PKCE pair for testing
 function generateTestPKCE() {
@@ -162,23 +186,36 @@ describe('OAuth Token Endpoint', () => {
   });
 
   describe('POST /api/oauth/token - refresh_token grant', () => {
-    it('should successfully refresh tokens', async () => {
-      const mockNewTokens = {
-        access_token: 'new-access-token',
-        refresh_token: 'new-refresh-token',
-        expires_in: 3600,
-        token_type: 'Bearer',
-      };
+    const mockUserId = 'test-user-id-123';
+    const mockNewTokenId = 'new-token-id-456';
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (tokenRotation.refreshAccessToken as any).mockResolvedValue({
+    it('should successfully refresh tokens using persisted token store', async () => {
+      // Mock successful token rotation
+      vi.mocked(refreshTokenStore.rotateRefreshToken).mockResolvedValue({
         success: true,
-        tokens: mockNewTokens,
+        newTokenId: mockNewTokenId,
+        newToken: 'rt_new-refresh-token-hash',
+      });
+
+      // Mock database lookup for the new token's user info
+      mockDbClient.from.mockReturnValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { user_id: mockUserId, scopes: ['openid', 'profile'] },
+          error: null,
+        }),
+      });
+
+      // Mock user lookup
+      mockDbClient.auth.admin.getUserById.mockResolvedValue({
+        data: { user: { email: 'test@example.com' } },
+        error: null,
       });
 
       const requestBody = {
         grant_type: 'refresh_token',
-        refresh_token: 'old-refresh-token',
+        refresh_token: 'rt_old-refresh-token',
         client_id: 'test-client-id',
       };
 
@@ -192,25 +229,26 @@ describe('OAuth Token Endpoint', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual(mockNewTokens);
-      expect(tokenRotation.refreshAccessToken).toHaveBeenCalledWith(
-        'old-refresh-token',
+      expect(data.access_token).toBeDefined();
+      expect(data.refresh_token).toBe('rt_new-refresh-token-hash');
+      expect(data.token_type).toBe('Bearer');
+      expect(data.expires_in).toBe(3600);
+      expect(refreshTokenStore.rotateRefreshToken).toHaveBeenCalledWith(
+        'rt_old-refresh-token',
         'test-client-id'
       );
     });
 
     it('should detect token reuse and return error', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (tokenRotation.refreshAccessToken as any).mockResolvedValue({
+      // Mock reuse detection
+      vi.mocked(refreshTokenStore.rotateRefreshToken).mockResolvedValue({
         success: false,
-        error: tokenRotation.TokenRefreshError.TOKEN_REUSE_DETECTED,
-        shouldRevokeAll: true,
-        message: 'Token reuse detected',
+        error: 'Token reuse detected. All tokens in family have been revoked.',
       });
 
       const requestBody = {
         grant_type: 'refresh_token',
-        refresh_token: 'reused-token',
+        refresh_token: 'rt_reused-token',
       };
 
       const request = new NextRequest('http://localhost:3002/api/oauth/token', {
@@ -248,16 +286,15 @@ describe('OAuth Token Endpoint', () => {
     });
 
     it('should handle expired refresh token', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (tokenRotation.refreshAccessToken as any).mockResolvedValue({
+      // Mock expired token
+      vi.mocked(refreshTokenStore.rotateRefreshToken).mockResolvedValue({
         success: false,
-        error: tokenRotation.TokenRefreshError.EXPIRED_TOKEN,
-        message: 'Refresh token expired',
+        error: 'Refresh token has expired',
       });
 
       const requestBody = {
         grant_type: 'refresh_token',
-        refresh_token: 'expired-token',
+        refresh_token: 'rt_expired-token',
       };
 
       const request = new NextRequest('http://localhost:3002/api/oauth/token', {
@@ -273,17 +310,16 @@ describe('OAuth Token Endpoint', () => {
       expect(data.error).toBe('invalid_grant');
     });
 
-    it('should handle network errors', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (tokenRotation.refreshAccessToken as any).mockResolvedValue({
+    it('should handle invalid refresh token', async () => {
+      // Mock invalid token
+      vi.mocked(refreshTokenStore.rotateRefreshToken).mockResolvedValue({
         success: false,
-        error: tokenRotation.TokenRefreshError.NETWORK_ERROR,
-        message: 'Network error',
+        error: 'Refresh token not found',
       });
 
       const requestBody = {
         grant_type: 'refresh_token',
-        refresh_token: 'valid-token',
+        refresh_token: 'rt_invalid-token',
       };
 
       const request = new NextRequest('http://localhost:3002/api/oauth/token', {
@@ -295,29 +331,42 @@ describe('OAuth Token Endpoint', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(500);
-      expect(data.error).toBe('server_error');
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('invalid_grant');
     });
   });
 
   describe('POST /api/oauth/token - form-urlencoded support', () => {
-    it('should parse application/x-www-form-urlencoded body', async () => {
-      const mockNewTokens = {
-        access_token: 'new-access-token',
-        refresh_token: 'new-refresh-token',
-        expires_in: 3600,
-        token_type: 'Bearer',
-      };
+    const mockUserId = 'test-user-id-123';
+    const mockNewTokenId = 'new-token-id-456';
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (tokenRotation.refreshAccessToken as any).mockResolvedValue({
+    it('should parse application/x-www-form-urlencoded body', async () => {
+      // Mock successful token rotation
+      vi.mocked(refreshTokenStore.rotateRefreshToken).mockResolvedValue({
         success: true,
-        tokens: mockNewTokens,
+        newTokenId: mockNewTokenId,
+        newToken: 'rt_new-refresh-token-hash',
+      });
+
+      // Mock database lookup for the new token's user info
+      mockDbClient.from.mockReturnValue({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { user_id: mockUserId, scopes: ['openid', 'profile'] },
+          error: null,
+        }),
+      });
+
+      // Mock user lookup
+      mockDbClient.auth.admin.getUserById.mockResolvedValue({
+        data: { user: { email: 'test@example.com' } },
+        error: null,
       });
 
       const formData = new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: 'old-refresh-token',
+        refresh_token: 'rt_old-refresh-token',
         client_id: 'test-client-id',
       });
 
@@ -331,7 +380,8 @@ describe('OAuth Token Endpoint', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data).toEqual(mockNewTokens);
+      expect(data.access_token).toBeDefined();
+      expect(data.refresh_token).toBe('rt_new-refresh-token-hash');
     });
   });
 
