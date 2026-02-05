@@ -158,7 +158,7 @@ Agent 1 (Sonnet): BEA-373 - Modal timing
 - Agent B (Sonnet): BEA-363 (Keyboard focus)
 - Agent C (Sonnet): BEA-373 (Modal timing)
 
-**Total Time:** ~4 days with 3 parallel agents
+**Approach:** 3 parallel agents
 
 ### Option 2: Sequential with 2 Agents
 
@@ -170,18 +170,18 @@ Agent 1 (Sonnet): BEA-373 - Modal timing
 - Agent A: BEA-363 → BEA-373
 - Agent B: (Available for new work)
 
-**Total Time:** ~1.5 weeks with 2 agents
+**Approach:** 2 parallel agents
 
 ### Option 3: Recommended Hybrid (3 Agents, Prioritized)
 
-**Phase 1 (Critical - Days 1-2):**
+**Phase 1 (Critical):**
 - **Agent A (Opus)**: BEA-364 (E2E auth bypass) ← HIGHEST PRIORITY
 - **Agent B (Opus)**: BEA-369 (Cookie timing) ← HIGH PRIORITY
 - **Agent C (Opus)**: BEA-370 (Dual-screen sync) ← HIGH PRIORITY
 
 **Checkpoint:** Run full E2E suite, expect ~10-15 failures remaining
 
-**Phase 2 (Accessibility - Days 3-4):**
+**Phase 2 (Accessibility):**
 - **Agent A (Sonnet)**: BEA-371 (Skip links) + BEA-372 (Touch targets)
 - **Agent B (Sonnet)**: BEA-363 (Keyboard focus investigation + fix)
 - **Agent C (Sonnet)**: BEA-373 (Modal timing)
@@ -278,5 +278,5 @@ Each report includes:
 - Root cause analysis
 - Affected test files
 - Proposed solutions
-- Complexity estimates
+- Complexity assessments
 - WCAG criterion references (where applicable)

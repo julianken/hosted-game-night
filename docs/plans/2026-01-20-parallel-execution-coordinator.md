@@ -522,7 +522,7 @@ done
 - **DO** use Playwright tests in review to verify functionality
 - **DO** ensure PR template is used for all PRs
 - **DO** maintain main branch stability - only merge passing PRs
-- **DO** track time estimates but don't block on them
+- **DO** track complexity assessments but don't block on them
 - Use `Task(..., run_in_background=true)` for all agents
 - Use `Read` tool or `tail` to monitor background agent progress
 - Keep executive flow lightweight - delegate all work to agents

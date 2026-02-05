@@ -4,7 +4,7 @@
 **Priority:** CRITICAL - Blocking Security Vulnerability
 **Status:** Not Started
 **Complexity:** Medium (4 points)
-**Estimated Scope:** Database migration only, no application code changes
+**Scope:** Database migration only, no application code changes
 
 ---
 

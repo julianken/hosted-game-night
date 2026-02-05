@@ -4,7 +4,7 @@
 **Priority:** CRITICAL - Data Integrity Issue
 **Status:** Not Started
 **Complexity:** Simple (2 points)
-**Estimated Scope:** Single SQL ALTER TABLE statement
+**Scope:** Single SQL ALTER TABLE statement
 
 ---
 

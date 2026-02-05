@@ -551,9 +551,9 @@ echo "  E2E_PORT_BASE=${PORT_BASE} pnpm test:e2e"
 
 ## 4. Implementation Plan
 
-### Phase 1: Dynamic Port Configuration (Low Effort)
+### Phase 1: Dynamic Port Configuration (Low Complexity)
 
-**Estimated time:** 2-4 hours
+**Complexity:** Low (config changes only)
 **Changes required:**
 1. Modify `playwright.config.ts` to use `E2E_PORT_BASE` environment variable
 2. Modify `e2e/fixtures/auth.ts` to use dynamic URLs
@@ -573,9 +573,9 @@ E2E_PORT_BASE=3100 pnpm test:e2e
 
 **Problem:** This still requires modifying how dev servers start, which is more complex.
 
-### Phase 2: Dockerized Development Environment (Medium Effort)
+### Phase 2: Dockerized Development Environment (Medium Complexity)
 
-**Estimated time:** 1-2 days
+**Complexity:** Medium (new Docker infrastructure)
 **Changes required:**
 1. Create `Dockerfile.dev`
 2. Create `docker-compose.e2e.yml`
@@ -592,9 +592,9 @@ E2E_PORT_BASE=3100 pnpm test:e2e
 docker-compose -f docker-compose.e2e.yml down
 ```
 
-### Phase 3: Full Database Isolation (High Effort)
+### Phase 3: Full Database Isolation (High Complexity)
 
-**Estimated time:** 3-5 days
+**Complexity:** High (full Supabase local stack)
 **Changes required:**
 1. Integrate Supabase local development stack (supabase/supabase-local)
 2. Database migrations run per container
@@ -771,7 +771,7 @@ Within a single Playwright run, tests are already parallel (`fullyParallel: true
 - Only ONE E2E test run at a time across all worktrees
 ```
 
-### Medium-Term (1-2 weeks): Port-per-Worktree Without Docker
+### Medium-Term: Port-per-Worktree Without Docker
 
 **Rationale:**
 - Enables true parallel E2E testing
@@ -919,4 +919,4 @@ Within a single Playwright run, tests are already parallel (`fullyParallel: true
 
 ---
 
-*This document represents a thorough analysis of the E2E test isolation challenge. The recommended approach balances implementation effort with practical benefit for the current AI-agent-only development model.*
+*This document represents a thorough analysis of the E2E test isolation challenge. The recommended approach balances implementation complexity with practical benefit for the current AI-agent-only development model.*

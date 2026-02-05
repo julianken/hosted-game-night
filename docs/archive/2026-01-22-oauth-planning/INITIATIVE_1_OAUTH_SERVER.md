@@ -525,28 +525,28 @@ supabase/migrations/
 
 ## Rollout Plan
 
-### Phase 1: Development (Weeks 1-6)
+### Phase 1: Development
 - Complete Projects 1.1-1.4 (OAuth server + security)
 - Deploy to staging environment
 - Internal testing with dev accounts
 
-### Phase 2: Integration (Weeks 7-8)
+### Phase 2: Integration
 - Complete Projects 1.5-1.6 (Bingo/Trivia integration)
 - E2E testing with real user flows
 - Performance benchmarking
 
-### Phase 3: RBAC & Admin (Weeks 9-10)
+### Phase 3: RBAC & Admin
 - Complete Projects 1.7-1.8 (RBAC + admin features)
 - Admin UI testing
 - Documentation finalization
 
-### Phase 4: Beta (Week 11)
+### Phase 4: Beta
 - Deploy to production
 - Invite 10 beta facilities
 - Monitor auth metrics, error rates
 - Gather feedback
 
-### Phase 5: General Availability (Week 12+)
+### Phase 5: General Availability
 - Roll out to all facilities
 - Monitor performance and security
 - Incident response readiness
@@ -588,12 +588,12 @@ This initiative is complete when:
 - [ ] Backup and disaster recovery tested
 - [ ] Graceful degradation plan for Redis/Supabase outages
 
-### Success Metrics (30 days post-launch)
+### Success Metrics (Post-Launch)
 - [ ] 100% of users authenticate via Platform Hub OAuth
 - [ ] Zero unauthorized access incidents
 - [ ] Authentication error rate <1%
 - [ ] Average authorization flow time <300ms
-- [ ] Developer integration time <4 hours (from zero to working app)
+- [ ] Developer integration is straightforward (from zero to working app)
 - [ ] User satisfaction score ≥4.5/5
 
 ---

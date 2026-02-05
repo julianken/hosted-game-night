@@ -532,39 +532,39 @@ apps/trivia/src/
 
 ## Implementation Phases
 
-### Phase 1: Foundation (3-4 days)
+### Phase 1: Foundation
 - [ ] Create room code generator utility
 - [ ] Write database migration
 - [ ] Create PIN security utilities
 - [ ] Export from packages
 
-### Phase 2: API Routes (3-4 days)
+### Phase 2: API Routes
 - [ ] Implement session CRUD endpoints for Bingo
 - [ ] Implement PIN verification endpoint
 - [ ] Implement state update endpoint
 - [ ] Write API route tests
 - [ ] Duplicate for Trivia
 
-### Phase 3: UI Components (3-4 days)
+### Phase 3: UI Components
 - [ ] Create CreateGameModal
 - [ ] Create JoinGameModal
 - [ ] Create RoomCodeDisplay
 - [ ] Create SyncStatusIndicator
 - [ ] Write component tests
 
-### Phase 4: Integration (3-4 days)
+### Phase 4: Integration
 - [ ] Update presenter pages to use session management
 - [ ] Update display pages to parse room codes
 - [ ] Add auto-sync to game stores
 - [ ] Test full flows
 
-### Phase 5: Polish (2-3 days)
+### Phase 5: Polish
 - [ ] Error handling and edge cases
 - [ ] Loading states
 - [ ] Accessibility review
 - [ ] Manual testing checklist
 
-**Total Estimated Effort: 3-4 weeks**
+**Total Scope:** 5 phases, high complexity
 
 ---
 

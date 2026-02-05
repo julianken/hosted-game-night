@@ -35,13 +35,13 @@ Complete specifications for all 15 projects across 3 initiatives, organized by *
 
 Build Platform Hub as the central OAuth 2.1 Authorization Server. **START HERE.**
 
-**Total Estimated Issues:** 73-87
+**Approximate Scope:** 73-87 issues
 
 ### Project 1.1: OAuth Server Setup & Configuration ⚡ FOUNDATION
 
 **Priority:** Urgent/Critical (1)
 **Status:** Planned
-**Estimated Issues:** 10-12
+**Approximate Scope:** 10-12 issues
 
 **Summary:**
 Enable and configure Supabase OAuth 2.1 server as the authorization server. **ALL OTHER WORK DEPENDS ON THIS.**
@@ -64,7 +64,7 @@ Enable and configure Supabase OAuth 2.1 server as the authorization server. **AL
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 12-15
+**Approximate Scope:** 12-15 issues
 
 **Summary:**
 Build all authentication and authorization UI for the Hub
@@ -84,7 +84,7 @@ Build all authentication and authorization UI for the Hub
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 8-10
+**Approximate Scope:** 8-10 issues
 
 **Summary:**
 Build Next.js API routes for user profile and preferences
@@ -104,7 +104,7 @@ Build Next.js API routes for user profile and preferences
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 10-12
+**Approximate Scope:** 10-12 issues
 
 **Summary:**
 Build APIs for Bingo and Trivia template management
@@ -124,7 +124,7 @@ Build APIs for Bingo and Trivia template management
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 8-10
+**Approximate Scope:** 8-10 issues
 
 **Summary:**
 Build APIs for game session CRUD operations
@@ -144,7 +144,7 @@ Build APIs for game session CRUD operations
 
 **Priority:** Medium (3)
 **Status:** Planned
-**Estimated Issues:** 10-12
+**Approximate Scope:** 10-12 issues
 
 **Summary:**
 Build the main user dashboard UI
@@ -164,7 +164,7 @@ Build the main user dashboard UI
 
 **Priority:** Medium (3)
 **Status:** Planned
-**Estimated Issues:** 12-15
+**Approximate Scope:** 12-15 issues
 
 **Summary:**
 Build UI for creating, editing, and deleting templates
@@ -184,7 +184,7 @@ Build UI for creating, editing, and deleting templates
 
 **Priority:** Medium (3)
 **Status:** Planned
-**Estimated Issues:** 15-18
+**Approximate Scope:** 15-18 issues
 
 **Summary:**
 Build facility-level features for retirement community staff
@@ -204,13 +204,13 @@ Build facility-level features for retirement community staff
 
 Complete shared packages and infrastructure. **DO THIS SECOND.**
 
-**Total Estimated Issues:** 57-73
+**Approximate Scope:** 57-73 issues
 
 ### Project 2.1: @beak-gaming/oauth-client Package ⚡ CRITICAL
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 12-15
+**Approximate Scope:** 12-15 issues
 
 **Summary:**
 Centralized OAuth 2.1 client package with flows, hooks, middleware, and token management
@@ -235,7 +235,7 @@ Centralized OAuth 2.1 client package with flows, hooks, middleware, and token ma
 
 **Priority:** Medium (3)
 **Status:** Planned
-**Estimated Issues:** 8-10
+**Approximate Scope:** 8-10 issues
 
 **Summary:**
 Complete game-engine package with state machine, round management, timers, and testing
@@ -258,7 +258,7 @@ Complete game-engine package with state machine, round management, timers, and t
 
 **Priority:** Low (4)
 **Status:** Planned
-**Estimated Issues:** 4-6
+**Approximate Scope:** 4-6 issues
 
 **Summary:**
 Bug fixes and optimizations for auth and database packages
@@ -275,7 +275,7 @@ Bug fixes and optimizations for auth and database packages
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 15-20
+**Approximate Scope:** 15-20 issues
 
 **Summary:**
 Comprehensive OAuth, E2E, API, security, and accessibility testing
@@ -295,7 +295,7 @@ Comprehensive OAuth, E2E, API, security, and accessibility testing
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 18-22
+**Approximate Scope:** 18-22 issues
 
 **Summary:**
 Security audit, performance optimization, monitoring, CI/CD, and production documentation
@@ -316,13 +316,13 @@ Security audit, performance optimization, monitoring, CI/CD, and production docu
 
 Transform Bingo and Trivia into OAuth clients. **DO THIS LAST.**
 
-**Total Estimated Issues:** 24-30
+**Approximate Scope:** 24-30 issues
 
 ### Project 3.1: Bingo App - OAuth Client Integration
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 12-15
+**Approximate Scope:** 12-15 issues
 
 **Summary:**
 Transform Bingo into an OAuth client that authenticates through Platform Hub
@@ -346,7 +346,7 @@ Transform Bingo into an OAuth client that authenticates through Platform Hub
 
 **Priority:** High (2)
 **Status:** Planned
-**Estimated Issues:** 12-15
+**Approximate Scope:** 12-15 issues
 
 **Summary:**
 Transform Trivia into an OAuth client that authenticates through Platform Hub
@@ -375,7 +375,7 @@ Transform Trivia into an OAuth client that authenticates through Platform Hub
 
 ---
 
-## Estimated Total Issues
+## Approximate Total Scope
 
 - **Initiative 1 (Platform Hub):** 73-87 issues (8 projects)
 - **Initiative 2 (Infrastructure):** 57-73 issues (5 projects)
@@ -403,6 +403,6 @@ The fastest path to getting apps working with OAuth:
 
 1. ✅ **All 15 projects created in Linear** with initiative tags
 2. **Start work on Project 1.1** (OAuth Server Setup & Configuration)
-3. **Create issues** for each project (use estimated counts as guidance)
+3. **Create issues** for each project (use approximate scope as guidance)
 4. **Set up project dependencies** in Linear
 5. **Follow the execution order** strictly to avoid blockers

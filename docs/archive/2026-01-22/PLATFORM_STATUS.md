@@ -62,12 +62,12 @@ The Beak Gaming Platform is **significantly more complete** than documentation s
 **Security Issue Identified:**
 - ⚠️ Session tokens stored in localStorage (should use httpOnly cookies)
 
-**Estimated Work to 100%:**
-- Auth integration: 4-6 hours
-- Profile management: 2-3 hours
-- Template system: 6-8 hours
-- Security fix: 2-3 hours
-- **Total: 14-20 hours**
+**Remaining Work to 100%:**
+- Auth integration (high complexity, depends on @beak-gaming/auth package)
+- Profile management (low complexity, CRUD operations)
+- Template system (high complexity, new feature)
+- Security fix (medium complexity, cookie migration)
+- **Scope:** 4 work items, high complexity overall
 
 ### Trivia (apps/trivia) - 95%+ Complete
 
@@ -100,12 +100,12 @@ The Beak Gaming Platform is **significantly more complete** than documentation s
 - ⚠️ Claims 15 questions exist, actually has 20
 - ⚠️ Lists features as "deferred" that are implemented
 
-**Estimated Work to 100%:**
-- Auth integration: 4-6 hours
-- Question import: 3-4 hours
-- Categories: 2-3 hours
-- Template system: 4-6 hours
-- **Total: 13-19 hours**
+**Remaining Work to 100%:**
+- Auth integration (high complexity, depends on @beak-gaming/auth package)
+- Question import (medium complexity, CSV/JSON parsing)
+- Categories (low complexity, schema + UI)
+- Template system (high complexity, new feature)
+- **Scope:** 4 work items, medium complexity overall
 
 ### Platform Hub (apps/platform-hub) - 10% Complete
 
@@ -129,14 +129,14 @@ The Beak Gaming Platform is **significantly more complete** than documentation s
 
 **Critical Gap:** Platform Hub is ~80% complete visually but 0% functional. All UI exists but has no backend connectivity.
 
-**Estimated Work to 100%:**
-- Auth API routes: 3-4 hours
-- Profile API routes: 2-3 hours
-- Dashboard backend: 3-4 hours
-- Template system: 6-8 hours
-- Session history: 2-3 hours
-- Analytics: 4-6 hours
-- **Total: 20-28 hours**
+**Remaining Work to 100%:**
+- Auth API routes (medium complexity, session management)
+- Profile API routes (low complexity, CRUD operations)
+- Dashboard backend (medium complexity, data aggregation)
+- Template system (high complexity, new feature)
+- Session history (low complexity, query + display)
+- Analytics (high complexity, cross-game aggregation)
+- **Scope:** 6 work items, high complexity overall
 
 ## Shared Packages Status
 
@@ -256,14 +256,14 @@ Users can immediately:
 
 ## Recommended Work Priority
 
-### Phase 1: Documentation Fixes (Immediate - 1 hour)
+### Phase 1: Documentation Fixes (Immediate)
 1. ✅ Fix @beak-gaming/auth README to reflect 95% completion
 2. ✅ Fix @beak-gaming/database README to reflect 98% completion
 3. ✅ Add @beak-gaming/types and @beak-gaming/error-tracking to root CLAUDE.md
 4. ✅ Update Trivia project plan to reflect actual implementation
 5. ✅ Update root CLAUDE.md completion table
 
-### Phase 2: Platform Hub Backend (High Priority - 20-28 hours)
+### Phase 2: Platform Hub Backend (High Priority)
 1. Create app/api/ directory structure
 2. Implement /api/auth/* routes (login, register, logout)
 3. Implement /api/profile/* routes (get, update user profile)
@@ -271,50 +271,49 @@ Users can immediately:
 5. Implement /api/sessions/* routes (session history)
 6. Connect dashboard to real data
 
-### Phase 3: Game App Auth Integration (High Priority - 8-12 hours)
+### Phase 3: Game App Auth Integration (High Priority)
 1. Add @beak-gaming/auth to Bingo app
 2. Add @beak-gaming/auth to Trivia app
 3. Create auth API routes in each app
 4. Add middleware for protected routes
 5. Implement "save template" feature in both apps
 
-### Phase 4: Security Hardening (Medium Priority - 4-6 hours)
+### Phase 4: Security Hardening (Medium Priority)
 1. Migrate session tokens from localStorage to httpOnly cookies
 2. Implement CSRF protection
 3. Add rate limiting to API routes
 4. Review and document security model
 
-### Phase 5: Database Schema (Medium Priority - 4-6 hours)
+### Phase 5: Database Schema (Medium Priority)
 1. Create profiles table with trigger
 2. Create bingo_templates and trivia_templates tables
 3. Create session_history table
 4. Set up Row Level Security policies
 5. Document schema in repository
 
-### Phase 6: Testing Coverage (Low Priority - 12-16 hours)
+### Phase 6: Testing Coverage (Low Priority)
 1. Add E2E tests for Trivia session flow (BEA-10/BEA-11 mentioned but never created)
 2. Add E2E tests for Bingo
 3. Add auth flow E2E tests for Platform Hub
 4. Increase unit test coverage to 80%+
 
-## Total Estimated Work to 100% Completion
+## Remaining Work to 100% Completion
 
-| Phase | Hours | Priority |
-|-------|-------|----------|
-| Documentation Fixes | 1 | Immediate |
-| Platform Hub Backend | 20-28 | High |
-| Game App Auth Integration | 8-12 | High |
-| Security Hardening | 4-6 | Medium |
-| Database Schema | 4-6 | Medium |
-| Testing Coverage | 12-16 | Low |
-| **Total** | **49-69 hours** | |
+| Phase | Complexity | Priority |
+|-------|-----------|----------|
+| Documentation Fixes | Low | Immediate |
+| Platform Hub Backend | High | High |
+| Game App Auth Integration | High | High |
+| Security Hardening | Medium | Medium |
+| Database Schema | Medium | Medium |
+| Testing Coverage | Medium | Low |
 
 ## Conclusion
 
 The Beak Gaming Platform is in excellent shape. Both games are feature-complete and production-ready for anonymous play. The missing pieces are:
 
-1. **Documentation fixes** (1 hour) - Most critical, blocks understanding of available features
-2. **Auth integration** (28-40 hours) - Connects existing complete packages to apps
-3. **Testing and polish** (16-22 hours) - Raises quality bar
+1. **Documentation fixes** (low complexity) - Most critical, blocks understanding of available features
+2. **Auth integration** (high complexity) - Connects existing complete packages to apps
+3. **Testing and polish** (medium complexity) - Raises quality bar
 
 The heavy lifting is done. What remains is integration and documentation work.

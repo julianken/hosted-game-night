@@ -4,7 +4,7 @@
 **Priority:** CRITICAL - Security Vulnerability
 **Status:** Not Started
 **Complexity:** Simple (2 points)
-**Estimated Scope:** Delete 2 directories, verify no references, commit
+**Scope:** Delete 2 directories, verify no references, commit
 
 ---
 
