@@ -228,12 +228,12 @@ From original issue:
 - `e2e`
 - `ready-for-review` (after verification)
 
-## Estimated Resolution Time
+## Remaining Steps
 
 - Implementation: ✅ Complete
-- Verification: ⏳ ~30 minutes (3 test runs × ~5min each + analysis)
-- PR creation: ~15 minutes
-- **Total:** ~45 minutes remaining work
+- Verification: ⏳ Pending (3 test runs + analysis)
+- PR creation: Pending
+- **Status:** Implementation complete, verification and PR remaining
 
 ## Next Assignee
 

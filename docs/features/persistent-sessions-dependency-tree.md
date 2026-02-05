@@ -1047,7 +1047,7 @@ Adding a placeholder for the secret key needed to sign session tokens.
 - **Large Complexity:** 2 tasks
 - **Medium Complexity:** 16 tasks
 - **Small Complexity:** 13 tasks
-- **Estimated LOC:** ~1,500 lines of new code
+- **Approximate LOC:** ~1,500 lines of new code
 - **Code Reduction:** 44% vs. duplicated approach
 
 ---
@@ -1070,7 +1070,7 @@ Adding a placeholder for the secret key needed to sign session tokens.
 
 4. **Complexity** (Single Select)
    - Options: Small, Medium, Large
-   - Estimate of implementation effort
+   - Assessment of implementation complexity
 
 5. **Description** (Text)
    - Markdown description of the task (auto-populated from issue body)

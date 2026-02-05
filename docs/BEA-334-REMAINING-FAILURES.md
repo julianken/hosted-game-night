@@ -22,7 +22,7 @@ The core issue was a React state batching bug in session recovery. When localSto
 ### Category 1: Test Selector Issues (2 tests) - **EASY FIX**
 
 **Priority**: High (quick wins)
-**Effort**: 15 minutes
+**Complexity**: Trivial
 **Risk**: Low
 
 #### Tests:
@@ -68,7 +68,7 @@ await expect(page.getByRole('heading', { name: /offline session id/i })).toBeVis
 ### Category 2: Offline localStorage Persistence (1 test) - **MEDIUM FIX**
 
 **Priority**: Medium (offline mode edge case)
-**Effort**: 1-2 hours
+**Complexity**: Low
 **Risk**: Medium (may require understanding session persistence logic)
 
 #### Test:
@@ -116,7 +116,7 @@ localStorage.setItem('bingo_offline_session_A3B7K9', JSON.stringify({
 ### Category 3: PWA Service Worker for Offline Reload (2 tests) - **HARD FIX**
 
 **Priority**: Low (requires service worker, not available in dev mode)
-**Effort**: 4-8 hours (or defer until PWA build testing)
+**Complexity**: High (or defer until PWA build testing)
 **Risk**: High (fundamental architecture change)
 
 #### Tests:
@@ -175,7 +175,7 @@ test.skip('should work offline with network disconnected', async ({ ... }) => {
 ### Category 4: Offline Display Window Sync (1 test) - **MEDIUM FIX**
 
 **Priority**: Medium (offline mode edge case)
-**Effort**: 1-2 hours
+**Complexity**: Low
 **Risk**: Medium (may be related to Category 2)
 
 #### Test:
@@ -222,7 +222,7 @@ Error: element(s) not found
 ### Category 5: Keyboard Focus Order (1 test) - **EASY FIX**
 
 **Priority**: Low (accessibility refinement)
-**Effort**: 30 minutes
+**Complexity**: Trivial
 **Risk**: Low
 
 #### Test:
@@ -288,11 +288,11 @@ import { FocusTrap } from '@beak-gaming/ui';
    - Impact: +2 tests passing → 21/26 (81%)
 
 ### 🟡 Medium Priority (Worth Fixing) - DO SECOND
-2. ⚠️ **Offline localStorage Persistence** (1 test) - 1-2 hours
+2. ⚠️ **Offline localStorage Persistence** (1 test) - low complexity
    - Fix: Debug why session data isn't saving
    - Impact: +1 test passing → 22/26 (85%)
 
-3. ⚠️ **Offline Display Window Sync** (1 test) - 1-2 hours
+3. ⚠️ **Offline Display Window Sync** (1 test) - low complexity
    - Fix: Debug display page loading in offline mode
    - Impact: +1 test passing → 23/26 (88%)
 
@@ -320,7 +320,7 @@ pnpm test:e2e -g "should recover offline session after page refresh"
 # Result: 21/26 passing (81%)
 ```
 
-### Phase 2: Offline Mode Polish (2-4 hours)
+### Phase 2: Offline Mode Polish
 ```bash
 # Fix localStorage persistence
 # Investigate apps/bingo/src/app/play/page.tsx

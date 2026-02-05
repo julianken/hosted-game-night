@@ -598,12 +598,12 @@ Only happens with "British Slang" voice pack.
 
 ### 7.1 Testing Phases
 
-| Phase | Duration | Focus |
+| Phase | Sequence | Focus |
 |-------|----------|-------|
-| **Alpha** | Week 1 | Core functionality, critical bugs |
-| **Beta 1** | Week 2 | Full flows, edge cases |
-| **Beta 2** | Week 3 | Performance, polish, feedback |
-| **Release** | Week 4 | Final fixes, launch prep |
+| **Alpha** | Phase 1 | Core functionality, critical bugs |
+| **Beta 1** | Phase 2 | Full flows, edge cases |
+| **Beta 2** | Phase 3 | Performance, polish, feedback |
+| **Release** | Phase 4 | Final fixes, launch prep |
 
 ### 7.2 Daily Testing Checklist
 

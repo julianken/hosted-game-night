@@ -140,7 +140,7 @@ Workspace (organization-level)
 └── Teams (functional groups)
     ├── Issues (basic unit of work)
     ├── Projects (time-bound deliverables)
-    ├── Cycles (recurring sprint-like periods)
+    ├── Cycles (recurring scheduling periods)
     └── Views (dynamic issue groupings)
 ```
 
@@ -156,9 +156,9 @@ Workspace (organization-level)
 
 **Milestones:** Organize issues within projects to represent meaningful stages.
 
-**Cycles:** Automated and repeating scheduling periods (similar to sprints).
+**Cycles:** Automated and repeating scheduling periods.
 
-**Initiatives:** High-level planning across multiple projects for long timelines.
+**Initiatives:** High-level planning across multiple projects.
 
 ## Monorepo Organization Strategy
 
@@ -212,12 +212,12 @@ Create a consistent label structure:
 - `priority:medium` - Medium priority
 - `priority:low` - Low priority
 
-**Effort Labels** (workspace-level)
-- `effort:xs` - Extra small (< 2 hours)
-- `effort:s` - Small (2-4 hours)
-- `effort:m` - Medium (1-2 days)
-- `effort:l` - Large (3-5 days)
-- `effort:xl` - Extra large (1+ weeks)
+**Complexity Labels** (workspace-level)
+- `effort:xs` - Extra small (single-line or config change)
+- `effort:s` - Small (isolated change, few files)
+- `effort:m` - Medium (multiple files, moderate scope)
+- `effort:l` - Large (cross-package or significant scope)
+- `effort:xl` - Extra large (multi-session, high dependencies)
 
 **Feature Labels** (team-level)
 - `feat:dual-screen` - Dual-screen synchronization
@@ -290,7 +290,7 @@ Create custom views for visibility:
 - Blocked (waiting on dependencies)
 
 **Team Views:**
-- Current Sprint (current cycle)
+- Current Cycle
 - Backlog (unscheduled)
 - Bugs (type:bug, not done)
 - High Priority (priority:critical OR priority:high)
@@ -305,7 +305,7 @@ Create custom views for visibility:
 Configure 2-week cycles:
 
 - **Start:** Every other Monday
-- **Duration:** 2 weeks
+- **Duration:** Per cycle
 - **Auto-archive:** Issues completed in previous cycles
 - **Auto-rollover:** Incomplete issues move to next cycle
 
@@ -406,4 +406,4 @@ LINEAR_WEBHOOK_SECRET=your_webhook_secret
 4. Create initial projects for V1.0 work
 5. Import existing GitHub issues (if applicable)
 6. Set up PR automation
-7. Configure cycles for sprint planning
+7. Configure cycles for work planning

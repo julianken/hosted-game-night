@@ -4,7 +4,7 @@
 **Priority:** CRITICAL - Build Blocking
 **Status:** Not Started
 **Complexity:** Medium (4 points)
-**Estimated Scope:** Fix 3 test files, update 5 test cases
+**Scope:** Fix 3 test files, update 5 test cases
 
 ---
 

@@ -163,7 +163,7 @@ TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
 ### Phase 1: Critical Blocker (MUST FIX FIRST)
 **Issue:** Rate limiting blocks parallel E2E tests
 **Impact:** 60-80 failures (60% of all failures)
-**Effort:** 1-2 hours
+**Complexity:** Low
 **Files:** `apps/platform-hub/src/middleware.ts`
 
 **Solution:**
@@ -176,7 +176,7 @@ TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
 ### Phase 2: Display Window Issues (AFTER Phase 1)
 **Issue:** Display popup timeouts
 **Impact:** 30-40 failures
-**Effort:** 1-2 hours
+**Complexity:** Low
 **Files:** Test files, potentially app code
 
 **Solution:**
@@ -189,7 +189,7 @@ TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
 ### Phase 3: Polish (AFTER Phase 1 & 2)
 **Issues:** Touch targets, accessibility, modal timing
 **Impact:** ~15-20 failures
-**Effort:** 2-3 hours
+**Complexity:** Medium
 **Files:** Various component files, test files
 
 **Expected improvement:** ~15-20 failures fixed

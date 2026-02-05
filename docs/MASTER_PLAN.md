@@ -1075,7 +1075,7 @@ async function playRollSound(volume: number, soundFile: string): Promise<void> {
 
 **Better Approach:** Delete duplicate Button/Modal/Toast, re-export from @beak-gaming/ui
 
-**Quick Win:** Removes 180+ lines, <1 hour effort.
+**Quick Win:** Removes 180+ lines, trivial complexity.
 
 ---
 
@@ -1146,7 +1146,7 @@ async function playRollSound(volume: number, soundFile: string): Promise<void> {
 
 ## 12. DOCUMENTATION ROADMAP
 
-### 12.1 Immediate Actions (This Sprint)
+### 12.1 Immediate Actions
 
 **Replace Old Documentation:**
 This master plan replaces:

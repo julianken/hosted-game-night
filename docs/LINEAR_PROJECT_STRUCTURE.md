@@ -322,20 +322,20 @@ Labels are organized into groups with consistent prefixes:
 | `status:needs-info` | Gray (#9CA3AF) | Missing information |
 | `status:ready` | Green (#4ADE80) | Ready to work |
 
-#### Effort Labels (Optional)
+#### Complexity Labels (Optional)
 
 | Label | Color | Points | Description |
 |-------|-------|--------|-------------|
-| `effort:trivial` | Green (#86EFAC) | 1 | < 30 minutes |
-| `effort:small` | Teal (#5EEAD4) | 2-3 | 30 min - 2 hours |
-| `effort:medium` | Blue (#93C5FD) | 4-5 | 2-4 hours |
-| `effort:large` | Purple (#C4B5FD) | 6-8 | 4-8 hours |
-| `effort:complex` | Red (#FCA5A5) | 9-10 | Multi-session |
+| `effort:trivial` | Green (#86EFAC) | 1 | Single-line or config change |
+| `effort:small` | Teal (#5EEAD4) | 2-3 | Isolated change, few files |
+| `effort:medium` | Blue (#93C5FD) | 4-5 | Multiple files, moderate scope |
+| `effort:large` | Purple (#C4B5FD) | 6-8 | Cross-package or significant scope |
+| `effort:complex` | Red (#FCA5A5) | 9-10 | Multi-session, high dependencies |
 
 ### Label Application Rules
 
 1. **Every issue MUST have:** severity + type + at least one component
-2. **Effort labels:** Apply after scope is understood
+2. **Complexity labels:** Apply after scope is understood
 3. **Status labels:** Updated by workflow automations
 4. **Multiple components:** Apply all relevant (e.g., `app:bingo` + `pkg:sync`)
 
@@ -504,7 +504,7 @@ Type: Bug/Security
 Severity: Critical
 Priority: Urgent (P0)
 Component: db:supabase, app:bingo
-Effort: Medium (3 points)
+Complexity: Medium (3 points)
 
 Description: |
   ## Problem
@@ -572,7 +572,7 @@ Type: Bug/Test
 Severity: Critical
 Priority: Urgent (P0)
 Component: app:bingo
-Effort: Medium (4 points)
+Complexity: Medium (4 points)
 
 Description: |
   ## Problem
@@ -635,7 +635,7 @@ Type: Tech Debt
 Severity: Medium
 Priority: Medium (P2)
 Component: app:bingo, app:trivia, pkg:auth
-Effort: Medium (4 points)
+Complexity: Medium (4 points)
 
 Description: |
   ## Problem
@@ -709,7 +709,7 @@ Type: Feature
 Severity: Medium
 Priority: Medium (P2)
 Component: app:bingo, app:trivia, app:platform-hub
-Effort: Medium (4 points)
+Complexity: Medium (4 points)
 
 Description: |
   ## Problem
@@ -777,7 +777,7 @@ Type: Security
 Severity: Critical
 Priority: Urgent (P0)
 Component: app:bingo
-Effort: Small (2 points)
+Complexity: Small (2 points)
 
 Description: |
   ## Problem
@@ -878,7 +878,7 @@ For blocked issues, document:
 1. **What is blocked** - The issue that cannot proceed
 2. **Why it's blocked** - The dependency
 3. **Resolution path** - What needs to happen
-4. **ETA (if known)** - When blocker might resolve
+4. **Resolution status** - Progress toward unblocking
 
 ```yaml
 # Blocked issue comment
@@ -921,7 +921,7 @@ For test coverage issues, document:
 
 1. **Test file** - Where tests should live
 2. **Functions/components** - What needs testing
-3. **Test count estimate** - How many tests needed
+3. **Test scope** - What needs testing
 4. **Current coverage** - Baseline measurement
 5. **Target coverage** - Goal percentage
 
@@ -935,7 +935,7 @@ Functions to Test:
 
 Current Coverage: 0%
 Target Coverage: 80%
-Estimated Tests: ~70 test cases
+Test Scope: Comprehensive coverage of all handler paths
 ```
 
 ---

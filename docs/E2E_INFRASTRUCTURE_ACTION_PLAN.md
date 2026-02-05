@@ -15,7 +15,7 @@ The Beak Gaming Platform's E2E testing infrastructure has fundamental issues cau
 | Metric | Value |
 |--------|-------|
 | Total E2E Tests | ~340 tests across 20 spec files |
-| Estimated Current Pass Rate | 50-70% (varies by run) |
+| Current Pass Rate | 50-70% (varies by run) |
 | Root Causes Identified | 8 major issues |
 | GitHub Actions | DISABLED (cost savings) |
 | Pre-commit E2E Enforcement | NOT POSSIBLE (requires servers) |
@@ -33,16 +33,16 @@ The Beak Gaming Platform's E2E testing infrastructure has fundamental issues cau
 
 ### Goals
 
-| Phase | Target | Timeline |
+| Phase | Target | Priority |
 |-------|--------|----------|
-| Phase 1 | 70%+ pass rate, critical blockers fixed | Today (2-3 hours) |
+| Phase 1 | 70%+ pass rate, critical blockers fixed | Immediate |
 | Phase 2 | 90%+ pass rate, infrastructure stable | This week |
 | Phase 3 | 100% pass rate, process enforcement | Ongoing |
 | Phase 4 | CI/CD integration, monitoring | Future |
 
 ---
 
-## Phase 1: Immediate Fixes (Today - Complete Within 2-3 Hours)
+## Phase 1: Immediate Fixes (Critical Priority)
 
 ### 1.1 Fix Test Selector Ambiguity (Priority: P1)
 
@@ -713,7 +713,7 @@ export default defineConfig({
 
 ## Priority Matrix
 
-| Issue | Impact | Effort | Priority | Phase |
+| Issue | Impact | Complexity | Priority | Phase |
 |-------|--------|--------|----------|-------|
 | Selector ambiguity fixes | High | Low | P1 | 1 |
 | Keyboard focus test fix | Medium | Low | P1 | 1 |
@@ -794,7 +794,7 @@ export default defineConfig({
 **Mitigation:**
 - Document exact failure reason
 - Create Linear issue for persistent failures
-- Mark as skip with clear explanation if unfixable in current sprint
+- Mark as skip with clear explanation if unfixable in current cycle
 - Never claim "tests fixed" without running them
 
 ### Risk 3: Auth Strategy Change Breaks Tests

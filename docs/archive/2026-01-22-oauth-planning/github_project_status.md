@@ -92,7 +92,7 @@ Execute in sequence:
 4. #78 - Integrate auto-sync into Trivia store
 5. #79 - Test Trivia full flow
 
-**Estimated Effort**: 3-4 days
+**Complexity**: High (multiple sequential dependencies)
 
 ### Step 2: Execute Phase 6 (Polish & Testing)
 Can be done in parallel (3 agents):
@@ -100,13 +100,13 @@ Can be done in parallel (3 agents):
 - **Agent B**: #30 (Accessibility) + #38 (Testing checklist)
 - **Agent C**: #47 (Documentation) + #56 (.env.example)
 
-**Estimated Effort**: 2-3 days
+**Complexity**: Medium (parallel agent work possible)
 
 ### Step 3: Cleanup Tasks
 - #98 - Fix test issues
 - #99 - Update PR description
 
-**Estimated Effort**: 0.5 days
+**Complexity**: Low (cleanup tasks)
 
 ---
 
