@@ -73,6 +73,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SESSION_TOKEN_SECRET=your-64-character-hex-string  # openssl rand -hex 32
 # Optional (platform-hub only): REDIS_URL, REDIS_TOKEN (Upstash, for production rate limiting)
+# Optional (platform-hub only): CRON_SECRET (for Vercel Cron job authentication)
 ```
 
 ### AI Assistant Configuration

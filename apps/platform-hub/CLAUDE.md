@@ -34,6 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Rate limiting (10 req/min per IP)
 - Audit logging for OAuth events
 - OAuth consent page with full UI
+- Scheduled cleanup of expired authorizations (Vercel Cron, every 6 hours)
 
 ### Frontend
 - Game selection home page with cards for Bingo and Trivia
@@ -94,6 +95,7 @@ src/
 - `/api/oauth/approve` - Consent approval
 - `/api/oauth/deny` - Consent denial
 - `/api/oauth/csrf` - CSRF token generation
+- `/api/cron/cleanup-authorizations` - Scheduled cleanup of expired OAuth authorizations (Vercel Cron)
 
 ## Planned Routes (TODO)
 

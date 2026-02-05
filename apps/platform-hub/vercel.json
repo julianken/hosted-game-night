@@ -9,6 +9,12 @@
     "TURBO_TEAM": "beak-gaming",
     "TURBO_REMOTE_ONLY": "true"
   },
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-authorizations",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/bingo",
