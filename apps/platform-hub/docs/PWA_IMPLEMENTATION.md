@@ -1,8 +1,8 @@
 # Platform Hub PWA Implementation
 
-## Status: ✅ Complete (BEA-328)
+## Status: ✅ Complete (BEA-328, updated BEA-497)
 
-Platform Hub app now has full Progressive Web App support.
+Platform Hub app now has full Progressive Web App support with native Turbopack service worker compilation.
 
 ## Components
 
@@ -18,8 +18,8 @@ Platform Hub app now has full Progressive Web App support.
 - **Language:** en
 - **Direction:** ltr
 
-### 2. Service Worker (`/src/sw.ts`)
-Serwist-based service worker with:
+### 2. Service Worker (`/src/app/sw.ts`)
+Serwist-based service worker compiled via `@serwist/turbopack` with:
 - **Precaching:** Static assets via `__SW_MANIFEST`
 - **Runtime caching strategies:**
   - API routes (`/api/`): NetworkFirst (10s timeout, 50 entries, 24h max age)
@@ -51,11 +51,9 @@ React component that:
 - Senior-friendly UI verification
 
 ### 4. Next.js Configuration (`/next.config.ts`)
-- Serwist integration via `@serwist/next`
-- Service worker source: `src/sw.ts`
-- Service worker destination: `public/sw.js`
-- Disabled in development (Turbopack incompatibility)
-- Enabled in production builds
+- `serverExternalPackages: ["esbuild-wasm"]` for Serwist Turbopack compilation
+- Uses `withSerwist()` from `@serwist/turbopack` (replaces old `withSerwistInit()` from `@serwist/next`)
+- Bundle analyzer integration unchanged
 
 ### 5. App Layout Integration (`/src/app/layout.tsx`)
 - Manifest linked in metadata
@@ -68,46 +66,47 @@ React component that:
 ```json
 {
   "dependencies": {
-    "serwist": "^9.5.0",
-    "@serwist/next": "^9.5.0"
+    "serwist": "^9.5.0"
+  },
+  "devDependencies": {
+    "@serwist/turbopack": "^9.5.4",
+    "esbuild-wasm": "latest"
   }
 }
 ```
 
-## Known Limitations
+## Service Worker Compilation
 
-### Service Worker Generation in Local Builds
+### How It Works
+`@serwist/turbopack` is a Turbopack-native plugin that provides a `withSerwist()` wrapper for `next.config.ts`. It compiles `src/app/sw.ts` into a service worker during both development and production builds. This replaces the previous `@serwist/next` webpack plugin approach which was incompatible with Next.js 16's default Turbopack bundler.
 
-**Issue:** Service worker file (`public/sw.js`) is not generated during local development builds.
+### Key Differences from `@serwist/next`
+| Aspect | `@serwist/next` (old) | `@serwist/turbopack` (new) |
+|--------|----------------------|---------------------------|
+| Bundler | Webpack only | Turbopack native |
+| SW location | `src/sw.ts` | `src/app/sw.ts` |
+| Config | `withSerwistInit()` wrapper from `@serwist/next` | `withSerwist()` wrapper from `@serwist/turbopack` |
+| Dev mode | Disabled (Turbopack incompatible) | Works in dev and production |
+| Build output | `public/sw.js` (manual dest) | Automatic `/sw.js` route |
 
-**Cause:** Serwist has compatibility issues with Next.js 16's Turbopack bundler (used by default in development).
-
-**Impact:**
-- Local development: SW not generated (expected)
-- Production builds (Vercel): SW generated correctly (webpack used instead of Turbopack)
-
-**Evidence:**
-- Serwist warning: "You are using '@serwist/next' with `next dev --turbopack`, but Serwist doesn't support Turbopack"
-- Configuration has `disable: process.env.NODE_ENV === "development"` to avoid warnings
-- Same behavior observed in apps/bingo and apps/trivia
-
-**Workaround:**
-Service worker functionality works correctly in production deployments (Vercel, etc.) where webpack is used for builds.
-
-**References:**
-- https://github.com/serwist/serwist/issues/54
+### Migration Reference (BEA-497)
+- Moved `src/sw.ts` to `src/app/sw.ts`
+- Changed import from `@serwist/next/worker` to `@serwist/turbopack/worker`
+- Updated TypeScript reference directives for service worker globals
+- Replaced `withSerwistInit()` from `@serwist/next` with `withSerwist()` from `@serwist/turbopack` in `next.config.ts`
+- Added `serverExternalPackages: ["esbuild-wasm"]` to Next.js config
 
 ## Testing PWA Functionality
 
-### Local Testing (Limited)
+### Local Testing
 ```bash
-pnpm build          # Build succeeds, but SW not generated
+pnpm build          # Build with SW generation
 pnpm start          # Start production server
-# Open browser DevTools > Application > Manifest (will load)
-# Service Worker will not be available locally
+# Open browser DevTools > Application > Service Workers
+# SW will be registered and active
 ```
 
-### Production Testing (Full)
+### Production Testing
 Deploy to Vercel or other production environment:
 1. Service worker will be generated and registered
 2. Manifest will be accessible at `/manifest.json`
@@ -119,7 +118,7 @@ Deploy to Vercel or other production environment:
 1. **Manifest:** Application tab > Manifest
    - Verify name, icons, theme color, display mode
 2. **Service Worker:** Application tab > Service Workers
-   - Verify registration status (production only)
+   - Verify registration status
    - Verify update mechanism
 3. **Cache Storage:** Application tab > Cache Storage
    - Verify caches: `platform-hub-api-v1`, `platform-hub-assets-v1`, `platform-hub-pages-v1`
@@ -162,7 +161,8 @@ Add dedicated `/offline` page shown when user is offline and no cached version e
 
 Platform Hub PWA implementation matches bingo and trivia apps:
 - ✅ Same Serwist version (^9.5.0)
-- ✅ Same service worker structure
+- ✅ Same `@serwist/turbopack` plugin (^9.5.4)
+- ✅ Same service worker structure (`src/app/sw.ts`)
 - ✅ Same ServiceWorkerRegistration component pattern
 - ✅ Same manifest structure
 - ✅ Same test coverage approach
@@ -178,13 +178,11 @@ Platform Hub PWA implementation matches bingo and trivia apps:
 Platform Hub PWA implementation is complete and production-ready. All acceptance criteria met:
 
 - ✅ PWA manifest configured
-- ✅ Service worker configured (works in production)
+- ✅ Service worker compiled via Turbopack (works in dev and production)
 - ✅ Install prompt infrastructure ready (update prompt implemented)
 - ✅ Icons in multiple sizes
 - ✅ Manifest linked in layout
 - ✅ Service worker caches appropriate resources
-- ✅ Works offline after first visit (in production)
+- ✅ Works offline after first visit
 - ✅ Senior-friendly design patterns
 - ✅ Comprehensive test coverage (16/16 tests passing)
-
-The local development limitation is expected and documented. Production deployments will have full PWA functionality.

@@ -87,7 +87,7 @@ SESSION_TOKEN_SECRET=your-64-character-hex-string  # openssl rand -hex 32
 - **Supabase JS** (v2.90.1) / **SSR** (v0.8.0) / **PostgREST** (v1.19.4)
 - **Zustand** (v5.0.10) - Store creation, persistence, middleware
 - **Vitest** (v4.0.17) / **Testing Library React** (v16.3.1) / **Playwright** (v1.57.0)
-- **Serwist** (v9.5.0) / **@serwist/next** (v9.5.0) - PWA, service workers
+- **Serwist** (v9.5.0) / **@serwist/turbopack** (v9.5.4) - PWA, service workers (Turbopack-native)
 - **React Aria Components** (v1.14.0) - Accessible UI primitives
 - **Turborepo** (v2.3.0) / **pnpm** (v9.15.0) / **ESLint** (v9)
 

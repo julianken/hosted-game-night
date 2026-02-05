@@ -1,5 +1,7 @@
+/// <reference no-default-lib="true" />
+/// <reference lib="esnext" />
 /// <reference lib="webworker" />
-import { defaultCache } from '@serwist/next/worker';
+import { defaultCache } from '@serwist/turbopack/worker';
 import {
   CacheFirst,
   NetworkFirst,
@@ -11,13 +13,12 @@ import { ExpirationPlugin } from 'serwist';
 import { CacheableResponsePlugin } from 'serwist';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface WorkerGlobalScope extends SerwistGlobalConfig {}
+  interface WorkerGlobalScope extends SerwistGlobalConfig {
+    __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
+  }
 }
 
-declare const self: ServiceWorkerGlobalScope & {
-  __SW_MANIFEST: (PrecacheEntry | string)[];
-};
+declare const self: ServiceWorkerGlobalScope;
 
 // Cache versioning for proper cleanup
 const CACHE_VERSION = 'v1';
