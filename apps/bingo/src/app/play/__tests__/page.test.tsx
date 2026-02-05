@@ -9,7 +9,6 @@
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { renderHook } from '@testing-library/react';
 import PlayPage from '../page';
 import { ToastProvider } from "@beak-gaming/ui";
 import {
@@ -286,7 +285,7 @@ describe('PlayPage - Session ID Strategy', () => {
     it('prevents session ID collisions between tabs', async () => {
       // Simulate two tabs
       const tab1SessionId = generateShortSessionId();
-      const tab2SessionId = generateShortSessionId();
+      generateShortSessionId();
 
       // Store different session IDs
       storeOfflineSessionId(tab1SessionId);

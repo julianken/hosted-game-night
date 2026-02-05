@@ -15,11 +15,6 @@ import { ControlPanel } from '@/components/presenter/ControlPanel';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
 
-// Audience components
-import { LargeCurrentBall } from '@/components/audience/LargeCurrentBall';
-import { AudienceBingoBoard } from '@/components/audience/AudienceBingoBoard';
-import { PatternDisplay } from '@/components/audience/PatternDisplay';
-import { BallsCalledCounter } from '@/components/audience/BallsCalledCounter';
 
 // Types
 import { BingoBall, BingoPattern } from '@/types';

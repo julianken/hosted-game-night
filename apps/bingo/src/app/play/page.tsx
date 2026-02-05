@@ -12,7 +12,6 @@ import {
   clearStoredPin,
   getStoredOfflineSessionId,
   storeOfflineSessionId,
-  clearStoredOfflineSessionId as _clearStoredOfflineSessionId,
 } from '@/lib/session/secure-generation';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { BingoBoard } from '@/components/presenter/BingoBoard';
@@ -114,7 +113,6 @@ export default function PlayPage() {
   const {
     isRecovering,
     isRecovered,
-    error: recoveryError,
     roomCode: recoveredRoomCode,
     recover,
     clearToken,
@@ -240,7 +238,7 @@ export default function PlayPage() {
 
   // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
-  const { isSyncing: _isSyncing, lastSyncTime: _lastSyncTime } = useAutoSync(
+  useAutoSync(
     gameState,
     async (state) => {
       // Skip API calls in offline mode

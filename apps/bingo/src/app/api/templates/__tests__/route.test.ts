@@ -297,7 +297,7 @@ describe('POST /api/templates', () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
+    await response.json();
 
     expect(response.status).toBe(201);
     expect(mockCreate).toHaveBeenCalledWith(

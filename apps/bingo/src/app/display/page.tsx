@@ -31,7 +31,7 @@ const displayShortcuts = [
  * Invalid Session Error Component
  * Displayed when the session ID or room code is missing or invalid.
  */
-function InvalidSessionError({ type }: { type: 'room' | 'session' }) {
+function InvalidSessionError() {
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8" role="main">
       <div className="max-w-lg text-center space-y-6" role="alert">
@@ -101,7 +101,7 @@ function DisplayContent() {
   // Validate room code first (preferred for online mode)
   if (roomCode) {
     if (!isValidRoomCode(roomCode)) {
-      return <InvalidSessionError type="room" />;
+      return <InvalidSessionError />;
     }
     return <AudienceDisplay roomCode={roomCode} />;
   }
@@ -109,7 +109,7 @@ function DisplayContent() {
   // Check for offline session ID
   if (offlineSessionId) {
     if (!isValidSessionId(offlineSessionId)) {
-      return <InvalidSessionError type="session" />;
+      return <InvalidSessionError />;
     }
     return <AudienceDisplay sessionId={offlineSessionId} />;
   }
@@ -117,13 +117,13 @@ function DisplayContent() {
   // Fall back to session ID for backward compatibility
   if (sessionId) {
     if (!isValidSessionId(sessionId)) {
-      return <InvalidSessionError type="session" />;
+      return <InvalidSessionError />;
     }
     return <AudienceDisplay sessionId={sessionId} />;
   }
 
   // No room code or session ID provided
-  return <InvalidSessionError type="room" />;
+  return <InvalidSessionError />;
 }
 
 /**

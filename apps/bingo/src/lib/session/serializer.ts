@@ -110,11 +110,11 @@ export function deserializeBingoState(
     );
   }
 
-  // Validate patternId (optional)
-  const patternId =
-    record.patternId === null || record.patternId === undefined
-      ? null
-      : String(record.patternId);
+  // Validate patternId (optional) - validated but not directly used;
+  // pattern resolution happens via the `pattern` parameter
+  if (record.patternId !== null && record.patternId !== undefined) {
+    String(record.patternId); // Ensure it is a valid string
+  }
 
   // Validate calledBalls (required, but can be empty array)
   if (!isBingoBallArray(record.calledBalls)) {

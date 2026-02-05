@@ -350,7 +350,7 @@ describe('PlayPage - Auto-Create Game (BEA-417)', () => {
         expect(getStoredOfflineSessionId()).not.toBeNull();
       }, { timeout: 3000 });
 
-      const firstSessionId = getStoredOfflineSessionId();
+      getStoredOfflineSessionId();
 
       // Click "Create New Game" button (this clears session and resets auto-create flag)
       const createNewButton = await screen.findByRole('button', { name: /create new game/i });

@@ -317,7 +317,7 @@ describe('PATCH /api/templates/[id]', () => {
     const response = await PATCH(request, {
       params: Promise.resolve({ id: 'template-1' }),
     });
-    const data = await response.json();
+    await response.json();
 
     expect(response.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalledWith(

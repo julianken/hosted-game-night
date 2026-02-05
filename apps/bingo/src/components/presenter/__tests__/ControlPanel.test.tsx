@@ -3,11 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ControlPanel } from '../ControlPanel';
 import { ToastProvider } from "@beak-gaming/ui";
 import type { ReactElement } from 'react';
-
-// Mock stores for SaveTemplateModal
-const mockSetPattern = vi.fn();
-const mockSetVoicePack = vi.fn();
-
 vi.mock('@/stores/game-store', () => ({
   useGameStore: vi.fn((selector) => {
     const store = {

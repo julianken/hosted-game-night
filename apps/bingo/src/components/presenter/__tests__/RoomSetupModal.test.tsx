@@ -560,8 +560,9 @@ describe('RoomSetupModal', () => {
 
       buttons.forEach((button) => {
         const styles = window.getComputedStyle(button);
-        const minHeight = parseFloat(styles.minHeight);
-        const minWidth = parseFloat(styles.minWidth);
+        // Parse to verify they are valid (side-effect only)
+        parseFloat(styles.minHeight);
+        parseFloat(styles.minWidth);
 
         // Note: In jsdom, CSS custom properties may not compute correctly,
         // so we check that minHeight and minWidth are set

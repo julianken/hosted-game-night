@@ -15,15 +15,12 @@ import { useState, useEffect } from 'react';
 import PlayPage from '../page';
 import { ToastProvider } from "@beak-gaming/ui";
 import {
-  generateSecurePin,
-  generateShortSessionId,
   getStoredPin,
   storePin,
-  clearStoredPin,
   getStoredOfflineSessionId,
-  storeOfflineSessionId,
-  clearStoredOfflineSessionId,
 } from '@/lib/session/secure-generation';
+
+
 
 // Mock HTMLDialogElement methods (not supported in jsdom)
 HTMLDialogElement.prototype.showModal = vi.fn();
@@ -97,9 +94,9 @@ vi.mock('@beak-gaming/sync', () => ({
   useSessionRecovery: () => {
     // Create a proper React hook that simulates the recovery lifecycle
     const [isRecovering, setIsRecovering] = useState(true);
-    const [isRecovered, setIsRecovered] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [roomCode, setRoomCode] = useState<string | null>(null);
+    const isRecoveredState = useState(false);
+    const errorState = useState<string | null>(null);
+    const roomCodeState = useState<string | null>(null);
 
     // Simulate recovery completing on mount
     useEffect(() => {
@@ -114,9 +111,9 @@ vi.mock('@beak-gaming/sync', () => ({
 
     return {
       isRecovering,
-      isRecovered,
-      error,
-      roomCode,
+      isRecovered: isRecoveredState[0],
+      error: errorState[0],
+      roomCode: roomCodeState[0],
       requiresPin: false,
       recover: mockRecoverSession,
       clearToken: mockClearToken,
@@ -203,7 +200,7 @@ describe('Room Creation Flow', () => {
       const mockSessionToken = 'session-token-123';
 
       // Mock fetch with conditional responses
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url) => {
         if (typeof url === 'string' && url.includes('/api/templates')) {
           return Promise.resolve({
             ok: true,
@@ -283,7 +280,7 @@ describe('Room Creation Flow', () => {
       const mockSessionToken = 'session-token-123';
 
       // Mock fetch with conditional responses
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url) => {
         if (typeof url === 'string' && url.includes('/api/templates')) {
           return Promise.resolve({
             ok: true,
@@ -449,7 +446,7 @@ describe('Room Creation Flow', () => {
       const mockToken = 'join-token-123';
 
       // Mock fetch with conditional responses
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url) => {
         if (typeof url === 'string' && url.includes('/api/templates')) {
           return Promise.resolve({
             ok: true,
@@ -630,7 +627,7 @@ describe('Room Creation Flow', () => {
       const mockSessionToken = 'session-token-123';
 
       // Mock fetch with conditional responses
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation((url) => {
         if (typeof url === 'string' && url.includes('/api/templates')) {
           return Promise.resolve({
             ok: true,
