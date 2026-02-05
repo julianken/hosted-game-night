@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
-import withSerwistInit from '@serwist/next';
+import { withSerwist } from '@serwist/turbopack';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["esbuild-wasm"],
   transpilePackages: [
     '@beak-gaming/ui',
     '@beak-gaming/theme',
@@ -11,9 +12,6 @@ const nextConfig: NextConfig = {
   ],
   // Note: Request body size limits are enforced via middleware.ts
   // using Content-Length header inspection, not Next.js bodyParser config
-  // Required for Next.js 16 + Serwist: Serwist adds webpack config,
-  // but Turbopack is the default. This silences the warning.
-  // SW is disabled in dev mode anyway.
   turbopack: {
     resolveAlias: {
       '@beak-gaming/database/api': '../../packages/database/src/api/index.ts',
@@ -21,14 +19,13 @@ const nextConfig: NextConfig = {
         '../../packages/database/src/tables/index.ts',
     },
   },
+  async rewrites() {
+    return [
+      { source: '/sw.js', destination: '/serwist/sw.js' },
+      { source: '/sw.js.map', destination: '/serwist/sw.js.map' },
+    ];
+  },
 };
-
-const withSerwist = withSerwistInit({
-  swSrc: 'src/sw.ts',
-  swDest: 'public/sw.js',
-  // Disable in development to avoid Turbopack incompatibility warnings
-  disable: process.env.NODE_ENV === 'development',
-});
 
 // Bundle analyzer is enabled via ANALYZE=true environment variable
 const withAnalyzer = withBundleAnalyzer({

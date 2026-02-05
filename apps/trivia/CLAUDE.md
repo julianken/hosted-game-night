@@ -101,6 +101,7 @@ src/
 ├── app/
 │   ├── play/          # Presenter view (page.tsx)
 │   ├── display/       # Audience view (page.tsx)
+│   ├── sw.ts          # Service worker (@serwist/turbopack)
 │   └── layout.tsx     # Root layout with theme provider
 ├── components/
 │   ├── presenter/     # QuestionDisplay, QuestionList, TeamManager, TeamScoreboard, etc.
@@ -122,8 +123,7 @@ src/
 │   ├── theme-store.ts # Zustand theme state (persisted)
 │   └── settings-store.ts
 ├── types/             # TypeScript types
-├── test/              # Test utilities and mocks
-└── sw.ts              # Service worker (Serwist)
+└── test/              # Test utilities and mocks
 ```
 
 ## Game Mechanics (MVP)

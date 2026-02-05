@@ -156,6 +156,7 @@ src/
 │   ├── api/health/    # Health check endpoint
 │   ├── play/          # Presenter view (page.tsx)
 │   ├── display/       # Audience view (page.tsx)
+│   ├── sw.ts          # Service worker (@serwist/turbopack)
 │   └── layout.tsx     # Root layout with theme provider
 ├── components/
 │   ├── presenter/     # ControlPanel, PatternSelector, BallDisplay, ThemeSelector, etc.
@@ -180,8 +181,7 @@ src/
 │   ├── sync-store.ts  # Zustand sync state
 │   └── theme-store.ts # Zustand theme state (persisted)
 ├── types/             # TypeScript types
-├── test/              # Test utilities and mocks
-└── sw.ts              # Service worker (Serwist)
+└── test/              # Test utilities and mocks
 ```
 
 ## Design Requirements
