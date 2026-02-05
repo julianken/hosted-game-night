@@ -108,6 +108,9 @@ importers:
         specifier: ^5.0.10
         version: 5.0.10(@types/react@19.2.8)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
     devDependencies:
+      '@beak-gaming/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@next/bundle-analyzer':
         specifier: ^16.1.3
         version: 16.1.3
