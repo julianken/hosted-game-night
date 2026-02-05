@@ -77,7 +77,7 @@ export function TeamManager({
                   autoFocus
                   aria-label="Edit team name"
                   className="flex-1 px-3 py-2 text-base border border-border rounded-lg
-                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               ) : (
                 <>
@@ -98,8 +98,8 @@ export function TeamManager({
                     <button
                       onClick={() => onRemoveTeam(team.id)}
                       aria-label={`Remove team ${team.name}`}
-                      className="px-3 min-h-[var(--size-touch)] text-sm text-red-500
-                        hover:text-red-600 hover:bg-red-500/10 rounded-lg
+                      className="px-3 min-h-[var(--size-touch)] text-sm text-error
+                        hover:text-error hover:bg-error/10 rounded-lg
                         transition-colors"
                       title="Remove team"
                     >
@@ -127,8 +127,8 @@ export function TeamManager({
             transition-colors duration-200
             ${
               canAddMore
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
             }
           `}
         >
@@ -139,7 +139,7 @@ export function TeamManager({
       )}
 
       {status === 'setup' && teams.length === 0 && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-warning text-center">
           Add at least one team to start the game
         </p>
       )}

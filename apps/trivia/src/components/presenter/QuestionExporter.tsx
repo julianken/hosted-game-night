@@ -115,7 +115,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             className={`
               flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
               ${format === 'json'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80'
               }
             `}
@@ -128,7 +128,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             className={`
               flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
               ${format === 'csv'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80'
               }
             `}
@@ -148,8 +148,8 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             type="checkbox"
             checked={includeIds}
             onChange={(e) => setIncludeIds(e.target.checked)}
-            className="w-5 h-5 rounded border-border text-blue-600
-              focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-5 h-5 rounded border-border text-primary
+              focus:ring-2 focus:ring-primary focus:ring-offset-2"
           />
           <span className="text-sm">Include question IDs</span>
         </label>
@@ -159,8 +159,8 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             type="checkbox"
             checked={includeExplanations}
             onChange={(e) => setIncludeExplanations(e.target.checked)}
-            className="w-5 h-5 rounded border-border text-blue-600
-              focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-5 h-5 rounded border-border text-primary
+              focus:ring-2 focus:ring-primary focus:ring-offset-2"
           />
           <span className="text-sm">Include explanations</span>
         </label>
@@ -173,10 +173,10 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
         className={`
           w-full px-4 py-3 rounded-xl text-base font-medium transition-colors
           ${showSuccess
-            ? 'bg-green-600 text-white'
+            ? 'bg-success text-white'
             : isExporting
-              ? 'bg-blue-400 text-white cursor-wait'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-primary/70 text-primary-foreground cursor-wait'
+              : 'bg-primary hover:bg-primary/90 text-primary-foreground'
           }
         `}
       >

@@ -187,8 +187,8 @@ export default function QuestionSetsPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg" role="alert">
-          <p className="text-red-600 font-medium">{error}</p>
+        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg" role="alert">
+          <p className="text-error font-medium">{error}</p>
         </div>
       )}
 
@@ -311,7 +311,7 @@ export default function QuestionSetsPage() {
                 <button
                   type="button"
                   onClick={() => setDeletingId(qs.id)}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-error/10 text-error hover:bg-error/20 transition-colors"
                   aria-label={`Delete ${qs.name}`}
                   title="Delete"
                 >
@@ -329,7 +329,7 @@ export default function QuestionSetsPage() {
                     <button
                       type="button"
                       onClick={() => handleDelete(qs.id)}
-                      className="min-h-[44px] px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      className="min-h-[44px] px-4 py-2 text-sm font-medium rounded-lg bg-error text-white hover:bg-error/90 transition-colors"
                     >
                       Yes, Delete
                     </button>
@@ -355,8 +355,8 @@ export default function QuestionSetsPage() {
           aria-live="polite"
           className={`fixed bottom-6 right-6 p-4 rounded-lg shadow-lg border ${
             toast.type === 'success'
-              ? 'bg-green-500/10 border-green-500/20 text-green-600'
-              : 'bg-red-500/10 border-red-500/20 text-red-600'
+              ? 'bg-success/10 border-success/20 text-success'
+              : 'bg-error/10 border-error/20 text-error'
           }`}
         >
           <p className="text-base font-medium">{toast.message}</p>

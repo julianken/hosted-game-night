@@ -47,7 +47,7 @@ export function RoundSummary({
             <span className="text-xs text-muted-foreground uppercase tracking-wide">
               {isLastRound ? 'Winner' : 'Round Winner'}
             </span>
-            <div className="text-lg font-bold text-green-600" aria-label={`${isLastRound ? 'Winner' : 'Round winner'}: ${roundWinners.map(t => t.name).join(', ')}`}>
+            <div className="text-lg font-bold text-success" aria-label={`${isLastRound ? 'Winner' : 'Round winner'}: ${roundWinners.map(t => t.name).join(', ')}`}>
               {roundWinners.map(t => t.name).join(', ')}
             </div>
           </div>
@@ -93,7 +93,7 @@ export function RoundSummary({
           onClick={onNextRound}
           aria-label={isLastRound ? 'End game and show final results' : `Start round ${roundNumber + 1}`}
           className="px-4 py-2 rounded-lg text-sm font-semibold
-            bg-green-600 hover:bg-green-700 text-white
+            bg-success hover:bg-success/90 text-white
             transition-colors duration-200"
         >
           {isLastRound ? 'End Game' : 'Next Round'}

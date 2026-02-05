@@ -163,8 +163,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
       <h3 className="text-lg font-semibold">Import Question Set</h3>
 
       {successMessage && (
-        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg" role="status">
-          <p className="font-medium text-green-600">{successMessage}</p>
+        <div className="p-4 bg-success/10 border border-success/20 rounded-lg" role="status">
+          <p className="font-medium text-success">{successMessage}</p>
         </div>
       )}
 
@@ -181,8 +181,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
               transition-colors duration-200
               ${isDragging
-                ? 'border-blue-500 bg-blue-500/10'
-                : 'border-border hover:border-blue-400 hover:bg-muted/50'
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/60 hover:bg-muted/50'
               }
             `}
             role="button"
@@ -197,7 +197,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               </p>
               <button
                 type="button"
-                className="mt-2 px-4 min-h-[48px] py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-medium transition-colors"
+                className="mt-2 px-4 min-h-[48px] py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-base font-medium transition-colors"
                 onClick={(e) => { e.stopPropagation(); handleBrowseClick(); }}
               >
                 Browse files
@@ -250,8 +250,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
                   className={`
                     w-full px-4 min-h-[48px] py-2 rounded-lg text-base font-medium transition-colors
                     ${pasteText.trim()
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed'
                     }
                   `}
                 >
@@ -286,12 +286,12 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
       {/* Error state (standalone) */}
       {state === 'error' && (
         <div className="space-y-4">
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg" role="alert">
+          <div className="p-4 bg-error/10 border border-error/20 rounded-lg" role="alert">
             <div className="flex items-start gap-3">
               <span className="text-xl" aria-hidden="true">⚠️</span>
               <div>
-                <p className="font-medium text-red-600">Error: Import Failed</p>
-                <p className="text-sm text-red-500 mt-1">{error}</p>
+                <p className="font-medium text-error">Error: Import Failed</p>
+                <p className="text-sm text-error mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -318,12 +318,12 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               </div>
               <div>
                 <span className="text-muted-foreground">Valid:</span>
-                <span className="ml-2 font-medium text-green-600">{result.totalValid}</span>
+                <span className="ml-2 font-medium text-success">{result.totalValid}</span>
               </div>
               {result.totalInvalid > 0 && (
                 <div className="col-span-2">
                   <span className="text-muted-foreground">Invalid:</span>
-                  <span className="ml-2 font-medium text-red-600">{result.totalInvalid}</span>
+                  <span className="ml-2 font-medium text-error">{result.totalInvalid}</span>
                 </div>
               )}
             </div>
@@ -332,13 +332,13 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
           {/* Errors (first 10) */}
           {result.errors.length > 0 && (
             <div className="space-y-2">
-              <p className="text-base font-medium text-red-600">
+              <p className="text-base font-medium text-error">
                 Errors ({result.errors.length})
               </p>
-              <div className="max-h-32 overflow-y-auto border border-red-200 rounded-lg" role="alert">
+              <div className="max-h-32 overflow-y-auto border border-error/20 rounded-lg" role="alert">
                 {result.errors.slice(0, 10).map((err, i) => (
-                  <div key={i} className="px-3 py-2 text-sm border-b border-red-100 last:border-0">
-                    <span className="font-semibold text-red-500">Error:</span>
+                  <div key={i} className="px-3 py-2 text-sm border-b border-error/10 last:border-0">
+                    <span className="font-semibold text-error">Error:</span>
                     <span className="ml-1">Row {err.row + 1} ({err.field}): {err.message}</span>
                   </div>
                 ))}
@@ -354,13 +354,13 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
           {/* Warnings (first 5) */}
           {result.warnings.length > 0 && (
             <div className="space-y-2">
-              <p className="text-base font-medium text-amber-600">
+              <p className="text-base font-medium text-warning">
                 Warnings ({result.warnings.length})
               </p>
-              <div className="max-h-24 overflow-y-auto border border-amber-200 rounded-lg">
+              <div className="max-h-24 overflow-y-auto border border-warning/20 rounded-lg">
                 {result.warnings.slice(0, 5).map((warn, i) => (
-                  <div key={i} className="px-3 py-2 text-sm border-b border-amber-100 last:border-0">
-                    <span className="font-semibold text-amber-500">Warning:</span>
+                  <div key={i} className="px-3 py-2 text-sm border-b border-warning/10 last:border-0">
+                    <span className="font-semibold text-warning">Warning:</span>
                     <span className="ml-1">Row {warn.row + 1}: {warn.message}</span>
                   </div>
                 ))}
@@ -375,15 +375,15 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
 
           {/* Inline error from save attempt */}
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg" role="alert">
-              <p className="text-sm text-red-600"><span className="font-semibold">Error:</span> {error}</p>
+            <div className="p-3 bg-error/10 border border-error/20 rounded-lg" role="alert">
+              <p className="text-sm text-error"><span className="font-semibold">Error:</span> {error}</p>
             </div>
           )}
 
           {/* Name input */}
           <div className="space-y-2">
             <label htmlFor="qs-name" className="text-lg font-medium block">
-              Name <span className="text-red-500">*</span>
+              Name <span className="text-error">*</span>
             </label>
             <input
               id="qs-name"
@@ -455,8 +455,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               className={`
                 flex-1 px-4 min-h-[48px] py-2 rounded-lg text-base font-medium transition-colors
                 ${result.questions.length > 0 && name.trim()
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-success hover:bg-success/90 text-white'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }
               `}
             >

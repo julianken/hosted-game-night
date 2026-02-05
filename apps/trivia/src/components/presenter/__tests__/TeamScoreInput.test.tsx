@@ -299,7 +299,7 @@ describe('TeamScoreInput', () => {
       );
 
       // Current round (index 1 = R2) should have blue styling
-      const currentRoundScore = container.querySelector('.bg-blue-500\\/20');
+      const currentRoundScore = container.querySelector('.bg-primary\\/20');
       expect(currentRoundScore).toBeInTheDocument();
     });
 

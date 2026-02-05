@@ -131,8 +131,8 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
               transition-colors duration-200
               ${isDragging
-                ? 'border-blue-500 bg-blue-500/10'
-                : 'border-border hover:border-blue-400 hover:bg-muted/50'
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/60 hover:bg-muted/50'
               }
             `}
             role="button"
@@ -178,12 +178,12 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
       {/* Error state */}
       {state === 'error' && (
         <div className="space-y-4">
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="p-4 bg-error/10 border border-error/20 rounded-lg">
             <div className="flex items-start gap-3">
-              <span className="text-red-500 text-xl">⚠️</span>
+              <span className="text-error text-xl">⚠️</span>
               <div>
-                <p className="font-medium text-red-600">Import Failed</p>
-                <p className="text-sm text-red-500 mt-1">{error}</p>
+                <p className="font-medium text-error">Import Failed</p>
+                <p className="text-sm text-error mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -210,12 +210,12 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               </div>
               <div>
                 <span className="text-muted-foreground">Valid:</span>
-                <span className="ml-2 font-medium text-green-600">{result.totalValid}</span>
+                <span className="ml-2 font-medium text-success">{result.totalValid}</span>
               </div>
               {result.totalInvalid > 0 && (
                 <div className="col-span-2">
                   <span className="text-muted-foreground">Invalid:</span>
-                  <span className="ml-2 font-medium text-amber-600">{result.totalInvalid}</span>
+                  <span className="ml-2 font-medium text-warning">{result.totalInvalid}</span>
                 </div>
               )}
             </div>
@@ -224,13 +224,13 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Validation errors */}
           {result.errors.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-red-600">
+              <p className="text-sm font-medium text-error">
                 Validation Errors ({result.errors.length})
               </p>
-              <div className="max-h-32 overflow-y-auto border border-red-200 rounded-lg">
+              <div className="max-h-32 overflow-y-auto border border-error/20 rounded-lg">
                 {result.errors.slice(0, 10).map((err, i) => (
-                  <div key={i} className="px-3 py-2 text-xs border-b border-red-100 last:border-0">
-                    <span className="text-red-500">Row {err.row + 1}:</span>
+                  <div key={i} className="px-3 py-2 text-xs border-b border-error/10 last:border-0">
+                    <span className="text-error">Row {err.row + 1}:</span>
                     <span className="ml-1 text-muted-foreground">{err.field}</span>
                     <span className="ml-1">{err.message}</span>
                   </div>
@@ -247,13 +247,13 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Warnings */}
           {result.warnings.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-amber-600">
+              <p className="text-sm font-medium text-warning">
                 Warnings ({result.warnings.length})
               </p>
-              <div className="max-h-24 overflow-y-auto border border-amber-200 rounded-lg">
+              <div className="max-h-24 overflow-y-auto border border-warning/20 rounded-lg">
                 {result.warnings.slice(0, 5).map((warn, i) => (
-                  <div key={i} className="px-3 py-2 text-xs border-b border-amber-100 last:border-0">
-                    <span className="text-amber-500">Row {warn.row + 1}:</span>
+                  <div key={i} className="px-3 py-2 text-xs border-b border-warning/10 last:border-0">
+                    <span className="text-warning">Row {warn.row + 1}:</span>
                     <span className="ml-1">{warn.message}</span>
                   </div>
                 ))}
@@ -298,7 +298,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
                 className={`
                   flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                   ${importMode === 'replace'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80'
                   }
                 `}
@@ -310,7 +310,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
                 className={`
                   flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                   ${importMode === 'append'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80'
                   }
                 `}
@@ -335,8 +335,8 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               className={`
                 flex-1 px-4 py-2 rounded-lg text-base font-medium transition-colors
                 ${result.questions.length > 0
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-success hover:bg-success/90 text-white'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }
               `}
             >
