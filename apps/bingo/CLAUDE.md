@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Frontend | React + Tailwind CSS |
 | Backend (BFF) | Next.js API Routes |
 | Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (via BFF) |
+| Auth | OAuth 2.1 via Platform Hub |
 | State Management | Zustand |
 | PWA | Serwist (Service Worker) |
 | Hosting | Vercel |
@@ -208,7 +208,7 @@ pnpm test:coverage    # With coverage
 
 ## Future Work (TODO)
 
-- [ ] User authentication (via @beak-gaming/auth)
+- [x] User authentication (OAuth 2.1 via Platform Hub)
 - [ ] Saved game templates
 - [ ] Pattern editor
 - [ ] Voice pack selection UI improvements
