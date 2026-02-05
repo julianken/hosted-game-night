@@ -36,9 +36,9 @@ beak-gaming-platform/
 │   ├── sync/            # Dual-screen synchronization (BroadcastChannel)
 │   ├── ui/              # Shared UI components (Button, Modal, Toggle, Input, etc.)
 │   ├── theme/           # Senior-friendly design tokens and CSS
-│   ├── auth/            # Supabase authentication wrappers (30 exports)
+│   ├── auth/            # Supabase authentication wrappers (34 exports)
 │   ├── game-engine/     # Abstract game state machine
-│   ├── database/        # Supabase database utilities (212 exports)
+│   ├── database/        # Supabase database utilities (268 exports)
 │   ├── types/           # Shared TypeScript type definitions
 │   ├── error-tracking/  # Error logging and tracking utilities
 │   └── testing/         # Shared test utilities and mocks

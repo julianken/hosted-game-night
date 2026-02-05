@@ -194,8 +194,8 @@ This app depends on the following shared packages:
 
 - [`@beak-gaming/ui`](../../packages/ui/README.md) - Button, Toggle, Card, Modal, Toast components - **🚧 Partially Integrated**
 - [`@beak-gaming/theme`](../../packages/theme/README.md) - Design tokens (10+ themes, typography, spacing) - **🚧 Partially Integrated**
-- [`@beak-gaming/auth`](../../packages/auth/README.md) - Supabase authentication wrappers (40+ exports) - **❌ Not Integrated**
-- [`@beak-gaming/database`](../../packages/database/README.md) - Type-safe Supabase client wrappers (150+ exports) - **❌ Not Integrated**
+- [`@beak-gaming/auth`](../../packages/auth/README.md) - Supabase authentication wrappers (34 exports) - **❌ Not Integrated**
+- [`@beak-gaming/database`](../../packages/database/README.md) - Type-safe Supabase client wrappers (268 exports) - **❌ Not Integrated**
 - [`@beak-gaming/error-tracking`](../../packages/error-tracking/README.md) - Error logging utilities - **✅ Integrated**
 
 ## Integration Status

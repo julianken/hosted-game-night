@@ -12,7 +12,7 @@ Comprehensive type-safe TypeScript definitions for the Beak Gaming Platform. Pro
 - ✅ Generic sync message types for dual-screen system
 - ✅ Timestamp and metadata utilities
 - ✅ Comprehensive JSDoc documentation
-- ✅ 40+ exported types and interfaces
+- ✅ 30 exported types and interfaces
 - ✅ Zero runtime dependencies
 
 ## Installation

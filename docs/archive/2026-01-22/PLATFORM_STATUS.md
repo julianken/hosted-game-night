@@ -25,8 +25,8 @@ The Beak Gaming Platform is **significantly more complete** than documentation s
 **Problem:** Several package READMEs claim "placeholder" or "not implemented" status despite being 95%+ complete with comprehensive APIs.
 
 ### Affected Packages
-- **@beak-gaming/auth**: Claims "placeholder", actually has 40+ exports including AuthProvider, useAuth, useSession, useUser, middleware, etc.
-- **@beak-gaming/database**: Claims "not yet implemented", actually has 150+ exports including type-safe client, query builders, pagination, CRUD helpers, etc.
+- **@beak-gaming/auth**: Claims "placeholder", actually has 34 exports including AuthProvider, useAuth, useSession, useUser, middleware, etc.
+- **@beak-gaming/database**: Claims "not yet implemented", actually has 268 exports including type-safe client, query builders, pagination, CRUD helpers, etc.
 
 **Impact:** This mismatch could:
 - Block adoption of completed functionality

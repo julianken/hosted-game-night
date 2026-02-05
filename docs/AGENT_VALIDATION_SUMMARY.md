@@ -42,8 +42,8 @@ Bingo + Trivia (OAuth clients with protected routes)
 
 **Files Referenced:**
 - `apps/bingo/src/app/api/sessions/route.ts` - 9 lines, uses factory pattern
-- `packages/database/src/index.ts` - 150+ exports
-- `packages/auth/src/index.ts` - 40+ exports
+- `packages/database/src/index.ts` - 268 exports
+- `packages/auth/src/index.ts` - 34 exports
 
 ---
 
@@ -52,8 +52,8 @@ Bingo + Trivia (OAuth clients with protected routes)
 **Verdict:** HALT AND REDESIGN
 
 **Gap Analysis:** PARTIALLY JUSTIFIED
-- ✅ `@beak-gaming/auth` exists with ~2,000 LOC and 40+ exports
-- ✅ `@beak-gaming/database` exists with ~10,600 LOC and 150+ exports
+- ✅ `@beak-gaming/auth` exists with ~2,000 LOC and 34 exports
+- ✅ `@beak-gaming/database` exists with ~10,600 LOC and 268 exports
 - ❌ **Critical Misunderstanding:** Plan assumes Supabase can be OAuth server (initially thought incorrect, but proven correct by Simplifier agent's documentation fetch)
 
 **37% Inflation Claim:** UNABLE TO VERIFY
@@ -139,7 +139,7 @@ await supabase.auth.oauth.approveAuthorization(authorizationId)
 
 | Claim | Status | Actual |
 |-------|--------|--------|
-| 150+ exports | ✅ EXCEEDED | **239 exports** across 22 files |
+| 150+ exports | ✅ EXCEEDED | **268 exports** across 22 files |
 | Template CRUD exists | ✅ CONFIRMED | Full CRUD for Bingo + Trivia |
 | Session management complete | ✅ CONFIRMED | Local + persistent, HMAC tokens, PIN security |
 | React hooks available | ✅ CONFIRMED | 30 hooks (queries, mutations, sessions) |
@@ -160,7 +160,7 @@ await supabase.auth.oauth.approveAuthorization(authorizationId)
 - Trivia templates: 23 exports
 - Game sessions: 27 exports
 - Persistent sessions: 8 exports
-- React hooks: 30 exports
+- React hooks: 27 exports
 - Session tokens: 6 exports
 - PIN security: 6 exports
 - API factories: 2 exports
@@ -191,7 +191,7 @@ await supabase.auth.oauth.approveAuthorization(authorizationId)
 1. **Supabase provides OAuth 2.1 server** (verified via official docs)
 2. **Current plan is over-engineered** (rebuilds what exists)
 3. **Reduce from 50 issues to 12-15 issues** (70-92% reduction)
-4. **Leverage existing infrastructure** (239 exports, not build new)
+4. **Leverage existing infrastructure** (268 exports, not build new)
 5. **Use distributed APIs** (apps keep game logic)
 6. **Remove time estimates** (violates CLAUDE.md)
 
@@ -392,7 +392,7 @@ All four validation agents independently reached the same conclusion: **The curr
 The simplified approach:
 - ✅ Reduces complexity by 92%
 - ✅ Eliminates security risks of custom crypto code
-- ✅ Leverages existing infrastructure (239 exports)
+- ✅ Leverages existing infrastructure (268 exports)
 - ✅ Aligns with AI agent development model
 - ✅ Gets to production faster
 

@@ -319,10 +319,10 @@ AND constraint_type = 'FOREIGN KEY';
 
 | Package | Available | Used |
 |---------|-----------|------|
-| @beak-gaming/auth | 30 exports | NOT USED in Bingo/Trivia |
+| @beak-gaming/auth | 34 exports | NOT USED in Bingo/Trivia |
 | @beak-gaming/ui | 15 components | Partial (Button, Modal duplicated) |
-| @beak-gaming/database | 150+ exports | USED |
-| @beak-gaming/sync | ~70 exports | USED |
+| @beak-gaming/database | 268 exports | USED |
+| @beak-gaming/sync | 68 exports | USED |
 
 ### 3.3 Large Files Needing Refactor
 

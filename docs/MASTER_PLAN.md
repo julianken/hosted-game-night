@@ -19,8 +19,8 @@ The Beak Gaming Platform is a unified gaming system for retirement communities, 
 | **Bingo App** | 85% | ✅ Production Ready | Full game engine, 29 patterns, audio, OAuth, templates |
 | **Trivia App** | 95% | ✅ Production Ready | Full game engine, 20 questions, TTS, OAuth, templates, CSV import |
 | **Platform Hub** | 55-60% | 🚧 Active Development | OAuth server + CSRF + token rotation + consent UI + security hardening complete |
-| **@beak-gaming/auth** | 95% | ✅ Complete | 30+ exports, partially integrated (Platform Hub only) |
-| **@beak-gaming/database** | 98% | ✅ Complete | 212 exports, type-safe client, CRUD, React hooks, PIN security |
+| **@beak-gaming/auth** | 95% | ✅ Complete | 34 exports, partially integrated (Platform Hub only) |
+| **@beak-gaming/database** | 98% | ✅ Complete | 268 exports, type-safe client, CRUD, React hooks, PIN security |
 | **@beak-gaming/sync** | 100% | ✅ Complete | BroadcastChannel sync, comprehensive tests |
 | **@beak-gaming/ui** | 100% | ✅ Complete | Button, Toggle, Slider, Modal, Input, Skeleton variants |
 | **@beak-gaming/theme** | 100% | ✅ Complete | 2 theme modes (light/dark), senior-friendly tokens |
@@ -74,8 +74,8 @@ beak-gaming-platform/
 │   ├── platform-hub/       # Port 3002 - OAuth server + game selector
 │   └── trivia/             # Port 3001 - Team trivia with 20 questions + CSV import
 ├── packages/
-│   ├── auth/               # Supabase auth wrappers (30+ exports)
-│   ├── database/           # Type-safe Supabase client (150+ exports)
+│   ├── auth/               # Supabase auth wrappers (34 exports)
+│   ├── database/           # Type-safe Supabase client (268 exports)
 │   ├── error-tracking/     # Error logging utilities
 │   ├── game-engine/        # Base game state machine
 │   ├── sync/               # Dual-screen BroadcastChannel sync
@@ -362,9 +362,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
 | Package | Status | Exports | Test Coverage |
 |---------|--------|---------|---------------|
-| @beak-gaming/auth | ✅ 95% | 30 (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
-| @beak-gaming/database | ✅ 98% | 212 (client, CRUD, hooks, filters, PIN security) | 90%+ |
-| @beak-gaming/sync | ✅ 100% | ~70 exports (BroadcastSync, hooks, stores, session utils, room code generator) | 95%+ |
+| @beak-gaming/auth | ✅ 95% | 34 (AuthProvider, hooks, ProtectedRoute) | 100% (58/58 tests) |
+| @beak-gaming/database | ✅ 98% | 268 (client, CRUD, hooks, filters, PIN security) | 90%+ |
+| @beak-gaming/sync | ✅ 100% | 68 exports (BroadcastSync, hooks, stores, session utils, room code generator) | 95%+ |
 | @beak-gaming/ui | ⚠️ 88% | 15 components (Button, Modal, Toggle, Input, Slider, Skeleton variants, Confetti, SyncStatusIndicator, CreateGameModal, JoinGameModal, RoomCodeDisplay). Missing: Card, Toast (Toast duplicated in apps) | 85%+ |
 | @beak-gaming/theme | ✅ 100% | 2 theme modes + design tokens | N/A |
 | @beak-gaming/game-engine | ⚠️ 60-70% | GameStatus, transitions, statistics (700+ lines) | 90%+ |
@@ -373,7 +373,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 | @beak-gaming/testing | ⚠️ 70% | BroadcastChannel, Audio, Supabase mocks (helpers empty) | N/A |
 
 **Key Findings:**
-- `@beak-gaming/auth` **NOT integrated in Bingo/Trivia** (30 exports available but apps have duplicate OAuth clients)
+- `@beak-gaming/auth` **NOT integrated in Bingo/Trivia** (34 exports available but apps have duplicate OAuth clients)
 - Platform Hub duplicates auth code in `/lib/supabase/*` instead of using package exports
 - `@beak-gaming/game-engine` underutilized (apps don't use shared base types)
 - `@beak-gaming/testing` helpers module is placeholder only

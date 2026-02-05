@@ -16,7 +16,7 @@ Comprehensive type-safe database utilities for the Beak Gaming Platform. Provide
 - ✅ PIN security with lockout protection
 - ✅ API route factories for Next.js
 - ✅ Comprehensive error handling
-- ✅ 150+ exports
+- ✅ 268 exports
 
 ## Installation
 

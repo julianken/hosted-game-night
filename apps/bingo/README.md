@@ -211,8 +211,8 @@ This app depends on the following shared packages:
 - [`@beak-gaming/sync`](../../packages/sync/README.md) - BroadcastChannel dual-screen synchronization
 - [`@beak-gaming/ui`](../../packages/ui/README.md) - Button, Toggle, Slider, Card, Modal, Toast components
 - [`@beak-gaming/theme`](../../packages/theme/README.md) - Design tokens (10+ themes, typography, spacing)
-- [`@beak-gaming/database`](../../packages/database/README.md) - Type-safe Supabase client wrappers (150+ exports)
-- [`@beak-gaming/auth`](../../packages/auth/README.md) - Supabase authentication wrappers (40+ exports) - *not yet integrated*
+- [`@beak-gaming/database`](../../packages/database/README.md) - Type-safe Supabase client wrappers (268 exports)
+- [`@beak-gaming/auth`](../../packages/auth/README.md) - Supabase authentication wrappers (34 exports) - *not yet integrated*
 - [`@beak-gaming/game-engine`](../../packages/game-engine/README.md) - Abstract game state machine (partial usage)
 - [`@beak-gaming/testing`](../../packages/testing/README.md) - BroadcastChannel and Audio mocks for tests
 

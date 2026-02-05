@@ -12,9 +12,9 @@ A unified gaming platform for retirement communities, featuring Bingo, Trivia, a
 | **[@beak-gaming/sync](./packages/sync/README.md)** | ✅ Complete | 100% | BroadcastChannel dual-screen synchronization |
 | **[@beak-gaming/ui](./packages/ui/README.md)** | ✅ Complete | 100% | Button, Toggle, Slider, Card, Modal, Toast components |
 | **[@beak-gaming/theme](./packages/theme/README.md)** | ✅ Complete | 100% | Design tokens, 10+ themes, senior-friendly typography |
-| **[@beak-gaming/database](./packages/database/README.md)** | ✅ Complete | 98% | Type-safe Supabase client wrappers (150+ exports) |
-| **[@beak-gaming/auth](./packages/auth/README.md)** | ✅ Complete | 95% | Supabase authentication wrappers (40+ exports) |
-| **[@beak-gaming/types](./packages/types/README.md)** | ✅ Complete | 100% | Shared TypeScript type definitions (40+ exports) |
+| **[@beak-gaming/database](./packages/database/README.md)** | ✅ Complete | 98% | Type-safe Supabase client wrappers (268 exports) |
+| **[@beak-gaming/auth](./packages/auth/README.md)** | ✅ Complete | 95% | Supabase authentication wrappers (34 exports) |
+| **[@beak-gaming/types](./packages/types/README.md)** | ✅ Complete | 100% | Shared TypeScript type definitions (30 exports) |
 | **[@beak-gaming/game-engine](./packages/game-engine/README.md)** | ⚠️ Partial | 40% | Abstract game state machine |
 | **[@beak-gaming/testing](./packages/testing/README.md)** | ✅ Complete | 100% | BroadcastChannel and Audio mocks for tests |
 
@@ -493,9 +493,9 @@ Each shared package has API documentation:
 | **[@beak-gaming/sync](./packages/sync/README.md)** | [README](./packages/sync/README.md) | BroadcastChannel dual-screen synchronization |
 | **[@beak-gaming/ui](./packages/ui/README.md)** | [README](./packages/ui/README.md) | 6 senior-friendly UI components |
 | **[@beak-gaming/theme](./packages/theme/README.md)** | [README](./packages/theme/README.md) | Design tokens and CSS variables |
-| **[@beak-gaming/database](./packages/database/README.md)** | [README](./packages/database/README.md) | Type-safe Supabase utilities (150+ exports) |
-| **[@beak-gaming/auth](./packages/auth/README.md)** | [README](./packages/auth/README.md) | Authentication wrappers (40+ exports) |
-| **[@beak-gaming/types](./packages/types/README.md)** | [README](./packages/types/README.md) | Shared TypeScript types (40+ exports) |
+| **[@beak-gaming/database](./packages/database/README.md)** | [README](./packages/database/README.md) | Type-safe Supabase utilities (268 exports) |
+| **[@beak-gaming/auth](./packages/auth/README.md)** | [README](./packages/auth/README.md) | Authentication wrappers (34 exports) |
+| **[@beak-gaming/types](./packages/types/README.md)** | [README](./packages/types/README.md) | Shared TypeScript types (30 exports) |
 | **[@beak-gaming/game-engine](./packages/game-engine/README.md)** | [README](./packages/game-engine/README.md) | Abstract game state machine |
 | **[@beak-gaming/testing](./packages/testing/README.md)** | [README](./packages/testing/README.md) | Test utilities and mocks |
 

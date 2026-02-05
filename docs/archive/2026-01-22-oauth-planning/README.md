@@ -117,7 +117,7 @@ The project now maintains these OAuth-related documents:
 
 ### Code Explorer Agent Verdict
 **INFRASTRUCTURE IS MORE COMPLETE THAN DOCUMENTED**
-- Validated 239 exports across database package (claimed 150+)
+- Validated 268 exports across database package
 - Template CRUD exists for both Bingo and Trivia
 - Session management complete with HMAC tokens and PIN security
 - Platform Hub 35-40% complete (docs claimed 10%)
