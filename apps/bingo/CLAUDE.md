@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Frontend | React + Tailwind CSS |
 | Backend (BFF) | Next.js API Routes |
 | Database | Supabase (PostgreSQL) |
-| Auth | OAuth 2.1 via Platform Hub |
+| Auth | OAuth 2.1 via Platform Hub (middleware-based JWT verification) |
 | State Management | Zustand |
 | PWA | Serwist (Service Worker) |
 | Hosting | Vercel |

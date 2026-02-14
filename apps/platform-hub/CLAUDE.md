@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Beak Gaming Platform Hub** - The central entry point for the Beak Gaming Platform. Provides game selection, authentication, and user dashboard.
 
-**Current State:** OAuth 2.1 server complete (3,479 lines). Game selector UI complete. User dashboard and profile management not yet implemented.
+**Current State:** OAuth 2.1 server complete (3,479 lines). Game selector UI complete. User dashboard and settings pages implemented.
 
 ## Purpose
 
@@ -90,18 +90,32 @@ src/
 - `/signup` - User registration page
 - `/forgot-password` - Password reset request (sends email)
 - `/reset-password` - Password reset form (from email link)
+- `/dashboard` - User dashboard (protected)
+- `/dashboard/templates` - Template management (protected)
+- `/dashboard/templates/[id]` - Template editor (protected)
+- `/settings` - User settings (protected)
 - `/oauth/consent` - OAuth consent page
+- `/api/auth/login` - Login endpoint
+- `/api/auth/logout` - Logout endpoint
+- `/api/auth/reset-password` - Password reset endpoint
+- `/api/auth/sync-session` - Session sync endpoint
+- `/api/oauth/authorize` - Authorization endpoint
 - `/api/oauth/token` - Token endpoint (OAuth 2.1)
 - `/api/oauth/approve` - Consent approval
 - `/api/oauth/deny` - Consent denial
 - `/api/oauth/csrf` - CSRF token generation
+- `/api/oauth/authorization-details` - Get authorization details
+- `/api/profile` - Get user profile
+- `/api/profile/update` - Update user profile
+- `/api/profile/reset-e2e` - Reset E2E test data
+- `/api/templates` - Template CRUD operations
+- `/api/templates/[id]` - Template by ID
 - `/api/cron/cleanup-authorizations` - Scheduled cleanup of expired OAuth authorizations (Vercel Cron)
 
 ## Planned Routes (TODO)
 
-- `/dashboard` - User dashboard with real data (protected)
-- `/dashboard/templates` - Saved game templates
-- `/dashboard/settings` - User settings
+None - all core routes implemented.
+
 
 ## Future Work (TODO)
 

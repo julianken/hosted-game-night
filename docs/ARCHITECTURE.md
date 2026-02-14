@@ -60,7 +60,12 @@ src/
 │   ├── audience/     # Display components
 │   └── ui/           # App-specific UI
 ├── lib/
+│   ├── audio/        # Audio playback (bingo)
+│   ├── auth/         # Auth utilities and middleware helpers
 │   ├── game/         # Game engine, patterns, state machine
+│   ├── session/      # Session management (PIN generation, serialization)
+│   ├── supabase/     # Supabase client initialization
+│   ├── sw/           # Service worker utilities
 │   └── sync/         # BroadcastChannel wrapper
 ├── stores/           # Zustand stores
 ├── hooks/            # Custom React hooks

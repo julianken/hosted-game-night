@@ -34,10 +34,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `apps/trivia` | **Production Ready (95%)** | Trivia, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth, CSV import |
 | `apps/platform-hub` | **Backend Complete (55-60%)** | OAuth 2.1 server, CORS, rate limiting, security. Missing: BEA-319 to BEA-329 |
 | `packages/sync` | **Complete (100%)** | BroadcastChannel sync, Zustand store, React hook |
-| `packages/ui` | **Partial (88%)** | 15 components. Missing: Card, Toast |
-| `packages/theme` | **Complete (100%)** | Design tokens (10+ themes, typography, spacing, touch targets) |
+| `packages/ui` | **Partial (88%)** | 15 components. Missing: Card |
+| `packages/theme` | **Complete (100%)** | Design tokens (3 modes (light/dark/system), typography, spacing, touch targets) |
 | `packages/game-engine` | **Partial (40%)** | Base GameStatus type, transition functions, statistics |
-| `packages/auth` | **Complete (95%)** | AuthProvider, hooks, ProtectedRoute. Not integrated in apps yet |
+| `packages/auth` | **Complete (95%)** | AuthProvider, hooks, ProtectedRoute. Integrated in platform-hub, bingo, trivia (middleware-based) |
 | `packages/database` | **Complete (98%)** | Type-safe client, CRUD, pagination, hooks, PIN security, API factories |
 | `packages/testing` | **Complete (100%)** | BroadcastChannel and Audio mocks |
 | `packages/types` | **Complete** | Shared TypeScript types |

@@ -23,11 +23,10 @@ src/
 ├── lib/
 │   ├── game/               # Game engine (pure functions)
 │   │   ├── engine.ts       # State transition functions
-│   │   ├── patterns.ts     # Game patterns (bingo-specific)
+│   │   ├── patterns/     # Game patterns (bingo-specific)
 │   │   └── __tests__/      # Engine unit tests
 │   ├── sync/               # BroadcastChannel wrapper
 │   │   └── broadcast.ts    # Dual-screen sync
-│   └── utils/              # App-specific utilities
 ├── stores/                 # Zustand stores
 │   └── gameStore.ts        # Main game state store
 ├── hooks/                  # Custom React hooks
@@ -56,7 +55,7 @@ src/
 
 | Directory | App | Purpose |
 |-----------|-----|---------|
-| `src/lib/game/patterns.ts` | bingo | 29 bingo winning patterns |
+| `src/lib/game/patterns/` | bingo | 29 bingo winning patterns |
 | `src/lib/game/rounds.ts` | trivia | Round/question management |
 | `src/lib/game/scoring.ts` | trivia | Team scoring logic |
 | `src/app/api/templates/` | bingo, trivia | Template CRUD |

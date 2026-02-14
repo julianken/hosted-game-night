@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Frontend | React + Tailwind CSS |
 | Backend (BFF) | Next.js API Routes |
 | Database | Supabase (PostgreSQL) - shared with platform |
-| Auth | Supabase Auth via @beak-gaming/auth |
+| Auth | OAuth 2.1 via Platform Hub (middleware-based JWT verification) |
 | State Management | Zustand |
 | Dual-Screen Sync | @beak-gaming/sync |
 | PWA | Serwist (Service Worker) |
@@ -78,7 +78,7 @@ This app uses shared packages from the monorepo:
 - `@beak-gaming/sync` - Dual-screen synchronization
 - `@beak-gaming/ui` - Shared UI components (Button, Toggle, Slider)
 - `@beak-gaming/theme` - Senior-friendly design tokens
-- `@beak-gaming/auth` - Supabase authentication
+- `@beak-gaming/auth` - Auth utilities (token refresh, JWT verification)
 
 ## Key Commands
 
