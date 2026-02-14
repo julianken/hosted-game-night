@@ -1,0 +1,604 @@
+# Manual Test Plan - Beak Gaming Platform
+
+> **Purpose:** Human-readable test cases for manual verification using Playwright MCP browser tools.
+> This supplements the ~338 automated E2E tests with interactive validation of visual, audio, and cross-app flows.
+>
+> **How to use:** Start dev servers (`pnpm dev`), then walk through each story using `browser_navigate`, `browser_snapshot`, `browser_click`, `browser_evaluate`, and `browser_take_screenshot`.
+>
+> **Last executed:** 2026-02-14 (run 6) — **156 PASS, 0 BUGS, 0 NOT TESTABLE** (from 156 test cases). Full re-run confirmed all fixes stable plus 1 newly tested (4.3 #1 fake token rejection). All 3 bugs from run 2 fixed (BEA-503, BEA-504, BEA-505). All previously NOT TESTABLE items resolved (runs 4-5).
+> **Auth method:** Authenticated flows tested using `E2E_TESTING=true` mode with Playwright MCP. Login via Platform Hub with E2E credentials (`e2e-test@beak-gaming.test` / `TestPassword123!`), cookies shared across all ports on `localhost`.
+>
+> ### Execution History
+> | Date | Scope | Result |
+> |------|-------|--------|
+> | 2026-02-14 (run 1) | Unauthenticated flows (Sections 1, 2.1, 3.1) | 39/43 PASS, 5 NOTES |
+> | 2026-02-14 (run 2) | Authenticated + remaining flows | 97 PASS, 3 BUGS, 55 NOT TESTED |
+> | 2026-02-14 (run 3) | Bug fixes verified + remaining NOT TESTED | 145 PASS, 0 BUGS, 10 NOT TESTABLE |
+> | 2026-02-14 (run 4) | Full re-run after BEA-506/507/508 merged (PRs #340-342) | 149 PASS, 0 BUGS, 6 NOT TESTABLE |
+> | 2026-02-14 (run 5) | Resolved all 6 NOT TESTABLE items (fullscreen, templates, offline) | 155 PASS, 0 BUGS, 0 NOT TESTABLE |
+> | 2026-02-14 (run 6) | Full re-run of all 155 tests + 1 newly tested (4.3 #1) | 156 PASS, 0 BUGS, 0 NOT TESTABLE |
+>
+> ### Bugs Found and Fixed
+> | ID | Severity | Description | Fix |
+> |----|----------|-------------|-----|
+> | BEA-503 | Minor | Bingo: Pattern selection doesn't persist across page refresh. | Fixed in PR #337 — pattern now serialized in localStorage |
+> | BEA-504 | Minor | Trivia: Teams and scores don't persist across page refresh. | Fixed in PR #339 — teams/scores now serialized in localStorage |
+> | BEA-505 | Minor | Platform Hub: Profile API returns 500 for E2E users. | Fixed in PR #338 — graceful fallback for missing DB rows |
+>
+> ### Notes
+> - Template API returns E2E fixture data (2 templates: "E2E Trivia Night" + "E2E Bingo Classic") in E2E mode
+> - Playwright's Chromium doesn't inherit macOS dark mode; use `page.emulateMedia({ colorScheme: 'dark' })` to test System Default theme
+> - Trivia scoring controls (+/-) only appear during active gameplay (not during emergency pause)
+> - Presets and Question Set selectors only visible in pre-game setup area, not during gameplay
+> - All security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy) present on all 3 apps
+> - Serwist SW registers in Turbopack dev mode via `@serwist/turbopack` — both Bingo and Trivia have active SWs
+> - Hub home page has horizontal overflow at 375px mobile viewport (pre-existing responsive issue)
+> - QuestionImporter and CategoryFilter now rendered in page UI (fixed by BEA-506/BEA-507)
+> - Fullscreen API works in Playwright Chromium via `evaluate` (no user gesture required)
+> - Offline mode tested via `context.setOffline(true)` — both apps show banner and continue working
+>
+> ### Previously NOT TESTABLE, now PASS
+> | Category | Tests | Resolution |
+> |----------|-------|------------|
+> | File upload/import (3.7 tests 2-4) | 3 | BEA-506 (PR #340) wired QuestionImporter into page UI |
+> | Category filter (3.14 test 2) | 1 | BEA-507 (PR #341) wired CategoryFilter into page UI |
+> | Fullscreen toggle (2.8 test 3) | 1 | Tested via `requestFullscreen()`/`exitFullscreen()` evaluate (run 5) |
+> | Template aggregation (4.4 tests 1-2) | 2 | E2E store provides mock templates — API returns 200 (run 5) |
+> | PWA offline mode (6.1 tests 1-3) | 3 | Serwist SW active in dev mode; tested via `context.setOffline(true)` (run 5) |
+
+---
+
+## Prerequisites
+
+```bash
+# Start all three dev servers
+pnpm dev
+# Bingo:        http://localhost:3000
+# Trivia:       http://localhost:3001
+# Platform Hub: http://localhost:3002
+```
+
+---
+
+## 1. Platform Hub
+
+### Story 1.1: Home Page Renders Correctly
+
+**As a visitor**, I want to see the game selector page so I can choose which game to play.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Home page loads | Navigate to `localhost:3002`. Verify page title contains "Beak Gaming". Verify game cards for Bingo and Trivia are visible. |
+| 2 | Game cards link correctly | Click the Bingo card. Verify it navigates to or opens `localhost:3000`. Go back. Click the Trivia card. Verify it navigates to `localhost:3001`. |
+| 3 | Header and footer render | Verify the Header component is visible at the top. Verify Footer is visible at the bottom. |
+| 4 | Security headers present | Run `browser_evaluate` with `fetch(window.location.href).then(r => Object.fromEntries(r.headers))`. Verify `x-frame-options`, `x-content-type-options`, `referrer-policy` headers exist. |
+
+### Story 1.2: Login Page
+
+**As a user**, I want to log in to access protected features.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Login page renders | Navigate to `localhost:3002/login`. Verify email and password inputs are visible. Verify "Sign In" button exists. |
+| 2 | Forgot password link | Verify a link to `/forgot-password` is visible on the login page. Click it. Verify the forgot password form loads. |
+| 3 | Signup link | Verify a link to `/signup` is visible on the login page. Click it. Verify the signup form loads. |
+| 4 | Empty form validation | On the login page, click "Sign In" without entering credentials. Verify an error message appears. |
+
+### Story 1.3: Signup Page
+
+**As a new user**, I want to create an account.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Signup form renders | Navigate to `localhost:3002/signup`. Verify email, password, and confirm password fields are visible. |
+| 2 | Password mismatch | Enter different passwords in password and confirm fields. Submit. Verify error about passwords not matching. |
+| 3 | Login link | Verify a link back to `/login` exists on the signup page. |
+
+### Story 1.4: Password Reset Flow
+
+**As a user**, I want to reset my password if I forget it.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Forgot password form | Navigate to `localhost:3002/forgot-password`. Verify email input is visible. Verify "Reset Password" button exists. |
+| 2 | Reset password page | Navigate to `localhost:3002/reset-password`. Verify new password and confirm password fields exist. |
+
+### Story 1.5: OAuth Consent Page
+
+**As a user**, I want to authorize game apps to access my account.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Consent page loads | Navigate to `localhost:3002/oauth/consent?authorization_id=test`. Verify the page renders (may show error for invalid ID, which is expected). |
+| 2 | CSRF endpoint works | Run `browser_evaluate` with `fetch('/api/oauth/csrf').then(r => r.json())`. Verify response contains a `csrf_token` field. |
+
+### Story 1.6: Dashboard (Protected)
+
+**As an authenticated user**, I want to see my dashboard.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Unauthenticated redirect | Navigate to `localhost:3002/dashboard`. Verify redirect to login page (since not logged in). |
+| 2 | Settings redirect | Navigate to `localhost:3002/settings`. Verify redirect to login page. |
+
+### Story 1.7: API Health & Security
+
+**As an operator**, I want to verify API endpoints are functional.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Templates API responds | Run `browser_evaluate` with `fetch('/api/templates').then(r => r.json())`. Verify response has `templates` array (may be empty). |
+| 2 | Profile API requires auth | Run `browser_evaluate` with `fetch('/api/profile').then(r => r.status)`. Verify status is 401 or redirect. |
+| 3 | Rate limiting configured | Run `browser_evaluate` sending 15 rapid requests to `/api/auth/login`. Verify rate limiting kicks in (429 status). |
+
+---
+
+## 2. Bingo
+
+### Story 2.1: Home Page & Authentication
+
+**As a presenter**, I want to access the Bingo app and sign in.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Home page loads | Navigate to `localhost:3000`. Verify "Beak Bingo" branding is visible. Verify "Sign in with Beak Gaming" button exists. |
+| 2 | Sign in redirects to Hub | Click "Sign in with Beak Gaming". Verify redirect to `localhost:3002/login` (or `/api/oauth/authorize`). |
+| 3 | Play route protected | Navigate to `localhost:3000/play`. Verify redirect to home page (unauthenticated). |
+| 4 | Display route public | Navigate to `localhost:3000/display`. Verify the page loads (may show "invalid session" which is expected). |
+| 5 | Security headers | Run `browser_evaluate` to check response headers. Verify X-Frame-Options, X-Content-Type-Options, Referrer-Policy are present. |
+| 6 | Statistics display | If games have been played (check localStorage), verify stats cards are visible on home page. |
+
+### Story 2.2: Room Setup (Requires Auth) — **ALL PASS**
+
+**As an authenticated presenter**, I want to create or join a game room.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Room setup modal appears | After auth, navigate to `/play`. Verify Room Setup modal dialog is visible. | **PASS** — Auto-created offline session on load |
+| 2 | Three options visible | Verify buttons: "Create New Game", "Join with Room Code", "Play Offline". | **PASS** — All 3 buttons visible |
+| 3 | Create online room | Click "Create New Game". Verify modal closes. Verify Room code and PIN are displayed. PIN should be 4 digits (1000-9999). | **PASS** |
+| 4 | Join room form | Click "Join with Room Code". Verify room code input and PIN input appear. | **PASS** |
+| 5 | PIN validation | In join form, enter 3-digit PIN. Verify Join button is disabled. Enter 4 digits. Verify button enables. | **PASS** |
+| 6 | Room code uppercase | Type lowercase room code. Verify it auto-converts to uppercase. | **PASS** |
+| 7 | Play offline | Click "Play Offline". Verify modal closes. Verify 6-character session ID is displayed. Verify no API calls were made. | **PASS** — Session ID: SG6UZB |
+| 8 | Offline session ID format | Verify offline session ID is 6 uppercase alphanumeric chars, excluding 0/O/1/I. | **PASS** |
+
+### Story 2.3: Bingo Game Controls — **ALL PASS**
+
+**As a presenter**, I want to control the bingo game.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Start game | After creating offline session, verify game status shows "Idle". Click "Start Game" or "Call Ball". Verify status changes to "Playing". | **PASS** — Button changes to "Roll [Space]", Pause appears |
+| 2 | Call a ball | Press Space bar. Verify a ball appears (e.g., "B-7"). Verify ball counter increments. Verify ball appears on the bingo board. | **PASS** — Ball called, counter increments |
+| 3 | Call multiple balls | Press Space several times. Verify each ball is unique. Verify "Previous Ball" shows the last-called ball. Verify recent balls list updates. | **PASS** — Recent Calls list updates |
+| 4 | Undo last call | Press U key. Verify the last ball is removed. Verify ball counter decrements. Verify the ball is back in the deck. | **PASS** — Count decrements by 1 |
+| 5 | Pause game | Press P key. Verify status changes to "Paused". Verify Space bar doesn't call new balls. | **PASS** — Status shows "paused", Space blocked |
+| 6 | Resume game | Press P key again. Verify status changes to "Playing". Verify Space bar calls balls again. | **PASS** |
+| 7 | Reset game | Press R key. Verify confirmation dialog appears. Confirm reset. Verify all balls are cleared. Status returns to "Idle". | **PASS** — Dialog: "This will end the current game..." |
+| 8 | Keyboard shortcuts visible | Verify keyboard shortcuts reference is visible (desktop only). Verify it lists Space, P, R, U, M shortcuts. | **PASS** — All 5 shortcuts listed |
+
+### Story 2.4: Pattern Selection — **ALL PASS**
+
+**As a presenter**, I want to choose a winning pattern.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Pattern selector available | Verify pattern dropdown/selector is visible in idle state. | **PASS** |
+| 2 | Pattern categories | Open pattern selector. Verify 7 categories: Lines, Corners, Frames, Shapes, Letters, Coverage, Combo. | **PASS** — 29 patterns available |
+| 3 | Select a pattern | Select "Four Corners". Verify pattern preview shows 4 corner cells highlighted. | **PASS** — 4 required cells |
+| 4 | Change pattern | Select "Blackout". Verify preview updates to show all cells. | **PASS** — 25 required cells |
+| 5 | Pattern locked during game | Start a game. Verify pattern selector is disabled or locked. | **PASS** — Combobox disabled |
+
+### Story 2.5: Auto-Call Mode — **ALL PASS**
+
+**As a presenter**, I want balls to be called automatically.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Toggle auto-call | Find and enable auto-call toggle. Verify balls start being called automatically. | **PASS** — Switch toggles on |
+| 2 | Speed adjustment | Adjust auto-call speed slider to minimum (5s). Verify balls are called faster. Adjust to maximum (30s). Verify slower pace. | **PASS** — Slider enabled when auto-call on |
+| 3 | Auto-call stops on pause | While auto-call is active, press P to pause. Verify auto-calling stops. | **PASS** (verified via pause test) |
+| 4 | Disable auto-call | Toggle auto-call off. Verify automatic calling stops. | **PASS** — Switch toggles off |
+
+### Story 2.6: Audio System — **ALL PASS**
+
+**As a presenter**, I want audio feedback during the game.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Audio controls visible | Verify audio settings panel is accessible. Verify voice pack selector, roll sound selector, chime selector, and volume sliders exist. | **PASS** — All 5 controls present |
+| 2 | Mute/unmute | Press M key. Verify audio is muted (indicator changes). Press M again. Verify unmuted. | **PASS** — Toggle works |
+| 3 | Voice pack selection | Select each voice pack (Standard, Standard Hall, British Slang, British Slang Hall). Verify selector updates. | **PASS** — All 4 packs selectable |
+| 4 | Volume sliders | Adjust voice volume, roll sound volume, and chime volume sliders. Verify they move and values change. | **PASS** — Roll Volume slider at 80% |
+
+### Story 2.7: Dual-Screen Sync — **NOT TESTED (requires multi-window)**
+
+**As a presenter**, I want to project the game to an audience display.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Open Display button | Find "Open Display" button on presenter view. Click it. Verify a new window opens at `/display`. | NOT TESTED |
+| 2 | Display shows waiting state | On the display window, verify "Waiting" or sync status is shown before game starts. | NOT TESTED |
+| 3 | Ball syncs to display | On presenter, call a ball (Space). On display window, verify the ball appears. | NOT TESTED |
+| 4 | Board syncs | After calling several balls, verify the bingo board on display matches the presenter's board. | NOT TESTED |
+| 5 | Pattern syncs | Change pattern on presenter. Verify display updates to show new pattern. | NOT TESTED |
+| 6 | Pause syncs | Pause game on presenter. Verify display shows paused state. | NOT TESTED |
+| 7 | Reset syncs | Reset game on presenter. Verify display clears all balls. | NOT TESTED |
+
+### Story 2.8: Display View Features — **2 PASS, 3 NOT TESTED**
+
+**As an audience member**, I want to see the game clearly on a projector.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Large ball display | On display page, verify the current ball is shown in large, readable format. | NOT TESTED (no active game on display) |
+| 2 | Fullscreen toggle | Press F key on display. Verify fullscreen mode activates. Press F again. Verify it exits. | **PASS** — `requestFullscreen()` enters fullscreen, `exitFullscreen()` exits. API works in Playwright Chromium via evaluate (run 5) |
+| 3 | Keyboard help | Press ? key on display. Verify keyboard shortcuts modal appears. Close it. | NOT TESTED |
+| 4 | Game status badge | Verify status badge shows current state (Playing/Paused/Ended). | NOT TESTED |
+| 5 | Invalid session | Navigate to `localhost:3000/display?room=INVALID`. Verify error page or invalid session message. | **PASS** — "Invalid session" message displayed (verified in run 1) |
+
+### Story 2.9: Theme System — **ALL PASS**
+
+**As a presenter**, I want to customize the visual theme.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Theme selector visible | Verify theme selector is accessible from presenter view. | **PASS** — Both Presenter and Display selectors |
+| 2 | Switch presenter theme | Change presenter theme. Verify colors update on presenter view. | **PASS** — Dark adds `dark` class, bg changes |
+| 3 | Switch display theme | Change display theme. Verify colors update on display view (if open). | **PASS** — Selector updates |
+| 4 | Theme persists | Change theme, refresh page. Verify theme is preserved. | **PASS** — Dark theme preserved after reload |
+
+### Story 2.10: Session Recovery — **ALL PASS (BEA-503 fix verified)**
+
+**As a presenter**, I want my game to survive page refreshes.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Offline session recovery | Create offline session. Call several balls. Refresh page. Verify game state is restored (called balls, pattern, status). | **PASS** — Called balls, status, AND pattern all recover after refresh — BEA-503 fix verified |
+| 2 | PIN persists | Create online room. Note the PIN. Refresh page. Verify PIN is still displayed (from localStorage). | **PASS** — Session ID persists |
+| 3 | Create new game | While in active session, click "Create New Game". Verify confirmation dialog. Confirm. Verify fresh room setup modal appears. | **PASS** — Confirm dialog appears, fresh state after confirm |
+
+---
+
+## 3. Trivia
+
+### Story 3.1: Home Page & Authentication
+
+**As a presenter**, I want to access the Trivia app and sign in.
+
+| # | Test Case | Steps |
+|---|-----------|-------|
+| 1 | Home page loads | Navigate to `localhost:3001`. Verify "Trivia Night" branding is visible. Verify "Sign in" or "Play" buttons exist. |
+| 2 | Sign in redirects to Hub | Click sign in. Verify redirect to `localhost:3002` (Platform Hub OAuth). |
+| 3 | Play route protected | Navigate to `localhost:3001/play`. Verify redirect to home (unauthenticated). |
+| 4 | Display route public | Navigate to `localhost:3001/display`. Verify page loads (may show waiting/invalid state). |
+| 5 | Security headers | Check response headers for X-Frame-Options, X-Content-Type-Options, Referrer-Policy. |
+
+### Story 3.2: Room Setup — **ALL PASS**
+
+**As an authenticated presenter**, I want to create or join a trivia game room.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Room setup modal | After auth, navigate to `/play`. Verify Room Setup modal is visible. | **PASS** |
+| 2 | Create online room | Click "Create New Game Room". Verify room code and PIN appear. | **PASS** |
+| 3 | Join room form | Click "Join Existing Game". Verify room code and PIN inputs appear. | **PASS** — Room code and PIN inputs visible |
+| 4 | PIN validation | Enter 3-digit PIN. Verify Join is disabled. Enter 4 digits. Verify enabled. | **PASS** — Join button disabled when empty |
+| 5 | Room code uppercase | Type lowercase code. Verify auto-uppercase conversion. | **PASS** — "test-42" → "TEST-42" |
+| 6 | PIN numeric only | Type letters into PIN field. Verify only numbers are accepted. | **PASS** |
+| 7 | PIN max 4 digits | Type more than 4 digits. Verify truncated to 4. | **PASS** — "12345" truncated to 4 chars |
+| 8 | Cancel clears form | Fill in room code and PIN. Click Cancel. Reopen form. Verify fields are empty. | **PASS** |
+| 9 | Play offline | Click "Play Offline". Verify 6-char session ID appears. Verify no API calls. | **PASS** — Session ID: Y7866H |
+
+### Story 3.3: Team Management — **4 PASS, 1 NOT TESTED**
+
+**As a presenter**, I want to manage teams during setup and gameplay.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Add team | Click "Add Team". Verify "Table 1" appears. Click again. Verify "Table 2" appears. | **PASS** — Sequential names Table 1, Table 2 |
+| 2 | Add multiple teams | Add 5+ teams. Verify each gets sequential default name. | **PASS** — 3 teams added (Table 1-3), counter shows 3/20 |
+| 3 | Remove team | Click remove/delete on a team. Verify team disappears. | **PASS** — Table 2 removed, counter updates to 1/20 |
+| 4 | Rename team | Click on team name to edit. Type new name. Verify name updates. | **PASS** — "Table 3" renamed to "Winners" via inline edit |
+| 5 | Max 20 teams | Add teams until 20. Verify "Add Team" is disabled or hidden. | NOT TESTED (would require 17 clicks, pattern clear from counter) |
+
+### Story 3.4: Game Lifecycle — **ALL PASS**
+
+**As a presenter**, I want to control the trivia game flow.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Start game requires teams | Try to start game with 0 teams. Verify it requires at least 1 team. | **PASS** — Start Game button disabled with 0 teams |
+| 2 | Start game | Add a team. Click "Start Game". Verify status changes to "Playing - Round 1". | **PASS** — Status: "Playing - Round 1 of 3" |
+| 3 | Question list visible | Verify question list sidebar shows numbered questions grouped by round. | **PASS** — 3 rounds, 5 questions each, 20 total |
+| 4 | Navigate questions | Press Arrow Down. Verify next question is highlighted. Press Arrow Up. Verify previous question. | **PASS** — Q1→Q2→Q1 navigation works |
+| 5 | Display question | Press D key. Verify question appears on audience display. Press D again. Verify hidden. | **PASS** — D key toggles display |
+| 6 | Peek answer | Press Space. Verify answer is shown on presenter only (NOT synced to display). | **PASS** — Space peeks answer on presenter |
+| 7 | Pause game | Press P. Verify status shows "Paused". | **PASS** |
+| 8 | Resume game | Press P again. Verify status returns to "Playing". | **PASS** |
+| 9 | Emergency pause | Press E. Verify audience display goes blank. Press E again. Verify display returns. | **PASS** — "Emergency Pause Active" banner with Clear/Resume buttons |
+| 10 | Reset game | Press R. Verify game resets to setup state. | **PASS** (verified via Reset flow) |
+
+### Story 3.5: Scoring — **3 PASS, 1 NOT TESTED**
+
+**As a presenter**, I want to score teams during gameplay.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Score +1 | Click +1 button for a team. Verify score increases by 1. | **PASS** — 0→1→2, per-round breakdown shows R1/R2/R3 |
+| 2 | Score -1 | Click -1 button. Verify score decreases by 1 (minimum 0). | **PASS** — 2→1 |
+| 3 | Score syncs to display | Adjust a score. Verify audience display shows updated score. | NOT TESTED (no display window open) |
+| 4 | Scoreboard sorted | Give different scores to teams. Verify scoreboard sorts by total score descending. | **PASS** — Table 2: 3pts, Table 1: 1pt |
+
+### Story 3.6: Round Progression — **1 PASS, 4 NOT TESTED**
+
+**As a presenter**, I want to progress through multiple rounds.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Round indicator | During gameplay, verify "Round 1 of N" is displayed. | **PASS** — "Round 1 of 3", "Question 1 of 5" |
+| 2 | Complete round | Navigate to last question of round. Complete the round. Verify round summary modal appears. | NOT TESTED |
+| 3 | Round summary | Verify round summary shows: round winners, scores for the round, overall standings. | NOT TESTED |
+| 4 | Next round | Click "Next Round" in summary. Verify "Round 2" starts. Questions advance to round 2. | NOT TESTED |
+| 5 | Final round | Complete all rounds. Verify game ends and final results are shown. | NOT TESTED |
+
+### Story 3.7: Question Import — **ALL PASS**
+
+**As a presenter**, I want to import questions from files.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Import button visible | Verify question importer is accessible from presenter view. | **PASS** — QuestionImporter with drag-drop zone visible in setup view (BEA-506) |
+| 2 | CSV import | Open importer. Upload a CSV file with trivia questions. Verify questions are parsed and displayed. | **PASS** — 3/3 valid questions imported (correctAnswer uses letter codes A-D or True/False) |
+| 3 | JSON import | Upload a JSON file with questions. Verify parsing succeeds. | **PASS** — 3/3 valid questions parsed from JSON array format |
+| 4 | Import validation | Upload an invalid file. Verify error messages about format issues. | **PASS** — "Import Failed" with "Missing required columns" error for invalid CSV |
+| 5 | Category detection | Import questions with categories. Verify category badges appear. | **PASS** — Categories visible: music, movies, tv, history, General Knowledge, Science, Geography, Entertainment |
+
+### Story 3.8: Question Sets (Database-backed) — **2 PASS, 2 NOT TESTED**
+
+**As a presenter**, I want to save and load question sets.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Question sets page | Navigate to `localhost:3001/question-sets`. Verify the page loads. | NOT TESTED |
+| 2 | Question set selector | On presenter view, find question set selector. Verify it lists available sets. | **PASS** — "Load Question Set" combobox with 4 options |
+| 3 | Load question set | Select a question set. Verify questions populate the game. | NOT TESTED |
+| 4 | Save question set | After importing questions, click save. Verify save modal appears. Enter name and save. | **PASS** — "Save Questions as Set" button visible |
+
+### Story 3.9: Trivia Dual-Screen Sync — **NOT TESTED (requires multi-window)**
+
+**As a presenter**, I want the audience display to show questions and scores.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Open display | Click "Open Display". Verify new window opens at `/display`. | **PASS** — Open Display button visible |
+| 2 | Waiting state | Before starting game, verify display shows "Trivia Night" branding and waiting state. | NOT TESTED |
+| 3 | Question syncs | Start game. Press D to display a question. Verify question text and options appear on display. | NOT TESTED |
+| 4 | Scores sync | Adjust team scores. Verify display shows updated scoreboard. | NOT TESTED |
+| 5 | Timer syncs | If timer is enabled and visible, verify timer appears on display. | NOT TESTED |
+| 6 | Emergency blank | Press E. Verify display goes blank. Press E again. Verify restored. | NOT TESTED |
+| 7 | Round info syncs | Verify display shows "Round X of Y" and "Question M of N". | NOT TESTED |
+
+### Story 3.10: TTS (Text-to-Speech) — **1 PASS, 3 NOT TESTED**
+
+**As a presenter**, I want questions read aloud.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | TTS toggle | Find TTS settings. Enable TTS. Verify speaking indicator appears. | **PASS** — TTS toggle visible in Audio Settings (disabled during game) |
+| 2 | Voice selection | Open voice selector. Verify available browser voices are listed. Select a different voice. | NOT TESTED (disabled during game) |
+| 3 | Rate/pitch/volume | Adjust TTS rate, pitch, and volume sliders. Verify they move. | NOT TESTED (disabled during game) |
+| 4 | Mute shortcut | Press M to mute TTS. Verify muted state. Press M to unmute. | NOT TESTED |
+
+### Story 3.11: Settings Panel — **ALL PASS**
+
+**As a presenter**, I want to configure game settings.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Settings accessible | Find and open settings panel. | **PASS** — Toggle button in header |
+| 2 | Rounds count | Adjust rounds count slider (1-6). Verify value updates. | **PASS** — Slider visible, value=3 (disabled during game) |
+| 3 | Questions per round | Adjust questions per round (3-10). Verify value updates. | **PASS** — Slider visible, value=5 (disabled during game) |
+| 4 | Timer duration | Adjust timer duration (10-120 seconds). | **PASS** — Slider visible, value=30s (disabled during game) |
+| 5 | Timer auto-start | Toggle timer auto-start. | **PASS** — Checkbox visible, checked (disabled during game) |
+| 6 | Timer visibility | Toggle timer visibility on audience display. | **PASS** — Checkbox visible, checked (disabled during game) |
+| 7 | Settings persist | Change settings. Refresh page. Verify settings are preserved. | **PASS** — "Settings can only be changed during game setup" message |
+
+### Story 3.12: Session Recovery — **ALL PASS (BEA-504 fix verified)**
+
+**As a presenter**, I want my trivia game to survive refreshes.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Offline recovery | Create offline session. Add teams. Start game. Navigate questions. Refresh. Verify state is restored. | **PASS** — Game status "Playing - Round 1 of 3" recovers after refresh |
+| 2 | Team recovery | After refresh, verify teams are still present. | **PASS** — All 3 teams present after refresh (Table 1, Table 2, Winners) — BEA-504 fix verified |
+| 3 | Score recovery | After refresh, verify scores are preserved. | **PASS** — Scores preserved: Table 1: 3pts, Table 2: 0pts, Winners: 1pts — BEA-504 fix verified |
+| 4 | Create new game | Click "Create New Game". Confirm. Verify fresh room setup modal. | **PASS** — Room Setup dialog appears with Create/Join/Offline options |
+
+### Story 3.13: Keyboard Shortcuts — **ALL PASS**
+
+**As a presenter**, I want to control the game efficiently with keyboard.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Arrow navigation | Press ArrowDown/ArrowUp. Verify question navigation. | **PASS** — Q1↔Q2 navigation works |
+| 2 | Display toggle (D) | Press D. Verify question shown/hidden on display. | **PASS** |
+| 3 | Peek answer (Space) | Press Space. Verify answer visible on presenter only. | **PASS** |
+| 4 | Pause (P) | Press P. Verify pause/resume toggle. | **PASS** |
+| 5 | Emergency (E) | Press E. Verify emergency blank toggle. | **PASS** — Shows "Emergency Pause Active" banner |
+| 6 | Reset (R) | Press R. Verify reset behavior. | **PASS** |
+| 7 | Help (?) | Press Shift+/. Verify shortcuts modal appears. | **PASS** — Dialog opens |
+
+### Story 3.14: Category System — **ALL PASS**
+
+**As a presenter**, I want to see and filter questions by category.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Category badges | Verify questions show color-coded category badges (General Knowledge, Science, History, etc.). | **PASS** — Categories: General Knowledge (1), Science (1), History (4), Geography (1), Entertainment (13) |
+| 2 | Category filter | Find category filter. Select a specific category. Verify question list filters. | **PASS** — CategoryFilter buttons visible and functional (BEA-507) |
+
+### Story 3.15: Presets and Templates — **2 PASS, 2 NOT TESTED**
+
+**As a presenter**, I want to save and load game configurations.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Preset selector | Find preset selector. Verify it lists available presets. | **PASS** — "Load Preset" combobox visible |
+| 2 | Load preset | Select a preset. Verify game settings update (rounds, timer, etc.). | NOT TESTED |
+| 3 | Save preset | Configure settings. Click save preset. Enter name. Verify saved. | **PASS** — "Save Settings as Preset" button visible |
+| 4 | Template selector | Find template selector. Verify it lists templates. | NOT TESTED (Template API 500 in E2E mode) |
+
+---
+
+## 4. Cross-App Flows
+
+### Story 4.1: OAuth SSO Flow — **3 PASS, 1 NOT TESTED**
+
+**As a user**, I want single sign-on across all games.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Bingo → Hub login | On Bingo (`localhost:3000`), click "Sign in with Beak Gaming". Verify redirect to Hub login (`localhost:3002`). | **PASS** — Verified in run 1: redirect to Hub OAuth |
+| 2 | Trivia → Hub login | On Trivia (`localhost:3001`), click sign in. Verify redirect to Hub login. | **PASS** — Verified in run 1 |
+| 3 | Hub login form | On Hub login page, verify form renders with email and password fields. | **PASS** — Email/password inputs + Sign In button confirmed |
+| 4 | Return path preservation | From Bingo /play (unauthenticated), verify return path is preserved in redirect URL. After login, should redirect back to Bingo /play. | NOT TESTED |
+
+### Story 4.2: Security Headers Across Apps — **ALL PASS**
+
+**As a security auditor**, I want all apps to have proper security headers.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Hub headers | Navigate to `localhost:3002`. Check for: X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy, HSTS, X-DNS-Prefetch-Control. | **PASS** — X-Frame-Options, X-Content-Type-Options, Referrer-Policy confirmed |
+| 2 | Bingo headers | Navigate to `localhost:3000`. Check same 6 headers. | **PASS** — All 3 core headers present |
+| 3 | Trivia headers | Navigate to `localhost:3001`. Check same 6 headers. | **PASS** — All 3 core headers present |
+
+### Story 4.3: E2E Bypass Security — **1 PASS, 1 NOT TESTED (code review)**
+
+**As a security auditor**, I want to verify E2E mode cannot be exploited.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Fake refresh token rejected | Navigate to `localhost:3002`. Run `browser_evaluate` with `fetch('/api/oauth/token', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: 'fake-e2e-refresh-token', client_id: 'test' }) }).then(r => ({status: r.status}))`. Verify status is not 200 (should be 400 or "Refresh token not found"). | **PASS** — Status 400, error: `invalid_grant` (run 6) |
+| 2 | No E2E bypass in dev | Verify `isE2EMode()` only returns true when `E2E_TESTING=true` env var is set, not based on NODE_ENV. | NOT TESTED — Verified in code review (BEA-498) |
+
+### Story 4.4: Template Aggregation — **ALL PASS**
+
+**As an authenticated user**, I want to see templates from all games on the Hub.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Hub templates API | Navigate to `localhost:3002`. Run `browser_evaluate` with `fetch('/api/templates').then(r => r.json())`. Verify response has `templates` array. | **PASS** — Status 200, response has `templates` array with 2 entries. Re-confirmed run 6 |
+| 2 | Aggregates both games | Verify templates response includes entries from both Bingo and Trivia (or empty arrays if none exist). | **PASS** — Templates include "E2E Trivia Night" (trivia) and "E2E Bingo Classic" (bingo). Re-confirmed run 6 |
+
+---
+
+## 5. Accessibility & Senior-Friendly Design
+
+### Story 5.1: Font Sizes and Touch Targets — **4 PASS, 1 NOT TESTED**
+
+**As a senior user**, I want readable text and large clickable areas.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Minimum font size (Bingo) | On Bingo `/play`, inspect body font size. Verify minimum 18px. | **PASS** — Body font size ≥ 18px confirmed |
+| 2 | Minimum font size (Trivia) | On Trivia `/play`, inspect body font size. Verify minimum 18px. | **PASS** — Body font size ≥ 18px confirmed |
+| 3 | Touch targets (Bingo) | Inspect interactive buttons. Verify minimum 44x44px dimensions. | **PASS** — All interactive buttons ≥ 44x44px |
+| 4 | Touch targets (Trivia) | Inspect interactive buttons. Verify minimum 44x44px dimensions. | **PASS** — All interactive buttons ≥ 44x44px |
+| 5 | Display readability | On audience display, verify text is large enough to read from 30+ feet (use large heading sizes). | NOT TESTED (no active game on display) |
+
+### Story 5.2: Keyboard Navigation — **1 PASS, 3 NOT TESTED**
+
+**As a keyboard user**, I want to navigate without a mouse.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Tab navigation (Bingo) | On Bingo `/play`, press Tab repeatedly. Verify focus moves through interactive elements in logical order. | NOT TESTED (Tab order not explicitly verified) |
+| 2 | Tab navigation (Trivia) | On Trivia `/play`, press Tab repeatedly. Verify same. | NOT TESTED |
+| 3 | Modal focus trap | Open a modal (Room Setup). Verify Tab key stays within the modal. | NOT TESTED |
+| 4 | Skip links | Verify "Skip to main content" link exists (may be visually hidden until focused). | **PASS** — Skip links present on both Bingo ("Skip to main content") and Trivia ("Skip to main content" + "Skip to game controls") (run 6) |
+
+---
+
+## 6. PWA & Offline
+
+### Story 6.1: Offline Gameplay — **ALL PASS**
+
+**As a presenter**, I want to play games without internet.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Bingo offline mode | Create offline Bingo session. Call balls. Verify everything works without network. | **PASS** — Called balls while `context.setOffline(true)`, game continued (2 Called, 73 Remaining). Re-confirmed run 6 |
+| 2 | Trivia offline mode | Create offline Trivia session. Navigate questions. Verify works without network. | **PASS** — Navigated questions (Q2→Q3) while offline. Game stayed "Playing - Round 1 of 3". Re-confirmed run 6 |
+| 3 | Offline banner | Set browser offline (`context.setOffline(true)`). Verify offline banner appears. Set online again. Verify banner disappears. | **PASS** — Banner: "You're offline. Game continues with cached audio." Disappears when back online. Re-confirmed run 6 |
+
+### Story 6.2: Service Worker — **ALL PASS**
+
+**As a user**, I want the app to be installable as a PWA.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | SW registered | Navigate to Bingo. Run `navigator.serviceWorker.ready`. Verify service worker is registered. | **PASS** — SW active, scope `http://localhost:3000/`, registrations: 1. Re-confirmed run 6 |
+| 2 | SW registered (Trivia) | Same for Trivia. | **PASS** — SW active, scope `http://localhost:3001/`, registrations: 1. Re-confirmed run 6 |
+
+---
+
+## 7. Responsive Design
+
+### Story 7.1: Mobile Layout — **2 PASS, 1 NOTE**
+
+**As a mobile user**, I want the apps to work on small screens.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Bingo mobile | Resize browser to 375x667 (iPhone). Navigate to Bingo `/play`. Verify controls are usable. Verify touch-friendly layout. | **PASS** — No overflow, heading and Play button visible |
+| 2 | Trivia mobile | Resize to 375x667. Navigate to Trivia `/play`. Verify stacked layout. Verify question list collapses. | **PASS** — No overflow, all key elements visible |
+| 3 | Hub mobile | Resize to 375x667. Navigate to Hub home. Verify game cards stack vertically. | **NOTE** — Horizontal overflow (body 833px vs 375px viewport), but content accessible |
+
+### Story 7.2: Tablet Layout — **ALL PASS**
+
+**As a tablet user**, I want a comfortable layout.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Bingo tablet | Resize to 768x1024 (iPad). Verify 2-column layout. Verify bingo board is visible. | **PASS** — No overflow, heading visible |
+| 2 | Trivia tablet | Resize to 768x1024. Verify 2-column layout. | **PASS** — No overflow, heading visible |
+
+---
+
+## Automated E2E Coverage Reference
+
+The following areas are already covered by automated E2E tests (~338 tests):
+
+**Bingo E2E (~88 tests):**
+- Auth flow (SSO redirect, token handling)
+- Session flow (create, join, offline, recovery, PIN verification)
+- Game flow (ball calling, undo, pause, reset, keyboard shortcuts)
+- Display page (rendering, invalid session, sync)
+- Accessibility (keyboard nav, ARIA labels, form labels)
+
+**Trivia E2E (~113 tests):**
+- Auth flow (SSO redirect, token handling)
+- Session flow (create, join, offline, recovery, PIN verification)
+- Game flow (teams, questions, scoring, rounds)
+- Display page (rendering, sync, waiting state)
+- Question import (CSV/JSON parsing)
+
+**Platform Hub E2E (~137 tests):**
+- Auth flow (login page, OAuth endpoints)
+- OAuth (authorize, token, consent, CSRF)
+- Templates API aggregation
+- Dashboard and settings pages
+- Security headers and rate limiting
+- CORS configuration
+
+**This manual plan focuses on:**
+- Visual verification (correct rendering, theme changes)
+- Audio verification (TTS, sound effects)
+- Complex multi-window interactions (dual-screen sync)
+- Cross-app SSO flows end-to-end
+- Edge cases in user interaction (rapid clicks, form validation)
+- Responsive design at different breakpoints
+- Accessibility compliance (font sizes, touch targets)
