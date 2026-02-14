@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import { getE2EPortConfig } from './e2e/utils/port-config';
 
 // Load .env file manually (Playwright doesn't auto-load it)
+// Respects existing env vars — runner scripts (e.g., e2e-real-auth.sh) can
+// export values that take precedence over the .env file.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
@@ -13,14 +15,18 @@ if (fs.existsSync(envPath)) {
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       const [, key, value] = match;
-      process.env[key.trim()] = value.trim();
+      const trimmedKey = key.trim();
+      // Don't overwrite env vars already set (e.g., by e2e-real-auth.sh)
+      if (process.env[trimmedKey] === undefined) {
+        process.env[trimmedKey] = value.trim();
+      }
     }
   });
 }
 
-// Set E2E testing flag - this signals to Platform Hub to bypass Supabase auth
-// and generate JWTs locally to avoid rate limits
-process.env.E2E_TESTING = 'true';
+// Set E2E testing flag unless explicitly disabled (e.g., for real-auth tests).
+// This signals to Platform Hub to bypass Supabase auth and generate JWTs locally.
+process.env.E2E_TESTING ??= 'true';
 
 const isCI = !!process.env.CI;
 
@@ -147,6 +153,29 @@ export default defineConfig({
         // and potential auth redirect race conditions (BEA-375)
         navigationTimeout: 15000,
       },
+    },
+    /**
+     * Real-Auth project: Tests real authentication paths against local Supabase (Docker).
+     *
+     * Unlike the other projects (which use E2E_TESTING=true to bypass Supabase),
+     * this project tests:
+     * - Supabase signInWithPassword (RS256 JWT verified via JWKS)
+     * - Platform Hub OAuth 2.1 (HS256 JWT via SESSION_TOKEN_SECRET)
+     * - Cross-app SSO (cookie propagation + middleware verification)
+     *
+     * Run separately: pnpm test:e2e:real-auth
+     * (uses scripts/e2e-real-auth.sh which starts local Supabase + dev servers)
+     */
+    {
+      name: 'real-auth',
+      testDir: './e2e/real-auth',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${portConfig.hubPort}`,
+        viewport: { width: 1280, height: 720 },
+      },
+      timeout: 90_000, // Real Supabase calls are slower than E2E bypass
+      retries: 0, // No retries — avoid compounding rate limit issues
     },
   ],
 

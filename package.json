@@ -37,6 +37,7 @@
     "test:e2e:high": "./scripts/e2e-with-build.sh --grep '@critical|@high'",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
+    "test:e2e:real-auth": "./scripts/e2e-real-auth.sh",
     "test:e2e:summary": "node scripts/test-summary.js",
     "prepare": "husky"
   },

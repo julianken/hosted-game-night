@@ -152,7 +152,7 @@ describe('TemplateSelector', () => {
     });
   });
 
-  it('shows error message when fetch fails', async () => {
+  it('shows empty state when fetch returns non-ok response (BEA-420)', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
     } as Response);
@@ -160,9 +160,8 @@ describe('TemplateSelector', () => {
     renderWithProviders(<TemplateSelector />);
 
     await waitFor(() => {
-      const errors = screen.getAllByText(/Failed to load templates/i);
-      expect(errors.length).toBeGreaterThanOrEqual(1);
-    }, { timeout: 3000 });
+      expect(screen.getByText(/No saved question sets/i)).toBeInTheDocument();
+    });
   });
 
   it('shows empty state when no templates exist', async () => {

@@ -7,6 +7,7 @@ import {
 } from '../serializer';
 import { GameState, BingoBall, BingoPattern } from '@/types';
 import { DEFAULT_AUTO_CALL_SPEED } from '@/lib/game/engine';
+import { patternRegistry } from '@/lib/game/patterns';
 
 describe('serializer', () => {
   // Test data fixtures
@@ -220,10 +221,10 @@ describe('serializer', () => {
       expect(deserialized.pattern).toEqual(mockPattern);
     });
 
-    it('does not include pattern when not provided', () => {
+    it('does not include pattern when patternId is not in registry and no pattern param', () => {
       const serialized: SerializedBingoState = {
         status: 'idle',
-        patternId: 'horizontal-line',
+        patternId: 'nonexistent-pattern-id',
         calledBalls: [],
         currentBall: null,
         previousBall: null,
@@ -254,6 +255,95 @@ describe('serializer', () => {
       const deserialized = deserializeBingoState(serialized, null);
 
       expect(deserialized.pattern).toBeNull();
+    });
+
+    describe('pattern reconstruction from registry', () => {
+      it('reconstructs pattern from patternId when no pattern param is provided', () => {
+        // Use a real pattern ID that exists in the registry (auto-initialized on import)
+        const realPattern = patternRegistry.getAll()[0];
+        expect(realPattern).toBeDefined();
+
+        const serialized: SerializedBingoState = {
+          status: 'playing',
+          patternId: realPattern.id,
+          calledBalls: [],
+          currentBall: null,
+          previousBall: null,
+          remainingBalls: [],
+          autoCallEnabled: false,
+          autoCallSpeed: DEFAULT_AUTO_CALL_SPEED,
+          audioEnabled: true,
+        };
+
+        const deserialized = deserializeBingoState(serialized);
+
+        expect(deserialized.pattern).toBeDefined();
+        expect(deserialized.pattern?.id).toBe(realPattern.id);
+        expect(deserialized.pattern?.name).toBe(realPattern.name);
+        expect(deserialized.pattern?.cells).toEqual(realPattern.cells);
+      });
+
+      it('does not crash with an invalid patternId not in registry', () => {
+        const serialized: SerializedBingoState = {
+          status: 'idle',
+          patternId: 'totally-fake-pattern-id',
+          calledBalls: [],
+          currentBall: null,
+          previousBall: null,
+          remainingBalls: [],
+          autoCallEnabled: false,
+          autoCallSpeed: DEFAULT_AUTO_CALL_SPEED,
+          audioEnabled: true,
+        };
+
+        // Should not throw
+        const deserialized = deserializeBingoState(serialized);
+
+        // Pattern should be undefined (not found in registry)
+        expect(deserialized.pattern).toBeUndefined();
+      });
+
+      it('does not reconstruct pattern when patternId is null', () => {
+        const serialized: SerializedBingoState = {
+          status: 'idle',
+          patternId: null,
+          calledBalls: [],
+          currentBall: null,
+          previousBall: null,
+          remainingBalls: [],
+          autoCallEnabled: false,
+          autoCallSpeed: DEFAULT_AUTO_CALL_SPEED,
+          audioEnabled: true,
+        };
+
+        const deserialized = deserializeBingoState(serialized);
+
+        // pattern key should not be set at all
+        expect('pattern' in deserialized).toBe(false);
+      });
+
+      it('prefers explicit pattern param over registry reconstruction', () => {
+        const realPattern = patternRegistry.getAll()[0];
+        expect(realPattern).toBeDefined();
+
+        const serialized: SerializedBingoState = {
+          status: 'idle',
+          patternId: realPattern.id,
+          calledBalls: [],
+          currentBall: null,
+          previousBall: null,
+          remainingBalls: [],
+          autoCallEnabled: false,
+          autoCallSpeed: DEFAULT_AUTO_CALL_SPEED,
+          audioEnabled: true,
+        };
+
+        // Pass a different pattern explicitly
+        const deserialized = deserializeBingoState(serialized, mockPattern);
+
+        // Should use the explicitly provided pattern, not the registry one
+        expect(deserialized.pattern).toEqual(mockPattern);
+      });
     });
 
     it('applies default for missing autoCallEnabled', () => {
@@ -533,6 +623,31 @@ describe('serializer', () => {
       expect(deserialized.autoCallEnabled).toBe(originalState.autoCallEnabled);
       expect(deserialized.autoCallSpeed).toBe(originalState.autoCallSpeed);
       expect(deserialized.audioEnabled).toBe(originalState.audioEnabled);
+    });
+
+    it('preserves pattern through serialize -> deserialize cycle without explicit pattern param', () => {
+      // Use a real registered pattern so registry reconstruction works
+      const realPattern = patternRegistry.getAll()[0];
+      expect(realPattern).toBeDefined();
+
+      const originalState = createMockGameState({
+        status: 'playing',
+        pattern: realPattern,
+        calledBalls: [mockBall1],
+        currentBall: mockBall1,
+        remainingBalls: [mockBall2, mockBall3],
+      });
+
+      const serialized = serializeBingoState(originalState);
+      // Deserialize WITHOUT passing the pattern param (simulates session recovery)
+      const deserialized = deserializeBingoState(serialized);
+
+      expect(deserialized.pattern).toBeDefined();
+      expect(deserialized.pattern?.id).toBe(realPattern.id);
+      expect(deserialized.pattern?.name).toBe(realPattern.name);
+      expect(deserialized.pattern?.cells).toEqual(realPattern.cells);
+      expect(deserialized.status).toBe(originalState.status);
+      expect(deserialized.calledBalls).toEqual(originalState.calledBalls);
     });
   });
 });

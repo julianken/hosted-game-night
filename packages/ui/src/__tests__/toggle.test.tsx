@@ -12,16 +12,12 @@ describe('Toggle', () => {
   describe('rendering', () => {
     it('should render in off state correctly', () => {
       render(<Toggle {...defaultProps} checked={false} />);
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).not.toBeChecked();
       const toggle = screen.getByRole('switch');
       expect(toggle).toHaveAttribute('aria-checked', 'false');
     });
 
     it('should render in on state correctly', () => {
       render(<Toggle {...defaultProps} checked={true} />);
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).toBeChecked();
       const toggle = screen.getByRole('switch');
       expect(toggle).toHaveAttribute('aria-checked', 'true');
     });
@@ -33,47 +29,43 @@ describe('Toggle', () => {
   });
 
   describe('toggle interaction', () => {
-    it('should toggle on click and call onChange', () => {
+    it('should call onChange with true when clicking an off toggle', () => {
       const handleChange = vi.fn();
       render(<Toggle {...defaultProps} checked={false} onChange={handleChange} />);
 
-      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('switch'));
       expect(handleChange).toHaveBeenCalledWith(true);
     });
 
-    it('should toggle off when clicking an on toggle', () => {
+    it('should call onChange with false when clicking an on toggle', () => {
       const handleChange = vi.fn();
       render(<Toggle {...defaultProps} checked={true} onChange={handleChange} />);
 
-      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('switch'));
       expect(handleChange).toHaveBeenCalledWith(false);
     });
   });
 
   describe('disabled state', () => {
-    it('should not toggle when disabled', () => {
+    it('should not call onChange when disabled', () => {
       const handleChange = vi.fn();
       render(<Toggle {...defaultProps} disabled onChange={handleChange} />);
 
-      const checkbox = screen.getByRole('checkbox');
+      const toggle = screen.getByRole('switch');
+      fireEvent.click(toggle);
 
-      // Try to click the disabled checkbox
-      fireEvent.click(checkbox);
-
-      // In React Testing Library, clicking a disabled checkbox may still trigger onChange
-      // So we check if the checkbox is actually disabled instead
-      expect(checkbox).toBeDisabled();
+      expect(handleChange).not.toHaveBeenCalled();
     });
 
     it('should have disabled attribute when disabled', () => {
       render(<Toggle {...defaultProps} disabled />);
-      expect(screen.getByRole('checkbox')).toBeDisabled();
+      expect(screen.getByRole('switch')).toBeDisabled();
     });
 
-    it('should apply disabled styling to label', () => {
+    it('should apply disabled styling', () => {
       render(<Toggle {...defaultProps} disabled label="Disabled Toggle" />);
-      const labelElement = screen.getByText('Disabled Toggle').parentElement;
-      expect(labelElement?.className).toContain('opacity-50');
+      const wrapper = screen.getByText('Disabled Toggle').parentElement;
+      expect(wrapper?.className).toContain('opacity-50');
     });
   });
 
@@ -89,30 +81,24 @@ describe('Toggle', () => {
   });
 
   describe('accessibility', () => {
-    it('should have checkbox and switch roles', () => {
+    it('should have switch role', () => {
       render(<Toggle {...defaultProps} />);
-      expect(screen.getByRole('checkbox')).toBeInTheDocument();
       expect(screen.getByRole('switch')).toBeInTheDocument();
+    });
+
+    it('should have accessible name from label', () => {
+      render(<Toggle {...defaultProps} label="Test Toggle" />);
+      expect(screen.getByRole('switch', { name: 'Test Toggle' })).toBeInTheDocument();
     });
 
     it('should have correct aria-checked when off', () => {
       render(<Toggle {...defaultProps} checked={false} />);
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
-      expect(screen.getByRole('checkbox')).not.toBeChecked();
     });
 
     it('should have correct aria-checked when on', () => {
       render(<Toggle {...defaultProps} checked={true} />);
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
-      expect(screen.getByRole('checkbox')).toBeChecked();
-    });
-
-    it('should have label wrapping checkbox', () => {
-      render(<Toggle {...defaultProps} label="Associated Label" />);
-      const checkbox = screen.getByRole('checkbox');
-      const label = screen.getByText('Associated Label').closest('label');
-
-      expect(label).toContainElement(checkbox);
     });
   });
 
@@ -131,8 +117,8 @@ describe('Toggle', () => {
 
     it('should have minimum height of 44px for senior-friendly design', () => {
       render(<Toggle {...defaultProps} />);
-      const labelElement = screen.getByText('Test Toggle').closest('label');
-      expect(labelElement?.className).toContain('min-h-[44px]');
+      const wrapper = screen.getByText('Test Toggle').parentElement;
+      expect(wrapper?.className).toContain('min-h-[44px]');
 
       const toggle = screen.getByRole('switch');
       expect(toggle.className).toContain('h-[44px]');

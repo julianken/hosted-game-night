@@ -1,5 +1,6 @@
 import { GameState, BingoBall, BingoPattern } from '@/types';
 import { DEFAULT_AUTO_CALL_SPEED } from '@/lib/game/engine';
+import { patternRegistry } from '@/lib/game/patterns';
 
 /**
  * Serialized representation of a Bingo game state for database storage.
@@ -168,9 +169,14 @@ export function deserializeBingoState(
     audioEnabled,
   };
 
-  // Include pattern if provided, otherwise leave it undefined so it doesn't overwrite
+  // Include pattern if provided, otherwise attempt to reconstruct from patternId
   if (pattern !== undefined) {
     partialState.pattern = pattern;
+  } else if (record.patternId) {
+    const reconstructed = patternRegistry.get(String(record.patternId));
+    if (reconstructed) {
+      partialState.pattern = reconstructed;
+    }
   }
 
   return partialState;

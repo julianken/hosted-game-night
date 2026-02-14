@@ -1,7 +1,5 @@
 'use client';
 
-import { useId } from 'react';
-
 export interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -10,33 +8,31 @@ export interface ToggleProps {
 }
 
 export function Toggle({ checked, onChange, label, disabled = false }: ToggleProps) {
-  const id = useId();
+  const handleToggle = () => {
+    if (!disabled) onChange(!checked);
+  };
 
   return (
-    <label
+    <div
       className={`
-        flex items-center gap-3 min-h-[44px] cursor-pointer
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        flex items-center gap-3 min-h-[44px]
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
     >
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={disabled}
-        className="sr-only peer"
-      />
-      <div
+      <button
+        type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={handleToggle}
         className={`
           relative inline-flex h-[44px] w-[80px] shrink-0
-          items-center rounded-full
+          items-center rounded-full border-0 p-0
           transition-colors duration-200
-          focus-within:ring-4 focus-within:ring-primary/50
+          focus:outline-none focus:ring-4 focus:ring-primary/50
           ${checked ? 'bg-accent' : 'bg-muted'}
-          ${disabled ? '' : 'peer-focus:ring-4 peer-focus:ring-primary/50'}
+          disabled:cursor-not-allowed
         `}
       >
         <span
@@ -46,10 +42,13 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
             ${checked ? 'translate-x-[40px]' : 'translate-x-[4px]'}
           `}
         />
-      </div>
-      <span className="text-lg font-medium select-none">
+      </button>
+      <span
+        className="text-lg font-medium select-none"
+        onClick={handleToggle}
+      >
         {label}
       </span>
-    </label>
+    </div>
   );
 }
