@@ -12,10 +12,6 @@ export async function POST(request: Request) {
       email,
       currentPassword,
       newPassword,
-      emailNotificationsEnabled,
-      gameRemindersEnabled,
-      weeklySummaryEnabled,
-      marketingEmailsEnabled,
     } = body;
 
     // Check for E2E auth via custom SSO cookie (set by /api/auth/login in E2E mode)
@@ -35,18 +31,6 @@ export async function POST(request: Request) {
 
       if (facilityName !== undefined) {
         updates.facility_name = facilityName;
-      }
-      if (emailNotificationsEnabled !== undefined) {
-        updates.email_notifications_enabled = emailNotificationsEnabled;
-      }
-      if (gameRemindersEnabled !== undefined) {
-        updates.game_reminders_enabled = gameRemindersEnabled;
-      }
-      if (weeklySummaryEnabled !== undefined) {
-        updates.weekly_summary_enabled = weeklySummaryEnabled;
-      }
-      if (marketingEmailsEnabled !== undefined) {
-        updates.marketing_emails_enabled = marketingEmailsEnabled;
       }
 
       // Update in-memory store
@@ -133,47 +117,6 @@ export async function POST(request: Request) {
 
     if (facilityName !== undefined) {
       profileUpdates.facility_name = facilityName;
-    }
-
-    // Add notification preferences if provided
-    if (emailNotificationsEnabled !== undefined) {
-      if (typeof emailNotificationsEnabled !== 'boolean') {
-        return NextResponse.json(
-          { error: 'emailNotificationsEnabled must be a boolean' },
-          { status: 400 }
-        );
-      }
-      profileUpdates.email_notifications_enabled = emailNotificationsEnabled;
-    }
-
-    if (gameRemindersEnabled !== undefined) {
-      if (typeof gameRemindersEnabled !== 'boolean') {
-        return NextResponse.json(
-          { error: 'gameRemindersEnabled must be a boolean' },
-          { status: 400 }
-        );
-      }
-      profileUpdates.game_reminders_enabled = gameRemindersEnabled;
-    }
-
-    if (weeklySummaryEnabled !== undefined) {
-      if (typeof weeklySummaryEnabled !== 'boolean') {
-        return NextResponse.json(
-          { error: 'weeklySummaryEnabled must be a boolean' },
-          { status: 400 }
-        );
-      }
-      profileUpdates.weekly_summary_enabled = weeklySummaryEnabled;
-    }
-
-    if (marketingEmailsEnabled !== undefined) {
-      if (typeof marketingEmailsEnabled !== 'boolean') {
-        return NextResponse.json(
-          { error: 'marketingEmailsEnabled must be a boolean' },
-          { status: 400 }
-        );
-      }
-      profileUpdates.marketing_emails_enabled = marketingEmailsEnabled;
     }
 
     // Update profile in profiles table
