@@ -24,7 +24,7 @@ import { shouldRefreshToken, refreshTokens } from '@beak-gaming/auth';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const PLATFORM_HUB_URL = process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002';
-const COOKIE_DOMAIN = process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim() || undefined;
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN?.trim() || undefined;
 
 // E2E Testing: Same secret used by Platform Hub login API
 const E2E_JWT_SECRET = new TextEncoder().encode(

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get cookie options
     const cookieStore = await cookies();
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim() || undefined;
+    const cookieDomain = process.env.COOKIE_DOMAIN?.trim() || undefined;
 
     // Set cross-app SSO cookies
     cookieStore.set('beak_access_token', accessToken, {

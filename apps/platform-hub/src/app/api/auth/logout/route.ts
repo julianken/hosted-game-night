@@ -32,7 +32,7 @@ export async function POST() {
     // Clear all cross-app SSO authentication cookies
     const cookieOptions = {
       path: '/',
-      domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+      domain: process.env.COOKIE_DOMAIN || undefined,
       maxAge: 0,
     };
 

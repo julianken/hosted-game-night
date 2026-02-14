@@ -78,7 +78,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     // Get cookie store for setting cookies
     const cookieStore = await cookies();
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
+    const cookieDomain = process.env.COOKIE_DOMAIN;
 
     // ==========================================================================
     // E2E TESTING MODE: Skip Supabase auth to avoid rate limits

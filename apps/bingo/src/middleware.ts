@@ -123,7 +123,7 @@ async function verifyAccessToken(token: string): Promise<boolean> {
 function getCookieOptions(maxAge: number) {
   return {
     path: '/',
-    domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim() || undefined,
+    domain: process.env.COOKIE_DOMAIN?.trim() || undefined,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
@@ -181,7 +181,7 @@ export async function middleware(request: NextRequest) {
 
       // Create response and set new cookies
       const response = NextResponse.next();
-      const maxAge = 60 * 60 * 24 * 7; // 7 days
+      const maxAge = 3600; // 1 hour
 
       response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
       response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));
@@ -205,7 +205,7 @@ export async function middleware(request: NextRequest) {
 
         // Create response and set new cookies
         const response = NextResponse.next();
-        const maxAge = 60 * 60 * 24 * 7; // 7 days
+        const maxAge = 3600; // 1 hour
 
         response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
         response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));
@@ -236,7 +236,7 @@ export async function middleware(request: NextRequest) {
 
         // Create response and set new cookies
         const response = NextResponse.next();
-        const maxAge = 60 * 60 * 24 * 7; // 7 days
+        const maxAge = 3600; // 1 hour
 
         response.cookies.set('beak_access_token', result.accessToken, getCookieOptions(maxAge));
         response.cookies.set('beak_refresh_token', result.refreshToken, getCookieOptions(maxAge));

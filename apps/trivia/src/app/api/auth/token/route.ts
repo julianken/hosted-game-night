@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: tokens.expires_in,
       path: '/',
-      domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     // Refresh token cookie (long-lived, typically 30 days)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60, // 30 days
         path: '/',
-        domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+        domain: process.env.COOKIE_DOMAIN || undefined,
       });
     }
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: tokens.expires_in,
       path: '/',
-      domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     return NextResponse.json({
