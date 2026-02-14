@@ -31,6 +31,7 @@ import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { PresetSelector } from '@/components/presenter/PresetSelector';
 import { QuestionSetSelector } from '@/components/presenter/QuestionSetSelector';
+import { QuestionImporter } from '@/components/presenter/QuestionImporter';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
 import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
 import { Button } from '@beak-gaming/ui';
@@ -933,6 +934,7 @@ export default function PlayPage() {
               {/* Right: Question Content */}
               <div className="bg-background border border-border rounded-xl p-4 shadow-sm space-y-4">
                 <h2 className="text-lg font-semibold text-foreground">Question Content</h2>
+                <QuestionImporter status={game.status} onImport={gameState.importQuestions} />
                 <QuestionSetSelector disabled={game.status !== 'setup'} />
                 <button
                   onClick={() => setShowSaveQuestionSetModal(true)}
