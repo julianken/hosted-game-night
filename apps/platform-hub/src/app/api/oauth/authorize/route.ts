@@ -97,8 +97,10 @@ export async function GET(request: NextRequest) {
 
     // Determine if this is an E2E test session
     const isE2ETestSession =
-      beakUserId === E2E_TEST_USER_ID ||
-      (process.env.E2E_TESTING === 'true' && beakAccessToken && beakUserId);
+      process.env.E2E_TESTING === 'true' &&
+      beakUserId === E2E_TEST_USER_ID &&
+      beakAccessToken &&
+      beakUserId;
 
     // Create Supabase client
     const supabase = await createClient();

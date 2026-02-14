@@ -17,8 +17,7 @@ export async function POST() {
 
     // Only allow in E2E Testing Mode
     const isE2ETesting =
-      process.env.E2E_TESTING === 'true' ||
-      (process.env.NODE_ENV !== 'production' && e2eToken && e2eUserId);
+      process.env.E2E_TESTING === 'true' && e2eToken && e2eUserId;
 
     if (!isE2ETesting || !e2eToken || !e2eUserId) {
       return NextResponse.json(

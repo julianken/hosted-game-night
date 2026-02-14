@@ -22,8 +22,7 @@ export async function GET() {
 
   // E2E Testing Mode: Use in-memory profile store
   const isE2ETesting =
-    process.env.E2E_TESTING === 'true' ||
-    (process.env.NODE_ENV !== 'production' && e2eToken && e2eUserId);
+    process.env.E2E_TESTING === 'true' && e2eToken && e2eUserId;
 
   if (isE2ETesting && e2eToken && e2eUserId) {
     const profile = getE2EProfile(e2eUserId.value);

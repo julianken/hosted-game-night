@@ -25,8 +25,7 @@ export async function POST(request: Request) {
 
     // E2E Testing Mode: Use in-memory profile store
     const isE2ETesting =
-      process.env.E2E_TESTING === 'true' ||
-      (process.env.NODE_ENV !== 'production' && e2eToken && e2eUserId);
+      process.env.E2E_TESTING === 'true' && e2eToken && e2eUserId;
 
     if (isE2ETesting && e2eToken && e2eUserId) {
       console.log('[Profile Update API] E2E testing mode: using in-memory store');
