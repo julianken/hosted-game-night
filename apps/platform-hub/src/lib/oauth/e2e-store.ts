@@ -105,10 +105,10 @@ export function deleteE2EAuthorization(id: string): boolean {
 
 /**
  * Check if running in E2E mode
- * Returns true if E2E_TESTING is set or in dev mode with test user
+ * Returns true only if E2E_TESTING is explicitly set to 'true'
  */
 export function isE2EMode(): boolean {
-  return process.env.E2E_TESTING === 'true' || process.env.NODE_ENV !== 'production';
+  return process.env.E2E_TESTING === 'true';
 }
 
 /**

@@ -83,13 +83,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     // ==========================================================================
     // E2E TESTING MODE: Skip Supabase auth to avoid rate limits
     // ==========================================================================
-    // Enable E2E mode if:
-    // 1. E2E_TESTING env var is explicitly set to 'true', OR
-    // 2. In development mode AND email matches the E2E test pattern
-    // This allows E2E tests to work even if developers forget to use `pnpm dev:e2e`
-    const isE2ETesting =
-      process.env.E2E_TESTING === 'true' ||
-      (process.env.NODE_ENV !== 'production' && email === E2E_TEST_EMAIL);
+    // Enable E2E mode only if E2E_TESTING is explicitly set to 'true'
+    // This prevents security bypass in dev/staging environments
+    const isE2ETesting = process.env.E2E_TESTING === 'true';
 
     if (isE2ETesting && email === E2E_TEST_EMAIL) {
       console.log('[Login API] E2E testing mode: bypassing Supabase auth');
