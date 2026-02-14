@@ -32,8 +32,10 @@ export async function GET(request: NextRequest) {
     const beakAccessToken = cookieStore.get('beak_access_token')?.value;
 
     const isE2ESession =
-      beakUserId === E2E_TEST_USER_ID ||
-      (process.env.E2E_TESTING === 'true' && beakAccessToken && beakUserId);
+      process.env.E2E_TESTING === 'true' &&
+      beakUserId === E2E_TEST_USER_ID &&
+      beakAccessToken &&
+      beakUserId;
 
     // In E2E mode, try to get authorization from in-memory store
     if (isE2ESession) {

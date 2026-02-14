@@ -64,8 +64,10 @@ export async function POST(request: NextRequest) {
     const beakAccessToken = cookieStore.get('beak_access_token')?.value;
 
     const isE2ESession =
-      beakUserId === E2E_TEST_USER_ID ||
-      (process.env.E2E_TESTING === 'true' && beakAccessToken && beakUserId);
+      process.env.E2E_TESTING === 'true' &&
+      beakUserId === E2E_TEST_USER_ID &&
+      beakAccessToken &&
+      beakUserId;
 
     // Get authenticated user session (for auth checks)
     const supabase = await createClient();
