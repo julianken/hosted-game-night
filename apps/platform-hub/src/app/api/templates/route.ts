@@ -57,6 +57,36 @@ export async function GET(request: Request) {
       ? parseInt(searchParams.get('limit')!, 10)
       : null;
 
+
+    // E2E mode: return mock templates instead of fetching from downstream APIs
+    if (process.env.E2E_TESTING === 'true') {
+      const { getE2ETemplates } = await import('@/lib/e2e-template-store');
+      const templates = getE2ETemplates();
+
+      // Sort by updated_at descending (match production path)
+      templates.sort((a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+
+      let filteredTemplates = templates;
+
+      // Apply recent filter if requested
+      if (recent) {
+        const bingoTemplates = templates.filter(t => t.game === 'bingo').slice(0, 3);
+        const triviaTemplates = templates.filter(t => t.game === 'trivia').slice(0, 3);
+        filteredTemplates = [...bingoTemplates, ...triviaTemplates].sort(
+          (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
+      }
+
+      // Apply limit if provided
+      if (limit && limit > 0) {
+        filteredTemplates = filteredTemplates.slice(0, limit);
+      }
+
+      return NextResponse.json({ templates: filteredTemplates });
+    }
+
     const [bingoResponse, triviaResponse] = await Promise.allSettled([
       fetch(`${bingoUrl}/api/templates`, {
         headers: {
