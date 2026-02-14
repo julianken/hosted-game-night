@@ -84,3 +84,77 @@ BEGIN
     RAISE NOTICE 'E2E test user already exists: e2e-test@beak-gaming.test';
   END IF;
 END $$;
+
+-- Create real-auth test user for local Supabase E2E tests
+-- Email: real-auth-test@beak-gaming.test
+-- Password: RealAuthTest123!
+--
+-- This user is used by the `real-auth` Playwright project which runs against
+-- local Supabase (Docker) WITHOUT the E2E_TESTING flag, testing real auth paths:
+-- - Supabase signInWithPassword (RS256 JWKS verification)
+-- - Platform Hub OAuth 2.1 flow (HS256 SESSION_TOKEN_SECRET)
+-- - Cross-app SSO cookie propagation
+
+DO $$
+DECLARE
+  real_auth_user_id uuid;
+BEGIN
+  -- Check if real-auth test user already exists
+  SELECT id INTO real_auth_user_id
+  FROM auth.users
+  WHERE email = 'real-auth-test@beak-gaming.test';
+
+  -- Only create if user doesn't exist
+  IF real_auth_user_id IS NULL THEN
+    INSERT INTO auth.users (
+      id,
+      instance_id,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      created_at,
+      updated_at,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      is_super_admin,
+      role,
+      aud,
+      confirmation_token,
+      email_change,
+      email_change_token_new,
+      recovery_token
+    )
+    VALUES (
+      gen_random_uuid(),
+      '00000000-0000-0000-0000-000000000000',
+      'real-auth-test@beak-gaming.test',
+      crypt('RealAuthTest123!', gen_salt('bf')),
+      NOW(),
+      NOW(),
+      NOW(),
+      '{}',
+      '{"name": "Real Auth Test User"}',
+      false,
+      'authenticated',
+      'authenticated',
+      '',
+      '',
+      '',
+      ''
+    )
+    RETURNING id INTO real_auth_user_id;
+
+    -- Create profile for real-auth test user
+    INSERT INTO public.profiles (id, created_at, updated_at)
+    VALUES (
+      real_auth_user_id,
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING;
+
+    RAISE NOTICE 'Created real-auth test user: real-auth-test@beak-gaming.test';
+  ELSE
+    RAISE NOTICE 'Real-auth test user already exists: real-auth-test@beak-gaming.test';
+  END IF;
+END $$;

@@ -148,6 +148,29 @@ export default defineConfig({
         navigationTimeout: 15000,
       },
     },
+    /**
+     * Real-Auth project: Tests real authentication paths against local Supabase (Docker).
+     *
+     * Unlike the other projects (which use E2E_TESTING=true to bypass Supabase),
+     * this project tests:
+     * - Supabase signInWithPassword (RS256 JWT verified via JWKS)
+     * - Platform Hub OAuth 2.1 (HS256 JWT via SESSION_TOKEN_SECRET)
+     * - Cross-app SSO (cookie propagation + middleware verification)
+     *
+     * Run separately: pnpm test:e2e:real-auth
+     * (uses scripts/e2e-real-auth.sh which starts local Supabase + dev servers)
+     */
+    {
+      name: 'real-auth',
+      testDir: './e2e/real-auth',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${portConfig.hubPort}`,
+        viewport: { width: 1280, height: 720 },
+      },
+      timeout: 90_000, // Real Supabase calls are slower than E2E bypass
+      retries: 0, // No retries — avoid compounding rate limit issues
+    },
   ],
 
   /**

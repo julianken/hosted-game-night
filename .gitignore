@@ -50,4 +50,5 @@ pnpm-debug.log*
 .env.vercel
 test-results/
 .env.e2e
+.env.real-auth
 start-e2e-servers.sh
