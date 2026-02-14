@@ -235,8 +235,10 @@ export default function PlayPage() {
   }, []);
 
   // Save offline session state to localStorage
+  // Guard: only save after offline recovery has been attempted to prevent
+  // overwriting recovered state with initial empty state (BEA-504)
   useEffect(() => {
-    if (isOfflineMode && offlineSessionId) {
+    if (isOfflineMode && offlineSessionId && offlineRecoveryAttempted) {
       try {
         const sessionKey = `trivia_offline_session_${offlineSessionId}`;
         const sessionData = {
@@ -250,7 +252,7 @@ export default function PlayPage() {
         console.error('Failed to save offline session:', error);
       }
     }
-  }, [isOfflineMode, offlineSessionId, gameState]);
+  }, [isOfflineMode, offlineSessionId, offlineRecoveryAttempted, gameState]);
 
   // Generate or retrieve PIN when modal opens
   useEffect(() => {
@@ -377,6 +379,9 @@ export default function PlayPage() {
     setIsOfflineMode(true);
     setRoomCode(null);
     setSessionToken(null);
+
+    // Persist the new offline session ID so it survives page refresh
+    storeOfflineSessionId(newSessionId);
 
     // Initialize offline session in localStorage
     try {

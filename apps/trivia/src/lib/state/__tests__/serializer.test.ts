@@ -833,5 +833,179 @@ describe('serializer', () => {
       expect(deserialized.statusBeforePause).toBe('playing');
       expect(deserialized.emergencyBlank).toBe(true);
     });
+
+    it('preserves teams with empty roundScores (as created by addTeam)', () => {
+      // Teams created by addTeam() have empty roundScores arrays
+      const newTeam: Team = {
+        id: 't-new',
+        name: 'Table 1',
+        score: 0,
+        tableNumber: 1,
+        roundScores: [],
+      };
+
+      const state = createMockGameState({
+        teams: [newTeam],
+      });
+
+      const serialized = serializeTriviaState(state);
+      const deserialized = deserializeTriviaState(serialized);
+
+      expect(deserialized.teams).toEqual([newTeam]);
+      expect(deserialized.teams![0].roundScores).toEqual([]);
+    });
+
+    it('preserves teams with scores through JSON round-trip (localStorage simulation)', () => {
+      // Simulate the full localStorage round-trip: serialize -> JSON.stringify -> JSON.parse -> deserialize
+      const teamsWithScores: Team[] = [
+        { id: 't1', name: 'Eagles', score: 15, tableNumber: 1, roundScores: [5, 5, 5] },
+        { id: 't2', name: 'Hawks', score: 12, tableNumber: 2, roundScores: [4, 4, 4] },
+        { id: 't3', name: 'Table 3', score: 0, tableNumber: 3, roundScores: [0, 0, 0] },
+      ];
+
+      const state = createMockGameState({
+        status: 'playing',
+        currentRound: 2,
+        totalRounds: 3,
+        teams: teamsWithScores,
+        questions: [mockQuestion1],
+      });
+
+      // Full round-trip through JSON (as localStorage does)
+      const serialized = serializeTriviaState(state);
+      const jsonString = JSON.stringify(serialized);
+      const parsed = JSON.parse(jsonString);
+      const deserialized = deserializeTriviaState(parsed);
+
+      expect(deserialized.teams).toHaveLength(3);
+      expect(deserialized.teams).toEqual(teamsWithScores);
+      expect(deserialized.teams![0].score).toBe(15);
+      expect(deserialized.teams![0].roundScores).toEqual([5, 5, 5]);
+      expect(deserialized.teams![1].name).toBe('Hawks');
+      expect(deserialized.teams![2].score).toBe(0);
+    });
+
+    it('preserves multiple teams with varying states through serialize/deserialize', () => {
+      // Typical mid-game scenario: some teams have scores, some just added
+      const mixedTeams: Team[] = [
+        { id: 't1', name: 'Table 1', score: 10, tableNumber: 1, roundScores: [5, 3, 2] },
+        { id: 't2', name: 'Custom Name', score: 0, tableNumber: 2, roundScores: [0, 0, 0] },
+        { id: 't3', name: 'Table 3', score: 7, tableNumber: 3, roundScores: [3, 4, 0] },
+      ];
+
+      const state = createMockGameState({
+        status: 'between_rounds',
+        currentRound: 2,
+        totalRounds: 3,
+        teams: mixedTeams,
+        teamAnswers: [mockTeamAnswer1],
+        questions: [mockQuestion1, mockQuestion2],
+      });
+
+      const serialized = serializeTriviaState(state);
+      const deserialized = deserializeTriviaState(serialized);
+
+      expect(deserialized.teams).toEqual(mixedTeams);
+      expect(deserialized.status).toBe('between_rounds');
+      expect(deserialized.teamAnswers).toEqual([mockTeamAnswer1]);
+    });
+  });
+
+  describe('team validation edge cases', () => {
+    it('accepts teams with empty roundScores array', () => {
+      const serialized: SerializedTriviaState = {
+        sessionId: 'test',
+        status: 'setup',
+        statusBeforePause: null,
+        questions: [],
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: DEFAULT_ROUNDS,
+        teams: [{ id: 't1', name: 'Table 1', score: 0, tableNumber: 1, roundScores: [] }],
+        teamAnswers: [],
+        timer: mockTimer,
+        settings: mockSettings,
+        showScoreboard: false,
+        emergencyBlank: false,
+        ttsEnabled: false,
+      };
+
+      const deserialized = deserializeTriviaState(serialized);
+      expect(deserialized.teams).toHaveLength(1);
+      expect(deserialized.teams![0].roundScores).toEqual([]);
+    });
+
+    it('accepts team with tableNumber at boundary (1 and 20)', () => {
+      const serialized: SerializedTriviaState = {
+        sessionId: 'test',
+        status: 'setup',
+        statusBeforePause: null,
+        questions: [],
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: DEFAULT_ROUNDS,
+        teams: [
+          { id: 't1', name: 'Table 1', score: 0, tableNumber: 1, roundScores: [] },
+          { id: 't20', name: 'Table 20', score: 5, tableNumber: 20, roundScores: [5] },
+        ],
+        teamAnswers: [],
+        timer: mockTimer,
+        settings: mockSettings,
+        showScoreboard: false,
+        emergencyBlank: false,
+        ttsEnabled: false,
+      };
+
+      const deserialized = deserializeTriviaState(serialized);
+      expect(deserialized.teams).toHaveLength(2);
+      expect(deserialized.teams![0].tableNumber).toBe(1);
+      expect(deserialized.teams![1].tableNumber).toBe(20);
+    });
+
+    it('rejects team with tableNumber 0', () => {
+      const serialized = {
+        sessionId: 'test',
+        status: 'setup',
+        statusBeforePause: null,
+        questions: [],
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: DEFAULT_ROUNDS,
+        teams: [{ id: 't1', name: 'Table 0', score: 0, tableNumber: 0, roundScores: [] }],
+        teamAnswers: [],
+        timer: mockTimer,
+        settings: mockSettings,
+        showScoreboard: false,
+        emergencyBlank: false,
+        ttsEnabled: false,
+      };
+
+      expect(() => deserializeTriviaState(serialized)).toThrow(SerializationError);
+    });
+
+    it('rejects team with non-numeric roundScores entries', () => {
+      const serialized = {
+        sessionId: 'test',
+        status: 'setup',
+        statusBeforePause: null,
+        questions: [],
+        selectedQuestionIndex: 0,
+        displayQuestionIndex: null,
+        currentRound: 0,
+        totalRounds: DEFAULT_ROUNDS,
+        teams: [{ id: 't1', name: 'Table 1', score: 0, tableNumber: 1, roundScores: ['not', 'numbers'] }],
+        teamAnswers: [],
+        timer: mockTimer,
+        settings: mockSettings,
+        showScoreboard: false,
+        emergencyBlank: false,
+        ttsEnabled: false,
+      };
+
+      expect(() => deserializeTriviaState(serialized)).toThrow(SerializationError);
+    });
   });
 });
