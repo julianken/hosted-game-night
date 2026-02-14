@@ -50,9 +50,13 @@ export async function GET(request: NextRequest) {
     const codeChallengeMethod = searchParams.get('code_challenge_method');
     const responseType = searchParams.get('response_type');
 
-    // Validate required parameters
+    // Validate required parameters (pre-validation phase)
+    // Per RFC 6749 Section 4.1.2.1: MUST NOT redirect on invalid redirect_uri
     if (!clientId) {
-      return errorRedirect(redirectUri, 'invalid_request', 'Missing client_id', state);
+      return NextResponse.json(
+        { error: 'invalid_request', error_description: 'Missing client_id' },
+        { status: 400 }
+      );
     }
 
     if (!redirectUri) {
@@ -63,29 +67,23 @@ export async function GET(request: NextRequest) {
     }
 
     if (!scope || !state || !codeChallenge) {
-      return errorRedirect(
-        redirectUri,
-        'invalid_request',
-        'Missing required parameters (scope, state, or code_challenge)',
-        state
+      return NextResponse.json(
+        { error: 'invalid_request', error_description: 'Missing required parameters (scope, state, or code_challenge)' },
+        { status: 400 }
       );
     }
 
     if (codeChallengeMethod !== 'S256') {
-      return errorRedirect(
-        redirectUri,
-        'invalid_request',
-        'code_challenge_method must be S256',
-        state
+      return NextResponse.json(
+        { error: 'invalid_request', error_description: 'code_challenge_method must be S256' },
+        { status: 400 }
       );
     }
 
     if (responseType !== 'code') {
-      return errorRedirect(
-        redirectUri,
-        'unsupported_response_type',
-        'Only authorization_code grant is supported',
-        state
+      return NextResponse.json(
+        { error: 'unsupported_response_type', error_description: 'Only authorization_code grant is supported' },
+        { status: 400 }
       );
     }
 
@@ -161,7 +159,10 @@ export async function GET(request: NextRequest) {
 
       if (clientError || !dbClient_) {
         console.error('[OAuth Authorize] Client not found, error:', clientError);
-        return errorRedirect(redirectUri, 'invalid_client', 'Client not found', state);
+        return NextResponse.json(
+          { error: 'invalid_client', error_description: 'Client not found' },
+          { status: 400 }
+        );
       }
 
       client = dbClient_;
@@ -169,18 +170,23 @@ export async function GET(request: NextRequest) {
 
     // At this point client is guaranteed to exist
     if (!client) {
-      return errorRedirect(redirectUri, 'invalid_client', 'Client not found', state);
+      return NextResponse.json(
+        { error: 'invalid_client', error_description: 'Client not found' },
+        { status: 400 }
+      );
     }
 
     // Validate redirect_uri is registered for this client
     if (!client.redirect_uris.includes(redirectUri)) {
-      return errorRedirect(
-        redirectUri,
-        'invalid_request',
-        'redirect_uri not registered for this client',
-        state
+      return NextResponse.json(
+        { error: 'invalid_request', error_description: 'redirect_uri not registered for this client' },
+        { status: 400 }
       );
     }
+
+    // **POST-VALIDATION PHASE**
+    // Beyond this point, redirect_uri has been validated.
+    // Errors can safely use errorRedirect() to redirect back to client.
 
     // Create authorization request
     const authorizationId = uuidv4();
@@ -293,13 +299,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Authorization endpoint error:', error);
-    const redirectUri = request.nextUrl.searchParams.get('redirect_uri');
-    const state = request.nextUrl.searchParams.get('state');
-
-    if (redirectUri) {
-      return errorRedirect(redirectUri, 'server_error', 'Internal server error', state);
-    }
-
+    // In the catch block, we cannot guarantee redirect_uri was validated
+    // Therefore, do NOT redirect - return JSON error
     return NextResponse.json(
       { error: 'server_error', error_description: 'Internal server error' },
       { status: 500 }
