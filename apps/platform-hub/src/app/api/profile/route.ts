@@ -7,6 +7,8 @@ import { getE2EProfile } from '@/lib/e2e-profile-store';
  * GET /api/profile
  *
  * Retrieves the current user's profile information.
+ * - `facility_name` comes from the `profiles` table
+ * - `email` comes from `auth.users` via `supabase.auth.getUser()`
  *
  * E2E Testing:
  * - Detects E2E mode via cookies: beak_access_token, beak_user_id
@@ -50,7 +52,7 @@ export async function GET() {
     // Fetch profile from database
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('facility_name, email')
+      .select('facility_name')
       .eq('id', user.id)
       .single();
 
@@ -65,7 +67,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       facility_name: profile?.facility_name || user.user_metadata?.facility_name || '',
-      email: profile?.email || user.email || '',
+      email: user.email || '',
     });
   } catch (error) {
     console.error('Profile API error:', error);
