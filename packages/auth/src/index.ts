@@ -49,3 +49,10 @@ export {
   refreshTokens,
   type TokenRefreshResult,
 } from './token-refresh';
+
+// API route authentication utilities
+export {
+  getApiUser,
+  createAuthenticatedClient,
+  type ApiUser,
+} from './api-auth';

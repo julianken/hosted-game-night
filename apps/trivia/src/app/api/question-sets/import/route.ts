@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@beak-gaming/database/server';
+import { getApiUser, createAuthenticatedClient } from '@beak-gaming/auth';
 import { parseJsonQuestions, questionsToTriviaQuestions } from '@/lib/questions';
 import { createTriviaQuestionSet } from '@beak-gaming/database/tables';
 import { isDatabaseError } from '@beak-gaming/database/errors';
@@ -14,16 +14,15 @@ import type { TriviaQuestionSetInsert } from '@beak-gaming/database/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const body = await request.json();
     const { rawJson, name, description } = body as {
       rawJson?: string;

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@beak-gaming/database/server';
+import { getApiUser, createAuthenticatedClient } from '@beak-gaming/auth';
 import {
   listAllTriviaTemplates,
   createTriviaTemplate,
@@ -39,18 +39,17 @@ function validateQuestions(questions: TriviaQuestion[]): string | null {
  * GET /api/templates
  * List all templates for the authenticated user
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const templates = await listAllTriviaTemplates(supabase, user.id);
 
     return NextResponse.json({ templates });
@@ -77,16 +76,15 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const body = await request.json();
 
     // Validate required fields

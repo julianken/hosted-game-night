@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 
-// Mock the Supabase server client
-vi.mock('@beak-gaming/database/server', () => ({
-  createClient: vi.fn(),
+// Mock the auth utilities
+vi.mock('@beak-gaming/auth', () => ({
+  getApiUser: vi.fn(),
+  createAuthenticatedClient: vi.fn(),
 }));
 
 // Mock the database functions
@@ -17,7 +18,7 @@ vi.mock('@beak-gaming/database/errors', () => ({
   isDatabaseError: vi.fn(),
 }));
 
-import { createClient } from '@beak-gaming/database/server';
+import { getApiUser, createAuthenticatedClient } from '@beak-gaming/auth';
 import {
   listAllTriviaTemplates,
   createTriviaTemplate,
@@ -25,25 +26,32 @@ import {
 import { isDatabaseError } from '@beak-gaming/database/errors';
 import type { TriviaTemplate } from '@beak-gaming/database/types';
 
+const mockGetApiUser = getApiUser as ReturnType<typeof vi.fn>;
+const mockCreateAuthenticatedClient = createAuthenticatedClient as ReturnType<typeof vi.fn>;
+
+/**
+ * Helper to create a mock request with beak_access_token cookie
+ */
+function createMockRequest(url: string, init?: { method?: string; body?: string }) {
+  const request = new NextRequest(url, init);
+  request.cookies.set('beak_access_token', 'test-jwt-token');
+  return request;
+}
+
 describe('GET /api/templates', () => {
-  const mockCreateClient = createClient as ReturnType<typeof vi.fn>;
   const mockListAll = listAllTriviaTemplates as ReturnType<typeof vi.fn>;
+  const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);
   });
 
   it('returns 401 when user is not authenticated', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: { message: 'Not authenticated' },
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue(null);
 
-    const response = await GET();
+    const request = createMockRequest('http://localhost/api/templates');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -72,40 +80,27 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockListAll.mockResolvedValue(mockTemplates);
 
-    const response = await GET();
+    const request = createMockRequest('http://localhost/api/templates');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.templates).toEqual(mockTemplates);
-    expect(mockListAll).toHaveBeenCalledWith(expect.anything(), 'user-123');
+    expect(mockListAll).toHaveBeenCalledWith(mockSupabaseClient, 'user-123');
   });
 
   it('handles database errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Database error', statusCode: 503 };
     mockListAll.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const response = await GET();
+    const request = createMockRequest('http://localhost/api/templates');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(503);
@@ -114,24 +109,18 @@ describe('GET /api/templates', () => {
 });
 
 describe('POST /api/templates', () => {
-  const mockCreateClient = createClient as ReturnType<typeof vi.fn>;
   const mockCreate = createTriviaTemplate as ReturnType<typeof vi.fn>;
+  const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);
   });
 
   it('returns 401 when user is not authenticated', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: { message: 'Not authenticated' },
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue(null);
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({ name: 'Test' }),
     });
@@ -144,16 +133,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when name is missing', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({ questions: [] }),
     });
@@ -166,16 +148,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when questions is not an array', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({ name: 'Test', questions: 'not-an-array' }),
     });
@@ -188,16 +163,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when question has less than 2 options', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Test',
@@ -219,16 +187,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when correctIndex is out of range', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Test',
@@ -250,16 +211,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when correctIndex is negative', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Test',
@@ -281,16 +235,9 @@ describe('POST /api/templates', () => {
   });
 
   it('returns 400 when question text is empty', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Test',
@@ -331,18 +278,10 @@ describe('POST /api/templates', () => {
       updated_at: '2024-01-01T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockCreate.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'My Template',
@@ -365,7 +304,7 @@ describe('POST /api/templates', () => {
     expect(response.status).toBe(201);
     expect(data.template).toEqual(mockTemplate);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.anything(),
+      mockSupabaseClient,
       expect.objectContaining({
         user_id: 'user-123',
         name: 'My Template',
@@ -397,18 +336,10 @@ describe('POST /api/templates', () => {
       updated_at: '2024-01-01T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockCreate.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Basic Template',
@@ -420,7 +351,7 @@ describe('POST /api/templates', () => {
 
     expect(response.status).toBe(201);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.anything(),
+      mockSupabaseClient,
       expect.objectContaining({
         questions: [],
         rounds_count: 3,
@@ -432,20 +363,13 @@ describe('POST /api/templates', () => {
   });
 
   it('handles database errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Duplicate template name', statusCode: 409 };
     mockCreate.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Duplicate',
@@ -485,18 +409,10 @@ describe('POST /api/templates', () => {
       updated_at: '2024-01-01T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockCreate.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates', {
+    const request = createMockRequest('http://localhost/api/templates', {
       method: 'POST',
       body: JSON.stringify({
         name: 'Multi-Question Template',
