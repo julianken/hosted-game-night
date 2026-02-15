@@ -34,8 +34,14 @@ const E2E_JWT_SECRET = new TextEncoder().encode(
   'e2e-test-secret-key-that-is-at-least-32-characters-long'
 );
 
-// Production: Same secret used by Platform Hub OAuth token endpoint
-// This must match the SESSION_TOKEN_SECRET used by Platform Hub
+// Production: Supabase JWT secret for PostgRES-compatible tokens (preferred)
+function getSupabaseJwtSecret(): Uint8Array | null {
+  const secret = process.env.SUPABASE_JWT_SECRET;
+  if (!secret) return null;
+  return new TextEncoder().encode(secret);
+}
+
+// Backward compatibility: SESSION_TOKEN_SECRET used by Platform Hub (migration)
 function getSessionSecret(): Uint8Array | null {
   const secret = process.env.SESSION_TOKEN_SECRET;
   if (!secret) return null;
@@ -90,7 +96,21 @@ async function verifyAccessToken(token: string): Promise<boolean> {
     }
   }
 
-  // Platform Hub OAuth tokens: Verify with SESSION_TOKEN_SECRET
+  // Platform Hub OAuth tokens: Verify with SUPABASE_JWT_SECRET (preferred)
+  const supabaseJwtSecret = getSupabaseJwtSecret();
+  if (supabaseJwtSecret) {
+    try {
+      await jwtVerify(token, supabaseJwtSecret, {
+        issuer: `${SUPABASE_URL}/auth/v1`,
+        audience: 'authenticated',
+      });
+      return true;
+    } catch {
+      // SUPABASE_JWT_SECRET verification failed, fall through
+    }
+  }
+
+  // Backward compatibility: Verify with SESSION_TOKEN_SECRET
   const sessionSecret = getSessionSecret();
   if (sessionSecret) {
     try {
@@ -100,7 +120,7 @@ async function verifyAccessToken(token: string): Promise<boolean> {
       });
       return true;
     } catch {
-      // Platform Hub token verification failed, fall through to Supabase
+      // SESSION_TOKEN_SECRET verification failed, fall through to Supabase JWKS
     }
   }
 

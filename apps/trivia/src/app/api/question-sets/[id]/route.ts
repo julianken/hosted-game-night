@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@beak-gaming/database/server';
+import { getApiUser, createAuthenticatedClient } from '@beak-gaming/auth';
 import {
   getTriviaQuestionSet,
   updateTriviaQuestionSet,
@@ -51,16 +51,15 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const { id } = await params;
     const questionSet = await getTriviaQuestionSet(supabase, id);
 
@@ -91,16 +90,15 @@ export async function PATCH(
   { params }: RouteParams
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const { id } = await params;
     const body = await request.json();
 
@@ -157,16 +155,15 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getApiUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
     const { id } = await params;
     await deleteTriviaQuestionSet(supabase, id);
 

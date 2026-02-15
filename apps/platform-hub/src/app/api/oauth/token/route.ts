@@ -367,10 +367,13 @@ async function handleAuthorizationCodeGrant(params: {
       console.log('[Token Endpoint] Could not fetch user email, continuing without it');
     }
 
-    // Generate JWT tokens using SESSION_TOKEN_SECRET
+    // Generate JWT tokens using SUPABASE_JWT_SECRET (preferred) or SESSION_TOKEN_SECRET (fallback)
+    const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
     const sessionSecret = process.env.SESSION_TOKEN_SECRET;
-    if (!sessionSecret) {
-      console.error('[Token Endpoint] SESSION_TOKEN_SECRET not configured');
+    const signingSecret = supabaseJwtSecret || sessionSecret;
+
+    if (!signingSecret) {
+      console.error('[Token Endpoint] Neither SUPABASE_JWT_SECRET nor SESSION_TOKEN_SECRET configured');
       return NextResponse.json(
         {
           error: 'server_error',
@@ -380,7 +383,14 @@ async function handleAuthorizationCodeGrant(params: {
       );
     }
 
-    const jwtSecret = new TextEncoder().encode(sessionSecret);
+    // When using SUPABASE_JWT_SECRET, use Supabase-compatible issuer
+    // so PostgRES accepts the JWT for RLS enforcement
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const jwtIssuer = supabaseJwtSecret
+      ? `${supabaseUrl}/auth/v1`
+      : 'beak-gaming-platform';
+
+    const jwtSecret = new TextEncoder().encode(signingSecret);
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 3600; // 1 hour
 
@@ -389,7 +399,7 @@ async function handleAuthorizationCodeGrant(params: {
       email: userEmail,
       role: 'authenticated',
       aud: 'authenticated',
-      iss: 'beak-gaming-platform',
+      iss: jwtIssuer,
       app_metadata: { provider: 'email', providers: ['email'] },
       user_metadata: { email: userEmail },
     })
@@ -581,10 +591,13 @@ async function handleRefreshTokenGrant(params: {
       console.log('[Token Endpoint] Could not fetch user email, continuing without it');
     }
 
-    // Generate new access token
+    // Generate new access token using SUPABASE_JWT_SECRET (preferred) or SESSION_TOKEN_SECRET (fallback)
+    const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
     const sessionSecret = process.env.SESSION_TOKEN_SECRET;
-    if (!sessionSecret) {
-      console.error('[Token Endpoint] SESSION_TOKEN_SECRET not configured');
+    const signingSecret = supabaseJwtSecret || sessionSecret;
+
+    if (!signingSecret) {
+      console.error('[Token Endpoint] Neither SUPABASE_JWT_SECRET nor SESSION_TOKEN_SECRET configured');
       return NextResponse.json(
         {
           error: 'server_error',
@@ -594,7 +607,12 @@ async function handleRefreshTokenGrant(params: {
       );
     }
 
-    const jwtSecret = new TextEncoder().encode(sessionSecret);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const jwtIssuer = supabaseJwtSecret
+      ? `${supabaseUrl}/auth/v1`
+      : 'beak-gaming-platform';
+
+    const jwtSecret = new TextEncoder().encode(signingSecret);
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 3600; // 1 hour
 
@@ -603,7 +621,7 @@ async function handleRefreshTokenGrant(params: {
       email: userEmail,
       role: 'authenticated',
       aud: 'authenticated',
-      iss: 'beak-gaming-platform',
+      iss: jwtIssuer,
       app_metadata: { provider: 'email', providers: ['email'] },
       user_metadata: { email: userEmail },
     })

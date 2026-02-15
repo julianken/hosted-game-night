@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, PATCH, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
-// Mock the Supabase server client
-vi.mock('@beak-gaming/database/server', () => ({
-  createClient: vi.fn(),
+// Mock the auth utilities
+vi.mock('@beak-gaming/auth', () => ({
+  getApiUser: vi.fn(),
+  createAuthenticatedClient: vi.fn(),
 }));
 
 // Mock the database functions
@@ -18,7 +19,7 @@ vi.mock('@beak-gaming/database/errors', () => ({
   isDatabaseError: vi.fn(),
 }));
 
-import { createClient } from '@beak-gaming/database/server';
+import { getApiUser, createAuthenticatedClient } from '@beak-gaming/auth';
 import {
   getTriviaTemplate,
   updateTriviaTemplate,
@@ -27,25 +28,31 @@ import {
 import { isDatabaseError } from '@beak-gaming/database/errors';
 import type { TriviaTemplate } from '@beak-gaming/database/types';
 
+const mockGetApiUser = getApiUser as ReturnType<typeof vi.fn>;
+const mockCreateAuthenticatedClient = createAuthenticatedClient as ReturnType<typeof vi.fn>;
+
+/**
+ * Helper to create a mock request with beak_access_token cookie
+ */
+function createMockRequest(url: string, init?: { method?: string; body?: string }) {
+  const request = new NextRequest(url, init);
+  request.cookies.set('beak_access_token', 'test-jwt-token');
+  return request;
+}
+
 describe('GET /api/templates/[id]', () => {
-  const mockCreateClient = createClient as ReturnType<typeof vi.fn>;
   const mockGet = getTriviaTemplate as ReturnType<typeof vi.fn>;
+  const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);
   });
 
   it('returns 401 when user is not authenticated', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: { message: 'Not authenticated' },
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue(null);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1');
+    const request = createMockRequest('http://localhost/api/templates/template-1');
     const params = Promise.resolve({ id: 'template-1' });
     const response = await GET(request, { params });
     const data = await response.json();
@@ -74,42 +81,27 @@ describe('GET /api/templates/[id]', () => {
       updated_at: '2024-01-01T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockGet.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1');
+    const request = createMockRequest('http://localhost/api/templates/template-1');
     const params = Promise.resolve({ id: 'template-1' });
     const response = await GET(request, { params });
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.template).toEqual(mockTemplate);
-    expect(mockGet).toHaveBeenCalledWith(expect.anything(), 'template-1');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
   });
 
   it('handles not found errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'Template not found', statusCode: 404 };
     mockGet.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const request = new NextRequest('http://localhost/api/templates/nonexistent');
+    const request = createMockRequest('http://localhost/api/templates/nonexistent');
     const params = Promise.resolve({ id: 'nonexistent' });
     const response = await GET(request, { params });
     const data = await response.json();
@@ -120,24 +112,18 @@ describe('GET /api/templates/[id]', () => {
 });
 
 describe('PATCH /api/templates/[id]', () => {
-  const mockCreateClient = createClient as ReturnType<typeof vi.fn>;
   const mockUpdate = updateTriviaTemplate as ReturnType<typeof vi.fn>;
+  const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);
   });
 
   it('returns 401 when user is not authenticated', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: { message: 'Not authenticated' },
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue(null);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({ name: 'Updated Name' }),
     });
@@ -169,18 +155,10 @@ describe('PATCH /api/templates/[id]', () => {
       updated_at: '2024-01-02T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockUpdate.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({
         name: 'Updated Name',
@@ -197,7 +175,7 @@ describe('PATCH /api/templates/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.template).toEqual(mockTemplate);
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.anything(),
+      mockSupabaseClient,
       'template-1',
       expect.objectContaining({
         name: 'Updated Name',
@@ -210,16 +188,9 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('returns 400 when questions is not an array', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({ questions: 'not-an-array' }),
     });
@@ -232,16 +203,9 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('returns 400 when question has invalid structure', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({
         questions: [
@@ -262,16 +226,9 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('returns 400 when correctIndex is out of range', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({
         questions: [
@@ -292,16 +249,9 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('returns 400 when question text is empty', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({
         questions: [
@@ -335,18 +285,10 @@ describe('PATCH /api/templates/[id]', () => {
       updated_at: '2024-01-02T00:00:00Z',
     };
 
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockUpdate.mockResolvedValue(mockTemplate);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
       body: JSON.stringify({ name: 'Updated Name' }),
     });
@@ -355,27 +297,20 @@ describe('PATCH /api/templates/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.anything(),
+      mockSupabaseClient,
       'template-1',
       { name: 'Updated Name' }
     );
   });
 
   it('handles database errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'Template not found', statusCode: 404 };
     mockUpdate.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const request = new NextRequest('http://localhost/api/templates/nonexistent', {
+    const request = createMockRequest('http://localhost/api/templates/nonexistent', {
       method: 'PATCH',
       body: JSON.stringify({ name: 'Updated' }),
     });
@@ -389,24 +324,18 @@ describe('PATCH /api/templates/[id]', () => {
 });
 
 describe('DELETE /api/templates/[id]', () => {
-  const mockCreateClient = createClient as ReturnType<typeof vi.fn>;
   const mockDelete = deleteTriviaTemplate as ReturnType<typeof vi.fn>;
+  const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);
   });
 
   it('returns 401 when user is not authenticated', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: { message: 'Not authenticated' },
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue(null);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'DELETE',
     });
     const params = Promise.resolve({ id: 'template-1' });
@@ -418,18 +347,10 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('deletes template successfully', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
-
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
     mockDelete.mockResolvedValue(undefined);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'DELETE',
     });
     const params = Promise.resolve({ id: 'template-1' });
@@ -438,24 +359,17 @@ describe('DELETE /api/templates/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(mockDelete).toHaveBeenCalledWith(expect.anything(), 'template-1');
+    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
   });
 
   it('handles not found errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'Template not found', statusCode: 404 };
     mockDelete.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const request = new NextRequest('http://localhost/api/templates/nonexistent', {
+    const request = createMockRequest('http://localhost/api/templates/nonexistent', {
       method: 'DELETE',
     });
     const params = Promise.resolve({ id: 'nonexistent' });
@@ -467,20 +381,13 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('handles database errors', async () => {
-    mockCreateClient.mockResolvedValue({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-    });
+    mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Database error', statusCode: 503 };
     mockDelete.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
-    const request = new NextRequest('http://localhost/api/templates/template-1', {
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'DELETE',
     });
     const params = Promise.resolve({ id: 'template-1' });
