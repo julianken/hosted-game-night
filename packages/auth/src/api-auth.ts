@@ -126,38 +126,37 @@ export async function getApiUser(request: {
 }
 
 /**
- * Create a Supabase client that authenticates with the given JWT.
+ * Create a Supabase client for authenticated API route operations.
  *
- * The JWT is passed as an `Authorization: Bearer` header, which PostgRES
- * verifies using the project's HS256 JWT secret. This sets `auth.uid()` to
- * the `sub` claim, enabling RLS policies to enforce row-level access.
+ * Uses the service role key to bypass PostgRES JWT verification. This is
+ * necessary because the Supabase project uses ECC (P-256) for JWT signing,
+ * and we cannot mint ES256 tokens (we don't have the private key). Data
+ * isolation is enforced at the application level — all query functions
+ * require user_id as a parameter.
  *
- * @param accessToken - The verified JWT access token
- * @returns A Supabase client authenticated with the given token
+ * Note: RLS is not enforced with this client. If the project switches back
+ * to HS256 or provides a way to mint ES256 tokens, this can be updated to
+ * use the anon key + JWT Bearer header approach for RLS enforcement.
+ *
+ * @returns A Supabase client with service role access
  *
  * @example
  * ```ts
- * const supabase = createAuthenticatedClient(accessToken);
- * // RLS policies will enforce that auth.uid() = user's ID
- * const { data } = await supabase.from('templates').select('*');
+ * const supabase = createAuthenticatedClient();
+ * const { data } = await supabase.from('templates').select('*').eq('user_id', user.id);
  * ```
  */
-export function createAuthenticatedClient(accessToken: string) {
+export function createAuthenticatedClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
-      'Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      'Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY'
     );
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

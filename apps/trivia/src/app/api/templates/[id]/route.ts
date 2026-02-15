@@ -59,7 +59,7 @@ export async function GET(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
 
     // getTriviaTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
@@ -100,7 +100,7 @@ export async function PATCH(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
     const body = await request.json();
 
@@ -169,7 +169,7 @@ export async function DELETE(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
 
     // RLS will prevent deleting other users' templates

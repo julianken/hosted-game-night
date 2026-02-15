@@ -345,20 +345,18 @@ describe('getApiUser', () => {
 describe('createAuthenticatedClient', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE_URL;
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key-for-testing';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key-for-testing';
   });
 
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
-  it('creates a Supabase client with the access token as Authorization header', () => {
-    const client = createAuthenticatedClient('test-jwt-token');
+  it('creates a Supabase client with service role key', () => {
+    const client = createAuthenticatedClient();
 
-    // The client should be created successfully (not throw)
     expect(client).toBeDefined();
-    // We can verify it's a Supabase client by checking it has expected methods
     expect(client.from).toBeDefined();
     expect(typeof client.from).toBe('function');
   });
@@ -366,15 +364,15 @@ describe('createAuthenticatedClient', () => {
   it('throws when NEXT_PUBLIC_SUPABASE_URL is missing', () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-    expect(() => createAuthenticatedClient('test-token')).toThrow(
+    expect(() => createAuthenticatedClient()).toThrow(
       'Missing required environment variables'
     );
   });
 
-  it('throws when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing', () => {
-    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  it('throws when SUPABASE_SERVICE_ROLE_KEY is missing', () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    expect(() => createAuthenticatedClient('test-token')).toThrow(
+    expect(() => createAuthenticatedClient()).toThrow(
       'Missing required environment variables'
     );
   });

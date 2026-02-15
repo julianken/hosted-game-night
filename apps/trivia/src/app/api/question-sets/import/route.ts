@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const body = await request.json();
     const { rawJson, name, description } = body as {
       rawJson?: string;

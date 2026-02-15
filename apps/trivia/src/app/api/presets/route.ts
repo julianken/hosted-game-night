@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const presets = await listAllTriviaPresets(supabase, user.id);
 
     return NextResponse.json({ presets });
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const body = await request.json();
 
     // Validate required fields

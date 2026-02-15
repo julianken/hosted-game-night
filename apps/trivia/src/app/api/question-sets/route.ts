@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const questionSets = await listAllTriviaQuestionSets(supabase, user.id);
 
     return NextResponse.json({ questionSets });
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const body = await request.json();
 
     // Validate required fields

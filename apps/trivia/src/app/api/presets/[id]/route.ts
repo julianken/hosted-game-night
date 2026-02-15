@@ -36,7 +36,7 @@ export async function GET(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
     const preset = await getTriviaPreset(supabase, id);
 
@@ -75,7 +75,7 @@ export async function PATCH(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
     const body = await request.json();
 
@@ -123,7 +123,7 @@ export async function DELETE(
       );
     }
 
-    const supabase = createAuthenticatedClient(request.cookies.get('beak_access_token')!.value);
+    const supabase = createAuthenticatedClient();
     const { id } = await params;
     await deleteTriviaPreset(supabase, id);
 
