@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Joolie Boolie Platform Hub** - The central entry point for the Joolie Boolie Platform. Provides game selection, authentication, and user dashboard.
+**Joolie Boolie Hub** - The central entry point for the Joolie Boolie. Provides game selection, authentication, and user dashboard.
 
 **Current State:** OAuth 2.1 server complete (3,479 lines). Game selector UI complete. User dashboard and settings pages implemented.
 

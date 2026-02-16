@@ -28,7 +28,7 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Copyright */}
             <p className="text-lg text-muted-foreground text-center md:text-left">
-              &copy; {currentYear} Joolie Boolie Platform. All rights reserved.
+              &copy; {currentYear} Joolie Boolie. All rights reserved.
             </p>
 
             {/* Links */}

@@ -1,4 +1,4 @@
-# Manual Test Plan - Joolie Boolie Platform
+# Manual Test Plan - Joolie Boolie
 
 > **Purpose:** Human-readable test cases for manual verification using Playwright MCP browser tools.
 > This supplements the ~338 automated E2E tests with interactive validation of visual, audio, and cross-app flows.

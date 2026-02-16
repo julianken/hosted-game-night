@@ -52,7 +52,7 @@ test.describe('Bingo Home Page', () => {
     expect(await h3s.count()).toBeGreaterThan(3); // Feature cards and steps
   });
 
-  test('footer mentions Joolie Boolie Platform', async ({ page }) => {
+  test('footer mentions Joolie Boolie', async ({ page }) => {
     await expect(page.getByText(/joolie boolie platform/i)).toBeVisible();
   });
 

@@ -24,7 +24,7 @@ CREATE TABLE public.facilities (
 );
 
 -- Add table comment
-COMMENT ON TABLE public.facilities IS 'Communities and groups that use the Joolie Boolie Platform';
+COMMENT ON TABLE public.facilities IS 'Communities and groups that use the Joolie Boolie';
 COMMENT ON COLUMN public.facilities.is_active IS 'Soft delete flag - inactive facilities are hidden but not deleted';
 
 -- Indexes

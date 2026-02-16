@@ -206,7 +206,7 @@ export default async function Home() {
       <footer className="bg-muted/10 border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-lg text-muted-foreground">
-            Part of the <span className="font-semibold">Joolie Boolie Platform</span> for groups and communities
+            Part of the <span className="font-semibold">Joolie Boolie</span> for groups and communities
           </p>
         </div>
       </footer>

@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { SignupForm } from '@/components';
 
 export const metadata: Metadata = {
-  title: 'Create Account - Joolie Boolie Platform',
-  description: 'Create your Joolie Boolie Platform account to start playing Bingo, Trivia, and more games.',
+  title: 'Create Account - Joolie Boolie',
+  description: 'Create your Joolie Boolie account to start playing Bingo, Trivia, and more games.',
 };
 
 // Force dynamic rendering to avoid build-time Supabase initialization

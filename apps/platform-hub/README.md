@@ -2,7 +2,7 @@
 
 **Status:** 🚧 Scaffolded (10% Complete)
 
-The central entry point for the Joolie Boolie Platform. Provides game selection, authentication flows, and user dashboard. Currently features a complete UI layer with game selector, auth forms, and dashboard components, but lacks backend API routes and authentication integration.
+The central entry point for the Joolie Boolie. Provides game selection, authentication flows, and user dashboard. Currently features a complete UI layer with game selector, auth forms, and dashboard components, but lacks backend API routes and authentication integration.
 
 ## Features
 

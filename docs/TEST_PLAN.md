@@ -3,7 +3,7 @@
 **Document Version:** 1.0
 **Created:** 2026-01-22
 **Status:** Active
-**Scope:** Joolie Boolie Platform - Internal Beta Testing
+**Scope:** Joolie Boolie - Internal Beta Testing
 
 ---
 

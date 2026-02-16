@@ -24,7 +24,7 @@ describe('Footer', () => {
 
     it('renders copyright with current year', () => {
       render(<Footer />);
-      expect(screen.getByText(/2026 Joolie Boolie Platform/)).toBeInTheDocument();
+      expect(screen.getByText(/2026 Joolie Boolie/)).toBeInTheDocument();
     });
 
     it('renders the accessibility note', () => {

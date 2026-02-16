@@ -58,7 +58,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
           <Link
             href="/"
             className="flex items-center gap-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 rounded-lg p-2 -m-2"
-            aria-label="Joolie Boolie Platform - Home"
+            aria-label="Joolie Boolie - Home"
           >
             {/* Joolie Boolie Logo - Simple bird icon */}
             <div className="w-12 h-12 flex items-center justify-center bg-primary rounded-xl text-primary-foreground">

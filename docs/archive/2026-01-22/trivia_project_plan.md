@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Name:** Trivia
-**Part of:** Joolie Boolie Platform monorepo
+**Part of:** Joolie Boolie monorepo
 **Purpose:** Presenter-controlled trivia system for groups and communities
 **Access Model:** Free to play (no login required for MVP), optional accounts for future custom questions
 

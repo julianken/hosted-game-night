@@ -62,7 +62,7 @@ console.log(`  Hub: http://localhost:${portConfig.hubPort}`);
 export { portConfig };
 
 /**
- * Playwright configuration for Joolie Boolie Platform E2E tests.
+ * Playwright configuration for Joolie Boolie E2E tests.
  *
  * Configured with projects for:
  * - Bingo app (dynamic port, default 3000)

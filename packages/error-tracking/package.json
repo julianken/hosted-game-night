@@ -2,7 +2,7 @@
   "name": "@joolie-boolie/error-tracking",
   "version": "0.1.0",
   "private": true,
-  "description": "Error tracking abstraction for Joolie Boolie Platform with support for multiple backends",
+  "description": "Error tracking abstraction for Joolie Boolie with support for multiple backends",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

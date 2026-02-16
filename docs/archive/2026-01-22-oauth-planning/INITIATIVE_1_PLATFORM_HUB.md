@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Build Platform Hub as the central authentication, authorization, and administration system for Joolie Boolie Platform. Implements OAuth 2.1 authorization server, RBAC, multi-tenancy, and facility management tools.
+Build Platform Hub as the central authentication, authorization, and administration system for Joolie Boolie. Implements OAuth 2.1 authorization server, RBAC, multi-tenancy, and facility management tools.
 
 ## Scope
 

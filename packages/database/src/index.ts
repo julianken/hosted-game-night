@@ -1,7 +1,7 @@
 /**
  * @joolie-boolie/database
  *
- * Shared database utilities for the Joolie Boolie Platform.
+ * Shared database utilities for the Joolie Boolie.
  * Provides type-safe Supabase client wrappers, query helpers, and React hooks.
  */
 

@@ -7,7 +7,7 @@ describe('HomePage', () => {
     it('renders the main heading', () => {
       render(<HomePage />);
       expect(
-        screen.getByRole('heading', { name: 'Joolie Boolie Platform', level: 1 })
+        screen.getByRole('heading', { name: 'Joolie Boolie', level: 1 })
       ).toBeInTheDocument();
     });
 

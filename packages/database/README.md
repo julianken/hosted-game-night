@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (98% Complete)
 
-Comprehensive type-safe database utilities for the Joolie Boolie Platform. Provides Supabase client wrappers, CRUD helpers, React hooks, pagination, filtering, and table-specific utilities.
+Comprehensive type-safe database utilities for the Joolie Boolie. Provides Supabase client wrappers, CRUD helpers, React hooks, pagination, filtering, and table-specific utilities.
 
 ## Features
 

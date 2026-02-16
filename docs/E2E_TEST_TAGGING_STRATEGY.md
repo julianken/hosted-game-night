@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document defines the test tagging strategy for the Joolie Boolie Platform E2E test suite. Tags enable selective test execution for faster CI feedback loops.
+This document defines the test tagging strategy for the Joolie Boolie E2E test suite. Tags enable selective test execution for faster CI feedback loops.
 
 ## Tag Levels
 
@@ -108,7 +108,7 @@ test('has Play Now button that links to presenter view @high', ...)
 test('navigates to presenter view when Play Now is clicked @high', ...)
 test('displays feature cards @medium', ...)
 test('has accessible structure with proper headings @high', ...)
-test('footer mentions Joolie Boolie Platform @low', ...)
+test('footer mentions Joolie Boolie @low', ...)
 test('has accessible button sizes (min 44x44px) @high', ...)
 ```
 

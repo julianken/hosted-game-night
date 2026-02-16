@@ -2,7 +2,7 @@
  * Game Statistics Module
  *
  * Exports all types, calculator functions, and storage utilities
- * for tracking game statistics across the Joolie Boolie Platform.
+ * for tracking game statistics across the Joolie Boolie.
  */
 
 // Types

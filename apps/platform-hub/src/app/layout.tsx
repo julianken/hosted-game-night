@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Joolie Boolie Platform',
+  title: 'Joolie Boolie',
   description:
     'Fun, accessible games designed for groups and communities - Bingo, Trivia, and more',
   keywords: ['bingo', 'trivia', 'games', 'community', 'accessible', 'inclusive'],
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Joolie Boolie Platform',
+    title: 'Joolie Boolie',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    title: 'Joolie Boolie Platform',
+    title: 'Joolie Boolie',
     description: 'Fun, accessible games designed for groups and communities',
     type: 'website',
   },

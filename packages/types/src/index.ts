@@ -1,7 +1,7 @@
 /**
  * @joolie-boolie/types
  *
- * Shared TypeScript types for the Joolie Boolie Platform.
+ * Shared TypeScript types for the Joolie Boolie.
  *
  * This package provides common types used across the monorepo, including:
  * - Game types (GameStatus, GameType, GameSession)

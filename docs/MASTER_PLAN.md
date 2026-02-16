@@ -10,7 +10,7 @@
 
 ## EXECUTIVE SUMMARY
 
-The Joolie Boolie Platform is a unified gaming system for groups and communities, featuring Bingo and Trivia games with shared authentication, template management, and dual-screen presentation capabilities. Built as a Turborepo monorepo with 3 apps and 9 shared packages.
+The Joolie Boolie is a unified gaming system for groups and communities, featuring Bingo and Trivia games with shared authentication, template management, and dual-screen presentation capabilities. Built as a Turborepo monorepo with 3 apps and 9 shared packages.
 
 ### Current State
 

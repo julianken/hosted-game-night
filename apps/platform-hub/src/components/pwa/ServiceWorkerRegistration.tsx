@@ -12,7 +12,7 @@ function UpdatePrompt({ onUpdate, onDismiss }: UpdatePromptProps) {
     <div className="fixed bottom-4 right-4 bg-blue-700 text-white p-4 rounded-lg shadow-lg max-w-sm z-50">
       <p className="font-medium mb-2 text-lg">New version available</p>
       <p className="text-base text-blue-100 mb-3">
-        A new version of Joolie Boolie Platform is ready. Update now for the
+        A new version of Joolie Boolie is ready. Update now for the
         latest features.
       </p>
       <div className="flex gap-2">

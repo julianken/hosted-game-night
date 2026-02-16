@@ -1,7 +1,7 @@
 /**
  * Game Statistics Types
  *
- * Shared types for tracking game statistics across all games in the Joolie Boolie Platform.
+ * Shared types for tracking game statistics across all games in the Joolie Boolie.
  */
 
 // =============================================================================

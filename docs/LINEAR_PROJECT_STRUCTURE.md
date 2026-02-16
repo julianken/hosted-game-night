@@ -1,4 +1,4 @@
-# Linear Project Structure - Joolie Boolie Platform
+# Linear Project Structure - Joolie Boolie
 
 **Document Version:** 1.0
 **Created:** 2026-01-22

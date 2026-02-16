@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (95% Complete)
 
-Comprehensive Supabase authentication wrappers for the Joolie Boolie Platform. Provides React components, hooks, and utilities for implementing user authentication across all apps.
+Comprehensive Supabase authentication wrappers for the Joolie Boolie. Provides React components, hooks, and utilities for implementing user authentication across all apps.
 
 ## Features
 

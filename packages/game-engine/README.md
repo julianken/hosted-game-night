@@ -1,6 +1,6 @@
 # @joolie-boolie/game-engine
 
-Abstract game state machine for the Joolie Boolie Platform. Provides a generic foundation for game state management that individual games can extend.
+Abstract game state machine for the Joolie Boolie. Provides a generic foundation for game state management that individual games can extend.
 
 ## Installation
 

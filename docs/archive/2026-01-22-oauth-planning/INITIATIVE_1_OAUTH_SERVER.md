@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Transform Platform Hub into a centralized OAuth 2.1 authorization server that provides secure authentication and authorization for all Joolie Boolie Platform applications. This initiative establishes the foundation for a production-ready multi-tenant gaming platform with proper session management, security controls, and developer-friendly integration patterns.
+Transform Platform Hub into a centralized OAuth 2.1 authorization server that provides secure authentication and authorization for all Joolie Boolie applications. This initiative establishes the foundation for a production-ready multi-tenant gaming platform with proper session management, security controls, and developer-friendly integration patterns.
 
 ## Current Status
 
@@ -600,7 +600,7 @@ This initiative is complete when:
 
 ## Related Documents
 
-- [Master Plan: Joolie Boolie Platform](link-to-master-plan)
+- [Master Plan: Joolie Boolie](link-to-master-plan)
 - [AI Agent Guide: OAuth Development](link-to-agent-guide)
 - [LINEAR_PROJECTS_MANUAL_CREATION.md](../docs/LINEAR_PROJECTS_MANUAL_CREATION.md)
 - [Pull Request Template](../.github/PULL_REQUEST_TEMPLATE.md)

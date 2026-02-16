@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Last Updated:** January 21, 2026
-**Applies To:** All apps and packages in the Joolie Boolie Platform monorepo
+**Applies To:** All apps and packages in the Joolie Boolie monorepo
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### Purpose
 
-This document defines the standards for writing and maintaining README files across the Joolie Boolie Platform monorepo. Consistent documentation ensures that developers, contributors, and stakeholders can quickly understand each component's purpose, capabilities, and integration status.
+This document defines the standards for writing and maintaining README files across the Joolie Boolie monorepo. Consistent documentation ensures that developers, contributors, and stakeholders can quickly understand each component's purpose, capabilities, and integration status.
 
 ### Benefits of Consistent Documentation
 
@@ -354,7 +354,7 @@ How to install/use the package in the monorepo.
 ```markdown
 ## Installation
 
-This package is part of the Joolie Boolie Platform monorepo. Add it to your app's dependencies:
+This package is part of the Joolie Boolie monorepo. Add it to your app's dependencies:
 
 \`\`\`json
 {
@@ -622,7 +622,7 @@ useEffect(() => {
 
 ```markdown
 ✅ Correct:
-# Joolie Boolie Platform
+# Joolie Boolie
 ## Architecture overview
 ### Game engine pattern
 
@@ -1407,7 +1407,7 @@ Run these commands from repository root to find instances that need updating.
 ## Acknowledgments
 
 This standards document was created based on:
-- Analysis of existing Joolie Boolie Platform READMEs
+- Analysis of existing Joolie Boolie READMEs
 - Best practices from the monorepo community
 - Accessible design requirements
 - Feedback from AI assistant integration (Claude Code)

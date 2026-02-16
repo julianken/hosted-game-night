@@ -98,7 +98,7 @@ export default function HomePage() {
               id="hero-heading"
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 sm:mb-6"
             >
-              Joolie Boolie Platform
+              Joolie Boolie
             </h1>
 
             <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">

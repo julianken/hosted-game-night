@@ -1,5 +1,5 @@
 /**
- * User-related types shared across the Joolie Boolie Platform.
+ * User-related types shared across the Joolie Boolie.
  */
 
 import type { Timestamps } from './game';

@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (100% Complete)
 
-Dual-screen synchronization package for the Joolie Boolie Platform. Provides BroadcastChannel-based communication between presenter and audience windows.
+Dual-screen synchronization package for the Joolie Boolie. Provides BroadcastChannel-based communication between presenter and audience windows.
 
 ## Why Apps Have Their Own Implementations
 

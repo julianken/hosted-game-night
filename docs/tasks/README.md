@@ -1,6 +1,6 @@
 # Task Execution Plans
 
-This directory contains detailed execution plans for all tasks in the Joolie Boolie Platform project. Each plan follows the **Tactical Execution Framework** (see `../TACTICAL_EXECUTION_FRAMEWORK.md`) to ensure 9-10/10 tactical execution quality.
+This directory contains detailed execution plans for all tasks in the Joolie Boolie project. Each plan follows the **Tactical Execution Framework** (see `../TACTICAL_EXECUTION_FRAMEWORK.md`) to ensure 9-10/10 tactical execution quality.
 
 **Framework Principles:**
 - **No time estimates** - Focus on dependencies, complexity, and verification

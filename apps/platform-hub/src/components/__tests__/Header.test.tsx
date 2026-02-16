@@ -79,7 +79,7 @@ describe('Header', () => {
 
     it('renders the home link', () => {
       render(<Header />);
-      const homeLink = screen.getByLabelText('Joolie Boolie Platform - Home');
+      const homeLink = screen.getByLabelText('Joolie Boolie - Home');
       expect(homeLink).toBeInTheDocument();
       expect(homeLink).toHaveAttribute('href', '/');
     });
@@ -107,7 +107,7 @@ describe('Header', () => {
 
     it('home link has aria-label', () => {
       render(<Header />);
-      expect(screen.getByLabelText('Joolie Boolie Platform - Home')).toBeInTheDocument();
+      expect(screen.getByLabelText('Joolie Boolie - Home')).toBeInTheDocument();
     });
 
     it('logo SVG has aria-hidden', () => {

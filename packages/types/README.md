@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (100% Complete)
 
-Comprehensive type-safe TypeScript definitions for the Joolie Boolie Platform. Provides shared types for games, users, APIs, and dual-screen synchronization to ensure consistency across the monorepo and prevent type drift.
+Comprehensive type-safe TypeScript definitions for the Joolie Boolie. Provides shared types for games, users, APIs, and dual-screen synchronization to ensure consistency across the monorepo and prevent type drift.
 
 ## Features
 
@@ -181,7 +181,7 @@ Extended game status for trivia that includes additional states beyond the base 
 ```typescript
 type GameType = 'bingo' | 'trivia';
 ```
-Available game types in the Joolie Boolie Platform.
+Available game types in the Joolie Boolie.
 
 #### `GAME_TYPE_NAMES`
 ```typescript

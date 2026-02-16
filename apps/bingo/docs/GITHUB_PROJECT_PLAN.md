@@ -983,5 +983,5 @@ The implementation is complete when:
 
 ---
 
-*Project: Joolie Boolie Platform - Bingo*
+*Project: Joolie Boolie - Bingo*
 *Epic: Simplified Room Creation Flow*

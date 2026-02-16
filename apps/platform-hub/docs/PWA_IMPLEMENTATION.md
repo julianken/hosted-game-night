@@ -7,7 +7,7 @@ Platform Hub app now has full Progressive Web App support with native Turbopack 
 ## Components
 
 ### 1. PWA Manifest (`/public/manifest.json`)
-- **Name:** "Joolie Boolie Platform"
+- **Name:** "Joolie Boolie"
 - **Short name:** "Joolie Boolie"
 - **Theme color:** #1e40af (blue-700)
 - **Background color:** #0f172a (slate-900)

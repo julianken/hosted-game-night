@@ -1,4 +1,4 @@
-# Joolie Boolie Platform
+# Joolie Boolie
 
 A unified gaming platform for groups and communities, featuring Bingo, Trivia, and future games. Built as a Turborepo monorepo with shared packages.
 

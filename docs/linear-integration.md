@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how the Joolie Boolie Platform integrates with Linear for product management and issue tracking.
+This guide explains how the Joolie Boolie integrates with Linear for product management and issue tracking.
 
 ## Integration Methods
 
@@ -162,7 +162,7 @@ Workspace (organization-level)
 
 ## Monorepo Organization Strategy
 
-### Recommended Structure for Joolie Boolie Platform
+### Recommended Structure for Joolie Boolie
 
 Given our Turborepo monorepo with multiple apps (Bingo, Trivia, Platform Hub) and shared packages, here's the recommended Linear organization:
 
@@ -400,7 +400,7 @@ LINEAR_WEBHOOK_SECRET=your_webhook_secret
 
 ## Next Steps
 
-1. Create Linear workspace for Joolie Boolie Platform
+1. Create Linear workspace for Joolie Boolie
 2. Set up teams according to monorepo structure
 3. Configure label taxonomy
 4. Create initial projects for V1.0 work

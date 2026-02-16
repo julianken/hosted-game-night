@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (100% Complete)
 
-Accessible design tokens and CSS variables for the Joolie Boolie Platform. Provides a comprehensive design system with 10+ color themes, accessibility-focused font sizes (18px minimum), and WCAG-compliant touch targets (44px minimum).
+Accessible design tokens and CSS variables for the Joolie Boolie. Provides a comprehensive design system with 10+ color themes, accessibility-focused font sizes (18px minimum), and WCAG-compliant touch targets (44px minimum).
 
 ## Current Status
 

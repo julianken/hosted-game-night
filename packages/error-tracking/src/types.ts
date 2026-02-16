@@ -5,7 +5,7 @@
  */
 
 /**
- * Error categories for the Joolie Boolie Platform
+ * Error categories for the Joolie Boolie
  */
 export type ErrorCategory =
   | 'network' // Network/API errors

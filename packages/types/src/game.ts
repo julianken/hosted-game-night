@@ -1,5 +1,5 @@
 /**
- * Common game-related types shared across the Joolie Boolie Platform.
+ * Common game-related types shared across the Joolie Boolie.
  *
  * These types represent the core concepts that are common to all games
  * in the platform (bingo, trivia, etc.).
@@ -25,7 +25,7 @@ export type TriviaGameStatus = GameStatus | 'setup' | 'between_rounds';
 // =============================================================================
 
 /**
- * Available game types in the Joolie Boolie Platform.
+ * Available game types in the Joolie Boolie.
  */
 export type GameType = 'bingo' | 'trivia';
 

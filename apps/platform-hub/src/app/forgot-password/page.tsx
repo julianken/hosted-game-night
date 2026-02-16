@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { ForgotPasswordForm } from '@/components';
 
 export const metadata: Metadata = {
-  title: 'Reset Password - Joolie Boolie Platform',
-  description: 'Reset your Joolie Boolie Platform password to regain access to your account.',
+  title: 'Reset Password - Joolie Boolie',
+  description: 'Reset your Joolie Boolie password to regain access to your account.',
 };
 
 // Force dynamic rendering to avoid build-time Supabase initialization

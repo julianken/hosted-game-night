@@ -49,7 +49,7 @@
   - Write 1-2 sentences describing what this package does
   - Explain the problem it solves
   - Mention key capabilities or use cases
-  - Example: "Comprehensive type-safe database utilities for the Joolie Boolie Platform.
+  - Example: "Comprehensive type-safe database utilities for the Joolie Boolie.
     Provides Supabase client wrappers, CRUD helpers, React hooks, pagination, filtering,
     and table-specific utilities."
 -->

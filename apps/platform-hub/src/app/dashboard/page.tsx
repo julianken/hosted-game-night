@@ -198,7 +198,7 @@ function getGamesConfig(stats: ReturnType<typeof calculateGameStats>) {
 }
 
 export const metadata = {
-  title: 'Dashboard | Joolie Boolie Platform',
+  title: 'Dashboard | Joolie Boolie',
   description:
     'Your Joolie Boolie dashboard - quick access to games, recent sessions, and settings',
 };

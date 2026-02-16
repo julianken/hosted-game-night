@@ -1,6 +1,6 @@
-# Contributing to Joolie Boolie Platform
+# Contributing to Joolie Boolie
 
-Thank you for your interest in contributing to the Joolie Boolie Platform!
+Thank you for your interest in contributing to the Joolie Boolie!
 
 ## Development Setup
 

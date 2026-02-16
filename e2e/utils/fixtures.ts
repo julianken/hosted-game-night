@@ -2,7 +2,7 @@ import { test as base, Page, BrowserContext, expect } from '@playwright/test';
 import { waitForHydration, waitForSyncConnection } from './helpers';
 
 /**
- * Extended test fixtures for Joolie Boolie Platform.
+ * Extended test fixtures for Joolie Boolie.
  */
 
 export interface BingoTestFixtures {

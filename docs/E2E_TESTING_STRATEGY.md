@@ -1,4 +1,4 @@
-# Joolie Boolie Platform - E2E Testing Strategy
+# Joolie Boolie - E2E Testing Strategy
 
 **Document Version:** 1.0.0
 **Created:** January 23, 2026
@@ -10,7 +10,7 @@
 
 ### 1.1 Current State Assessment
 
-The Joolie Boolie Platform has **288 E2E test cases** across 13 spec files covering Bingo and Trivia applications. However, these tests are **currently DISABLED in CI** due to:
+The Joolie Boolie has **288 E2E test cases** across 13 spec files covering Bingo and Trivia applications. However, these tests are **currently DISABLED in CI** due to:
 
 - **Execution time:** 17+ minutes (target: <5 minutes)
 - **Reliability issues:** Tests not yet stable enough for CI enforcement

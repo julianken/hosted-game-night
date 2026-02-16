@@ -17,7 +17,7 @@ import { SyncRole } from './types';
 // =============================================================================
 
 /**
- * Supported game types in the Joolie Boolie Platform.
+ * Supported game types in the Joolie Boolie.
  */
 export type GameType = 'bingo' | 'trivia';
 

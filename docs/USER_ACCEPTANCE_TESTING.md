@@ -23,7 +23,7 @@
 
 ### 1.1 Purpose
 
-This document guides internal beta testers through User Acceptance Testing (UAT) of the Joolie Boolie Platform. Beta testing validates that the platform meets the needs of group and community activity coordinators for running Bingo and Trivia games.
+This document guides internal beta testers through User Acceptance Testing (UAT) of the Joolie Boolie. Beta testing validates that the platform meets the needs of group and community activity coordinators for running Bingo and Trivia games.
 
 ### 1.2 Scope
 
@@ -706,4 +706,4 @@ Only happens with "British Slang" voice pack.
 
 **Thank you for participating in beta testing!**
 
-Your feedback is crucial for making Joolie Boolie Platform ready for groups and communities.
+Your feedback is crucial for making Joolie Boolie ready for groups and communities.
