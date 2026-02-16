@@ -126,6 +126,27 @@ None - all core routes implemented.
 - [ ] Admin dashboard (RBAC tables exist, no UI)
 - [ ] Cross-game session history
 
+## Production URLs
+
+| Service | URL |
+|---------|-----|
+| Platform Hub | `https://beak-gaming.com` |
+| Bingo | `https://bingo.beak-gaming.com` |
+| Trivia | `https://trivia.beak-gaming.com` |
+| OAuth Consent Page | `https://beak-gaming.com/oauth/consent` |
+
+### `NEXT_PUBLIC_PLATFORM_HUB_URL` Environment Variable
+
+The `NEXT_PUBLIC_PLATFORM_HUB_URL` env var controls the base URL used for OAuth `consent_page_url` when registering OAuth clients. This ensures Supabase redirects users to the correct consent page during the OAuth flow.
+
+- **Production (Vercel):** Set to `https://beak-gaming.com`
+- **Local development / E2E:** Falls back to `http://localhost:3002` if not set
+
+Used by:
+- `scripts/setup-oauth-clients.ts` (root-level)
+- `apps/platform-hub/scripts/setup-oauth-clients.ts`
+- `apps/platform-hub/scripts/register-oauth-clients.ts`
+
 ## Email Troubleshooting
 
 If password reset emails are not being delivered:
