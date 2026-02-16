@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getApiUser } from '@beak-gaming/auth';
 
 const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
 const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
@@ -49,14 +50,22 @@ export type Template = BingoTemplate | TriviaTemplate;
  * - recent=true: Return only recent templates (3 most recent per game)
  * - limit=N: Maximum total templates to return (default: no limit)
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getApiUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const recent = searchParams.get('recent') === 'true';
     const limit = searchParams.get('limit')
       ? parseInt(searchParams.get('limit')!, 10)
       : null;
-
 
     // E2E mode: return mock templates instead of fetching from downstream APIs
     if (process.env.E2E_TESTING === 'true') {

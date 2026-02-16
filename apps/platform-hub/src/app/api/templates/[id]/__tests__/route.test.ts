@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { DELETE } from '../route';
+
+// Mock getApiUser
+vi.mock('@beak-gaming/auth', () => ({
+  getApiUser: vi.fn().mockResolvedValue({ id: 'user-1', email: 'test@example.com' }),
+}));
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -14,13 +20,30 @@ describe('DELETE /api/templates/[id]', () => {
     mockFetch.mockClear();
   });
 
+  it('should return 401 when not authenticated', async () => {
+    const { getApiUser } = await import('@beak-gaming/auth');
+    vi.mocked(getApiUser).mockResolvedValueOnce(null);
+
+    const request = new NextRequest(
+      'http://localhost:3002/api/templates/bingo-1?game=bingo'
+    );
+    const params = Promise.resolve({ id: 'bingo-1' });
+
+    const response = await DELETE(request, { params });
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data.error).toBe('Unauthorized');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it('should delete a bingo template', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true }),
     });
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/bingo-1?game=bingo'
     );
     const params = Promise.resolve({ id: 'bingo-1' });
@@ -44,7 +67,7 @@ describe('DELETE /api/templates/[id]', () => {
       json: async () => ({ success: true }),
     });
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/trivia-1?game=trivia'
     );
     const params = Promise.resolve({ id: 'trivia-1' });
@@ -63,7 +86,7 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('should return 400 if game parameter is missing', async () => {
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/template-1'
     );
     const params = Promise.resolve({ id: 'template-1' });
@@ -77,7 +100,7 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('should return 400 if game parameter is invalid', async () => {
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/template-1?game=invalid'
     );
     const params = Promise.resolve({ id: 'template-1' });
@@ -97,7 +120,7 @@ describe('DELETE /api/templates/[id]', () => {
       json: async () => ({ error: 'Template not found' }),
     });
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/nonexistent?game=bingo'
     );
     const params = Promise.resolve({ id: 'nonexistent' });
@@ -112,7 +135,7 @@ describe('DELETE /api/templates/[id]', () => {
   it('should handle network errors', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/template-1?game=bingo'
     );
     const params = Promise.resolve({ id: 'template-1' });
@@ -124,13 +147,13 @@ describe('DELETE /api/templates/[id]', () => {
     expect(data.error).toBe('Failed to delete template');
   });
 
-  it('should use correct port for bingo API', async () => {
+  it('should use correct URL for bingo API', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true }),
     });
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/bingo-1?game=bingo'
     );
     const params = Promise.resolve({ id: 'bingo-1' });
@@ -143,13 +166,13 @@ describe('DELETE /api/templates/[id]', () => {
     );
   });
 
-  it('should use correct port for trivia API', async () => {
+  it('should use correct URL for trivia API', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true }),
     });
 
-    const request = new Request(
+    const request = new NextRequest(
       'http://localhost:3002/api/templates/trivia-1?game=trivia'
     );
     const params = Promise.resolve({ id: 'trivia-1' });
