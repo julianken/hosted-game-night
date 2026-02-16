@@ -553,11 +553,11 @@ export default function PlayPage() {
               <div className="flex flex-wrap items-center gap-2 flex-1">
                 {roomCode && !isOfflineMode && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Room:</span>
+                    <span className="text-base text-muted-foreground">Room:</span>
                     <span className="font-mono font-semibold text-foreground">{roomCode}</span>
                     {currentPin && (
                       <>
-                        <span className="text-sm text-muted-foreground ml-2">PIN:</span>
+                        <span className="text-base text-muted-foreground ml-2">PIN:</span>
                         <span className="font-mono font-semibold text-foreground">{currentPin}</span>
                       </>
                     )}
@@ -565,7 +565,7 @@ export default function PlayPage() {
                 )}
                 {isOfflineMode && offlineSessionId && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Offline Session:</span>
+                    <span className="text-base text-muted-foreground">Offline Session:</span>
                     <span className="font-mono font-semibold text-foreground">{offlineSessionId}</span>
                   </div>
                 )}
@@ -634,7 +634,7 @@ export default function PlayPage() {
               <BallDisplay ball={game.currentBall} size="xl" />
               {game.previousBall && (
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="text-sm md:text-base">Previous:</span>
+                  <span className="text-base md:text-lg">Previous:</span>
                   <BallDisplay ball={game.previousBall} size="sm" />
                 </div>
               )}
@@ -724,7 +724,7 @@ export default function PlayPage() {
                 onChange={game.toggleAudio}
                 label="Audio Announcements"
               />
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Press M to toggle audio
               </p>
 
@@ -756,31 +756,31 @@ export default function PlayPage() {
               <ul className="space-y-2 text-base">
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Roll</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     Space
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Pause/Resume</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     P
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Undo</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     U
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Reset</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     R
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Mute/Unmute</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     M
                   </kbd>
                 </li>

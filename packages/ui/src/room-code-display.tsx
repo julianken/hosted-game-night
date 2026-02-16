@@ -207,7 +207,7 @@ export function RoomCodeDisplay({
       {/* Sync Status Indicator */}
       {showSyncStatus && (isSaving || lastSavedAt) && (
         <div
-          className="mt-4 text-sm text-gray-600 dark:text-gray-400"
+          className="mt-4 text-base text-gray-600 dark:text-gray-400"
           role="status"
           aria-live="polite"
           aria-atomic="true"

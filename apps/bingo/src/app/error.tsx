@@ -83,7 +83,7 @@ export default function Error({
 
         {/* Error ID for debugging */}
         {error.digest && (
-          <p className="mt-8 text-sm text-gray-400 font-mono">
+          <p className="mt-8 text-base text-gray-400 font-mono">
             Error ID: {error.digest}
           </p>
         )}

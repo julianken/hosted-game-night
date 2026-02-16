@@ -98,7 +98,7 @@ function CallbackHandler() {
           <>
             <h1 className="text-2xl font-bold text-red-600">Authentication Error</h1>
             <p className="text-muted-foreground">{error}</p>
-            <p className="text-sm text-muted-foreground">Redirecting to home page...</p>
+            <p className="text-base text-muted-foreground">Redirecting to home page...</p>
           </>
         ) : (
           <>

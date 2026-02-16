@@ -71,7 +71,7 @@ export function VoiceSelector({
               style={{ width: `${preloadProgress}%` }}
             />
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Loading voice pack... {preloadProgress}%
           </p>
         </div>

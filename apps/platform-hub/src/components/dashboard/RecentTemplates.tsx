@@ -168,7 +168,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                   </p>
                   <a
                     href={gameConfig.bingo.gameUrl}
-                    className="text-sm text-primary hover:underline"
+                    className="text-base text-primary hover:underline"
                   >
                     Create one in Bingo
                   </a>
@@ -203,7 +203,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                             {truncateName(template.name)}
                           </h4>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <p className="text-base text-muted-foreground mb-2">
                           {formatDate(template.updated_at)}
                         </p>
                         <a
@@ -211,7 +211,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                           className="
                             inline-flex items-center gap-1
                             min-h-[44px] px-3 py-2
-                            text-sm font-medium text-primary hover:text-primary/80
+                            text-base font-medium text-primary hover:text-primary/80
                             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:rounded
                             transition-colors duration-150
                           "
@@ -252,7 +252,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                   </p>
                   <a
                     href={gameConfig.trivia.gameUrl}
-                    className="text-sm text-primary hover:underline"
+                    className="text-base text-primary hover:underline"
                   >
                     Create one in Trivia
                   </a>
@@ -287,7 +287,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                             {truncateName(template.name)}
                           </h4>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <p className="text-base text-muted-foreground mb-2">
                           {formatDate(template.updated_at)}
                         </p>
                         <a
@@ -295,7 +295,7 @@ export const RecentTemplates = forwardRef<HTMLElement, RecentTemplatesProps>(
                           className="
                             inline-flex items-center gap-1
                             min-h-[44px] px-3 py-2
-                            text-sm font-medium text-primary hover:text-primary/80
+                            text-base font-medium text-primary hover:text-primary/80
                             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:rounded
                             transition-colors duration-150
                           "

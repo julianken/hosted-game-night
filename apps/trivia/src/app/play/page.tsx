@@ -588,7 +588,7 @@ export default function PlayPage() {
           {/* Display controls */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {/* Game status */}
-            <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusDisplay.className}`}>
+            <span className={`px-2 sm:px-3 py-1 rounded-full text-base font-medium ${statusDisplay.className}`}>
               {statusDisplay.text}
             </span>
 
@@ -601,7 +601,7 @@ export default function PlayPage() {
                 `}
                 title={isConnected ? 'Sync active' : 'Sync not active'}
               />
-              <span className="text-sm md:text-base text-muted-foreground hidden sm:block">
+              <span className="text-base text-muted-foreground hidden sm:block">
                 {isConnected ? 'Sync Active' : 'Sync Ready'}
               </span>
             </div>
@@ -686,11 +686,11 @@ export default function PlayPage() {
           <div className="mb-4 flex flex-wrap items-center gap-4">
             {roomCode && !isOfflineMode && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Room:</span>
+                <span className="text-base text-muted-foreground">Room:</span>
                 <span className="font-mono font-semibold text-foreground">{roomCode}</span>
                 {currentPin && (
                   <>
-                    <span className="text-sm text-muted-foreground ml-2">PIN:</span>
+                    <span className="text-base text-muted-foreground ml-2">PIN:</span>
                     <span className="font-mono font-semibold text-foreground">{currentPin}</span>
                   </>
                 )}
@@ -698,7 +698,7 @@ export default function PlayPage() {
             )}
             {isOfflineMode && offlineSessionId && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Offline Session:</span>
+                <span className="text-base text-muted-foreground">Offline Session:</span>
                 <span className="font-mono font-semibold text-foreground">{offlineSessionId}</span>
               </div>
             )}
@@ -751,7 +751,7 @@ export default function PlayPage() {
           <section className="sm:hidden">
             <div className="bg-background border border-border rounded-xl p-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
+                <span className="text-base font-medium text-muted-foreground">
                   Round {game.currentRound + 1}/{game.totalRounds}
                 </span>
                 <div className="flex items-center gap-2">
@@ -818,7 +818,7 @@ export default function PlayPage() {
                 <h2 className="text-xl font-semibold">Keyboard Shortcuts</h2>
                 <button
                   onClick={() => game.setShowHelp(true)}
-                  className="text-sm text-primary hover:text-primary/80 underline"
+                  className="text-base text-primary hover:text-primary/80 underline"
                 >
                   View all
                 </button>
@@ -827,35 +827,35 @@ export default function PlayPage() {
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Navigate questions</span>
                   <div className="flex gap-1">
-                    <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                    <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                       ↑
                     </kbd>
-                    <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                    <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                       ↓
                     </kbd>
                   </div>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Peek answer</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     Space
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Toggle display</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     D
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">Fullscreen</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     F
                   </kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-muted-foreground">All shortcuts</span>
-                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-sm">
+                  <kbd className="px-2 py-1 bg-muted/30 rounded font-mono text-base">
                     ?
                   </kbd>
                 </li>
@@ -977,7 +977,7 @@ export default function PlayPage() {
                   <h2 className="text-base md:text-lg font-semibold text-foreground">
                     Ready to Start?
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {game.teams.length === 0
                       ? 'Add at least one team to begin'
                       : `${game.teams.length} team${game.teams.length === 1 ? '' : 's'} ready`}
@@ -1029,7 +1029,7 @@ export default function PlayPage() {
                 <h2 className="text-base md:text-lg font-semibold text-foreground">
                   Last Question of Round {game.currentRound + 1}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   Complete the round when ready to show round summary
                 </p>
               </div>
@@ -1053,7 +1053,7 @@ export default function PlayPage() {
                 <h2 className="text-base md:text-lg font-semibold text-foreground">
                   Round {game.currentRound + 1} Complete
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   Review scores and proceed when ready
                 </p>
               </div>
@@ -1114,7 +1114,7 @@ export default function PlayPage() {
                   <h2 className="text-base md:text-lg font-semibold text-foreground">
                     {game.emergencyBlank ? 'Emergency Pause Active' : 'Game Paused'}
                   </h2>
-                  <p className="text-xs md:text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {game.emergencyBlank
                       ? 'Audience display is blanked. Press E to clear emergency.'
                       : 'Press P or click Resume to continue the game'}

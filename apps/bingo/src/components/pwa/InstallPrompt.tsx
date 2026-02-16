@@ -103,19 +103,19 @@ export function InstallPrompt() {
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">Install Beak Bingo</h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-base text-gray-600 mt-1">
             Add to your home screen for quick access and offline play.
           </p>
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleInstall}
-              className="min-h-[var(--size-touch)] px-4 py-3 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors"
+              className="min-h-[var(--size-touch)] px-4 py-3 bg-indigo-600 text-white text-base font-medium rounded hover:bg-indigo-700 transition-colors"
             >
               Install
             </button>
             <button
               onClick={handleDismiss}
-              className="min-h-[var(--size-touch)] px-4 py-3 text-gray-600 text-sm hover:text-gray-900 transition-colors"
+              className="min-h-[var(--size-touch)] px-4 py-3 text-gray-600 text-base hover:text-gray-900 transition-colors"
             >
               Not now
             </button>

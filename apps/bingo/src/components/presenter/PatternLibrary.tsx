@@ -424,11 +424,11 @@ export function PatternLibrary({
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg truncate">{pattern.name}</h3>
                     {pattern.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                      <p className="text-base text-muted-foreground line-clamp-2 mt-1">
                         {pattern.description}
                       </p>
                     )}
-                    <p className="text-xs text-muted mt-1">
+                    <p className="text-base text-muted mt-1">
                       {pattern.cells.length} cells
                     </p>
                   </div>
@@ -470,7 +470,7 @@ export function PatternLibrary({
 
       {/* Pattern count */}
       {patterns.length > 0 && (
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-base text-muted-foreground text-center">
           {patterns.length} custom pattern{patterns.length !== 1 ? 's' : ''}
         </p>
       )}

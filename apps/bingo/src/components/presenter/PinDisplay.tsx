@@ -61,7 +61,7 @@ export function PinDisplay({ pin, offlineSessionId, className = '' }: PinDisplay
         <div className="text-2xl font-mono font-bold text-muted-foreground" data-testid="offline-session-id">
           {offlineSessionId}
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-base text-muted-foreground mt-2">
           No network connection. PIN sharing unavailable.
         </p>
       </div>
@@ -120,7 +120,7 @@ export function PinDisplay({ pin, offlineSessionId, className = '' }: PinDisplay
           </div>
         )}
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Share this PIN with players to join your game
         </p>
       </div>

@@ -202,7 +202,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               >
                 Browse files
               </button>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-base text-muted-foreground mt-2">
                 Accepts .json files up to 5MB
               </p>
             </div>
@@ -233,7 +233,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
                 <textarea
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
-                  className="w-full min-h-[200px] p-3 font-mono text-sm bg-muted/30 border border-border rounded-lg resize-y"
+                  className="w-full min-h-[200px] p-3 font-mono text-base bg-muted/30 border border-border rounded-lg resize-y"
                   placeholder={`[
   {
     "question": "What is the capital of France?",
@@ -268,7 +268,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
             <div className="animate-spin text-2xl" aria-hidden="true">⏳</div>
-            <p className="text-sm text-muted-foreground">Processing...</p>
+            <p className="text-base text-muted-foreground">Processing...</p>
           </div>
         </div>
       )}
@@ -278,7 +278,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
             <div className="animate-spin text-2xl" aria-hidden="true">⏳</div>
-            <p className="text-sm text-muted-foreground">Saving question set...</p>
+            <p className="text-base text-muted-foreground">Saving question set...</p>
           </div>
         </div>
       )}
@@ -291,7 +291,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               <span className="text-xl" aria-hidden="true">⚠️</span>
               <div>
                 <p className="font-medium text-error">Error: Import Failed</p>
-                <p className="text-sm text-error mt-1">{error}</p>
+                <p className="text-base text-error mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -337,13 +337,13 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               </p>
               <div className="max-h-32 overflow-y-auto border border-error/20 rounded-lg" role="alert">
                 {result.errors.slice(0, 10).map((err, i) => (
-                  <div key={i} className="px-3 py-2 text-sm border-b border-error/10 last:border-0">
+                  <div key={i} className="px-3 py-2 text-base border-b border-error/10 last:border-0">
                     <span className="font-semibold text-error">Error:</span>
                     <span className="ml-1">Row {err.row + 1} ({err.field}): {err.message}</span>
                   </div>
                 ))}
                 {result.errors.length > 10 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.errors.length - 10} more errors
                   </div>
                 )}
@@ -359,13 +359,13 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
               </p>
               <div className="max-h-24 overflow-y-auto border border-warning/20 rounded-lg">
                 {result.warnings.slice(0, 5).map((warn, i) => (
-                  <div key={i} className="px-3 py-2 text-sm border-b border-warning/10 last:border-0">
+                  <div key={i} className="px-3 py-2 text-base border-b border-warning/10 last:border-0">
                     <span className="font-semibold text-warning">Warning:</span>
                     <span className="ml-1">Row {warn.row + 1}: {warn.message}</span>
                   </div>
                 ))}
                 {result.warnings.length > 5 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.warnings.length - 5} more warnings
                   </div>
                 )}
@@ -376,7 +376,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
           {/* Inline error from save attempt */}
           {error && (
             <div className="p-3 bg-error/10 border border-error/20 rounded-lg" role="alert">
-              <p className="text-sm text-error"><span className="font-semibold">Error:</span> {error}</p>
+              <p className="text-base text-error"><span className="font-semibold">Error:</span> {error}</p>
             </div>
           )}
 
@@ -419,19 +419,19 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
                 {result.questions.slice(0, 5).map((q, i) => (
                   <div
                     key={q.id}
-                    className="px-3 py-2 text-sm border-b border-border last:border-0 flex items-center gap-2"
+                    className="px-3 py-2 text-base border-b border-border last:border-0 flex items-center gap-2"
                   >
                     <span className="text-muted-foreground shrink-0">Q{i + 1}:</span>
                     <span className="truncate">{q.text}</span>
                     {q.category && (
-                      <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(q.category)}`}>
+                      <span className={`shrink-0 text-base px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(q.category)}`}>
                         {q.category.replace('_', ' ')}
                       </span>
                     )}
                   </div>
                 ))}
                 {result.questions.length > 5 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.questions.length - 5} more questions
                   </div>
                 )}

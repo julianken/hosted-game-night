@@ -239,7 +239,7 @@ export default function QuestionSetsPage() {
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     {qs.name}
                     {qs.is_default && (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      <span className="text-base font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                         (Default)
                       </span>
                     )}
@@ -249,14 +249,14 @@ export default function QuestionSetsPage() {
 
               {/* Description */}
               {qs.description && (
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                <p className="text-base text-muted-foreground mb-3 line-clamp-2">
                   {qs.description}
                 </p>
               )}
 
               {/* Question count */}
               <div className="flex flex-wrap gap-2 mb-3">
-                <span className="text-sm font-medium px-2 py-0.5 rounded-full bg-muted">
+                <span className="text-base font-medium px-2 py-0.5 rounded-full bg-muted">
                   {qs.questions.length} question{qs.questions.length !== 1 ? 's' : ''}
                 </span>
 
@@ -264,7 +264,7 @@ export default function QuestionSetsPage() {
                 {(categoryStatsMap.get(qs.id) ?? []).slice(0, 4).map((stat) => (
                   <span
                     key={stat.categoryId}
-                    className={`text-xs px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(stat.categoryId)}`}
+                    className={`text-base px-2 py-0.5 rounded-full border ${getCategoryBadgeClasses(stat.categoryId)}`}
                   >
                     {stat.categoryName} ({stat.questionCount})
                   </span>
@@ -272,7 +272,7 @@ export default function QuestionSetsPage() {
               </div>
 
               {/* Created date */}
-              <p className="text-xs text-muted-foreground mb-4">
+              <p className="text-base text-muted-foreground mb-4">
                 Created {formatDate(qs.created_at)}
               </p>
 
@@ -281,7 +281,7 @@ export default function QuestionSetsPage() {
                 <button
                   type="button"
                   onClick={() => handleEdit(qs.id)}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-base font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                   aria-label={`Edit ${qs.name}`}
                   title="Edit"
                 >
@@ -293,7 +293,7 @@ export default function QuestionSetsPage() {
                     setEditingId(qs.id);
                     setEditingName(qs.name);
                   }}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-base font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                   aria-label={`Rename ${qs.name}`}
                   title="Rename"
                 >
@@ -302,7 +302,7 @@ export default function QuestionSetsPage() {
                 <button
                   type="button"
                   onClick={() => handleExport(qs)}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-base font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                   aria-label={`Export ${qs.name}`}
                   title="Export as JSON"
                 >
@@ -311,7 +311,7 @@ export default function QuestionSetsPage() {
                 <button
                   type="button"
                   onClick={() => setDeletingId(qs.id)}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium rounded-lg bg-error/10 text-error hover:bg-error/20 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 text-base font-medium rounded-lg bg-error/10 text-error hover:bg-error/20 transition-colors"
                   aria-label={`Delete ${qs.name}`}
                   title="Delete"
                 >
@@ -322,21 +322,21 @@ export default function QuestionSetsPage() {
               {/* Delete confirmation */}
               {deletingId === qs.id && (
                 <div className="mt-3 p-3 border border-red-300 rounded-lg bg-red-50 dark:bg-red-950 dark:border-red-800">
-                  <p className="text-sm font-medium mb-2">
+                  <p className="text-base font-medium mb-2">
                     Are you sure? This cannot be undone.
                   </p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => handleDelete(qs.id)}
-                      className="min-h-[44px] px-4 py-2 text-sm font-medium rounded-lg bg-error text-white hover:bg-error/90 transition-colors"
+                      className="min-h-[44px] px-4 py-2 text-base font-medium rounded-lg bg-error text-white hover:bg-error/90 transition-colors"
                     >
                       Yes, Delete
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeletingId(null)}
-                      className="min-h-[44px] px-4 py-2 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                      className="min-h-[44px] px-4 py-2 text-base font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                     >
                       Cancel
                     </button>

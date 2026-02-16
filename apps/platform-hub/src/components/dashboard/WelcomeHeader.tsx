@@ -148,7 +148,7 @@ function QuickStat({ label, value, icon }: QuickStatProps) {
         {icon}
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-base text-muted-foreground">{label}</p>
         <p className="text-xl md:text-2xl font-bold text-foreground">{value}</p>
       </div>
     </div>

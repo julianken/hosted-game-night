@@ -129,7 +129,7 @@ export function TimerDisplay({
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-foreground">Timer</h3>
         <span
-          className={`text-sm font-medium ${isRunning ? 'text-green-600 dark:text-green-500' : 'text-muted-foreground'}`}
+          className={`text-base font-medium ${isRunning ? 'text-green-600 dark:text-green-500' : 'text-muted-foreground'}`}
           aria-live="polite"
         >
           {isRunning ? 'Running' : 'Stopped'}
@@ -215,7 +215,7 @@ export function TimerDisplay({
       )}
 
       {/* Duration info */}
-      <p className="text-sm text-muted-foreground text-center">
+      <p className="text-base text-muted-foreground text-center">
         Duration: {timerDuration}s
       </p>
     </div>

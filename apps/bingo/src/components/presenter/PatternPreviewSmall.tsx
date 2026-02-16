@@ -91,7 +91,7 @@ export function PatternPreviewSmall({
         )}
       </div>
       {showName && (
-        <span className="text-sm font-medium text-center text-muted-foreground truncate max-w-full">
+        <span className="text-base font-medium text-center text-muted-foreground truncate max-w-full">
           {pattern.name}
         </span>
       )}

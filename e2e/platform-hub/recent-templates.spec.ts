@@ -86,7 +86,7 @@ test.describe('Recent Templates Display (BEA-325)', () => {
 
       // Should have timestamp
       const timestamp = firstTemplate.locator(
-        'p.text-sm.text-muted-foreground'
+        'p.text-base.text-muted-foreground'
       );
       await expect(timestamp).toBeVisible();
       const timestampText = await timestamp.textContent();

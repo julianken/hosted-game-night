@@ -64,12 +64,12 @@ export function ScopesList({ scopes }: ScopesListProps) {
               <p className="text-base font-semibold text-foreground">
                 {scope.name}
                 {scope.required && (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  <span className="ml-2 text-base font-normal text-muted-foreground">
                     (Required)
                   </span>
                 )}
               </p>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-base text-muted-foreground mt-0.5">
                 {scope.description}
               </p>
             </div>

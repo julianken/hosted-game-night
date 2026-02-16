@@ -94,7 +94,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
 
             {/* Error ID */}
             {error.id && (
-              <p className="mt-8 text-sm text-gray-400 font-mono">
+              <p className="mt-8 text-base text-muted-foreground font-mono">
                 Error ID: {error.id}
               </p>
             )}

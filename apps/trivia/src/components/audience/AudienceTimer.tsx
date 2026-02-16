@@ -85,7 +85,7 @@ const sizeConfig = {
     svgSize: 160,
     strokeWidth: 10,
     timeText: 'text-4xl lg:text-5xl',
-    unitText: 'text-sm lg:text-base',
+    unitText: 'text-base',
     statusText: 'text-lg',
   },
   default: {

@@ -39,7 +39,7 @@ export function QuestionDisplay({
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           {roundProgress && (
-            <span className="text-sm font-medium text-muted-foreground/70">
+            <span className="text-base font-medium text-muted-foreground/70">
               {roundProgress}
             </span>
           )}
@@ -54,7 +54,7 @@ export function QuestionDisplay({
             aria-pressed={isOnDisplay}
             aria-label={isOnDisplay ? 'Hide question from audience display' : 'Show question on audience display'}
             className={`
-              flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium
+              flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-base font-medium
               transition-colors duration-200
               ${
                 isOnDisplay
@@ -85,7 +85,7 @@ export function QuestionDisplay({
             aria-pressed={peekAnswer}
             aria-label={peekAnswer ? 'Hide Peeked Answer' : 'Peek Answer'}
             className={`
-              flex items-center justify-center gap-2 w-24 min-h-[var(--size-touch)] px-3 rounded-lg text-sm font-medium
+              flex items-center justify-center gap-2 w-24 min-h-[var(--size-touch)] px-3 rounded-lg text-base font-medium
               transition-colors duration-200
               ${
                 peekAnswer

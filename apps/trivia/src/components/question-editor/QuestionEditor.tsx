@@ -290,7 +290,7 @@ export function QuestionEditor({
             {errors.question}
           </p>
         )}
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
           {question.question.length}/{VALIDATION.QUESTION_MAX_LENGTH} characters
         </p>
       </div>

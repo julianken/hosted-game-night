@@ -51,7 +51,7 @@ export function TeamManager({
       <div className="flex items-center justify-between">
         <h2 id="team-manager-heading" className="text-xl font-semibold">Teams</h2>
         {status === 'setup' && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-base text-muted-foreground">
             {teams.length}/{MAX_TEAMS}
           </span>
         )}
@@ -87,7 +87,7 @@ export function TeamManager({
                   <button
                     onClick={() => handleStartEdit(team)}
                     aria-label={`Rename team ${team.name}`}
-                    className="px-3 min-h-[var(--size-touch)] text-sm text-muted-foreground
+                    className="px-3 min-h-[var(--size-touch)] text-base text-muted-foreground
                       hover:text-foreground hover:bg-muted rounded-lg
                       transition-colors"
                     title="Rename team"
@@ -98,7 +98,7 @@ export function TeamManager({
                     <button
                       onClick={() => onRemoveTeam(team.id)}
                       aria-label={`Remove team ${team.name}`}
-                      className="px-3 min-h-[var(--size-touch)] text-sm text-error
+                      className="px-3 min-h-[var(--size-touch)] text-base text-error
                         hover:text-error hover:bg-error/10 rounded-lg
                         transition-colors"
                       title="Remove team"
@@ -112,7 +112,7 @@ export function TeamManager({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground text-center py-4">
+        <p className="text-base text-muted-foreground text-center py-4">
           No teams added yet
         </p>
       )}
@@ -139,7 +139,7 @@ export function TeamManager({
       )}
 
       {status === 'setup' && teams.length === 0 && (
-        <p className="text-sm text-warning text-center">
+        <p className="text-base text-warning text-center">
           Add at least one team to start the game
         </p>
       )}

@@ -79,13 +79,13 @@ export function TemplateCard({ template, onDelete }: TemplateCardProps) {
             {template.name}
           </h3>
           {template.is_default && (
-            <span className="inline-block mt-1 text-sm font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
+            <span className="inline-block mt-1 text-base font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
               ★ Default
             </span>
           )}
         </div>
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${gameBadgeColors}`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-base font-medium border ${gameBadgeColors}`}
         >
           {template.game === 'bingo' ? 'Bingo' : 'Trivia'}
         </span>
@@ -95,7 +95,7 @@ export function TemplateCard({ template, onDelete }: TemplateCardProps) {
       <p className="text-base text-gray-600 mb-4">{getGameStats(template)}</p>
 
       {/* Last Updated */}
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-base text-muted-foreground mb-6">
         Updated {formatRelativeTime(template.updated_at)}
       </p>
 

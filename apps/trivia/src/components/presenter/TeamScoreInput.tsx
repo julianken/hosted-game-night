@@ -58,7 +58,7 @@ export function TeamScoreInput({
     <div className="space-y-3" role="region" aria-label="Team score management">
       <div className="flex items-center justify-between">
         <h2 id="team-scores-heading" className="text-xl font-semibold">Team Scores</h2>
-        <span className="text-sm text-muted-foreground" aria-label={`Current round: ${currentRound + 1}`}>
+        <span className="text-base text-muted-foreground" aria-label={`Current round: ${currentRound + 1}`}>
           Round {currentRound + 1}
         </span>
       </div>
@@ -138,13 +138,13 @@ export function TeamScoreInput({
 
               {/* Per-round breakdown */}
               {team.roundScores && team.roundScores.length > 0 && (
-                <div className="flex items-center gap-2 text-sm pl-1">
+                <div className="flex items-center gap-2 text-base pl-1">
                   <span className="text-muted-foreground">Per round:</span>
                   {team.roundScores.map((roundScore, i) => (
                     <span
                       key={i}
                       className={`
-                        px-2 py-0.5 rounded text-xs font-medium
+                        px-2 py-0.5 rounded text-base font-medium
                         ${i === currentRound
                           ? 'bg-primary/20 text-primary'
                           : 'bg-muted/50 text-muted-foreground'

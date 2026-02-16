@@ -85,14 +85,14 @@ export function CategoryFilter({
     <div className={`space-y-3 ${className}`} role="region" aria-label="Filter questions by category">
       {/* Header with actions */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">
+        <h3 className="text-base font-medium text-muted-foreground">
           Filter by Category
         </h3>
         <div className="flex items-center gap-2">
           {hasSelection && (
             <button
               onClick={handleClearAll}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Clear all category filters"
             >
               Clear
@@ -101,7 +101,7 @@ export function CategoryFilter({
           {multiSelect && !hasSelection && (
             <button
               onClick={handleSelectAll}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Select all categories"
             >
               Select All
@@ -130,7 +130,7 @@ export function CategoryFilter({
               aria-label={`${category.name}${showCounts ? `, ${count} questions` : ''}${selected ? ', selected' : ''}`}
               className={`
                 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                text-sm font-medium border transition-all duration-200
+                text-base font-medium border transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                 disabled:opacity-40 disabled:cursor-not-allowed
                 ${
@@ -146,7 +146,7 @@ export function CategoryFilter({
               {showCounts && (
                 <span
                   className={`
-                    text-xs px-1.5 py-0.5 rounded-full
+                    text-base px-1.5 py-0.5 rounded-full
                     ${selected ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}
                   `}
                 >
@@ -160,7 +160,7 @@ export function CategoryFilter({
 
       {/* Summary */}
       {hasSelection && (
-        <p className="text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-base text-muted-foreground" aria-live="polite">
           Showing {selectedCategories.length === 1 ? '1 category' : `${selectedCategories.length} categories`}
         </p>
       )}
@@ -207,7 +207,7 @@ export function CategoryFilterCompact({
             aria-pressed={selected}
             aria-label={`${category.name}, ${count} questions${selected ? ', selected' : ''}`}
             className={`
-              px-2 py-0.5 rounded text-xs font-medium border transition-colors
+              px-2 py-0.5 rounded text-base font-medium border transition-colors
               ${
                 selected
                   ? getCategoryFilterActiveClasses(category.id)

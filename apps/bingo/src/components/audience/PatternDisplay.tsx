@@ -88,7 +88,7 @@ export function PatternDisplay({ pattern }: PatternDisplayProps) {
               >
                 {/* Free space indicator */}
                 {rowIndex === 2 && colIndex === 2 && (
-                  <span className="text-xs md:text-sm font-bold text-primary-foreground opacity-80">
+                  <span className="text-base md:text-lg font-bold text-primary-foreground opacity-80">
                     FREE
                   </span>
                 )}

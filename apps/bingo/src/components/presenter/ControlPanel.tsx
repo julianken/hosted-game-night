@@ -75,14 +75,14 @@ export function ControlPanel({
         {canPause && (
           <Button variant="secondary" size="md" onClick={onPause}>
             Pause
-            <span className="ml-1 text-sm opacity-75">[P]</span>
+            <span className="ml-1 text-base opacity-75">[P]</span>
           </Button>
         )}
 
         {canResume && (
           <Button variant="primary" size="md" onClick={onResume}>
             Resume
-            <span className="ml-1 text-sm opacity-75">[P]</span>
+            <span className="ml-1 text-base opacity-75">[P]</span>
           </Button>
         )}
 
@@ -93,12 +93,12 @@ export function ControlPanel({
           disabled={!canUndo || isProcessing}
         >
           Undo
-          <span className="ml-1 text-sm opacity-75">[U]</span>
+          <span className="ml-1 text-base opacity-75">[U]</span>
         </Button>
 
         <Button variant="danger" size="md" onClick={onReset}>
           Reset
-          <span className="ml-1 text-sm opacity-75">[R]</span>
+          <span className="ml-1 text-base opacity-75">[R]</span>
         </Button>
       </div>
 

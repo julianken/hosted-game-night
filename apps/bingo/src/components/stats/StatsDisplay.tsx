@@ -108,7 +108,7 @@ function StatCard({ title, value, description }: StatCardProps) {
         {title}
       </h3>
       <p className="text-4xl font-bold text-foreground mb-1">{value}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-base text-muted-foreground">{description}</p>
     </div>
   );
 }

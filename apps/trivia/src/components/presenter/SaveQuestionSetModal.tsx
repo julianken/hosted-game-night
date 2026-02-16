@@ -181,7 +181,7 @@ export function SaveQuestionSetModal({
                 <span className="font-medium">Categories:</span>
                 <ul className="ml-4 mt-1 space-y-0.5">
                   {categoryBreakdown.map(([category, count]) => (
-                    <li key={category} className="text-sm text-muted-foreground">
+                    <li key={category} className="text-base text-muted-foreground">
                       {category.replace(/_/g, ' ')} ({count})
                     </li>
                   ))}

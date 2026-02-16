@@ -113,7 +113,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
         </svg>
         Share
         {counts.total > 1 && (
-          <span className="ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-success/20 text-success">
+          <span className="ml-1 px-1.5 py-0.5 text-base font-medium rounded-full bg-success/20 text-success">
             {counts.total}
           </span>
         )}
@@ -135,14 +135,14 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 isConnected ? 'bg-success' : 'bg-muted'
               }`}
             />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-base text-muted-foreground">
               {isConnected ? 'Sync active' : 'Sync ready'}
             </span>
           </div>
 
           {/* Audience link */}
           <div className="space-y-2 mb-4">
-            <label className="text-sm font-medium text-muted-foreground">
+            <label className="text-base font-medium text-muted-foreground">
               Audience Display Link
             </label>
             <div className="flex gap-2">
@@ -150,7 +150,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 type="text"
                 value={shareLink}
                 readOnly
-                className="flex-1 px-3 py-2 text-sm rounded-lg bg-muted/20 border border-border
+                className="flex-1 px-3 py-2 text-base rounded-lg bg-muted/20 border border-border
                   focus:outline-none focus:ring-2 focus:ring-primary/50"
                 onClick={(e) => e.currentTarget.select()}
               />
@@ -163,14 +163,14 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 {copied ? 'Copied!' : 'Copy'}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Share this link to open the audience display on another device
             </p>
           </div>
 
           {/* Presenter link (co-host) */}
           <div className="space-y-2 mb-4">
-            <label className="text-sm font-medium text-muted-foreground">
+            <label className="text-base font-medium text-muted-foreground">
               Co-Host Link
             </label>
             <div className="flex gap-2">
@@ -178,7 +178,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 type="text"
                 value={presenterLink}
                 readOnly
-                className="flex-1 px-3 py-2 text-sm rounded-lg bg-muted/20 border border-border
+                className="flex-1 px-3 py-2 text-base rounded-lg bg-muted/20 border border-border
                   focus:outline-none focus:ring-2 focus:ring-primary/50"
                 onClick={(e) => e.currentTarget.select()}
               />
@@ -191,15 +191,15 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 Copy
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Share this link with a co-host (same controls)
             </p>
           </div>
 
           {/* Participants */}
           <div className="border-t border-border pt-4">
-            <h4 className="text-sm font-medium mb-2">Connected Participants</h4>
-            <div className="flex gap-4 text-sm">
+            <h4 className="text-base font-medium mb-2">Connected Participants</h4>
+            <div className="flex gap-4 text-base">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary" />
                 <span className="text-muted-foreground">
@@ -218,7 +218,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
                 {sessionState.participants.map((participant) => (
                   <div
                     key={participant.id}
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                    className="flex items-center gap-2 text-base text-muted-foreground"
                   >
                     <span
                       className={`w-2 h-2 rounded-full ${
@@ -238,7 +238,7 @@ export function ShareSession({ sessionId, isConnected }: ShareSessionProps) {
 
           {/* Note about current implementation */}
           <div className="mt-4 p-2 rounded-lg bg-warning/10 border border-warning/30">
-            <p className="text-xs text-warning">
+            <p className="text-base text-warning">
               Note: Session sharing currently works for same-device windows only.
               Cross-device sync coming soon!
             </p>

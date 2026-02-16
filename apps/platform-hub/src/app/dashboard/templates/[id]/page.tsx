@@ -157,11 +157,11 @@ function TriviaTemplateDetails({ template }: { template: Template }) {
                 key={index}
                 className="p-4 bg-gray-50 rounded-lg border border-gray-200"
               >
-                <p className="text-sm font-medium text-gray-500 mb-1">
+                <p className="text-base font-medium text-muted-foreground mb-1">
                   Question {index + 1}
                 </p>
                 <p className="text-base text-gray-900 mb-2">{q.question}</p>
-                <p className="text-sm text-gray-700">
+                <p className="text-base text-gray-700">
                   <span className="font-medium">Answer:</span> {q.answer}
                 </p>
               </div>
@@ -249,7 +249,7 @@ export default async function TemplateDetailPage({
         </div>
 
         {/* Metadata */}
-        <div className="flex gap-6 text-sm text-gray-600">
+        <div className="flex gap-6 text-base text-muted-foreground">
           <div>
             <span className="font-medium">Created:</span>{' '}
             {formatRelativeTime(template.created_at)}

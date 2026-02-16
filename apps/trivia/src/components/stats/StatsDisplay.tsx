@@ -75,7 +75,7 @@ export function StatsDisplay() {
                 className="inline-flex items-center px-3 py-1.5 bg-secondary/20 border border-secondary/30 rounded-full text-base capitalize"
               >
                 {category.category}
-                <span className="ml-1.5 text-sm text-muted-foreground">
+                <span className="ml-1.5 text-base text-muted-foreground">
                   ({category.questionsAnswered} Q)
                 </span>
               </span>
@@ -99,11 +99,11 @@ interface StatCardProps {
 function StatCard({ title, value, description }: StatCardProps) {
   return (
     <div className="bg-muted/10 rounded-xl p-4 border border-border text-center">
-      <h3 className="text-sm font-medium text-muted-foreground mb-1">
+      <h3 className="text-base font-medium text-muted-foreground mb-1">
         {title}
       </h3>
       <p className="text-2xl md:text-3xl font-bold text-foreground">{value}</p>
-      <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      <p className="text-base text-muted-foreground mt-1">{description}</p>
     </div>
   );
 }

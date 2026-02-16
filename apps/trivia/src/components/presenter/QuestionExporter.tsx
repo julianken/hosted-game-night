@@ -50,7 +50,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
     return (
       <div className="space-y-3">
         <h3 className="text-lg font-semibold">Export Questions</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           No questions to export.
         </p>
       </div>
@@ -63,8 +63,8 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
 
       {/* Statistics */}
       <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-        <p className="font-medium text-sm">Current Questions</p>
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <p className="font-medium text-base">Current Questions</p>
+        <div className="grid grid-cols-2 gap-2 text-base">
           <div>
             <span className="text-muted-foreground">Total:</span>
             <span className="ml-2 font-medium">{stats.totalQuestions}</span>
@@ -77,12 +77,12 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
 
         {/* By category */}
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">By Category:</p>
+          <p className="text-base text-muted-foreground">By Category:</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(stats.byCategory).map(([category, count]) => (
               <span
                 key={category}
-                className="px-2 py-0.5 bg-background rounded text-xs"
+                className="px-2 py-0.5 bg-background rounded text-base"
               >
                 {category}: {count}
               </span>
@@ -92,12 +92,12 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
 
         {/* By type */}
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">By Type:</p>
+          <p className="text-base text-muted-foreground">By Type:</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(stats.byType).map(([type, count]) => (
               <span
                 key={type}
-                className="px-2 py-0.5 bg-background rounded text-xs"
+                className="px-2 py-0.5 bg-background rounded text-base"
               >
                 {type.replace('_', ' ')}: {count}
               </span>
@@ -108,12 +108,12 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
 
       {/* Format selection */}
       <div className="space-y-2">
-        <p className="text-sm font-medium">Export Format</p>
+        <p className="text-base font-medium">Export Format</p>
         <div className="flex gap-2">
           <button
             onClick={() => setFormat('json')}
             className={`
-              flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              flex-1 px-3 py-2 rounded-lg text-base font-medium transition-colors
               ${format === 'json'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80'
@@ -126,7 +126,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
           <button
             onClick={() => setFormat('csv')}
             className={`
-              flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              flex-1 px-3 py-2 rounded-lg text-base font-medium transition-colors
               ${format === 'csv'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80'
@@ -141,7 +141,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
 
       {/* Options */}
       <div className="space-y-3">
-        <p className="text-sm font-medium">Options</p>
+        <p className="text-base font-medium">Options</p>
 
         <label className="flex items-center gap-3 cursor-pointer">
           <input
@@ -151,7 +151,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             className="w-5 h-5 rounded border-border text-primary
               focus:ring-2 focus:ring-primary focus:ring-offset-2"
           />
-          <span className="text-sm">Include question IDs</span>
+          <span className="text-base">Include question IDs</span>
         </label>
 
         <label className="flex items-center gap-3 cursor-pointer">
@@ -162,7 +162,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
             className="w-5 h-5 rounded border-border text-primary
               focus:ring-2 focus:ring-primary focus:ring-offset-2"
           />
-          <span className="text-sm">Include explanations</span>
+          <span className="text-base">Include explanations</span>
         </label>
       </div>
 
@@ -189,7 +189,7 @@ export function QuestionExporter({ questions }: QuestionExporterProps) {
       </button>
 
       {/* Format help */}
-      <div className="text-xs text-muted-foreground space-y-1">
+      <div className="text-base text-muted-foreground space-y-1">
         <p>
           <strong>JSON:</strong> Full data export, best for backups and re-importing
         </p>

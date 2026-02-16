@@ -525,7 +525,7 @@ function CategorySection({
           disabled={disabled}
           className={`
             min-h-[44px] min-w-[44px] px-3
-            text-sm font-medium rounded-lg
+            text-base font-medium rounded-lg
             text-destructive hover:bg-destructive/10
             focus:outline-none focus:ring-4 focus:ring-destructive/50
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -606,7 +606,7 @@ function QuestionForm({ question, questionIndex, onUpdate, onRemove, disabled }:
           disabled={disabled}
           className={`
             min-h-[44px] min-w-[44px] px-3
-            text-sm text-destructive hover:bg-destructive/10
+            text-base text-destructive hover:bg-destructive/10
             rounded-lg
             focus:outline-none focus:ring-4 focus:ring-destructive/50
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -619,7 +619,7 @@ function QuestionForm({ question, questionIndex, onUpdate, onRemove, disabled }:
 
       {/* Question Text */}
       <div className="flex flex-col gap-2">
-        <label htmlFor={`${questionId}-text`} className="text-sm font-medium">
+        <label htmlFor={`${questionId}-text`} className="text-base font-medium">
           Question Text
         </label>
         <input
@@ -642,7 +642,7 @@ function QuestionForm({ question, questionIndex, onUpdate, onRemove, disabled }:
 
       {/* Options */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Options</label>
+        <label className="text-base font-medium">Options</label>
         {question.options.map((option, optIdx) => (
           <div key={optIdx} className="flex items-center gap-2">
             <input

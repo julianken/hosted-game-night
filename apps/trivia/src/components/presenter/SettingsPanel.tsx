@@ -155,7 +155,7 @@ export function SettingsPanel({
             label="Text-to-Speech"
             disabled={isDisabled}
           />
-          <p className="text-sm text-muted-foreground -mt-4">
+          <p className="text-base text-muted-foreground -mt-4">
             Reads questions aloud when displayed
           </p>
         </div>
@@ -194,7 +194,7 @@ export function SettingsPanel({
             >
               <div className="flex items-center justify-between">
                 <span className="text-base font-medium">Saved Teams</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-base text-muted-foreground">
                   {lastTeamSetup.count} team{lastTeamSetup.count !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -204,13 +204,13 @@ export function SettingsPanel({
                 {lastTeamSetup.names.slice(0, 5).map((name, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 text-sm bg-background border border-border rounded-lg"
+                    className="px-2 py-1 text-base bg-background border border-border rounded-lg"
                   >
                     {name}
                   </span>
                 ))}
                 {lastTeamSetup.names.length > 5 && (
-                  <span className="px-2 py-1 text-sm text-muted-foreground">
+                  <span className="px-2 py-1 text-base text-muted-foreground">
                     +{lastTeamSetup.names.length - 5} more
                   </span>
                 )}
@@ -231,7 +231,7 @@ export function SettingsPanel({
 
           {/* No saved teams message */}
           {(!lastTeamSetup || lastTeamSetup.count === 0) && status === 'setup' && (
-            <p className="text-sm text-muted-foreground text-center py-2">
+            <p className="text-base text-muted-foreground text-center py-2">
               No saved team setup available
             </p>
           )}
@@ -240,7 +240,7 @@ export function SettingsPanel({
 
       {/* Disabled state message */}
       {isDisabled && (
-        <p className="text-sm text-warning text-center py-2">
+        <p className="text-base text-warning text-center py-2">
           Settings can only be changed during game setup
         </p>
       )}

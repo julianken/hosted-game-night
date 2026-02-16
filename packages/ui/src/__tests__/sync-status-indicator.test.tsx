@@ -288,10 +288,10 @@ describe('SyncStatusIndicator', () => {
   });
 
   describe('visual design', () => {
-    it('should be small and unobtrusive (text-sm)', () => {
+    it('should use accessible font size (text-base)', () => {
       const { container } = render(<SyncStatusIndicator status="saved" />);
       const statusElement = container.querySelector('[role="status"]');
-      expect(statusElement?.className).toContain('text-sm');
+      expect(statusElement?.className).toContain('text-base');
     });
 
     it('should have appropriate padding', () => {

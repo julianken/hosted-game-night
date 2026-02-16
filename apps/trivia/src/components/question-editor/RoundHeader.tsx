@@ -82,7 +82,7 @@ export function RoundHeader({
           </span>
           <span className="text-lg">Round {roundNumber}</span>
           <span
-            className="inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-full bg-primary/10 text-primary text-sm font-semibold"
+            className="inline-flex items-center justify-center min-w-[32px] h-8 px-2 rounded-full bg-primary/10 text-primary text-base font-semibold"
             aria-label={`${questionCount} questions`}
           >
             {questionCount}
@@ -94,7 +94,7 @@ export function RoundHeader({
           disabled={disabled || !canRemove}
           className={`
             min-h-[44px] min-w-[44px] px-3
-            text-sm font-medium rounded-lg
+            text-base font-medium rounded-lg
             text-destructive hover:bg-destructive/10
             focus:outline-none focus:ring-4 focus:ring-destructive/50
             disabled:opacity-50 disabled:cursor-not-allowed

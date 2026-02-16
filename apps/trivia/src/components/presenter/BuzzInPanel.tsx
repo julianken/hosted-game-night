@@ -103,7 +103,7 @@ export function BuzzInPanel({
         {isActive && firstBuzzTeam && (
           <span className="flex items-center justify-center gap-2">
             <span className="text-2xl font-bold">{firstBuzzTeam.name}</span>
-            <span className="text-sm opacity-75">buzzed first!</span>
+            <span className="text-base opacity-75">buzzed first!</span>
           </span>
         )}
       </div>
@@ -115,11 +115,11 @@ export function BuzzInPanel({
           role="alert"
           aria-live="assertive"
         >
-          <div className="text-sm text-muted-foreground mb-1">First to buzz</div>
+          <div className="text-base text-muted-foreground mb-1">First to buzz</div>
           <div className="text-3xl font-bold text-primary">
             {firstBuzzTeam.name}
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
+          <div className="text-base text-muted-foreground mt-1">
             Key: {getKeyForTeam(getTeamIndex(firstBuzzTeam.id))}
           </div>
         </div>
@@ -128,7 +128,7 @@ export function BuzzInPanel({
       {/* Buzz order list */}
       {buzzOrder.length > 1 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">
+          <h4 className="text-base font-medium text-muted-foreground">
             Buzz Order
           </h4>
           <ul className="space-y-1" role="list" aria-label="Teams that buzzed">
@@ -143,7 +143,7 @@ export function BuzzInPanel({
                 <span className="flex items-center gap-2">
                   <span
                     className={`
-                      w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+                      w-6 h-6 rounded-full flex items-center justify-center text-base font-bold
                       ${
                         index === 0
                           ? 'bg-primary text-primary-foreground'
@@ -158,7 +158,7 @@ export function BuzzInPanel({
                   </span>
                 </span>
                 {index > 0 && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-base text-muted-foreground">
                     +{entry.delta}ms
                   </span>
                 )}
@@ -171,7 +171,7 @@ export function BuzzInPanel({
       {/* Team key assignments */}
       {isActive && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">
+          <h4 className="text-base font-medium text-muted-foreground">
             Team Keys
           </h4>
           <div className="grid grid-cols-2 gap-2" role="list" aria-label="Team keyboard assignments">
@@ -185,7 +185,7 @@ export function BuzzInPanel({
                   key={team.id}
                   role="listitem"
                   className={`
-                    flex items-center gap-2 p-2 rounded text-sm
+                    flex items-center gap-2 p-2 rounded text-base
                     ${
                       isFirst
                         ? 'bg-primary/20 border border-primary'
@@ -197,7 +197,7 @@ export function BuzzInPanel({
                 >
                   <kbd
                     className={`
-                      px-2 py-1 rounded font-mono text-xs
+                      px-2 py-1 rounded font-mono text-base
                       ${
                         isFirst
                           ? 'bg-primary text-primary-foreground'
@@ -238,7 +238,7 @@ export function BuzzInPanel({
       )}
 
       {/* Help text */}
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="text-base text-muted-foreground text-center">
         Press number keys 1-9 (or 0 for team 10) to buzz in
       </p>
     </div>

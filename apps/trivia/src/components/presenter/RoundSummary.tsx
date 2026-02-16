@@ -36,7 +36,7 @@ export function RoundSummary({
             {isLastRound ? 'Final Results' : `Round ${roundNumber} Complete`}
           </h2>
           {!isLastRound && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               {totalRounds - roundNumber} round{totalRounds - roundNumber !== 1 ? 's' : ''} remaining
             </p>
           )}
@@ -44,7 +44,7 @@ export function RoundSummary({
         {/* Round Winner Badge */}
         {roundWinners.length > 0 && (
           <div className="text-right" role="status" aria-live="polite">
-            <span className="text-xs text-muted-foreground uppercase tracking-wide">
+            <span className="text-base text-muted-foreground uppercase tracking-wide">
               {isLastRound ? 'Winner' : 'Round Winner'}
             </span>
             <div className="text-lg font-bold text-success" aria-label={`${isLastRound ? 'Winner' : 'Round winner'}: ${roundWinners.map(t => t.name).join(', ')}`}>
@@ -62,7 +62,7 @@ export function RoundSummary({
             role="listitem"
             aria-label={`${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : index === 2 ? 'rd' : 'th'} place: ${team.name} with ${team.score} points`}
             className={`
-              flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm
+              flex items-center gap-2 px-3 py-1.5 rounded-lg text-base
               ${index === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-muted/50'}
             `}
           >
@@ -72,7 +72,7 @@ export function RoundSummary({
           </div>
         ))}
         {teamsSortedByScore.length > 5 && (
-          <span className="text-sm text-muted-foreground self-center" aria-label={`And ${teamsSortedByScore.length - 5} more teams`}>
+          <span className="text-base text-muted-foreground self-center" aria-label={`And ${teamsSortedByScore.length - 5} more teams`}>
             +{teamsSortedByScore.length - 5} more
           </span>
         )}
@@ -83,7 +83,7 @@ export function RoundSummary({
         <button
           onClick={onClose}
           aria-label={isLastRound ? 'View questions' : 'Return to game'}
-          className="px-4 py-2 rounded-lg text-sm font-medium
+          className="px-4 py-2 rounded-lg text-base font-medium
             bg-muted text-foreground hover:bg-muted/80
             transition-colors duration-200"
         >
@@ -92,7 +92,7 @@ export function RoundSummary({
         <button
           onClick={onNextRound}
           aria-label={isLastRound ? 'End game and show final results' : `Start round ${roundNumber + 1}`}
-          className="px-4 py-2 rounded-lg text-sm font-semibold
+          className="px-4 py-2 rounded-lg text-base font-semibold
             bg-success hover:bg-success/90 text-white
             transition-colors duration-200"
         >

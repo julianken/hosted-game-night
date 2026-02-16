@@ -200,7 +200,7 @@ export function ConsentScreen({
           </div>
 
           {/* Keyboard shortcuts help */}
-          <p className="text-sm text-center text-muted-foreground pt-4">
+          <p className="text-base text-center text-muted-foreground pt-4">
             Keyboard shortcuts: <kbd className="px-2 py-1 bg-muted rounded">Enter</kbd> to allow,{' '}
             <kbd className="px-2 py-1 bg-muted rounded">Esc</kbd> to deny
           </p>

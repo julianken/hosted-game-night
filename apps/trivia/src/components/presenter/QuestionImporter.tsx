@@ -108,7 +108,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
     return (
       <div className="space-y-3">
         <h3 className="text-lg font-semibold">Import Questions</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Question import is only available during game setup.
         </p>
       </div>
@@ -145,10 +145,10 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               <p className="text-base font-medium">
                 {isDragging ? 'Drop file here' : 'Drag and drop a file here'}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 or click to browse
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-base text-muted-foreground mt-2">
                 Supports JSON and CSV formats
               </p>
             </div>
@@ -170,7 +170,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
             <div className="animate-spin text-2xl">⏳</div>
-            <p className="text-sm text-muted-foreground">Processing file...</p>
+            <p className="text-base text-muted-foreground">Processing file...</p>
           </div>
         </div>
       )}
@@ -183,7 +183,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               <span className="text-error text-xl">⚠️</span>
               <div>
                 <p className="font-medium text-error">Import Failed</p>
-                <p className="text-sm text-error mt-1">{error}</p>
+                <p className="text-base text-error mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -203,7 +203,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Summary */}
           <div className="p-4 bg-muted/50 rounded-lg space-y-2">
             <p className="font-medium">Import Summary</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-2 gap-2 text-base">
               <div>
                 <span className="text-muted-foreground">Total parsed:</span>
                 <span className="ml-2 font-medium">{result.totalParsed}</span>
@@ -224,19 +224,19 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Validation errors */}
           {result.errors.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-error">
+              <p className="text-base font-medium text-error">
                 Validation Errors ({result.errors.length})
               </p>
               <div className="max-h-32 overflow-y-auto border border-error/20 rounded-lg">
                 {result.errors.slice(0, 10).map((err, i) => (
-                  <div key={i} className="px-3 py-2 text-xs border-b border-error/10 last:border-0">
+                  <div key={i} className="px-3 py-2 text-base border-b border-error/10 last:border-0">
                     <span className="text-error">Row {err.row + 1}:</span>
                     <span className="ml-1 text-muted-foreground">{err.field}</span>
                     <span className="ml-1">{err.message}</span>
                   </div>
                 ))}
                 {result.errors.length > 10 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.errors.length - 10} more errors
                   </div>
                 )}
@@ -247,18 +247,18 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Warnings */}
           {result.warnings.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-warning">
+              <p className="text-base font-medium text-warning">
                 Warnings ({result.warnings.length})
               </p>
               <div className="max-h-24 overflow-y-auto border border-warning/20 rounded-lg">
                 {result.warnings.slice(0, 5).map((warn, i) => (
-                  <div key={i} className="px-3 py-2 text-xs border-b border-warning/10 last:border-0">
+                  <div key={i} className="px-3 py-2 text-base border-b border-warning/10 last:border-0">
                     <span className="text-warning">Row {warn.row + 1}:</span>
                     <span className="ml-1">{warn.message}</span>
                   </div>
                 ))}
                 {result.warnings.length > 5 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.warnings.length - 5} more warnings
                   </div>
                 )}
@@ -269,19 +269,19 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
           {/* Question preview */}
           {result.questions.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium">Question Preview</p>
+              <p className="text-base font-medium">Question Preview</p>
               <div className="max-h-40 overflow-y-auto border border-border rounded-lg">
                 {result.questions.slice(0, 5).map((q, i) => (
                   <div
                     key={q.id}
-                    className="px-3 py-2 text-sm border-b border-border last:border-0"
+                    className="px-3 py-2 text-base border-b border-border last:border-0"
                   >
                     <span className="text-muted-foreground">Q{i + 1}:</span>
                     <span className="ml-2 truncate">{q.text}</span>
                   </div>
                 ))}
                 {result.questions.length > 5 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                  <div className="px-3 py-2 text-base text-muted-foreground">
                     ...and {result.questions.length - 5} more questions
                   </div>
                 )}
@@ -291,12 +291,12 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
 
           {/* Import mode selection */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Import Mode</p>
+            <p className="text-base font-medium">Import Mode</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setImportMode('replace')}
                 className={`
-                  flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  flex-1 px-3 py-2 rounded-lg text-base font-medium transition-colors
                   ${importMode === 'replace'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80'
@@ -308,7 +308,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
               <button
                 onClick={() => setImportMode('append')}
                 className={`
-                  flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  flex-1 px-3 py-2 rounded-lg text-base font-medium transition-colors
                   ${importMode === 'append'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80'

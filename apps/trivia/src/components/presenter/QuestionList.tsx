@@ -36,7 +36,7 @@ export function QuestionList({
     <div className="space-y-3" role="region" aria-label="Question navigation">
       <div className="flex items-center justify-between">
         <h2 id="questions-heading" className="text-xl font-semibold">Questions</h2>
-        <span className="text-sm text-muted-foreground" aria-label={`${questions.length} total questions`}>
+        <span className="text-base text-muted-foreground" aria-label={`${questions.length} total questions`}>
           {questions.length} total
         </span>
       </div>
@@ -57,15 +57,15 @@ export function QuestionList({
               <div
                 className={`
                   sticky top-0 z-10 flex items-center justify-between
-                  px-3 py-2 rounded-lg font-medium text-sm
+                  px-3 py-2 rounded-lg font-medium text-base
                   ${isCurrentRound ? 'bg-blue-500/20 text-blue-600' : ''}
                   ${isPastRound ? 'bg-green-500/10 text-green-600' : ''}
                   ${!isCurrentRound && !isPastRound ? 'bg-muted/50 text-muted-foreground' : ''}
                 `}
                 aria-current={isCurrentRound ? 'true' : undefined}
               >
-                <h3 className="text-sm font-medium">Round {roundIndex + 1}</h3>
-                <span className="text-xs">
+                <h3 className="text-base font-medium">Round {roundIndex + 1}</h3>
+                <span className="text-base">
                   {roundQuestions.length} questions
                   {isPastRound && ' (completed)'}
                 </span>
@@ -107,7 +107,7 @@ export function QuestionList({
                         aria-hidden="true"
                         className={`
                           flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-                          text-sm font-bold
+                          text-base font-bold
                           ${isSelected ? 'bg-blue-500 text-white' : 'bg-muted text-muted-foreground'}
                         `}
                       >
@@ -116,10 +116,10 @@ export function QuestionList({
 
                       {/* Question preview */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground truncate">
+                        <p className="text-base text-foreground truncate">
                           {question.text}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-base text-muted-foreground">
                           {question.type === 'multiple_choice' ? 'MC' : 'T/F'} • {question.category}
                         </p>
                       </div>

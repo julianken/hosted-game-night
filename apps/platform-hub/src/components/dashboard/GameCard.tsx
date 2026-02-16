@@ -86,7 +86,7 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
               </p>
 
               {/* Stats Row */}
-              <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4 text-base md:text-lg text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <svg
                     className="w-5 h-5"

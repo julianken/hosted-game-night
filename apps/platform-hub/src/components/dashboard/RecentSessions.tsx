@@ -264,7 +264,7 @@ export const RecentSessions = forwardRef<HTMLElement, RecentSessionsProps>(
                       <span
                         className={`
                           inline-flex items-center px-2.5 py-0.5
-                          text-sm font-medium rounded-full
+                          text-base font-medium rounded-full
                           ${config.colorClass}
                         `}
                       >

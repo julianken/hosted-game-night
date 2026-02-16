@@ -114,7 +114,7 @@ export function AudioSettingsPanel({ onClose }: AudioSettingsPanelProps) {
         />
 
         {!isAvailable && ttsEnabled && (
-          <p className="text-sm text-warning-foreground bg-warning/20 p-2 rounded">
+          <p className="text-base text-warning-foreground bg-warning/20 p-2 rounded">
             Text-to-Speech is not available in this browser.
           </p>
         )}
@@ -171,7 +171,7 @@ export function AudioSettingsPanel({ onClose }: AudioSettingsPanelProps) {
         )}
 
         {/* TTS Usage Info */}
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           When enabled, TTS will read questions aloud, announce answers, and
           announce scores and winners.
         </p>
@@ -213,7 +213,7 @@ export function AudioSettingsPanel({ onClose }: AudioSettingsPanelProps) {
         )}
 
         {/* SFX Info */}
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Sound effects play for timer warnings, answer reveals, round
           completions, and game end.
         </p>

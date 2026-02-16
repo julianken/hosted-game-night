@@ -69,7 +69,7 @@ export function TeamScoreboard({ teams }: TeamScoreboardProps) {
                 aria-hidden="true"
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center
-                  text-sm font-bold
+                  text-base font-bold
                   ${
                     team.score > 0 && team.rank === 1
                       ? 'bg-yellow-500 text-yellow-950'

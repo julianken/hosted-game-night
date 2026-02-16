@@ -109,7 +109,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <summary className="text-base text-gray-500 cursor-pointer hover:text-gray-700">
                   Technical Details (for support)
                 </summary>
-                <pre className="mt-2 p-4 bg-gray-100 rounded-lg text-sm text-gray-600 overflow-auto max-h-40">
+                <pre className="mt-2 p-4 bg-gray-100 rounded-lg text-base text-gray-600 overflow-auto max-h-40">
                   {this.state.error.message}
                 </pre>
               </details>

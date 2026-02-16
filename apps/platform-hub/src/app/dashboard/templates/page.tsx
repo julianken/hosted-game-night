@@ -100,7 +100,7 @@ export default function TemplatesPage() {
           <p className="text-base font-medium text-yellow-900 mb-2">
             Some game APIs are unavailable:
           </p>
-          <ul className="list-disc list-inside text-sm text-yellow-800">
+          <ul className="list-disc list-inside text-base text-yellow-800">
             {errors.map((error, index) => (
               <li key={index}>{error}</li>
             ))}

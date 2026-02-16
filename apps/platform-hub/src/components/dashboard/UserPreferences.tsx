@@ -399,7 +399,7 @@ function PreferenceItem({ icon, label, value, valueColor = 'text-foreground' }: 
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-base text-muted-foreground">{label}</p>
         <p className={`text-lg font-semibold truncate ${valueColor}`}>{value}</p>
       </div>
     </div>

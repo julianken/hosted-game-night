@@ -272,7 +272,7 @@ export function PatternEditor({
                     title={isFree ? 'Free space (always included)' : isMarked ? 'Click to remove' : 'Click to add'}
                   >
                     {isFree && (
-                      <span className="text-sm font-bold text-accent-foreground">FREE</span>
+                      <span className="text-base font-bold text-accent-foreground">FREE</span>
                     )}
                   </button>
                 );
