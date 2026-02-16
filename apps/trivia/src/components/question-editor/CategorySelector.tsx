@@ -84,7 +84,7 @@ export const CategorySelector = forwardRef<HTMLSelectElement, CategorySelectorPr
         )}
 
         {!error && helperText && (
-          <p id={`${selectId}-helper`} className="mt-2 text-base text-gray-600 dark:text-gray-400">
+          <p id={`${selectId}-helper`} className="mt-2 text-base text-muted-foreground">
             {helperText}
           </p>
         )}

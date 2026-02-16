@@ -234,7 +234,7 @@ export function RoomSetupModal({
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg
-                  className="w-5 h-5 animate-spin"
+                  className="w-5 h-5 animate-spin motion-reduce:animate-none"
                   fill="none"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -349,7 +349,7 @@ export function RoomSetupModal({
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg
-                        className="w-5 h-5 animate-spin"
+                        className="w-5 h-5 animate-spin motion-reduce:animate-none"
                         fill="none"
                         viewBox="0 0 24 24"
                         aria-hidden="true"

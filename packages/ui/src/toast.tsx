@@ -238,7 +238,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         min-w-[300px] max-w-md
         px-4 py-3 rounded-lg shadow-lg
         ${bg}
-        ${isExiting ? 'animate-fade-out' : 'animate-slide-in'}
+        ${isExiting ? 'animate-fade-out motion-reduce:animate-none' : 'animate-slide-in motion-reduce:animate-none'}
       `}
       style={{
         animation: isExiting

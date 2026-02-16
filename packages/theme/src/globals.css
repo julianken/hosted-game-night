@@ -19,7 +19,7 @@
 
   /* Feedback colors */
   --success: #16a34a;
-  --warning: #ca8a04;
+  --warning: #854d0e;
   --error: #dc2626;
 
   /* Borders and muted elements */
@@ -136,4 +136,14 @@ button,
 [role="button"] {
   min-height: var(--size-touch);
   min-width: var(--size-touch);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

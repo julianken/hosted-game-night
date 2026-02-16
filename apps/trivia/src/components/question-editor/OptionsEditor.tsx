@@ -118,7 +118,7 @@ export function OptionsEditor({
       <fieldset>
         <legend className="block mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Answer Options
-          <span className="ml-2 text-base font-normal text-gray-600 dark:text-gray-400">
+          <span className="ml-2 text-base font-normal text-muted-foreground">
             (Select the correct answer)
           </span>
         </legend>
