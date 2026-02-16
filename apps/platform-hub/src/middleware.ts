@@ -59,7 +59,8 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Check if running in E2E test environment
-  const isE2ETesting = process.env.E2E_TESTING === 'true' || process.env.NODE_ENV === 'test';
+  // Only use E2E_TESTING env var (consistent with bingo/trivia middleware)
+  const isE2ETesting = process.env.E2E_TESTING === 'true';
 
   // 1. Check body size for POST, PUT, PATCH requests
   // This prevents DoS attacks via large payloads

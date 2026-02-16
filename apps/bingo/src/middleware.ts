@@ -29,10 +29,22 @@ import {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const PLATFORM_HUB_URL = process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002';
 
-// E2E Testing: Same secret used by Platform Hub login API
-const E2E_JWT_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+// Production guard: E2E mode must never run in production
+if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('E2E mode cannot run in production');
+}
+
+// E2E Testing: Secret loaded from environment variable (never hardcoded)
+function getE2EJwtSecret(): Uint8Array {
+  const secret = process.env.E2E_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
+      'Set it in your .env.local file.'
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
 
 // Production: Supabase JWT secret for PostgRES-compatible tokens (preferred)
 function getSupabaseJwtSecret(): Uint8Array | null {
@@ -86,7 +98,7 @@ async function verifyAccessToken(token: string): Promise<boolean> {
   // E2E Testing Mode: Try E2E secret first
   if (isE2ETesting) {
     try {
-      await jwtVerify(token, E2E_JWT_SECRET, {
+      await jwtVerify(token, getE2EJwtSecret(), {
         issuer: 'e2e-test',
         audience: 'authenticated',
       });

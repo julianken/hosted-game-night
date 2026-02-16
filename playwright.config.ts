@@ -207,7 +207,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
-          env: { E2E_TESTING: 'true', PORT: String(portConfig.bingoPort) },
+          env: { E2E_TESTING: 'true', E2E_JWT_SECRET: process.env.E2E_JWT_SECRET ?? 'e2e-test-secret-key-that-is-at-least-32-characters-long', PORT: String(portConfig.bingoPort) },
         },
         {
           command: 'pnpm --filter @beak-gaming/trivia start',
@@ -216,7 +216,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
-          env: { E2E_TESTING: 'true', PORT: String(portConfig.triviaPort) },
+          env: { E2E_TESTING: 'true', E2E_JWT_SECRET: process.env.E2E_JWT_SECRET ?? 'e2e-test-secret-key-that-is-at-least-32-characters-long', PORT: String(portConfig.triviaPort) },
         },
         {
           command: 'pnpm --filter @beak-gaming/platform-hub start',
@@ -225,7 +225,7 @@ export default defineConfig({
           timeout: 120 * 1000,
           stdout: 'ignore',
           stderr: 'ignore',
-          env: { E2E_TESTING: 'true', PORT: String(portConfig.hubPort) },
+          env: { E2E_TESTING: 'true', E2E_JWT_SECRET: process.env.E2E_JWT_SECRET ?? 'e2e-test-secret-key-that-is-at-least-32-characters-long', PORT: String(portConfig.hubPort) },
         },
       ]
     : undefined,

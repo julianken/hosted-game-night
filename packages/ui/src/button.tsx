@@ -58,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {loading ? (
           <span className="flex items-center gap-2">
             <svg
-              className="animate-spin h-5 w-5"
+              className="animate-spin motion-reduce:animate-none h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

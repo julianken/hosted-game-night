@@ -69,12 +69,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <ThemeInitializer />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:p-4 focus:bg-background focus:text-foreground focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-primary"
+        >
+          Skip to main content
+        </a>
         <ErrorBoundaryProvider>
           <AuthProvider>
             <SessionTimeoutMonitor />
             <ToastProvider position="top-right">
               <Header />
-              <div className="flex-1 flex flex-col">{children}</div>
+              <div id="main-content" className="flex-1 flex flex-col">{children}</div>
               <Footer />
             </ToastProvider>
           </AuthProvider>

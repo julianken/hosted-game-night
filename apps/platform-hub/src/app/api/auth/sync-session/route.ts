@@ -6,23 +6,95 @@
  * (e.g., rate limiting, server issues) but client-side Supabase auth succeeds.
  *
  * The client sends the access_token and refresh_token from the Supabase session,
- * and this endpoint sets the beak_* cookies for middleware verification.
+ * and this endpoint verifies the JWT signature before setting the beak_* cookies
+ * for middleware verification.
+ *
+ * Verification chain:
+ * 1. E2E test secret (when E2E_TESTING=true)
+ * 2. SUPABASE_JWT_SECRET (production)
+ * 3. Supabase JWKS endpoint (fallback)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { jwtDecode } from 'jwt-decode';
+import { jwtVerify, createRemoteJWKSet, type JWTPayload } from 'jose';
+
+// E2E Testing: Same secret used by Platform Hub login API
+const E2E_JWT_SECRET = new TextEncoder().encode(
+  'e2e-test-secret-key-that-is-at-least-32-characters-long'
+);
+
+// Lazy-initialized JWKS for Supabase token verification
+let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function getJWKS() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return null;
+  if (!jwksCache) {
+    jwksCache = createRemoteJWKSet(new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`));
+  }
+  return jwksCache;
+}
+
+/**
+ * Verify JWT and return its payload, or null if verification fails.
+ * Tries verification chain: E2E secret -> SUPABASE_JWT_SECRET -> JWKS
+ */
+async function verifyJwt(token: string): Promise<JWTPayload | null> {
+  const isE2ETesting = process.env.E2E_TESTING === 'true';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+
+  // 1. E2E test secret
+  if (isE2ETesting) {
+    try {
+      const { payload } = await jwtVerify(token, E2E_JWT_SECRET, {
+        issuer: 'e2e-test',
+        audience: 'authenticated',
+      });
+      return payload;
+    } catch {
+      // Fall through to next method
+    }
+  }
+
+  // 2. SUPABASE_JWT_SECRET (production)
+  const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
+  if (supabaseJwtSecret) {
+    try {
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(supabaseJwtSecret),
+        {
+          issuer: `${supabaseUrl}/auth/v1`,
+          audience: 'authenticated',
+        }
+      );
+      return payload;
+    } catch {
+      // Fall through to next method
+    }
+  }
+
+  // 3. Supabase JWKS endpoint (fallback)
+  const jwks = getJWKS();
+  if (jwks) {
+    try {
+      const { payload } = await jwtVerify(token, jwks, {
+        issuer: `${supabaseUrl}/auth/v1`,
+        audience: 'authenticated',
+      });
+      return payload;
+    } catch {
+      // All methods failed
+    }
+  }
+
+  return null;
+}
 
 interface SyncRequest {
   accessToken: string;
   refreshToken: string;
-}
-
-interface JWTPayload {
-  sub: string;
-  email?: string;
-  exp: number;
-  [key: string]: unknown;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -37,24 +109,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Decode the JWT to get user info and expiration
-    let userId = 'unknown';
-    let userEmail: string | undefined;
+    // Verify JWT signature and extract payload
+    const payload = await verifyJwt(accessToken);
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid or unverifiable access token' },
+        { status: 401 }
+      );
+    }
+
+    const userId = (payload.sub as string) || 'unknown';
+    const userEmail = payload.email as string | undefined;
+
+    // Calculate expires_in from exp claim
     let expiresIn = 3600; // Default 1 hour
-
-    try {
-      const payload = jwtDecode<JWTPayload>(accessToken);
-      userId = payload.sub || 'unknown';
-      userEmail = payload.email;
-
-      // Calculate expires_in from exp claim
-      if (payload.exp) {
-        const now = Math.floor(Date.now() / 1000);
-        expiresIn = Math.max(payload.exp - now, 0);
-      }
-    } catch (decodeError) {
-      console.error('[Sync Session] Failed to decode JWT:', decodeError);
-      // Continue anyway - the token might still be valid
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      expiresIn = Math.max(payload.exp - now, 0);
     }
 
     // Get cookie options

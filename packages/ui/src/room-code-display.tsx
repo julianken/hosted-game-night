@@ -207,7 +207,7 @@ export function RoomCodeDisplay({
       {/* Sync Status Indicator */}
       {showSyncStatus && (isSaving || lastSavedAt) && (
         <div
-          className="mt-4 text-base text-gray-600 dark:text-gray-400"
+          className="mt-4 text-base text-muted-foreground"
           role="status"
           aria-live="polite"
           aria-atomic="true"
@@ -215,7 +215,7 @@ export function RoomCodeDisplay({
           {isSaving ? (
             <span className="flex items-center gap-2">
               <svg
-                className="animate-spin h-4 w-4"
+                className="animate-spin motion-reduce:animate-none h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

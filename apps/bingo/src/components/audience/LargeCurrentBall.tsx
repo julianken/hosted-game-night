@@ -42,7 +42,7 @@ export function LargeCurrentBall({ ball }: LargeCurrentBallProps) {
         rounded-full flex items-center justify-center
         font-bold shadow-2xl
         transition-transform duration-300
-        animate-in zoom-in-50 duration-500
+        animate-in zoom-in-50 duration-500 motion-reduce:animate-none
       `}
       role="img"
       aria-label={`Ball ${ball.label}`}

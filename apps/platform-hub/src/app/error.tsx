@@ -61,7 +61,7 @@ export default function Error({
         </p>
 
         {/* Help text */}
-        <p className="text-lg text-gray-500 mb-8">
+        <p className="text-lg text-muted-foreground mb-8">
           If this keeps happening, please let a staff member know.
         </p>
 

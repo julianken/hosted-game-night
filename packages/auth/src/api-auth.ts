@@ -21,10 +21,22 @@
 import { jwtVerify } from 'jose';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
-// E2E Testing: Same secret used by Platform Hub login API and game app middleware
-const E2E_JWT_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+// Production guard: E2E mode must never run in production
+if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('E2E mode cannot run in production');
+}
+
+// E2E Testing: Secret loaded from environment variable (never hardcoded)
+function getE2EJwtSecret(): Uint8Array {
+  const secret = process.env.E2E_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
+      'Set it in your .env.local file.'
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
 
 /**
  * User identity extracted from a verified JWT
@@ -44,7 +56,7 @@ function getVerificationChain(): Array<{ secret: Uint8Array; issuer: string }> {
 
   // 1. E2E test secret (only in E2E mode)
   if (isE2ETesting) {
-    chain.push({ secret: E2E_JWT_SECRET, issuer: 'e2e-test' });
+    chain.push({ secret: getE2EJwtSecret(), issuer: 'e2e-test' });
   }
 
   // 2. SUPABASE_JWT_SECRET (production — PostgRES-compatible)

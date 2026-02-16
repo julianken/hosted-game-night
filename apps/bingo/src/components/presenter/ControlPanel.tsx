@@ -119,7 +119,7 @@ export function ControlPanel({
           aria-hidden="true"
           className={`
             w-3 h-3 rounded-full
-            ${status === 'playing' ? 'bg-success animate-pulse' : ''}
+            ${status === 'playing' ? 'bg-success animate-pulse motion-reduce:animate-none' : ''}
             ${status === 'paused' ? 'bg-warning' : ''}
             ${status === 'idle' ? 'bg-muted' : ''}
             ${status === 'ended' ? 'bg-error' : ''}

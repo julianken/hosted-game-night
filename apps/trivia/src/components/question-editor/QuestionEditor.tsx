@@ -228,7 +228,7 @@ export function QuestionEditor({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Question {questionIndex + 1}
-          <span className="ml-2 text-base font-normal text-gray-600 dark:text-gray-400">
+          <span className="ml-2 text-base font-normal text-muted-foreground">
             (Round {roundIndex + 1})
           </span>
         </h3>
@@ -277,7 +277,7 @@ export function QuestionEditor({
             transition-colors
             focus:outline-none focus:ring-4
             disabled:opacity-50 disabled:cursor-not-allowed
-            placeholder:text-gray-400 dark:placeholder:text-gray-500
+            placeholder:text-muted-foreground
             ${
               errors.question
                 ? 'border-error focus:border-error focus:ring-error/50'
@@ -290,7 +290,7 @@ export function QuestionEditor({
             {errors.question}
           </p>
         )}
-        <p className="mt-1 text-base text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-base text-muted-foreground">
           {question.question.length}/{VALIDATION.QUESTION_MAX_LENGTH} characters
         </p>
       </div>
@@ -353,7 +353,7 @@ export function QuestionEditor({
           className="block mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
         >
           Explanation
-          <span className="ml-2 text-base font-normal text-gray-600 dark:text-gray-400">
+          <span className="ml-2 text-base font-normal text-muted-foreground">
             (Optional)
           </span>
         </label>
@@ -377,7 +377,7 @@ export function QuestionEditor({
             transition-colors
             focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary
             disabled:opacity-50 disabled:cursor-not-allowed
-            placeholder:text-gray-400 dark:placeholder:text-gray-500
+            placeholder:text-muted-foreground
             resize-none
           "
         />

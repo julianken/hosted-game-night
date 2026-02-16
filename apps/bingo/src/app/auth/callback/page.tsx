@@ -104,7 +104,7 @@ function CallbackHandler() {
           <>
             <h1 className="text-2xl font-bold">Completing Sign In</h1>
             <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="animate-spin motion-reduce:animate-none rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
             <p className="text-muted-foreground">Please wait...</p>
           </>
@@ -122,7 +122,7 @@ export default function AuthCallbackPage() {
           <div className="max-w-md w-full space-y-4 text-center">
             <h1 className="text-2xl font-bold">Loading...</h1>
             <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="animate-spin motion-reduce:animate-none rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           </div>
         </main>

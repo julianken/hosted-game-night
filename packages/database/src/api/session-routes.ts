@@ -32,6 +32,12 @@ export interface SessionRouteConfig {
   createClient: () => Promise<TypedSupabaseClient>;
   /** Optional game-specific state validation */
   validateGameState?: (state: unknown) => boolean;
+  /**
+   * Optional authentication function for session creation.
+   * When provided, the POST handler will require authentication.
+   * Should return a user object if authenticated, or null if not.
+   */
+  authenticateRequest?: (request: NextRequest) => Promise<{ id: string; email: string } | null>;
 }
 
 /**
@@ -44,15 +50,27 @@ export interface SessionRouteConfig {
  * @returns Object containing route handler functions
  */
 export function createSessionRoutes(config: SessionRouteConfig) {
-  const { gameType, createClient, validateGameState } = config;
+  const { gameType, createClient, validateGameState, authenticateRequest } = config;
 
   /**
    * POST /api/sessions - Create new session
    *
-   * Creates a new game session with PIN protection and returns a signed token
+   * Creates a new game session with PIN protection and returns a signed token.
+   * Requires authentication when authenticateRequest is configured.
    */
   const POST = async (request: NextRequest) => {
     try {
+      // Verify authentication if auth function is provided
+      if (authenticateRequest) {
+        const user = await authenticateRequest(request);
+        if (!user) {
+          return NextResponse.json(
+            { error: 'Unauthorized' },
+            { status: 401 }
+          );
+        }
+      }
+
       const client = await createClient();
       const body = await request.json();
 

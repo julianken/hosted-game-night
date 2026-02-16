@@ -47,7 +47,7 @@ export function BallDisplay({ ball, size = 'lg' }: BallDisplayProps) {
         rounded-full flex items-center justify-center
         font-bold shadow-lg
         transition-transform duration-200
-        animate-in zoom-in-50 duration-300
+        animate-in zoom-in-50 duration-300 motion-reduce:animate-none
       `}
       role="img"
       aria-label={`Ball ${ball.label}`}

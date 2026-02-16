@@ -169,7 +169,7 @@ export function QuestionImporter({ status, onImport }: QuestionImporterProps) {
       {state === 'loading' && (
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
-            <div className="animate-spin text-2xl">⏳</div>
+            <div className="animate-spin motion-reduce:animate-none text-2xl">⏳</div>
             <p className="text-base text-muted-foreground">Processing file...</p>
           </div>
         </div>

@@ -52,8 +52,8 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
     };
 
     const animationStyles = {
-      pulse: 'animate-pulse',
-      wave: 'animate-shimmer bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%]',
+      pulse: 'animate-pulse motion-reduce:animate-none',
+      wave: 'animate-shimmer motion-reduce:animate-none bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%]',
       none: '',
     };
 

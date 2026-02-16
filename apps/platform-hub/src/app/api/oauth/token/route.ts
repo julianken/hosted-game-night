@@ -25,10 +25,23 @@ import {
   rotateRefreshToken,
 } from '@/lib/refresh-token-store';
 
-// E2E Testing: Same secret used by Bingo/Trivia middleware for token verification
-const E2E_JWT_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+// Production guard: E2E mode must never run in production
+if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('E2E mode cannot run in production');
+}
+
+// E2E Testing: Secret loaded from environment variable (never hardcoded)
+function getE2EJwtSecret(): Uint8Array {
+  const secret = process.env.E2E_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
+      'Set it in your .env.local file.'
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
+
 const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
 const E2E_TEST_EMAIL = 'e2e-test@beak-gaming.test';
 import { tokenRotationLogger } from '@/lib/token-rotation';
@@ -242,7 +255,7 @@ async function handleAuthorizationCodeGrant(params: {
         .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
         .setIssuedAt(now)
         .setExpirationTime(now + expiresIn)
-        .sign(E2E_JWT_SECRET);
+        .sign(getE2EJwtSecret());
 
       const refreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
 
@@ -505,7 +518,7 @@ async function handleRefreshTokenGrant(params: {
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setIssuedAt(now)
       .setExpirationTime(now + expiresIn)
-      .sign(E2E_JWT_SECRET);
+      .sign(getE2EJwtSecret());
 
     const newRefreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
 

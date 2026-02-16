@@ -11,7 +11,7 @@ export default function NotFound() {
         {/* 404 Icon */}
         <div className="mb-6">
           <svg
-            className="w-24 h-24 mx-auto text-gray-400"
+            className="w-24 h-24 mx-auto text-muted-foreground"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +43,7 @@ export default function NotFound() {
         </p>
 
         {/* Help text */}
-        <p className="text-lg text-gray-500 mb-8">
+        <p className="text-lg text-muted-foreground mb-8">
           Let us get you back to the game!
         </p>
 
@@ -65,7 +65,7 @@ export default function NotFound() {
 
         {/* Helpful links */}
         <nav className="mt-10 pt-6 border-t border-gray-200" aria-label="Quick links">
-          <p className="text-base text-gray-500 mb-4">Or try one of these:</p>
+          <p className="text-base text-muted-foreground mb-4">Or try one of these:</p>
           <ul className="flex flex-col gap-2">
             <li>
               <Link

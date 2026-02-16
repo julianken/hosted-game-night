@@ -1,4 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getApiUser } from '@beak-gaming/auth';
+
+const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
+const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
 
 /**
  * Delete template by ID
@@ -8,10 +12,19 @@ import { NextResponse } from 'next/server';
  * - Returns success/error
  */
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const user = await getApiUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const {id} = await params;
     const { searchParams } = new URL(request.url);
     const game = searchParams.get('game');
@@ -23,9 +36,9 @@ export async function DELETE(
       );
     }
 
-    // Determine API URL
-    const port = game === 'bingo' ? 3000 : 3001;
-    const apiUrl = `http://localhost:${port}/api/templates/${id}`;
+    // Determine API URL from environment variables
+    const baseUrl = game === 'bingo' ? bingoUrl : triviaUrl;
+    const apiUrl = `${baseUrl}/api/templates/${id}`;
 
     // Proxy delete request
     const response = await fetch(apiUrl, {

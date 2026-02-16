@@ -13,6 +13,10 @@
     {
       "path": "/api/cron/cleanup-authorizations",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-sessions",
+      "schedule": "0 */6 * * *"
     }
   ],
   "redirects": [

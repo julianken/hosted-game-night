@@ -3,20 +3,37 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { GET } from '../route';
+
+// Mock getApiUser
+vi.mock('@beak-gaming/auth', () => ({
+  getApiUser: vi.fn().mockResolvedValue({ id: 'user-1', email: 'test@example.com' }),
+}));
 
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-// Helper to create mock Request objects
-function createMockRequest(url: string = 'http://localhost:3002/api/templates'): Request {
-  return new Request(url);
+// Helper to create mock NextRequest objects
+function createMockRequest(url: string = 'http://localhost:3002/api/templates'): NextRequest {
+  return new NextRequest(url);
 }
 
 describe('GET /api/templates', () => {
   beforeEach(() => {
     mockFetch.mockClear();
+  });
+
+  it('should return 401 when not authenticated', async () => {
+    const { getApiUser } = await import('@beak-gaming/auth');
+    vi.mocked(getApiUser).mockResolvedValueOnce(null);
+
+    const response = await GET(createMockRequest());
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data.error).toBe('Unauthorized');
   });
 
   it('should fetch and combine templates from both games', async () => {

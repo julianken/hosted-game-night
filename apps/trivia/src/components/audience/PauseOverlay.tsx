@@ -32,7 +32,7 @@ export function PauseOverlay({ emergencyBlank = false, timer }: PauseOverlayProp
   // Normal pause overlay
   return (
     <div
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300"
+      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300 motion-reduce:animate-none"
       role="alert"
       aria-live="polite"
       aria-label="Game paused"
@@ -72,7 +72,7 @@ export function PauseOverlay({ emergencyBlank = false, timer }: PauseOverlayProp
 
       {/* Pulsing indicator */}
       <div className="mt-12 flex items-center gap-3">
-        <div className="w-4 h-4 rounded-full bg-warning animate-pulse" />
+        <div className="w-4 h-4 rounded-full bg-warning animate-pulse motion-reduce:animate-none" />
         <span className="text-xl text-muted">Paused</span>
       </div>
     </div>

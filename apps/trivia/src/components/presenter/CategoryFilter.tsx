@@ -92,7 +92,7 @@ export function CategoryFilter({
           {hasSelection && (
             <button
               onClick={handleClearAll}
-              className="text-base text-muted-foreground hover:text-foreground transition-colors"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
               aria-label="Clear all category filters"
             >
               Clear
@@ -101,7 +101,7 @@ export function CategoryFilter({
           {multiSelect && !hasSelection && (
             <button
               onClick={handleSelectAll}
-              className="text-base text-muted-foreground hover:text-foreground transition-colors"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
               aria-label="Select all categories"
             >
               Select All
@@ -131,6 +131,7 @@ export function CategoryFilter({
               className={`
                 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                 text-base font-medium border transition-all duration-200
+                min-h-[44px] min-w-[44px]
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                 disabled:opacity-40 disabled:cursor-not-allowed
                 ${
@@ -208,6 +209,7 @@ export function CategoryFilterCompact({
             aria-label={`${category.name}, ${count} questions${selected ? ', selected' : ''}`}
             className={`
               px-2 py-0.5 rounded text-base font-medium border transition-colors
+              min-h-[44px] min-w-[44px] inline-flex items-center justify-center
               ${
                 selected
                   ? getCategoryFilterActiveClasses(category.id)
