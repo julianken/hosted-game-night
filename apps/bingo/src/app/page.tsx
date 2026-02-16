@@ -8,8 +8,6 @@ export default async function Home() {
   const cookieStore = await cookies();
   const isSignedIn = !!cookieStore.get('jb_access_token')?.value;
 
-  // Get return path if set by middleware (when unauthenticated user tried to access protected route)
-  const returnTo = cookieStore.get('jb_return_to')?.value;
 
   return (
     <main className="min-h-screen bg-background">
@@ -57,7 +55,7 @@ export default async function Home() {
               ) : (
                 // Not Signed In: Show "Sign in" (primary) + "Play as Guest" (secondary)
                 <>
-                  <LoginButton returnTo={returnTo} />
+                  <LoginButton returnTo="/play" />
                   <div className="flex flex-col items-center gap-2">
                     <Link
                       href="/play"

@@ -64,7 +64,7 @@ describe('Home Page (BEA-422)', () => {
   });
 
   describe('when user is NOT signed in', () => {
-    it('should render only the login button', async () => {
+    it('should render login button and Play as Guest link', async () => {
       vi.mocked(cookies).mockResolvedValue({
         get: vi.fn().mockReturnValue(undefined),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,8 +76,10 @@ describe('Home Page (BEA-422)', () => {
       // Should show login button
       expect(screen.getByTestId('login-button')).toBeInTheDocument();
 
-      // Should NOT show Play button
-      expect(screen.queryByRole('link', { name: /play/i })).not.toBeInTheDocument();
+      // Should show "Play as Guest" link pointing to /play
+      const guestLink = screen.getByRole('link', { name: /play as guest/i });
+      expect(guestLink).toBeInTheDocument();
+      expect(guestLink).toHaveAttribute('href', '/play');
     });
 
     it('should NOT show Presenter Mode button', async () => {

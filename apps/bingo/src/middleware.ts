@@ -9,8 +9,9 @@ import {
 /**
  * Next.js Middleware for Route Protection
  *
- * Protects routes that require authentication:
- * - /play (presenter view - requires valid OAuth token)
+ * Routes with optional authentication:
+ * - /play (presenter view - allows guest access without a token;
+ *   validates and refreshes tokens if present)
  *
  * Public routes (no auth required):
  * - / (home page)
