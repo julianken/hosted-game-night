@@ -1,9 +1,12 @@
 name: Release
 
-on:
-  push:
-    tags:
-      - 'v*'
+# DISABLED: Production deployments are handled by Vercel's Git integration.
+# Re-enable by uncommenting the tag trigger below if manual release workflow is needed.
+on: workflow_dispatch
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

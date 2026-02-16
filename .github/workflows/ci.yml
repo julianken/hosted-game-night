@@ -1,10 +1,13 @@
 name: CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# DISABLED: CI is handled locally via pre-commit hooks (Husky + lint-staged)
+# and Vercel build checks. Re-enable by uncommenting the triggers below.
+on: workflow_dispatch
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
