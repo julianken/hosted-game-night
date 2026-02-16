@@ -157,7 +157,7 @@ function TriviaTemplateDetails({ template }: { template: Template }) {
                 key={index}
                 className="p-4 bg-gray-50 rounded-lg border border-gray-200"
               >
-                <p className="text-sm font-medium text-gray-500 mb-1">
+                <p className="text-sm font-medium text-muted-foreground mb-1">
                   Question {index + 1}
                 </p>
                 <p className="text-base text-gray-900 mb-2">{q.question}</p>

@@ -267,7 +267,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
       {state === 'loading' && (
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
-            <div className="animate-spin text-2xl" aria-hidden="true">⏳</div>
+            <div className="animate-spin motion-reduce:animate-none text-2xl" aria-hidden="true">⏳</div>
             <p className="text-sm text-muted-foreground">Processing...</p>
           </div>
         </div>
@@ -277,7 +277,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
       {state === 'saving' && (
         <div className="flex items-center justify-center py-8">
           <div className="text-center space-y-2">
-            <div className="animate-spin text-2xl" aria-hidden="true">⏳</div>
+            <div className="animate-spin motion-reduce:animate-none text-2xl" aria-hidden="true">⏳</div>
             <p className="text-sm text-muted-foreground">Saving question set...</p>
           </div>
         </div>

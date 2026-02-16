@@ -95,7 +95,7 @@ export function TemplateCard({ template, onDelete }: TemplateCardProps) {
       <p className="text-base text-gray-600 mb-4">{getGameStats(template)}</p>
 
       {/* Last Updated */}
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted-foreground mb-6">
         Updated {formatRelativeTime(template.updated_at)}
       </p>
 

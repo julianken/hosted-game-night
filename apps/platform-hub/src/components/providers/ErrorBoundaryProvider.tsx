@@ -72,7 +72,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
             </p>
 
             {/* Help text */}
-            <p className="text-lg text-gray-500 mb-8">
+            <p className="text-lg text-muted-foreground mb-8">
               If this keeps happening, please let a staff member know.
             </p>
 
@@ -94,7 +94,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
 
             {/* Error ID */}
             {error.id && (
-              <p className="mt-8 text-sm text-gray-400 font-mono">
+              <p className="mt-8 text-sm text-muted-foreground font-mono">
                 Error ID: {error.id}
               </p>
             )}

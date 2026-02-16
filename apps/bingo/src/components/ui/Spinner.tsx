@@ -29,7 +29,7 @@ export function Spinner({ size = 'md', label = 'Loading', className = '' }: Spin
       className={`inline-flex items-center justify-center ${className}`.trim()}
     >
       <svg
-        className={`animate-spin text-primary ${sizeStyles[size]}`}
+        className={`animate-spin motion-reduce:animate-none text-primary ${sizeStyles[size]}`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -91,7 +91,7 @@ export interface InlineSpinnerProps {
 export function InlineSpinner({ className = '' }: InlineSpinnerProps) {
   return (
     <svg
-      className={`animate-spin h-5 w-5 ${className}`.trim()}
+      className={`animate-spin motion-reduce:animate-none h-5 w-5 ${className}`.trim()}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
