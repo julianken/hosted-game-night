@@ -9,8 +9,9 @@ import {
 /**
  * Next.js Middleware for Route Protection
  *
- * Protects routes that require authentication:
- * - /play (presenter view - requires valid OAuth token)
+ * Routes with optional authentication:
+ * - /play (presenter view - allows guest access without a token;
+ *   validates and refreshes tokens if present)
  *
  * Public routes (no auth required):
  * - / (home page)
@@ -187,20 +188,8 @@ export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get('jb_refresh_token')?.value;
 
   if (!accessToken) {
-    // No token - redirect to login with return path stored
-    const loginUrl = new URL('/', request.url);
-    const response = NextResponse.redirect(loginUrl);
-
-    // Store the requested path for post-auth redirect
-    response.cookies.set('jb_return_to', pathname, {
-      path: '/',
-      maxAge: 300, // 5 minutes - expires quickly for security
-      httpOnly: false, // Client-side JS needs to read this
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
-
-    return response;
+    // No token - allow through for guest mode (offline play)
+    return NextResponse.next();
   }
 
   // Check if token needs proactive refresh (within 5 minutes of expiry)
