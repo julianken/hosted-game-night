@@ -28,7 +28,26 @@ NEXT_PUBLIC_SUPABASE_URL=https://iivxpjhmnalsuvpdzgza.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_LvRIpm-i3o17HecBwfQckg_wTVe8WPM
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_Lx7THLMj2aYmg2HjqncGIw_PDrV3BPT
 SESSION_TOKEN_SECRET=<64-character-hex-string-from-openssl>
+E2E_JWT_SECRET=e2e-test-secret-key-that-is-at-least-32-characters-long
 ```
+
+### E2E JWT Secret (`E2E_JWT_SECRET`)
+
+The `E2E_JWT_SECRET` environment variable is **required** when `E2E_TESTING=true`. It is used to sign and verify test JWTs across all apps:
+
+- **Platform Hub** (`login/route.ts`, `token/route.ts`): Signs E2E test JWTs
+- **Bingo** (`middleware.ts`): Verifies E2E test JWTs
+- **Trivia** (`middleware.ts`): Verifies E2E test JWTs
+- **`@beak-gaming/auth`** (`api-auth.ts`): Verifies E2E test JWTs in API routes
+
+**The same value must be set in all app `.env.local` files.** A suggested development value:
+```
+E2E_JWT_SECRET=e2e-test-secret-key-that-is-at-least-32-characters-long
+```
+
+**Safety guards:**
+- If `E2E_TESTING=true` and `E2E_JWT_SECRET` is not set, the app will throw an error at startup
+- If `E2E_TESTING=true` and `NODE_ENV=production`, the app will refuse to start (prevents E2E bypass in production)
 
 ### Running E2E Tests
 

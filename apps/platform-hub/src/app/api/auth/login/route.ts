@@ -12,12 +12,26 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { SignJWT } from 'jose';
 
+// Production guard: E2E mode must never run in production
+if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('E2E mode cannot run in production');
+}
+
 // E2E Testing constants
 const E2E_TEST_EMAIL = 'e2e-test@beak-gaming.test';
 const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
-const E2E_JWT_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+
+// E2E Testing: Secret loaded from environment variable (never hardcoded)
+function getE2EJwtSecret(): Uint8Array {
+  const secret = process.env.E2E_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
+      'Set it in your .env.local file.'
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
 
 interface LoginRequest {
   email: string;
@@ -59,7 +73,7 @@ async function generateE2EAccessToken(): Promise<string> {
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setIssuedAt(now)
     .setExpirationTime(now + expiresIn)
-    .sign(E2E_JWT_SECRET);
+    .sign(getE2EJwtSecret());
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<LoginResponse>> {

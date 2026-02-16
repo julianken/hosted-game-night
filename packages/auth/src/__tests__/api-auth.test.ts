@@ -11,9 +11,8 @@ import { SignJWT } from 'jose';
 import { getApiUser, createAuthenticatedClient } from '../api-auth';
 
 // Test secrets
-const E2E_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+const E2E_SECRET_STRING = 'e2e-test-secret-key-that-is-at-least-32-characters-long';
+const E2E_SECRET = new TextEncoder().encode(E2E_SECRET_STRING);
 const SUPABASE_JWT_SECRET = 'test-supabase-jwt-secret-at-least-32-chars';
 const SESSION_TOKEN_SECRET = 'test-session-token-secret-at-least-32-chars';
 const SUPABASE_URL = 'https://test-project.supabase.co';
@@ -67,6 +66,7 @@ describe('getApiUser', () => {
   beforeEach(() => {
     // Clear all env vars
     delete process.env.E2E_TESTING;
+    delete process.env.E2E_JWT_SECRET;
     delete process.env.SUPABASE_JWT_SECRET;
     delete process.env.SESSION_TOKEN_SECRET;
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -74,6 +74,7 @@ describe('getApiUser', () => {
 
   afterEach(() => {
     delete process.env.E2E_TESTING;
+    delete process.env.E2E_JWT_SECRET;
     delete process.env.SUPABASE_JWT_SECRET;
     delete process.env.SESSION_TOKEN_SECRET;
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -108,6 +109,7 @@ describe('getApiUser', () => {
   describe('E2E mode verification', () => {
     beforeEach(() => {
       process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
     });
 
     it('verifies tokens signed with E2E secret', async () => {
@@ -228,6 +230,7 @@ describe('getApiUser', () => {
     it('tries E2E first, then SUPABASE_JWT_SECRET, then SESSION_TOKEN_SECRET', async () => {
       // Set up all three secrets
       process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
       process.env.SUPABASE_JWT_SECRET = SUPABASE_JWT_SECRET;
       process.env.SESSION_TOKEN_SECRET = SESSION_TOKEN_SECRET;
       process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE_URL;
@@ -250,6 +253,7 @@ describe('getApiUser', () => {
 
     it('falls through to SUPABASE_JWT_SECRET when E2E fails', async () => {
       process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
       process.env.SUPABASE_JWT_SECRET = SUPABASE_JWT_SECRET;
       process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE_URL;
 
@@ -272,6 +276,7 @@ describe('getApiUser', () => {
 
     it('falls through to SESSION_TOKEN_SECRET when others fail', async () => {
       process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
       process.env.SUPABASE_JWT_SECRET = SUPABASE_JWT_SECRET;
       process.env.SESSION_TOKEN_SECRET = SESSION_TOKEN_SECRET;
       process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE_URL;

@@ -137,6 +137,9 @@ export HUB_PORT=$HUB_PORT
 # E2E Testing flag (enables auth bypass in Platform Hub)
 export E2E_TESTING=true
 
+# E2E JWT signing secret (required when E2E_TESTING=true)
+export E2E_JWT_SECRET=e2e-test-secret-key-that-is-at-least-32-characters-long
+
 # Worktree metadata
 export WORKTREE_PATH="$WORKTREE_PATH"
 export PORT_OFFSET=$PORT_OFFSET
