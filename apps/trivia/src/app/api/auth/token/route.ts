@@ -2,15 +2,21 @@
  * OAuth 2.1 Token Exchange API Route
  * Exchanges authorization code + PKCE verifier for access tokens
  * Sets httpOnly cookies for secure token storage
+ *
+ * IMPORTANT: Cookies are set directly on the NextResponse object rather than
+ * using `cookies()` from `next/headers`. In Next.js App Router, cookies set
+ * via `cookies().set()` are not reliably included in the response when the
+ * Route Handler returns an explicit `NextResponse.json()`. Setting cookies
+ * on the response object ensures the Set-Cookie headers are always sent.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 const PLATFORM_HUB_URL =
   process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002';
 const CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_OAUTH_REDIRECT_URI!;
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN?.trim() || undefined;
 
 interface TokenRequest {
   code: string;
@@ -22,6 +28,20 @@ interface TokenResponse {
   token_type: string;
   expires_in: number;
   refresh_token: string;
+}
+
+/**
+ * Cookie options for auth token storage
+ */
+function getCookieOptions(maxAge: number, httpOnly = true) {
+  return {
+    httpOnly,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    maxAge,
+    path: '/',
+    domain: COOKIE_DOMAIN,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -85,49 +105,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Set httpOnly cookies for secure token storage
-    const cookieStore = await cookies();
-
-    // Access token cookie (expires with token)
-    // Use sameSite: 'lax' for same-origin OAuth flows (not cross-origin)
-    cookieStore.set('jb_access_token', tokens.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: tokens.expires_in,
-      path: '/',
-      domain: process.env.COOKIE_DOMAIN || undefined,
-    });
-
-    // Refresh token cookie (long-lived, typically 30 days)
-    if (tokens.refresh_token) {
-      cookieStore.set('jb_refresh_token', tokens.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-        path: '/',
-        domain: process.env.COOKIE_DOMAIN || undefined,
-      });
-    }
-
-    // User ID cookie (for client-side access)
-    cookieStore.set('jb_user_id', userId, {
-      httpOnly: false, // Allow client-side access
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: tokens.expires_in,
-      path: '/',
-      domain: process.env.COOKIE_DOMAIN || undefined,
-    });
-
-    return NextResponse.json({
+    // Build response and set cookies directly on the NextResponse object.
+    // This ensures Set-Cookie headers are included in the response.
+    const response = NextResponse.json({
       success: true,
       user: {
         id: userId,
         email: userEmail,
       },
     });
+
+    // Access token cookie (expires with token)
+    response.cookies.set('jb_access_token', tokens.access_token, getCookieOptions(tokens.expires_in));
+
+    // Refresh token cookie (long-lived, typically 30 days)
+    if (tokens.refresh_token) {
+      response.cookies.set('jb_refresh_token', tokens.refresh_token, getCookieOptions(30 * 24 * 60 * 60));
+    }
+
+    // User ID cookie (for client-side access, not httpOnly)
+    response.cookies.set('jb_user_id', userId, getCookieOptions(tokens.expires_in, false));
+
+    return response;
   } catch (error) {
     console.error('Token exchange error:', error);
     return NextResponse.json(
