@@ -658,8 +658,11 @@ export default function PlayPage() {
                 onCallBall={game.callBall}
                 onPause={game.pauseGame}
                 onResume={game.resumeGame}
-                onReset={game.resetGame}
+                onReset={game.requestReset}
                 onUndo={game.undoCall}
+                showResetConfirm={game.showResetConfirm}
+                onConfirmReset={game.confirmReset}
+                onCancelReset={game.cancelReset}
               />
             </div>
           </section>

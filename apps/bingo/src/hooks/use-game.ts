@@ -3,8 +3,16 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
-import { BingoPattern } from '@/types';
+import { BingoPattern, GameStatus } from '@/types';
 import { getRecentBalls } from '@/lib/game';
+
+/**
+ * Returns true if the game is in a state where reset should require confirmation.
+ * Confirmation is required when the game is actively in progress (playing or paused).
+ */
+function requiresResetConfirmation(status: GameStatus): boolean {
+  return status === 'playing' || status === 'paused';
+}
 
 /**
  * Main game hook combining game state, audio, and auto-call functionality.
@@ -85,6 +93,32 @@ export function useGame() {
   const resetGame = useCallback(() => {
     gameStore.resetGame();
   }, [gameStore]);
+
+  // Reset confirmation state
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  /**
+   * Request a game reset. If the game is in progress (playing/paused),
+   * shows a confirmation dialog instead of resetting immediately.
+   * If idle or ended, resets immediately.
+   */
+  const requestReset = useCallback(() => {
+    const currentStatus = useGameStore.getState().status;
+    if (requiresResetConfirmation(currentStatus)) {
+      setShowResetConfirm(true);
+    } else {
+      gameStore.resetGame();
+    }
+  }, [gameStore]);
+
+  const confirmReset = useCallback(() => {
+    setShowResetConfirm(false);
+    gameStore.resetGame();
+  }, [gameStore]);
+
+  const cancelReset = useCallback(() => {
+    setShowResetConfirm(false);
+  }, []);
 
   const setPattern = useCallback(
     (newPattern: BingoPattern) => {
@@ -214,6 +248,12 @@ export function useGame() {
     toggleAutoCall,
     setAutoCallSpeed,
     toggleAudio,
+
+    // Reset confirmation
+    showResetConfirm,
+    requestReset,
+    confirmReset,
+    cancelReset,
   };
 }
 
@@ -249,7 +289,7 @@ export function useGameKeyboard() {
           }
           break;
         case 'KeyR':
-          game.resetGame();
+          game.requestReset();
           break;
         case 'KeyU':
           if (game.canUndo && !game.isProcessing) {

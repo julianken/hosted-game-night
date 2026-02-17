@@ -185,6 +185,124 @@ describe('use-game', () => {
       });
     });
 
+    describe('reset confirmation', () => {
+      it('requestReset shows confirmation when game is playing', () => {
+        const { result } = renderHook(() => useGame());
+
+        act(() => {
+          result.current.startGame();
+        });
+
+        expect(result.current.status).toBe('playing');
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(true);
+        expect(result.current.status).toBe('playing'); // Not reset yet
+      });
+
+      it('requestReset shows confirmation when game is paused', () => {
+        const { result } = renderHook(() => useGame());
+
+        act(() => {
+          result.current.startGame();
+          result.current.pauseGame();
+        });
+
+        expect(result.current.status).toBe('paused');
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(true);
+        expect(result.current.status).toBe('paused'); // Not reset yet
+      });
+
+      it('requestReset resets immediately when game is idle', () => {
+        const { result } = renderHook(() => useGame());
+
+        expect(result.current.status).toBe('idle');
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(false);
+        expect(result.current.status).toBe('idle');
+      });
+
+      it('requestReset resets immediately when game is ended', () => {
+        const { result } = renderHook(() => useGame());
+
+        act(() => {
+          result.current.startGame();
+          result.current.endGame();
+        });
+
+        expect(result.current.status).toBe('ended');
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(false);
+        expect(result.current.status).toBe('idle');
+      });
+
+      it('confirmReset resets the game and closes dialog', () => {
+        const { result } = renderHook(() => useGame());
+
+        act(() => {
+          result.current.startGame();
+          useGameStore.getState().callBall();
+        });
+
+        expect(result.current.calledBalls).toHaveLength(1);
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(true);
+
+        act(() => {
+          result.current.confirmReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(false);
+        expect(result.current.status).toBe('idle');
+        expect(result.current.calledBalls).toHaveLength(0);
+      });
+
+      it('cancelReset keeps the game running and closes dialog', () => {
+        const { result } = renderHook(() => useGame());
+
+        act(() => {
+          result.current.startGame();
+          useGameStore.getState().callBall();
+        });
+
+        const calledBallsCount = result.current.calledBalls.length;
+
+        act(() => {
+          result.current.requestReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(true);
+
+        act(() => {
+          result.current.cancelReset();
+        });
+
+        expect(result.current.showResetConfirm).toBe(false);
+        expect(result.current.status).toBe('playing');
+        expect(result.current.calledBalls).toHaveLength(calledBallsCount);
+      });
+    });
+
     describe('setPattern', () => {
       it('sets the pattern', () => {
         const { result } = renderHook(() => useGame());
@@ -490,7 +608,7 @@ describe('use-game', () => {
       expect(result.current.status).toBe('playing');
     });
 
-    it('resets on R key', () => {
+    it('shows confirmation dialog on R key when game is playing', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
       act(() => {
@@ -498,10 +616,29 @@ describe('use-game', () => {
         useGameStore.getState().callBall();
       });
 
+      expect(result.current.status).toBe('playing');
+
       act(() => {
         window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }));
       });
 
+      // Should NOT reset immediately - should show confirmation instead
+      expect(result.current.status).toBe('playing');
+      expect(result.current.showResetConfirm).toBe(true);
+    });
+
+    it('resets immediately on R key when game is idle', () => {
+      const { result } = renderHook(() => useGameKeyboard());
+
+      // Game starts in idle state
+      expect(result.current.status).toBe('idle');
+
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }));
+      });
+
+      // Should reset without confirmation (already idle, no game in progress)
+      expect(result.current.showResetConfirm).toBe(false);
       expect(result.current.status).toBe('idle');
     });
 

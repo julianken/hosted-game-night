@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from "@joolie-boolie/ui";
+import { Button, Modal } from "@joolie-boolie/ui";
 import { GameStatus } from '@/types';
 import { SaveTemplateModal } from './SaveTemplateModal';
 
@@ -19,6 +19,12 @@ export interface ControlPanelProps {
   onResume: () => void;
   onReset: () => void;
   onUndo: () => void;
+  /** Whether the reset confirmation dialog is open */
+  showResetConfirm?: boolean;
+  /** Called when the user confirms the reset */
+  onConfirmReset?: () => void;
+  /** Called when the user cancels the reset */
+  onCancelReset?: () => void;
 }
 
 export function ControlPanel({
@@ -35,6 +41,9 @@ export function ControlPanel({
   onResume,
   onReset,
   onUndo,
+  showResetConfirm = false,
+  onConfirmReset,
+  onCancelReset,
 }: ControlPanelProps) {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
 
@@ -134,6 +143,21 @@ export function ControlPanel({
       isOpen={showSaveTemplateModal}
       onClose={() => setShowSaveTemplateModal(false)}
     />
+
+    {/* Reset Confirmation Dialog */}
+    <Modal
+      isOpen={showResetConfirm}
+      onClose={onCancelReset ?? (() => {})}
+      title="Reset Game?"
+      variant="danger"
+      confirmLabel="Reset"
+      cancelLabel="Cancel"
+      onConfirm={onConfirmReset}
+    >
+      <p>
+        This will end the current game and clear all called numbers. Are you sure?
+      </p>
+    </Modal>
   </>
   );
 }

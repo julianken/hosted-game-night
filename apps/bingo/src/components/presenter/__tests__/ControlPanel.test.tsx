@@ -184,6 +184,77 @@ describe('ControlPanel', () => {
     });
   });
 
+  describe('reset confirmation dialog', () => {
+    it('does not show reset confirmation dialog by default', () => {
+      renderWithProviders(<ControlPanel {...defaultProps} status="playing" />);
+      expect(screen.queryByText(/This will end the current game/i)).not.toBeInTheDocument();
+    });
+
+    it('shows reset confirmation dialog when showResetConfirm is true', () => {
+      renderWithProviders(
+        <ControlPanel
+          {...defaultProps}
+          status="playing"
+          showResetConfirm={true}
+          onConfirmReset={vi.fn()}
+          onCancelReset={vi.fn()}
+        />
+      );
+      expect(screen.getByText(/This will end the current game and clear all called numbers/i)).toBeInTheDocument();
+      expect(screen.getByText('Reset Game?')).toBeInTheDocument();
+    });
+
+    it('calls onConfirmReset when Reset is clicked in confirmation dialog', () => {
+      const handleConfirmReset = vi.fn();
+      renderWithProviders(
+        <ControlPanel
+          {...defaultProps}
+          status="playing"
+          showResetConfirm={true}
+          onConfirmReset={handleConfirmReset}
+          onCancelReset={vi.fn()}
+        />
+      );
+      // The Modal has a "Reset" confirm button
+      const resetButton = screen.getByRole('button', { name: 'Reset' });
+      fireEvent.click(resetButton);
+      expect(handleConfirmReset).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls onCancelReset when Cancel is clicked in confirmation dialog', () => {
+      const handleCancelReset = vi.fn();
+      renderWithProviders(
+        <ControlPanel
+          {...defaultProps}
+          status="playing"
+          showResetConfirm={true}
+          onConfirmReset={vi.fn()}
+          onCancelReset={handleCancelReset}
+        />
+      );
+      // The Modal has a "Cancel" button
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+      fireEvent.click(cancelButton);
+      expect(handleCancelReset).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls onCancelReset when close button is clicked in confirmation dialog', () => {
+      const handleCancelReset = vi.fn();
+      renderWithProviders(
+        <ControlPanel
+          {...defaultProps}
+          status="playing"
+          showResetConfirm={true}
+          onConfirmReset={vi.fn()}
+          onCancelReset={handleCancelReset}
+        />
+      );
+      const closeButton = screen.getByRole('button', { name: /Close modal/i });
+      fireEvent.click(closeButton);
+      expect(handleCancelReset).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('save template integration', () => {
     it('renders "Save as Template" button', () => {
       renderWithProviders(<ControlPanel {...defaultProps} status="idle" />);
