@@ -98,3 +98,16 @@ export type {
   SessionRecoveryState,
 } from './use-session-recovery';
 export { useSessionRecovery } from './use-session-recovery';
+
+// Presenter session hook
+export type {
+  PresenterSessionMode,
+  CreateRoomOptions,
+  UsePresenterSessionOptions,
+  UsePresenterSessionReturn,
+} from './use-presenter-session';
+export {
+  usePresenterSession,
+  generateSecurePin,
+  generateShortSessionId,
+} from './use-presenter-session';

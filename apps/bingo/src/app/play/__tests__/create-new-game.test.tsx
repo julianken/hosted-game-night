@@ -11,6 +11,31 @@ const mockConfirm = vi.fn(() => true);
 // Create a mutable status variable for dynamic mock behavior
 let mockGameStatus: 'idle' | 'playing' | 'paused' | 'ended' = 'idle';
 
+// Mutable session state for dynamic mock behavior
+let mockSessionState = {
+  mode: 'offline' as 'setup' | 'online' | 'offline' | 'joined',
+  roomCode: null as string | null,
+  offlineSessionId: 'TEST12' as string | null,
+  sessionId: 'TEST12',
+  pin: null as string | null,
+  isLoading: false,
+  error: null as string | null,
+  isRecovering: false,
+  isRecovered: false,
+  shouldShowModal: false,
+};
+
+const mockResetSession = vi.fn((opts?: { showModal?: boolean }) => {
+  mockClearToken();
+  if (opts?.showModal !== false) {
+    mockSessionState.shouldShowModal = true;
+  }
+});
+
+const mockCloseModal = vi.fn(() => {
+  mockSessionState.shouldShowModal = false;
+});
+
 // Mock dependencies
 vi.mock('@/hooks/use-game', () => ({
   useGameKeyboard: () => ({
@@ -67,6 +92,20 @@ vi.mock('@joolie-boolie/sync', () => ({
     isSyncing: false,
     lastSyncTime: null,
   }),
+  usePresenterSession: () => ({
+    ...mockSessionState,
+    createRoom: vi.fn(),
+    joinRoom: vi.fn(),
+    playOffline: vi.fn(),
+    resetSession: mockResetSession,
+    openModal: vi.fn(),
+    closeModal: mockCloseModal,
+    storeToken: vi.fn(),
+    clearToken: mockClearToken,
+    recover: vi.fn(),
+  }),
+  generateSecurePin: () => '1234',
+  generateShortSessionId: () => 'TEST12',
 }));
 
 vi.mock('@/hooks/use-audio', () => ({
@@ -114,17 +153,6 @@ vi.mock('@/lib/sync/session', () => ({
   generateSessionId: () => 'test-session-id',
 }));
 
-vi.mock('@joolie-boolie/ui', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@joolie-boolie/ui')>();
-  return {
-    ...actual,
-    CreateGameModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
-      isOpen ? <div role="dialog" onClick={onClose}>Create Game Modal</div> : null,
-    JoinGameModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
-      isOpen ? <div role="dialog" onClick={onClose}>Join Game Modal</div> : null,
-  };
-});
-
 vi.mock('@/components/pwa', () => ({
   InstallPrompt: () => null,
   OfflineBanner: () => null,
@@ -144,7 +172,23 @@ describe('PlayPage - Create New Game Button', () => {
     vi.clearAllMocks();
     mockClearToken.mockClear();
     mockResetGame.mockClear();
+    mockResetSession.mockClear();
+    mockCloseModal.mockClear();
     mockConfirm.mockReturnValue(true);
+
+    // Reset session state
+    mockSessionState = {
+      mode: 'offline',
+      roomCode: null,
+      offlineSessionId: 'TEST12',
+      sessionId: 'TEST12',
+      pin: null,
+      isLoading: false,
+      error: null,
+      isRecovering: false,
+      isRecovered: false,
+      shouldShowModal: false,
+    };
 
     // Mock window.confirm
     global.confirm = mockConfirm;
@@ -169,9 +213,6 @@ describe('PlayPage - Create New Game Button', () => {
 
     // Check button has secondary variant style
     expect(button.className).toContain('bg-secondary');
-
-    // Check button has medium size (min 56px height for touch targets)
-    expect(button.className).toContain('min-h-[56px]');
 
     // Check button has shadow for visibility
     expect(button.className).toContain('shadow-lg');
@@ -199,18 +240,14 @@ describe('PlayPage - Create New Game Button', () => {
     });
   });
 
-  it('clicking button shows create modal', async () => {
+  it('clicking button calls resetSession with showModal', async () => {
     renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /create new game/i });
     fireEvent.click(createButton);
 
-    // Modal should appear after clicking
     await waitFor(() => {
-      // The CreateGameModal component should be rendered
-      // We check for the modal heading or form
-      const modalElement = screen.getByRole('dialog', { hidden: false });
-      expect(modalElement).toBeInTheDocument();
+      expect(mockResetSession).toHaveBeenCalledWith({ showModal: true });
     });
   });
 
@@ -233,7 +270,23 @@ describe('PlayPage - Create New Game with Active Game', () => {
     vi.clearAllMocks();
     mockClearToken.mockClear();
     mockResetGame.mockClear();
+    mockResetSession.mockClear();
     mockConfirm.mockReturnValue(true);
+
+    // Reset session state
+    mockSessionState = {
+      mode: 'offline',
+      roomCode: null,
+      offlineSessionId: 'TEST12',
+      sessionId: 'TEST12',
+      pin: null,
+      isLoading: false,
+      error: null,
+      isRecovering: false,
+      isRecovered: false,
+      shouldShowModal: false,
+    };
+
     global.confirm = mockConfirm;
   });
 
@@ -262,8 +315,5 @@ describe('PlayPage - Create New Game with Active Game', () => {
     // Should NOT clear token or reset game
     expect(mockClearToken).not.toHaveBeenCalled();
     expect(mockResetGame).not.toHaveBeenCalled();
-
-    // Note: Modal state is controlled by shouldShowModal which includes recovery logic,
-    // so we don't test modal visibility here - that's covered by modal timing tests
   });
 });

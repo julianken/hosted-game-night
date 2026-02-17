@@ -76,6 +76,42 @@ vi.mock('@joolie-boolie/sync', () => ({
     isSyncing: false,
     lastSyncTime: null,
   }),
+  usePresenterSession: () => {
+    // Simulate the hook's initialization: writes offline session ID to localStorage
+    // on first render (mimics the useEffect in the real hook)
+    if (typeof window !== 'undefined') {
+      const existing = localStorage.getItem('bingo_offline_session_id');
+      if (!existing) {
+        localStorage.setItem('bingo_offline_session_id', 'MOCK12');
+      }
+    }
+    const offlineId = typeof window !== 'undefined'
+      ? localStorage.getItem('bingo_offline_session_id') || 'MOCK12'
+      : 'MOCK12';
+    return {
+      mode: 'offline' as const,
+      roomCode: null,
+      offlineSessionId: offlineId,
+      sessionId: offlineId,
+      pin: null,
+      isLoading: false,
+      error: null,
+      isRecovering: false,
+      isRecovered: false,
+      shouldShowModal: false,
+      createRoom: vi.fn(),
+      joinRoom: vi.fn(),
+      playOffline: vi.fn(),
+      resetSession: vi.fn(),
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+      storeToken: vi.fn(),
+      clearToken: vi.fn(),
+      recover: vi.fn(),
+    };
+  },
+  generateSecurePin: () => '1234',
+  generateShortSessionId: () => 'TEST12',
 }));
 
 vi.mock('@/hooks/use-audio', () => ({
