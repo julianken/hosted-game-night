@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ALLOWED_SENTRY_HOSTS = [
-  'sentry.io',
-  '.ingest.sentry.io',
-  'ingest.us.sentry.io',
-  'ingest.de.sentry.io',
-];
-
 function isAllowedHost(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return ALLOWED_SENTRY_HOSTS.some(
-      (host) => parsed.hostname === host || parsed.hostname.endsWith(host)
-    );
+    const hostname = parsed.hostname;
+    return hostname === 'sentry.io' || hostname.endsWith('.sentry.io');
   } catch {
     return false;
   }
@@ -50,6 +42,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!isAllowedHost(sentryIngestUrl)) {
       return NextResponse.json({ error: 'Invalid Sentry host' }, { status: 403 });
+    }
+
+    // Validate DSN matches configured DSN (prevent open proxy)
+    const configuredDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+    if (configuredDsn) {
+      try {
+        const configuredUrl = new URL(configuredDsn);
+        const envelopeUrl = new URL(dsn);
+        if (configuredUrl.hostname !== envelopeUrl.hostname || configuredUrl.pathname !== envelopeUrl.pathname) {
+          return NextResponse.json({ error: 'DSN mismatch' }, { status: 403 });
+        }
+      } catch {
+        // If either DSN can't be parsed, allow but the host check already passed
+      }
     }
 
     const response = await fetch(sentryIngestUrl, {

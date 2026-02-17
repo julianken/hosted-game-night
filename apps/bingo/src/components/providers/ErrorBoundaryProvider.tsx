@@ -28,7 +28,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
     sentryInitRef.current = true;
 
     // Wire Sentry backend
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN && process.env.NEXT_PUBLIC_E2E_TESTING !== 'true') {
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       import('@/lib/observability/sentry-backend')
         .then(({ SentryErrorBackend }) => {
           import('@joolie-boolie/error-tracking/client').then(({ setErrorBackend }) => {
