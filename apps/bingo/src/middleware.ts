@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify, createRemoteJWKSet } from 'jose';
 import {
   shouldRefreshToken,
   isTokenExpired,
   refreshTokens,
 } from '@joolie-boolie/auth';
+import {
+  createJwksGetter,
+  verifyAccessToken,
+  getCookieOptions,
+  clearAuthCookies,
+  isProtectedRoute,
+} from '@joolie-boolie/auth/game-middleware';
 
 /**
  * Next.js Middleware for Route Protection
@@ -36,32 +42,6 @@ if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production')
   throw new Error('E2E mode cannot run in production');
 }
 
-// E2E Testing: Secret loaded from environment variable (never hardcoded)
-function getE2EJwtSecret(): Uint8Array {
-  const secret = process.env.E2E_JWT_SECRET;
-  if (!secret) {
-    throw new Error(
-      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
-      'Set it in your .env.local file.'
-    );
-  }
-  return new TextEncoder().encode(secret);
-}
-
-// Production: Supabase JWT secret for PostgRES-compatible tokens (preferred)
-function getSupabaseJwtSecret(): Uint8Array | null {
-  const secret = process.env.SUPABASE_JWT_SECRET;
-  if (!secret) return null;
-  return new TextEncoder().encode(secret);
-}
-
-// Backward compatibility: SESSION_TOKEN_SECRET used by Platform Hub (migration)
-function getSessionSecret(): Uint8Array | null {
-  const secret = process.env.SESSION_TOKEN_SECRET;
-  if (!secret) return null;
-  return new TextEncoder().encode(secret);
-}
-
 /**
  * Routes that require authentication
  */
@@ -71,115 +51,13 @@ const PROTECTED_ROUTES = ['/play'];
  * JWKS endpoint for Supabase JWT verification
  * Lazy-initialized to avoid module-load-time network requests
  */
-let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
-
-function getJWKS() {
-  if (!jwksCache) {
-    jwksCache = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
-  }
-  return jwksCache;
-}
-
-/**
- * Check if path requires authentication
- */
-function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
-}
-
-/**
- * Verify JWT access token from httpOnly cookie
- * Supports multiple token types:
- * 1. Platform Hub tokens (HS256, signed with SESSION_TOKEN_SECRET)
- * 2. E2E test tokens (HS256, signed with E2E_JWT_SECRET)
- * 3. Supabase tokens (RS256, verified via JWKS)
- */
-async function verifyAccessToken(token: string): Promise<boolean> {
-  const isE2ETesting = process.env.E2E_TESTING === 'true';
-
-  // E2E Testing Mode: Try E2E secret first
-  if (isE2ETesting) {
-    try {
-      await jwtVerify(token, getE2EJwtSecret(), {
-        issuer: 'e2e-test',
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // E2E token verification failed, fall through to other methods
-    }
-  }
-
-  // Platform Hub OAuth tokens: Verify with SUPABASE_JWT_SECRET (preferred)
-  const supabaseJwtSecret = getSupabaseJwtSecret();
-  if (supabaseJwtSecret) {
-    try {
-      await jwtVerify(token, supabaseJwtSecret, {
-        issuer: `${SUPABASE_URL}/auth/v1`,
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // SUPABASE_JWT_SECRET verification failed, fall through
-    }
-  }
-
-  // Backward compatibility: Verify with SESSION_TOKEN_SECRET
-  const sessionSecret = getSessionSecret();
-  if (sessionSecret) {
-    try {
-      await jwtVerify(token, sessionSecret, {
-        issuer: 'joolie-boolie-platform',
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // SESSION_TOKEN_SECRET verification failed, fall through to Supabase JWKS
-    }
-  }
-
-  // Supabase tokens (fallback): Verify with JWKS
-  try {
-    await jwtVerify(token, getJWKS(), {
-      issuer: `${SUPABASE_URL}/auth/v1`,
-      audience: 'authenticated',
-    });
-    return true;
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    return false;
-  }
-}
-
-/**
- * Cookie options for token storage
- */
-function getCookieOptions(maxAge: number) {
-  return {
-    path: '/',
-    domain: process.env.COOKIE_DOMAIN?.trim() || undefined,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    maxAge,
-  };
-}
-
-/**
- * Clear all auth cookies
- */
-function clearAuthCookies(response: NextResponse) {
-  const cookieOptions = getCookieOptions(0);
-  response.cookies.set('jb_access_token', '', cookieOptions);
-  response.cookies.set('jb_refresh_token', '', cookieOptions);
-  response.cookies.set('jb_user_id', '', { ...cookieOptions, httpOnly: false });
-}
+const getJWKS = createJwksGetter(SUPABASE_URL);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Only protect specified routes
-  if (!isProtectedRoute(pathname)) {
+  if (!isProtectedRoute(pathname, PROTECTED_ROUTES)) {
     return NextResponse.next();
   }
 
@@ -244,7 +122,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Verify token is valid
-  const isValid = await verifyAccessToken(accessToken);
+  const isValid = await verifyAccessToken(accessToken, getJWKS, SUPABASE_URL);
 
   if (!isValid) {
     // Invalid token - try refresh before giving up
