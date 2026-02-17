@@ -1,8 +1,13 @@
+import type { BallNumber as BrandedBallNumber } from '@joolie-boolie/types/branded';
+
 // Bingo column letters
 export type BingoColumn = 'B' | 'I' | 'N' | 'G' | 'O';
 
-// Ball number range is 1-75
-export type BallNumber = number;
+/**
+ * Ball number range is 1-75.
+ * Re-exported as a branded type for compile-time safety.
+ */
+export type BallNumber = BrandedBallNumber;
 
 // A bingo ball with its letter and number
 export interface BingoBall {

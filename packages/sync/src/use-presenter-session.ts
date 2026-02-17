@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { SessionId, RoomCode } from '@joolie-boolie/types/branded';
+import { makeSessionId, makeRoomCode } from '@joolie-boolie/types/branded';
 import { useSessionRecovery } from './use-session-recovery';
 
 // =============================================================================
@@ -91,16 +93,16 @@ export interface UsePresenterSessionReturn {
   mode: PresenterSessionMode;
 
   /** Active room code (online/joined mode) or null */
-  roomCode: string | null;
+  roomCode: RoomCode | null;
 
   /** Active offline session ID (offline mode) or null */
-  offlineSessionId: string | null;
+  offlineSessionId: SessionId | null;
 
   /**
    * The effective session ID for BroadcastChannel sync.
    * Resolves to roomCode (online), offlineSessionId (offline), or '' (setup).
    */
-  sessionId: string;
+  sessionId: SessionId;
 
   /** Current PIN for the session, or null */
   pin: string | null;
@@ -129,7 +131,7 @@ export interface UsePresenterSessionReturn {
   createRoom: (options: CreateRoomOptions) => Promise<void>;
 
   /** Join an existing room by room code and PIN */
-  joinRoom: (roomCode: string, pin: string) => Promise<void>;
+  joinRoom: (roomCode: RoomCode | string, pin: string) => Promise<void>;
 
   /** Switch to offline mode with a new local session */
   playOffline: () => void;
@@ -283,10 +285,10 @@ export function usePresenterSession(
   // Core session state
   // ---------------------------------------------------------------------------
 
-  const [roomCode, setRoomCode] = useState<string | null>(null);
+  const [roomCode, setRoomCode] = useState<RoomCode | null>(null);
   const [sessionToken, setSessionTokenState] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [offlineSessionId, setOfflineSessionId] = useState<string | null>(null);
+  const [offlineSessionId, setOfflineSessionId] = useState<SessionId | null>(null);
   const [pin, setPin] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
@@ -317,7 +319,10 @@ export function usePresenterSession(
   // Derived values
   // ---------------------------------------------------------------------------
 
-  const sessionId = roomCode || offlineSessionId || '';
+  // The effective session ID is either the room code (online) or the offline
+  // session ID. Both are strings at runtime; we cast to SessionId because this
+  // field represents a generic "current session identifier" for sync purposes.
+  const sessionId: SessionId = (roomCode || offlineSessionId || makeSessionId('')) as SessionId;
 
   // Derive mode from state
   const mode: PresenterSessionMode = (() => {
@@ -354,14 +359,14 @@ export function usePresenterSession(
     try {
       const storedId = lsGet(offlineSessionIdStorageKey);
       if (storedId) {
-        setOfflineSessionId(storedId);
+        setOfflineSessionId(makeSessionId(storedId));
       } else {
         const newId = generateShortSessionId();
         lsSet(offlineSessionIdStorageKey, newId);
-        setOfflineSessionId(newId);
+        setOfflineSessionId(makeSessionId(newId));
       }
     } catch {
-      setOfflineSessionId(generateShortSessionId());
+      setOfflineSessionId(makeSessionId(generateShortSessionId()));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -409,7 +414,7 @@ export function usePresenterSession(
   // Sync recovered room code to local state
   useEffect(() => {
     if (isRecovered && recoveredRoomCode) {
-      setRoomCode(recoveredRoomCode);
+      setRoomCode(makeRoomCode(recoveredRoomCode));
     }
   }, [isRecovered, recoveredRoomCode]);
 
@@ -432,7 +437,7 @@ export function usePresenterSession(
                 gameState?: unknown;
               };
               if (data.isOffline && data.sessionId === storedId) {
-                setOfflineSessionId(storedId);
+                setOfflineSessionId(makeSessionId(storedId));
                 setIsOfflineMode(true);
                 if (data.gameState) {
                   hydrateStore(data.gameState);
@@ -472,20 +477,20 @@ export function usePresenterSession(
     ) {
       autoCreateExecuted.current = true;
 
-      const newSessionId = generateShortSessionId();
-      lsSet(offlineSessionIdStorageKey, newSessionId);
-      setOfflineSessionId(newSessionId);
+      const newSessionIdStr = generateShortSessionId();
+      lsSet(offlineSessionIdStorageKey, newSessionIdStr);
+      setOfflineSessionId(makeSessionId(newSessionIdStr));
       setIsOfflineMode(true);
 
       // Invoke app-specific initialization callback (e.g., set default pattern)
-      onAutoCreateOffline?.(newSessionId);
+      onAutoCreateOffline?.(newSessionIdStr);
 
       // Write initial offline session to localStorage
       try {
-        const sessionKey = `${offlineSessionStoragePrefix}_${newSessionId}`;
+        const sessionKey = `${offlineSessionStoragePrefix}_${newSessionIdStr}`;
         const now = new Date().toISOString();
         const sessionData = {
-          sessionId: newSessionId,
+          sessionId: newSessionIdStr,
           isOffline: true,
           gameState: serializeState(),
           createdAt: now,
@@ -580,7 +585,7 @@ export function usePresenterSession(
         const data = (await response.json()) as {
           data: { session: { roomCode: string }; sessionToken: string };
         };
-        setRoomCode(data.data.session.roomCode);
+        setRoomCode(makeRoomCode(data.data.session.roomCode));
         setSessionTokenState(data.data.sessionToken);
         storeToken(data.data.sessionToken);
         lsSet(pinStorageKey, opts.pin);
@@ -618,7 +623,7 @@ export function usePresenterSession(
         });
         if (!response.ok) throw new Error('Invalid PIN');
         const data = (await response.json()) as { token: string };
-        setRoomCode(code);
+        setRoomCode(makeRoomCode(code));
         setSessionTokenState(data.token);
         storeToken(data.token);
         lsSet(pinStorageKey, joinPin);
@@ -639,20 +644,20 @@ export function usePresenterSession(
    * Start a local-only offline session.
    */
   const playOffline = useCallback(() => {
-    const newSessionId = generateShortSessionId();
-    setOfflineSessionId(newSessionId);
+    const newSessionIdStr = generateShortSessionId();
+    setOfflineSessionId(makeSessionId(newSessionIdStr));
     setIsOfflineMode(true);
     setRoomCode(null);
     setSessionTokenState(null);
-    lsSet(offlineSessionIdStorageKey, newSessionId);
+    lsSet(offlineSessionIdStorageKey, newSessionIdStr);
 
     try {
-      const sessionKey = `${offlineSessionStoragePrefix}_${newSessionId}`;
+      const sessionKey = `${offlineSessionStoragePrefix}_${newSessionIdStr}`;
       const now = new Date().toISOString();
       lsSet(
         sessionKey,
         JSON.stringify({
-          sessionId: newSessionId,
+          sessionId: newSessionIdStr,
           isOffline: true,
           gameState: serializeState(),
           createdAt: now,

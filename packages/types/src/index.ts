@@ -75,3 +75,24 @@ export type {
   ThemeSyncPayload,
   BaseSyncState,
 } from './sync';
+
+// =============================================================================
+// BRANDED TYPES
+// =============================================================================
+
+export type {
+  Branded,
+  SessionId,
+  TeamId,
+  QuestionId,
+  RoomCode,
+  BallNumber,
+} from './branded';
+
+export {
+  makeSessionId,
+  makeTeamId,
+  makeQuestionId,
+  makeRoomCode,
+  makeBallNumber,
+} from './branded';

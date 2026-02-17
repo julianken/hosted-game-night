@@ -10,7 +10,8 @@
     "./game": "./src/game.ts",
     "./user": "./src/user.ts",
     "./api": "./src/api.ts",
-    "./sync": "./src/sync.ts"
+    "./sync": "./src/sync.ts",
+    "./branded": "./src/branded.ts"
   },
   "scripts": {
     "lint": "eslint src/",

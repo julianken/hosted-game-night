@@ -14,6 +14,9 @@
     "test:run": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
+  "dependencies": {
+    "@joolie-boolie/types": "workspace:*"
+  },
   "peerDependencies": {
     "react": "^19.0.0",
     "zustand": "^5.0.0"
