@@ -162,7 +162,7 @@ export interface TriviaStatistics extends BaseGameStatistics {
 export const STORAGE_KEYS = {
   BINGO_STATS: 'jb:bingo-statistics',
   TRIVIA_STATS: 'jb:trivia-statistics',
-} as const;
+} as const satisfies Record<string, string>;
 
 /**
  * Maximum number of recent sessions to store.

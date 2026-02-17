@@ -32,10 +32,10 @@ export type GameType = 'bingo' | 'trivia';
 /**
  * Map of game types to their display names.
  */
-export const GAME_TYPE_NAMES: Record<GameType, string> = {
+export const GAME_TYPE_NAMES = {
   bingo: 'Bingo',
   trivia: 'Trivia',
-} as const;
+} as const satisfies Record<GameType, string>;
 
 // =============================================================================
 // GAME SESSION

@@ -104,7 +104,7 @@ export const testPatterns = {
   diagonal: 'Diagonal',
   fullCard: 'Full Card (Blackout)',
   fourCorners: 'Four Corners',
-} as const;
+} as const satisfies Record<string, string>;
 
 /**
  * Test data: Sample trivia teams.
@@ -113,7 +113,7 @@ export const testTeams = [
   { name: 'Table 1', score: 0 },
   { name: 'Table 2', score: 0 },
   { name: 'Table 3', score: 0 },
-] as const;
+] as const satisfies readonly { name: string; score: number }[];
 
 /**
  * Keyboard shortcuts reference for Bingo.
@@ -124,7 +124,7 @@ export const bingoShortcuts = {
   undo: 'KeyU',
   reset: 'KeyR',
   mute: 'KeyM',
-} as const;
+} as const satisfies Record<string, string>;
 
 /**
  * Keyboard shortcuts reference for Trivia.
@@ -135,7 +135,7 @@ export const triviaShortcuts = {
   peek: 'KeyP',
   display: 'KeyD',
   reset: 'KeyR',
-} as const;
+} as const satisfies Record<string, string>;
 
 /**
  * Assert that two pages are showing the same ball.

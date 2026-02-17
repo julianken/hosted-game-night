@@ -127,7 +127,7 @@ export const CSV_COLUMNS = [
   'category',
   'explanation',
   'type',
-] as const;
+] as const satisfies readonly string[];
 
 export const CSV_REQUIRED_COLUMNS = [
   'question',
@@ -137,7 +137,7 @@ export const CSV_REQUIRED_COLUMNS = [
   'optionD',
   'correctAnswer',
   'roundIndex',
-] as const;
+] as const satisfies readonly string[];
 
 export type CsvColumn = (typeof CSV_COLUMNS)[number];
 export type CsvRequiredColumn = (typeof CSV_REQUIRED_COLUMNS)[number];

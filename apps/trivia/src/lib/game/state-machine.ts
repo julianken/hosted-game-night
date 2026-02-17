@@ -17,13 +17,13 @@ export type TriviaGameAction =
  * Valid actions from each game status.
  * Maps each current status to the set of actions that can be taken from it.
  */
-export const VALID_TRANSITIONS: Record<GameStatus, TriviaGameAction[]> = {
+export const VALID_TRANSITIONS = {
   setup: ['START_GAME'],
   playing: ['COMPLETE_ROUND', 'END_GAME', 'RESET_GAME', 'PAUSE_GAME', 'EMERGENCY_PAUSE'],
   between_rounds: ['NEXT_ROUND', 'END_GAME', 'RESET_GAME', 'PAUSE_GAME', 'EMERGENCY_PAUSE'],
   paused: ['RESUME_GAME', 'END_GAME', 'RESET_GAME'],
   ended: ['RESET_GAME'],
-};
+} as const satisfies Record<GameStatus, readonly TriviaGameAction[]>;
 
 /**
  * Resulting status after each action.
@@ -31,7 +31,7 @@ export const VALID_TRANSITIONS: Record<GameStatus, TriviaGameAction[]> = {
  * whether there are more rounds — the engine handles that branching logic.
  * RESUME_GAME restores statusBeforePause — also handled in the engine.
  */
-export const ACTION_RESULTS: Record<TriviaGameAction, GameStatus> = {
+export const ACTION_RESULTS = {
   START_GAME: 'playing',
   COMPLETE_ROUND: 'between_rounds',
   NEXT_ROUND: 'playing', // may become 'ended' if last round — see nextRound()
@@ -40,7 +40,7 @@ export const ACTION_RESULTS: Record<TriviaGameAction, GameStatus> = {
   PAUSE_GAME: 'paused',
   RESUME_GAME: 'playing', // restores statusBeforePause — see resumeGame()
   EMERGENCY_PAUSE: 'paused',
-};
+} as const satisfies Record<TriviaGameAction, GameStatus>;
 
 /**
  * Check if an action is valid for the current game status.

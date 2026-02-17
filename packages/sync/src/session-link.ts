@@ -64,25 +64,25 @@ export type ParseSessionLinkResult =
 export const SESSION_LINK_PARAMS = {
   SESSION_ID: 'session',
   ROLE: 'role',
-} as const;
+} as const satisfies Record<string, string>;
 
 /**
  * Default paths for each game type.
  */
-export const GAME_PATHS: Record<GameType, string> = {
+export const GAME_PATHS = {
   bingo: '/play',
   trivia: '/play',
-} as const;
+} as const satisfies Record<GameType, string>;
 
 /**
  * Valid game types for validation.
  */
-export const VALID_GAME_TYPES: readonly GameType[] = ['bingo', 'trivia'] as const;
+export const VALID_GAME_TYPES = ['bingo', 'trivia'] as const satisfies readonly GameType[];
 
 /**
  * Valid sync roles for validation.
  */
-export const VALID_ROLES: readonly SyncRole[] = ['presenter', 'audience'] as const;
+export const VALID_ROLES = ['presenter', 'audience'] as const satisfies readonly SyncRole[];
 
 // =============================================================================
 // UTILITIES

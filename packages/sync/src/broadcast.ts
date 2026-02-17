@@ -16,7 +16,7 @@ const DEDUP_CONFIG = {
   MAX_RECENT_MESSAGES: 100,
   /** Time window in ms to consider messages as duplicates */
   DEDUP_WINDOW_MS: 100,
-} as const;
+} as const satisfies Record<string, number>;
 
 /**
  * BroadcastChannel wrapper for dual-screen synchronization.

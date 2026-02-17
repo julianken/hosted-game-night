@@ -181,13 +181,13 @@ export interface DrawResult {
 }
 
 // Column ranges for ball generation
-export const COLUMN_RANGES: Record<BingoColumn, [number, number]> = {
+export const COLUMN_RANGES = {
   B: [1, 15],
   I: [16, 30],
   N: [31, 45],
   G: [46, 60],
   O: [61, 75],
-} as const;
+} as const satisfies Record<BingoColumn, readonly [number, number]>;
 
 export const COLUMNS: BingoColumn[] = ['B', 'I', 'N', 'G', 'O'];
 
@@ -200,24 +200,21 @@ export interface RollSoundConfig {
   duration: RollDuration;
 }
 
-export const ROLL_SOUND_OPTIONS: Record<RollSoundType, {
-  name: string;
-  durations: RollDuration[];
-}> = {
+export const ROLL_SOUND_OPTIONS = {
   'metal-cage': { name: 'Metal Cage', durations: ['2s', '4s', '6s', '8s'] },
   'plastic-cage': { name: 'Plastic Cage', durations: ['2s', '4s'] },
   'plastic-swirl': { name: 'Plastic Swirl', durations: ['2s', '4s', '6s', '8s'] },
   'lottery-balls': { name: 'Lottery Balls', durations: ['2s', '4s', '6s', '8s'] },
-};
+} as const satisfies Record<RollSoundType, { name: string; durations: readonly RollDuration[] }>;
 
 // Reveal chime types (sound that plays when ball number is revealed)
 export type RevealChimeType = 'none' | 'positive-notification' | 'gold-coin-prize';
 
-export const REVEAL_CHIME_OPTIONS: Record<RevealChimeType, { name: string }> = {
+export const REVEAL_CHIME_OPTIONS = {
   'none': { name: 'None' },
   'positive-notification': { name: 'Positive Notification' },
   'gold-coin-prize': { name: 'Gold Coin Prize' },
-};
+} as const satisfies Record<RevealChimeType, { name: string }>;
 
 // =============================================================================
 // GAME SESSION TYPES (API)

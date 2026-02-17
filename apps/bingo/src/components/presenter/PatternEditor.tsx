@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 
 // Constants for the 5x5 grid
 const GRID_SIZE = 5;
-const COLUMNS = ['B', 'I', 'N', 'G', 'O'] as const;
+const COLUMNS = ['B', 'I', 'N', 'G', 'O'] as const satisfies readonly string[];
 
 // Free space is always at center (row 2, col 2)
 const FREE_SPACE: PatternCell = { row: 2, col: 2 };

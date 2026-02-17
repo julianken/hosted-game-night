@@ -14,8 +14,8 @@ export interface OptionsEditorProps {
   errors?: { [key: number]: string }; // Option index -> error message
 }
 
-const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const;
-const TRUE_FALSE_OPTIONS = ['True', 'False'] as const;
+const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const satisfies readonly string[];
+const TRUE_FALSE_OPTIONS = ['True', 'False'] as const satisfies readonly string[];
 const MIN_MULTIPLE_CHOICE_OPTIONS = 2;
 const MAX_MULTIPLE_CHOICE_OPTIONS = 4;
 

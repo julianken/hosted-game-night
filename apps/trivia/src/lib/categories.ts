@@ -69,11 +69,11 @@ export const DEFAULT_CATEGORIES: CategoryConfig[] = [
  * Legacy category mappings for backwards compatibility.
  * Maps old category IDs to new ones.
  */
-export const LEGACY_CATEGORY_MAPPING: Record<string, QuestionCategory> = {
+export const LEGACY_CATEGORY_MAPPING = {
   music: 'entertainment',
   movies: 'entertainment',
   tv: 'entertainment',
-};
+} as const satisfies Record<string, QuestionCategory>;
 
 // =============================================================================
 // CATEGORY UTILITIES

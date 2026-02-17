@@ -29,11 +29,11 @@ export const DEFAULT_THEME: ThemeMode = 'system';
 /**
  * Available theme options for UI selectors.
  */
-export const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+export const THEME_OPTIONS = [
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
   { value: 'system', label: 'System Default' },
-];
+] as const satisfies readonly { value: ThemeMode; label: string }[];
 
 /**
  * Creates a theme store with the given storage key.

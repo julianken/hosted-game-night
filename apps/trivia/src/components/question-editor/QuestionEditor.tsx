@@ -24,15 +24,15 @@ const VALIDATION = {
   QUESTION_MIN_LENGTH: 3,
   QUESTION_MAX_LENGTH: 500,
   OPTION_MAX_LENGTH: 200,
-} as const;
+} as const satisfies Record<string, number>;
 
 /**
  * Question type display names
  */
-const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+const QUESTION_TYPE_LABELS = {
   multiple_choice: 'Multiple Choice',
   true_false: 'True/False',
-};
+} as const satisfies Record<QuestionType, string>;
 
 /**
  * Validation errors for a question

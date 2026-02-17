@@ -88,7 +88,7 @@ export const AUDIO_DEFAULTS: AudioState = {
 // SOUND EFFECT PATHS
 // =============================================================================
 
-export const SOUND_EFFECT_PATHS: Record<SoundEffectType, string> = {
+export const SOUND_EFFECT_PATHS = {
   'timer-tick': '/audio/sfx/timer-tick.mp3',
   'timer-expired': '/audio/sfx/timer-expired.mp3',
   'correct-answer': '/audio/sfx/correct-answer.mp3',
@@ -96,7 +96,7 @@ export const SOUND_EFFECT_PATHS: Record<SoundEffectType, string> = {
   'question-reveal': '/audio/sfx/question-reveal.mp3',
   'round-complete': '/audio/sfx/round-complete.mp3',
   'game-win': '/audio/sfx/game-win.mp3',
-};
+} as const satisfies Record<SoundEffectType, string>;
 
 /**
  * All available sound effect types.

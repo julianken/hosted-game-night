@@ -1,7 +1,7 @@
 // Bird words for room codes
 export const BIRD_WORDS = ['SWAN', 'HAWK', 'DUCK', 'DOVE', 'WREN',
                             'CROW', 'HERN', 'RAVEN', 'EGRET', 'FINCH',
-                            'CRANE', 'ROBIN'] as const;
+                            'CRANE', 'ROBIN'] as const satisfies readonly string[];
 
 // Generate SWAN-42 format
 export function generateRoomCode(): string {

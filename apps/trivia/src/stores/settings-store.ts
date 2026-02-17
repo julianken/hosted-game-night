@@ -60,7 +60,7 @@ export const SETTINGS_RANGES = {
   roundsCount: { min: 1, max: 6 },
   questionsPerRound: { min: 3, max: 10 },
   timerDuration: { min: 10, max: 120 },
-} as const;
+} as const satisfies Record<string, { min: number; max: number }>;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

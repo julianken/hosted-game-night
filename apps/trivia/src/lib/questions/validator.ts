@@ -14,7 +14,7 @@ import { isValidQuestionType, isValidQuestionCategory, isValidCorrectAnswer } fr
 // ZOD SCHEMA
 // =============================================================================
 
-const QUESTION_TYPES = ['multiple_choice', 'true_false'] as const;
+const QUESTION_TYPES = ['multiple_choice', 'true_false'] as const satisfies readonly string[];
 const QUESTION_CATEGORIES = [
   'general_knowledge',
   'science',
@@ -26,8 +26,8 @@ const QUESTION_CATEGORIES = [
   'music',
   'movies',
   'tv',
-] as const;
-const CORRECT_ANSWERS = ['A', 'B', 'C', 'D', 'True', 'False'] as const;
+] as const satisfies readonly string[];
+const CORRECT_ANSWERS = ['A', 'B', 'C', 'D', 'True', 'False'] as const satisfies readonly string[];
 
 export const QuestionSchema = z.object({
   id: z.string().min(1),
