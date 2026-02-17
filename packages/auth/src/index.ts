@@ -63,6 +63,3 @@ export { generatePKCE } from './pkce';
 // OAuth 2.1 client
 export { startOAuthFlow } from './oauth-client';
 
-// API route handler factories
-export { createLogoutHandler } from './api/logout-handler';
-export { createTokenHandler, type TokenHandlerConfig } from './api/token-handler';

@@ -1,4 +1,4 @@
-import { createTokenHandler } from '@joolie-boolie/auth';
+import { createTokenHandler } from '@joolie-boolie/auth/api';
 
 export const POST = createTokenHandler({
   platformHubUrl: process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002',

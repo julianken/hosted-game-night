@@ -1,2 +1,2 @@
-import { createLogoutHandler } from '@joolie-boolie/auth';
+import { createLogoutHandler } from '@joolie-boolie/auth/api';
 export const POST = createLogoutHandler();
