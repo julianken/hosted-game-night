@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
-  const { theme, setTheme } = useThemeStore();
+  const { presenterTheme: theme, setPresenterTheme: setTheme } = useThemeStore();
 
   const [facilityName, setFacilityName] = useState('');
   const [email, setEmail] = useState('');

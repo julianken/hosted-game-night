@@ -8,7 +8,7 @@ import { useApplyTheme } from '@/hooks/use-theme';
  * This runs on the client side and applies the theme to the document root.
  */
 export function ThemeInitializer() {
-  const theme = useThemeStore((state: ThemeStore) => state.theme);
+  const theme = useThemeStore((state: ThemeStore) => state.presenterTheme);
   useApplyTheme(theme);
 
   return null;

@@ -7,6 +7,30 @@ import { BingoPattern, GameStatus } from '@/types';
 import { getRecentBalls } from '@/lib/game';
 
 /**
+ * Executes the audio call sequence for a bingo ball: roll sound → call → reveal chime → voice.
+ * Returns the called ball, or null if no ball was called.
+ *
+ * @param audioStore - The audio store instance (from hook capture or getState())
+ * @param callBallFn - Function that calls the next ball and returns it
+ * @param audioEnabled - Whether audio is enabled
+ */
+async function executeCallSequence(
+  audioStore: ReturnType<typeof useAudioStore.getState>,
+  callBallFn: () => ReturnType<ReturnType<typeof useGameStore.getState>['callBall']>,
+  audioEnabled: boolean
+) {
+  if (audioEnabled) {
+    await audioStore.playRollSound(); // Roll sound plays first
+  }
+  const ball = callBallFn(); // Ball appears after roll completes
+  if (ball && audioEnabled) {
+    await audioStore.playRevealChime(); // Reveal chime plays when ball is shown
+    await audioStore.playBallVoice(ball); // Voice announcement plays
+  }
+  return ball;
+}
+
+/**
  * Returns true if the game is in a state where reset should require confirmation.
  * Confirmation is required when the game is actively in progress (playing or paused).
  */
@@ -59,15 +83,7 @@ export function useGame() {
     isProcessingRef.current = true;
     setIsProcessing(true);
     try {
-      if (audioEnabled) {
-        await audioStore.playRollSound();  // Roll sound plays first
-      }
-      const ball = gameStore.callBall();   // Ball appears after roll completes
-      if (ball && audioEnabled) {
-        await audioStore.playRevealChime();  // Reveal chime plays when ball is shown
-        await audioStore.playBallVoice(ball);  // Voice announcement plays
-      }
-      return ball;
+      return await executeCallSequence(audioStore, () => gameStore.callBall(), audioEnabled);
     } finally {
       isProcessingRef.current = false;
       setIsProcessing(false);
@@ -176,16 +192,7 @@ export function useGame() {
           setIsProcessing(true);
           try {
             const audioStoreState = useAudioStore.getState();
-
-            // Use same audio sequence as manual call
-            if (state.audioEnabled) {
-              await audioStoreState.playRollSound();  // Roll sound plays first
-            }
-            const ball = state.callBall();       // Ball appears after roll completes
-            if (ball && state.audioEnabled) {
-              await audioStoreState.playRevealChime();  // Reveal chime plays
-              await audioStoreState.playBallVoice(ball);  // Voice announcement plays
-            }
+            await executeCallSequence(audioStoreState, () => state.callBall(), state.audioEnabled);
           } finally {
             isProcessingRef.current = false;
             setIsProcessing(false);
