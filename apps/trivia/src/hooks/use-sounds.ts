@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { useAudioStore, useSfxSettings } from '@/stores/audio-store';
+import { useSfxSettings } from '@/stores/audio-store';
 import {
   soundManager,
   type SoundEffectType,
@@ -256,66 +256,8 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
 }
 
 // =============================================================================
-// ANSWER SOUNDS HOOK
+// NOTE: useAnswerSounds and useSoundSettings removed — they were passthrough
+// wrappers with no callers. Use useSounds() directly for answer sounds
+// (playCorrectAnswer, playWrongAnswer) and useAudioSettings() from
+// @/stores/audio-store for audio settings UI.
 // =============================================================================
-
-/**
- * Hook for playing answer feedback sounds.
- * Returns functions to play correct/wrong answer sounds.
- */
-export function useAnswerSounds() {
-  const sounds = useSounds();
-
-  const playCorrect = useCallback(() => {
-    sounds.playCorrectAnswer();
-  }, [sounds]);
-
-  const playWrong = useCallback(() => {
-    sounds.playWrongAnswer();
-  }, [sounds]);
-
-  return {
-    playCorrect,
-    playWrong,
-  };
-}
-
-// =============================================================================
-// AUDIO SETTINGS HOOK
-// =============================================================================
-
-/**
- * Hook for managing audio settings UI.
- * Provides controls for enabling/disabling sounds and adjusting volume.
- */
-export function useSoundSettings() {
-  const enabled = useAudioStore((s) => s.enabled);
-  const sfxEnabled = useAudioStore((s) => s.sfxEnabled);
-  const volume = useAudioStore((s) => s.volume);
-  const sfxVolume = useAudioStore((s) => s.sfxVolume);
-
-  const setEnabled = useAudioStore((s) => s.setEnabled);
-  const toggleEnabled = useAudioStore((s) => s.toggleEnabled);
-  const setSfxEnabled = useAudioStore((s) => s.setSfxEnabled);
-  const setVolume = useAudioStore((s) => s.setVolume);
-  const setSfxVolume = useAudioStore((s) => s.setSfxVolume);
-
-  return {
-    // State
-    enabled,
-    sfxEnabled,
-    volume,
-    sfxVolume,
-
-    // Computed
-    effectiveVolume: volume * sfxVolume,
-    isMuted: !enabled || !sfxEnabled,
-
-    // Actions
-    setEnabled,
-    toggleEnabled,
-    setSfxEnabled,
-    setVolume,
-    setSfxVolume,
-  };
-}
