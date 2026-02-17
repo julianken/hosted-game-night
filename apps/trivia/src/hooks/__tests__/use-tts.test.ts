@@ -81,7 +81,6 @@ describe('useTTS', () => {
       ...AUDIO_DEFAULTS,
       enabled: true,
       ttsEnabled: true,
-      isSpeaking: false,
     });
 
     // Clear mock calls
@@ -211,15 +210,14 @@ describe('useTTS', () => {
       expect(mockCancel).toHaveBeenCalled();
     });
 
-    it('sets isSpeaking to false in store', () => {
-      useAudioStore.setState({ isSpeaking: true });
+    it('sets isSpeaking to false', () => {
       const { result } = renderHook(() => useTTS());
 
       act(() => {
         result.current.stop();
       });
 
-      expect(useAudioStore.getState().isSpeaking).toBe(false);
+      expect(result.current.isSpeaking).toBe(false);
     });
   });
 
