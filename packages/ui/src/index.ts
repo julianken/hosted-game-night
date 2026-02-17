@@ -62,3 +62,6 @@ export {
   type ThemeSelectorProps,
   type ThemeOption,
 } from './theme-selector';
+
+// RoomSetupModal
+export { RoomSetupModal, type RoomSetupModalProps } from './room-setup-modal';
