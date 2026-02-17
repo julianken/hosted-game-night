@@ -10,6 +10,9 @@
 
 import crypto from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'lib-refresh-token-store' });
 
 /**
  * Refresh token configuration
@@ -98,7 +101,7 @@ export async function storeRefreshToken(
       .single();
 
     if (error) {
-      console.error('[RefreshTokenStore] Failed to store token:', error);
+      logger.error('Failed to store token', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -110,7 +113,7 @@ export async function storeRefreshToken(
       tokenId: data.id,
     };
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error storing token:', error);
+    logger.error('Unexpected error storing token', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -167,7 +170,7 @@ export async function validateRefreshToken(
     // This is a critical security check - if a token has been rotated,
     // using it again indicates the token was stolen
     if (data.rotated_to) {
-      console.warn('[RefreshTokenStore] TOKEN REUSE DETECTED for token:', data.id);
+      logger.warn('TOKEN REUSE DETECTED', { token_id: data.id });
       return {
         valid: false,
         tokenId: data.id,
@@ -206,7 +209,7 @@ export async function validateRefreshToken(
       scopes: data.scopes,
     };
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error validating token:', error);
+    logger.error('Unexpected error validating token', { error: error instanceof Error ? error.message : String(error) });
     return {
       valid: false,
       error: 'db_error',
@@ -273,7 +276,7 @@ export async function rotateRefreshToken(
       .single();
 
     if (insertError || !newTokenData) {
-      console.error('[RefreshTokenStore] Failed to create new token:', insertError);
+      logger.error('Failed to create new token', { error: insertError?.message });
       return {
         success: false,
         error: 'Failed to create new refresh token',
@@ -287,7 +290,7 @@ export async function rotateRefreshToken(
       .eq('id', validation.tokenId);
 
     if (updateError) {
-      console.error('[RefreshTokenStore] Failed to mark token as rotated:', updateError);
+      logger.error('Failed to mark token as rotated', { error: updateError.message });
       // Don't fail the request - the new token is valid
       // The old token will fail on next use anyway due to rotated_to being set
     }
@@ -298,7 +301,7 @@ export async function rotateRefreshToken(
       newToken,
     };
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error rotating token:', error);
+    logger.error('Unexpected error rotating token', { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -325,14 +328,14 @@ export async function revokeTokenFamily(tokenId: string): Promise<number> {
     });
 
     if (error) {
-      console.error('[RefreshTokenStore] Failed to revoke token family:', error);
+      logger.error('Failed to revoke token family', { error: error.message });
       return 0;
     }
 
-    console.log(`[RefreshTokenStore] Revoked ${data} tokens in family`);
+    logger.info('Revoked tokens in family', { revoked_count: data });
     return data || 0;
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error revoking family:', error);
+    logger.error('Unexpected error revoking family', { error: error instanceof Error ? error.message : String(error) });
     return 0;
   }
 }
@@ -354,13 +357,13 @@ export async function revokeRefreshToken(token: string): Promise<boolean> {
       .eq('token_hash', tokenHash);
 
     if (error) {
-      console.error('[RefreshTokenStore] Failed to revoke token:', error);
+      logger.error('Failed to revoke token', { error: error.message });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error revoking token:', error);
+    logger.error('Unexpected error revoking token', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }
@@ -392,13 +395,13 @@ export async function revokeAllUserTokens(
     const { data, error } = await query.select('id');
 
     if (error) {
-      console.error('[RefreshTokenStore] Failed to revoke user tokens:', error);
+      logger.error('Failed to revoke user tokens', { error: error.message });
       return 0;
     }
 
     return data?.length || 0;
   } catch (error) {
-    console.error('[RefreshTokenStore] Unexpected error revoking user tokens:', error);
+    logger.error('Unexpected error revoking user tokens', { error: error instanceof Error ? error.message : String(error) });
     return 0;
   }
 }

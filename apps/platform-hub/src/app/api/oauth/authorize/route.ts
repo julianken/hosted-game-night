@@ -11,6 +11,9 @@ import {
   updateE2EAuthorization,
 } from '@/lib/oauth/e2e-store';
 import { auditAuthorizationSuccess } from '@/middleware/audit-middleware';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'oauth-authorize' });
 
 /**
  * OAuth 2.1 Authorization Endpoint
@@ -109,7 +112,7 @@ export async function GET(request: NextRequest) {
 
     if (isE2ETestSession && beakUserId) {
       // E2E testing mode - use the user ID from SSO cookie
-      console.log('[OAuth Authorize] E2E testing mode: using SSO cookie user ID');
+      logger.info('E2E testing mode: using SSO cookie user ID');
       userId = beakUserId;
     } else {
       // Normal mode - check Supabase session
@@ -131,16 +134,14 @@ export async function GET(request: NextRequest) {
     // which requires bypassing RLS (oauth_authorizations only allows SELECT for users)
     const dbClient = createServiceRoleClient();
 
-    console.log('[OAuth Authorize] Looking up client:', clientId);
-    console.log('[OAuth Authorize] Is E2E test session:', isE2ETestSession);
-    console.log('[OAuth Authorize] User ID:', userId);
+    logger.info('Looking up client', { client_id: clientId, is_e2e: !!isE2ETestSession, user_id: userId });
 
     // Validate client exists and redirect_uri is registered
     let client: { id: string; name: string; redirect_uris: string[]; is_first_party?: boolean } | null = null;
 
     // In E2E mode, try mock clients first (handles case where migration isn't applied)
     if (isE2ETestSession && E2E_MOCK_CLIENTS[clientId]) {
-      console.log('[OAuth Authorize] Using E2E mock client data');
+      logger.info('Using E2E mock client data');
       client = E2E_MOCK_CLIENTS[clientId];
     }
 
@@ -152,15 +153,15 @@ export async function GET(request: NextRequest) {
         .eq('id', clientId)
         .single();
 
-      console.log('[OAuth Authorize] DB client lookup result:', {
-        client: dbClient_ ? { id: dbClient_.id, name: dbClient_.name, redirect_uris: dbClient_.redirect_uris } : null,
+      logger.info('DB client lookup result', {
+        client_found: !!dbClient_,
         error: clientError?.message,
-        code: clientError?.code
+        code: clientError?.code,
+        redirect_uri: redirectUri,
       });
-      console.log('[OAuth Authorize] Requested redirect_uri:', JSON.stringify(redirectUri));
 
       if (clientError || !dbClient_) {
-        console.error('[OAuth Authorize] Client not found, error:', clientError);
+        logger.error('Client not found', { error: clientError?.message });
         return NextResponse.json(
           { error: 'invalid_client', error_description: 'Client not found' },
           { status: 400 }
@@ -197,7 +198,7 @@ export async function GET(request: NextRequest) {
 
     // In E2E mode, store authorization in memory to avoid FK constraint issues
     if (isE2ETestSession) {
-      console.log('[OAuth Authorize] E2E mode: storing authorization in memory');
+      logger.info('E2E mode: storing authorization in memory');
       cleanupE2EAuthorizations();
 
       createE2EAuthorization({
@@ -216,7 +217,7 @@ export async function GET(request: NextRequest) {
 
       // Check if client is first-party (auto-approve without consent screen)
       if (client.is_first_party) {
-        console.log('[OAuth Authorize] E2E mode: auto-approving first-party client');
+        logger.info('E2E mode: auto-approving first-party client');
         const authCode = crypto.randomBytes(32).toString('hex');
         const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -250,13 +251,13 @@ export async function GET(request: NextRequest) {
         });
 
       if (insertError) {
-        console.error('Failed to create authorization:', insertError);
+        logger.error('Failed to create authorization', { error: insertError.message });
         return errorRedirect(redirectUri, 'server_error', 'Failed to create authorization', state);
       }
 
       // Check if client is first-party (auto-approve without consent screen)
       if (client.is_first_party) {
-        console.log('[OAuth Authorize] Auto-approving first-party client:', client.name);
+        logger.info('Auto-approving first-party client', { client_name: client.name });
         const authCode = crypto.randomBytes(32).toString('hex');
         const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -272,7 +273,7 @@ export async function GET(request: NextRequest) {
           .eq('id', authorizationId);
 
         if (updateError) {
-          console.error('Failed to auto-approve authorization:', updateError);
+          logger.error('Failed to auto-approve authorization', { error: updateError.message });
           return errorRedirect(redirectUri, 'server_error', 'Failed to auto-approve authorization', state);
         }
 
@@ -300,7 +301,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(consentUrl);
 
   } catch (error) {
-    console.error('Authorization endpoint error:', error);
+    logger.error('Authorization endpoint error', { error: error instanceof Error ? error.message : String(error) });
     // In the catch block, we cannot guarantee redirect_uri was validated
     // Therefore, do NOT redirect - return JSON error
     return NextResponse.json(

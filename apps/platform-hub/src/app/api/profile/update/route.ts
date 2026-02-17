@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { updateE2EProfile } from '@/lib/e2e-profile-store';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-profile-update' });
 
 export async function POST(request: Request) {
   try {
@@ -24,7 +27,7 @@ export async function POST(request: Request) {
       process.env.E2E_TESTING === 'true' && e2eToken && e2eUserId;
 
     if (isE2ETesting && e2eToken && e2eUserId) {
-      console.log('[Profile Update API] E2E testing mode: using in-memory store');
+      logger.info('E2E testing mode: using in-memory store');
 
       // Build update object
       const updates: Record<string, unknown> = {};
@@ -127,7 +130,7 @@ export async function POST(request: Request) {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Profile update error:', profileError);
+        logger.error('Profile update error', { error: profileError.message });
         return NextResponse.json(
           { error: 'Failed to update profile' },
           { status: 500 }
@@ -142,7 +145,7 @@ export async function POST(request: Request) {
       });
 
       if (emailError) {
-        console.error('Email update error:', emailError);
+        logger.error('Email update error', { error: emailError.message });
         return NextResponse.json(
           { error: 'Failed to update email. Email may already be in use.' },
           { status: 400 }
@@ -157,7 +160,7 @@ export async function POST(request: Request) {
       });
 
       if (passwordError) {
-        console.error('Password update error:', passwordError);
+        logger.error('Password update error', { error: passwordError.message });
         return NextResponse.json(
           { error: 'Failed to update password' },
           { status: 500 }
@@ -170,7 +173,7 @@ export async function POST(request: Request) {
       message: 'Profile updated successfully',
     });
   } catch (error) {
-    console.error('Profile update error:', error);
+    logger.error('Profile update error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

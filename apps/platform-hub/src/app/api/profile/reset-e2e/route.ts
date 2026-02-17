@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { resetE2EProfile } from '@/lib/e2e-profile-store';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-profile-reset-e2e' });
 
 /**
  * POST /api/profile/reset-e2e
@@ -34,7 +37,7 @@ export async function POST() {
       message: 'E2E profile reset to defaults',
     });
   } catch (error) {
-    console.error('E2E profile reset error:', error);
+    logger.error('E2E profile reset error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

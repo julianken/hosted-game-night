@@ -14,6 +14,9 @@
 
 import { NextResponse } from 'next/server';
 import { generateCsrfToken, setCsrfToken } from '@/lib/csrf';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'oauth-csrf' });
 
 export async function GET() {
   try {
@@ -26,7 +29,7 @@ export async function GET() {
     // Return token to client (needed for form submission)
     return NextResponse.json({ token });
   } catch (error) {
-    console.error('Error generating CSRF token:', error);
+    logger.error('Error generating CSRF token', { error: error instanceof Error ? error.message : String(error) });
 
     return NextResponse.json(
       { error: 'Failed to generate CSRF token' },

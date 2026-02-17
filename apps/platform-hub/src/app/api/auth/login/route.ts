@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { SignJWT } from 'jose';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'auth-login' });
 
 // Production guard: E2E mode must never run on actual production (Vercel)
 // Allows local production builds/servers for E2E testing (VERCEL=1 is auto-set by Vercel)
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     const isE2ETesting = process.env.E2E_TESTING === 'true';
 
     if (isE2ETesting && email === E2E_TEST_EMAIL) {
-      console.log('[Login API] E2E testing mode: bypassing Supabase auth');
+      logger.info('E2E testing mode: bypassing Supabase auth');
 
       // Generate a valid JWT locally (no external API calls)
       const accessToken = await generateE2EAccessToken();
@@ -157,7 +160,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables');
+      logger.error('Missing Supabase environment variables');
       return NextResponse.json(
         { success: false, error: 'Server configuration error' },
         { status: 500 }
@@ -192,7 +195,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
 
     if (authError || !data.session) {
       // Log the actual Supabase error for debugging
-      console.error('[Login API] Authentication failed:', {
+      logger.error('Authentication failed', {
         errorCode: authError?.code,
         errorMessage: authError?.message,
         errorStatus: authError?.status,
@@ -250,7 +253,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<LoginResp
       },
     });
   } catch (error) {
-    console.error('Login API error:', error);
+    logger.error('Login API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

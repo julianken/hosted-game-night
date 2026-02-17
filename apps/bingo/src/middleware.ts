@@ -11,6 +11,9 @@ import {
   clearAuthCookies,
   isProtectedRoute,
 } from '@joolie-boolie/auth/game-middleware';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'bingo-middleware' });
 
 /**
  * Next.js Middleware for Route Protection
@@ -73,12 +76,12 @@ export async function middleware(request: NextRequest) {
 
   // Check if token needs proactive refresh (within 5 minutes of expiry)
   if (refreshToken && shouldRefreshToken(accessToken)) {
-    console.log('[Middleware] Token approaching expiry, attempting proactive refresh');
+    logger.info('Token approaching expiry, attempting proactive refresh');
 
     const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL, OAUTH_CLIENT_ID);
 
     if (result.success && result.accessToken && result.refreshToken) {
-      console.log('[Middleware] Token refresh successful');
+      logger.info('Token refresh successful');
 
       // Create response and set new cookies
       const response = NextResponse.next();
@@ -89,7 +92,7 @@ export async function middleware(request: NextRequest) {
 
       return response;
     } else {
-      console.warn('[Middleware] Proactive refresh failed, falling back to existing token:', result.error);
+      logger.warn('Proactive refresh failed, falling back to existing token', { error: result.error });
       // Continue with existing token - it's still valid, just close to expiry
     }
   }
@@ -97,12 +100,12 @@ export async function middleware(request: NextRequest) {
   // Check if token is already expired - try refresh before rejecting
   if (isTokenExpired(accessToken)) {
     if (refreshToken) {
-      console.log('[Middleware] Token expired, attempting refresh');
+      logger.info('Token expired, attempting refresh');
 
       const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL, OAUTH_CLIENT_ID);
 
       if (result.success && result.accessToken && result.refreshToken) {
-        console.log('[Middleware] Token refresh successful after expiry');
+        logger.info('Token refresh successful after expiry');
 
         // Create response and set new cookies
         const response = NextResponse.next();
@@ -116,7 +119,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Refresh failed or no refresh token - clear cookies and redirect to login
-    console.log('[Middleware] Token expired and refresh failed, redirecting to login');
+    logger.info('Token expired and refresh failed, redirecting to login');
     const response = NextResponse.redirect(new URL('/', request.url));
     clearAuthCookies(response);
     return response;
@@ -128,12 +131,12 @@ export async function middleware(request: NextRequest) {
   if (!isValid) {
     // Invalid token - try refresh before giving up
     if (refreshToken) {
-      console.log('[Middleware] Token invalid, attempting refresh');
+      logger.info('Token invalid, attempting refresh');
 
       const result = await refreshTokens(refreshToken, PLATFORM_HUB_URL, OAUTH_CLIENT_ID);
 
       if (result.success && result.accessToken && result.refreshToken) {
-        console.log('[Middleware] Token refresh successful after invalid token');
+        logger.info('Token refresh successful after invalid token');
 
         // Create response and set new cookies
         const response = NextResponse.next();

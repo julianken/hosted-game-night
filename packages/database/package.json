@@ -25,6 +25,7 @@
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
+    "@joolie-boolie/error-tracking": "workspace:*",
     "@supabase/postgrest-js": "^1.19.4",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",

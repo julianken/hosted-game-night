@@ -14,6 +14,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'lib-supabase-bridge' });
 
 /**
  * User information extracted from OAuth JWT token
@@ -95,7 +98,7 @@ function decodeJWT(token: string): OAuthUserInfo | null {
 
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Failed to decode JWT:', error);
+    logger.error('Failed to decode JWT', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -287,7 +290,7 @@ export async function createSupabaseSession(
       await syncUserProfile(sessionData.user.id, sessionData.user.email!, profileOptions);
     } catch (profileError) {
       // Log error but don't fail the session creation
-      console.error('Profile sync failed:', profileError);
+      logger.error('Profile sync failed', { error: profileError instanceof Error ? profileError.message : String(profileError) });
       // Could add telemetry here
     }
 
@@ -444,13 +447,13 @@ export async function revokeSupabaseSession(accessToken: string): Promise<boolea
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Failed to revoke session:', error);
+      logger.error('Failed to revoke session', { error: error.message });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Unexpected error revoking session:', error);
+    logger.error('Unexpected error revoking session', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

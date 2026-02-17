@@ -6,6 +6,9 @@
 
 import { cookies } from 'next/headers';
 import { createClient } from '@joolie-boolie/database/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'trivia-lib-auth' });
 
 interface AuthUser {
   id: string;
@@ -39,7 +42,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
         email: payload.email,
       };
     } catch {
-      console.error('[Auth] Failed to decode jb_access_token JWT');
+      logger.error('Failed to decode jb_access_token JWT');
     }
   }
 

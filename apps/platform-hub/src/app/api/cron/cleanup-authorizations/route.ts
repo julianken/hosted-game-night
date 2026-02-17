@@ -15,6 +15,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'cron-cleanup-authorizations' });
 
 interface CleanupResponse {
   success: boolean;
@@ -33,9 +36,7 @@ function verifyCronSecret(request: NextRequest): boolean {
   // In development/testing, allow requests without auth if no CRON_SECRET is set
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
-    console.warn(
-      '[Cron Cleanup] CRON_SECRET not configured - allowing request in non-production'
-    );
+    logger.warn('CRON_SECRET not configured - allowing request in non-production');
     return process.env.NODE_ENV !== 'production';
   }
 
@@ -52,7 +53,7 @@ export async function GET(
 ): Promise<NextResponse<CleanupResponse>> {
   // Verify cron secret
   if (!verifyCronSecret(request)) {
-    console.error('[Cron Cleanup] Unauthorized request - invalid CRON_SECRET');
+    logger.error('Unauthorized request - invalid CRON_SECRET');
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }
@@ -66,7 +67,7 @@ export async function GET(
     const { data, error } = await supabase.rpc('cleanup_expired_authorizations');
 
     if (error) {
-      console.error('[Cron Cleanup] Database error:', error);
+      logger.error('Database error', { error: error.message });
       return NextResponse.json(
         {
           success: false,
@@ -78,9 +79,7 @@ export async function GET(
     }
 
     const deletedCount = data as number;
-    console.log(
-      `[Cron Cleanup] Successfully cleaned up ${deletedCount} expired authorizations`
-    );
+    logger.info('Successfully cleaned up expired authorizations', { deletedCount });
 
     return NextResponse.json({
       success: true,
@@ -88,7 +87,7 @@ export async function GET(
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Cron Cleanup] Unexpected error:', error);
+    logger.error('Unexpected error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         success: false,

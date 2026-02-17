@@ -13,6 +13,9 @@ import {
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { BingoTemplateInsert } from '@joolie-boolie/database/types';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-bingo-templates' });
 
 /**
  * GET /api/templates
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ templates });
   } catch (error) {
-    console.error('Error listing bingo templates:', error);
+    logger.error('Error listing bingo templates', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(
@@ -107,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {
-    console.error('Error creating bingo template:', error);
+    logger.error('Error creating bingo template', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(

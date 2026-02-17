@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@joolie-boolie/database/server';
 import { getGameSessionByRoomCode } from '@joolie-boolie/database/tables';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-bingo-sessions' });
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +25,7 @@ export async function GET(
       status: session.status,
     });
   } catch (error) {
-    console.error('Failed to fetch session by room code:', error);
+    logger.error('Failed to fetch session by room code', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

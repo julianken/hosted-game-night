@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 import type { TypedSupabaseClient } from '../client';
 import {
   createGameSession,
@@ -51,6 +52,7 @@ export interface SessionRouteConfig {
  */
 export function createSessionRoutes(config: SessionRouteConfig) {
   const { gameType, createClient, validateGameState, authenticateRequest } = config;
+  const logger = createLogger({ service: `api-${gameType}-sessions` });
 
   /**
    * POST /api/sessions - Create new session
@@ -84,7 +86,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
       // Validate SESSION_TOKEN_SECRET env var
       if (!process.env.SESSION_TOKEN_SECRET) {
-        console.error('SESSION_TOKEN_SECRET environment variable not set');
+        logger.error('SESSION_TOKEN_SECRET environment variable not set');
         return NextResponse.json(
           { error: 'Server configuration error' },
           { status: 500 }
@@ -108,7 +110,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
             .rpc('generate_room_code');
 
           if (rpcError || !roomCode) {
-            console.error('Failed to generate room code:', rpcError);
+            logger.error('Failed to generate room code', { error: rpcError?.message || 'Unknown error' });
             return NextResponse.json(
               { error: 'Failed to generate room code' },
               { status: 500 }
@@ -140,7 +142,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
           // If it's a duplicate key error and we have retries left, try again
           if (isDuplicateError && attempt < MAX_RETRIES - 1) {
-            console.warn(`Room code collision detected (attempt ${attempt + 1}/${MAX_RETRIES}), retrying...`);
+            logger.warn(`Room code collision detected (attempt ${attempt + 1}/${MAX_RETRIES}), retrying...`);
             continue;
           }
 
@@ -174,7 +176,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
         },
       });
     } catch (error) {
-      console.error('Failed to create session:', error);
+      logger.error('Failed to create session', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to create session' },
         { status: 500 }
@@ -217,7 +219,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
         },
       });
     } catch (error) {
-      console.error('Failed to fetch session:', error);
+      logger.error('Failed to fetch session', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to fetch session' },
         { status: 500 }
@@ -242,7 +244,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
       // Validate SESSION_TOKEN_SECRET env var
       if (!process.env.SESSION_TOKEN_SECRET) {
-        console.error('SESSION_TOKEN_SECRET environment variable not set');
+        logger.error('SESSION_TOKEN_SECRET environment variable not set');
         return NextResponse.json(
           { error: 'Server configuration error' },
           { status: 500 }
@@ -300,7 +302,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
         },
       });
     } catch (error) {
-      console.error('PIN verification failed:', error);
+      logger.error('PIN verification failed', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'PIN verification failed' },
         { status: 500 }
@@ -324,7 +326,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
       // Validate SESSION_TOKEN_SECRET env var
       if (!process.env.SESSION_TOKEN_SECRET) {
-        console.error('SESSION_TOKEN_SECRET environment variable not set');
+        logger.error('SESSION_TOKEN_SECRET environment variable not set');
         return NextResponse.json(
           { error: 'Server configuration error' },
           { status: 500 }
@@ -363,7 +365,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
         },
       });
     } catch (error) {
-      console.error('Failed to update state:', error);
+      logger.error('Failed to update state', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to update state' },
         { status: 500 }
@@ -387,7 +389,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
       // Validate SESSION_TOKEN_SECRET env var
       if (!process.env.SESSION_TOKEN_SECRET) {
-        console.error('SESSION_TOKEN_SECRET environment variable not set');
+        logger.error('SESSION_TOKEN_SECRET environment variable not set');
         return NextResponse.json(
           { error: 'Server configuration error' },
           { status: 500 }
@@ -412,7 +414,7 @@ export function createSessionRoutes(config: SessionRouteConfig) {
 
       return NextResponse.json({ data: { success: true } });
     } catch (error) {
-      console.error('Failed to complete session:', error);
+      logger.error('Failed to complete session', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to complete session' },
         { status: 500 }

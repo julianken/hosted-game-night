@@ -13,6 +13,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'lib-audit-log' });
 
 /**
  * Action types for OAuth audit log events
@@ -121,13 +124,13 @@ export async function logAuditEvent(
       .single();
 
     if (error) {
-      console.error('[Audit Log] Failed to write audit log entry:', error);
+      logger.error('Failed to write audit log entry', { error: error.message });
       return null;
     }
 
     return data;
   } catch (err) {
-    console.error('[Audit Log] Exception writing audit log entry:', err);
+    logger.error('Exception writing audit log entry', { error: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }

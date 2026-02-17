@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-templates' });
 
 const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
 const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
@@ -97,7 +100,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting template:', error);
+    logger.error('Error deleting template', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete template' },
       { status: 500 }

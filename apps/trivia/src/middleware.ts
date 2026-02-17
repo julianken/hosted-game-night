@@ -7,6 +7,9 @@ import {
   clearAuthCookies,
   isProtectedRoute,
 } from '@joolie-boolie/auth/game-middleware';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'trivia-middleware' });
 
 /**
  * Next.js Middleware for Route Protection
@@ -110,11 +113,11 @@ export async function middleware(request: NextRequest) {
         return createResponseWithRefreshedTokens(request, result.accessToken, result.refreshToken);
       }
       // New token invalid - fall through to normal verification
-      console.error('Refreshed token failed verification');
+      logger.error('Refreshed token failed verification');
     } else {
       // Refresh failed - log and fall through to normal verification
       // The existing token may still be valid if we're within the 5-min buffer
-      console.warn('Token refresh failed:', result.error);
+      logger.warn('Token refresh failed', { error: result.error });
     }
   }
 

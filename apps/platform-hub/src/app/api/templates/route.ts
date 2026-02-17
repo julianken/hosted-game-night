@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-templates' });
 
 const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
 const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
@@ -222,7 +225,7 @@ export async function GET(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
+    logger.error('Error fetching templates', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch templates', templates: [] },
       { status: 500 }

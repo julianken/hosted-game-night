@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-monitoring-tunnel' });
 
 function isAllowedHost(url: string): boolean {
   try {
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('[Sentry Tunnel] Error forwarding envelope:', error);
+    logger.error('Error forwarding envelope', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Tunnel error' }, { status: 500 });
   }
 }

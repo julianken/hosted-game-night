@@ -537,6 +537,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@joolie-boolie/error-tracking':
+        specifier: workspace:*
+        version: link:../error-tracking
       '@supabase/postgrest-js':
         specifier: ^1.19.4
         version: 1.21.4
