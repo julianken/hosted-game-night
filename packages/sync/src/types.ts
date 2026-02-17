@@ -17,6 +17,10 @@ export interface SyncMessage<TPayload = unknown> {
   originId?: string;
   /** Monotonically increasing sequence number to ensure message uniqueness */
   sequenceNumber?: number;
+  /** Timestamp when message was sent, used for latency detection */
+  sentAt?: number;
+  /** Hash of the state payload for divergence detection */
+  stateHash?: string;
 }
 
 /**

@@ -40,6 +40,19 @@ import {
 } from '@/lib/game/engine';
 import type { GameSettings } from '@/types';
 
+/**
+ * Emit a structured lifecycle event for game observability.
+ * Uses console.warn with JSON for structured client-side logging.
+ */
+function emitLifecycleEvent(event: string, data?: Record<string, unknown>): void {
+  console.warn(JSON.stringify({
+    event,
+    game: 'trivia',
+    timestamp: new Date().toISOString(),
+    ...data,
+  }));
+}
+
 export interface GameStore extends TriviaGameState {
   _isHydrating: boolean; // Flag to prevent sync loops during hydration
   // Actions
@@ -85,14 +98,19 @@ export const useGameStore = create<GameStore>()((set) => ({
 
   // Actions
   startGame: () => {
+    emitLifecycleEvent('game.started');
     set((state) => startGameEngine(state));
   },
 
   endGame: () => {
-    set((state) => endGameEngine(state));
+    set((state) => {
+      emitLifecycleEvent('game.ended', { currentRound: state.currentRound, totalRounds: state.totalRounds, teamCount: state.teams.length });
+      return endGameEngine(state);
+    });
   },
 
   resetGame: () => {
+    emitLifecycleEvent('game.reset');
     set((state) => resetGameEngine(state));
   },
 
@@ -125,11 +143,17 @@ export const useGameStore = create<GameStore>()((set) => ({
   },
 
   completeRound: () => {
-    set((state) => completeRoundEngine(state));
+    set((state) => {
+      emitLifecycleEvent('game.round_completed', { round: state.currentRound, totalRounds: state.totalRounds });
+      return completeRoundEngine(state);
+    });
   },
 
   nextRound: () => {
-    set((state) => nextRoundEngine(state));
+    set((state) => {
+      emitLifecycleEvent('game.round_started', { round: state.currentRound + 1, totalRounds: state.totalRounds });
+      return nextRoundEngine(state);
+    });
   },
 
   // Timer actions
@@ -151,14 +175,17 @@ export const useGameStore = create<GameStore>()((set) => ({
 
   // Pause actions
   pauseGame: () => {
+    emitLifecycleEvent('game.paused');
     set((state) => pauseGameEngine(state));
   },
 
   resumeGame: () => {
+    emitLifecycleEvent('game.resumed');
     set((state) => resumeGameEngine(state));
   },
 
   emergencyPause: () => {
+    emitLifecycleEvent('game.emergency_pause');
     set((state) => emergencyPauseEngine(state));
   },
 

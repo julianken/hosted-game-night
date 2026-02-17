@@ -9,6 +9,30 @@ function generateInstanceId(): string {
 }
 
 /**
+ * Latency threshold in milliseconds.
+ * Messages taking longer than this to arrive trigger a warning.
+ */
+const LATENCY_THRESHOLD_MS = 1000;
+
+/**
+ * Compute a simple hash of a state payload for divergence detection.
+ * Uses a basic string-based approach suitable for client-side use.
+ */
+function computeStateHash(payload: unknown): string {
+  try {
+    const str = JSON.stringify(payload);
+    // Simple DJB2 hash - fast, good distribution for string comparison
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash + str.charCodeAt(i)) & 0xffffffff;
+    }
+    return hash.toString(36);
+  } catch {
+    return 'hash-error';
+  }
+}
+
+/**
  * Configuration for deduplication behavior.
  */
 const DEDUP_CONFIG = {
@@ -32,6 +56,10 @@ const DEDUP_CONFIG = {
  * - Provides configurable error callbacks via options.onError
  * - Supports debug mode with verbose logging via options.debug
  * - Tracks connection state (disconnected, connected, error)
+ *
+ * Sync observability:
+ * - State hash divergence detection on STATE_UPDATE messages
+ * - Message latency monitoring with configurable threshold
  */
 export class BroadcastSync<TPayload = unknown> {
   private channel: BroadcastChannel | null = null;
@@ -48,6 +76,8 @@ export class BroadcastSync<TPayload = unknown> {
   private _connectionState: ConnectionState = 'disconnected';
   /** Monotonically increasing sequence counter for message uniqueness */
   private sequenceCounter = 0;
+  /** Last known state hash for divergence detection */
+  private lastStateHash: string | null = null;
 
   constructor(channelName: string, options: BroadcastSyncOptions = {}) {
     this.channelName = channelName;
@@ -99,6 +129,49 @@ export class BroadcastSync<TPayload = unknown> {
   }
 
   /**
+   * Check message latency and warn if it exceeds the threshold.
+   */
+  private checkMessageLatency(message: SyncMessage<TPayload>): void {
+    if (message.sentAt == null) return;
+
+    const latency = Date.now() - message.sentAt;
+    if (latency > LATENCY_THRESHOLD_MS) {
+      console.warn(JSON.stringify({
+        event: 'sync.message.high_latency',
+        channel: this.channelName,
+        messageType: message.type,
+        latencyMs: latency,
+        threshold: LATENCY_THRESHOLD_MS,
+        timestamp: new Date().toISOString(),
+      }));
+    }
+  }
+
+  /**
+   * Check for state hash divergence after applying a STATE_UPDATE.
+   * Compares the received hash against a locally computed hash of the payload.
+   */
+  private checkStateDivergence(message: SyncMessage<TPayload>): void {
+    if (message.type !== 'STATE_UPDATE' || message.payload == null || message.stateHash == null) {
+      return;
+    }
+
+    const localHash = computeStateHash(message.payload);
+    this.lastStateHash = localHash;
+
+    if (localHash !== message.stateHash) {
+      console.warn(JSON.stringify({
+        event: 'sync.state.divergence_detected',
+        channel: this.channelName,
+        receivedHash: message.stateHash,
+        localHash,
+        sequenceNumber: message.sequenceNumber,
+        timestamp: new Date().toISOString(),
+      }));
+    }
+  }
+
+  /**
    * Get the unique instance ID for this BroadcastSync.
    * Useful for testing and debugging.
    */
@@ -144,6 +217,12 @@ export class BroadcastSync<TPayload = unknown> {
           this.log('Ignoring duplicate message');
           return;
         }
+
+        // Observability: check message latency
+        this.checkMessageLatency(message);
+
+        // Observability: check state divergence for STATE_UPDATE messages
+        this.checkStateDivergence(message);
 
         this.notifyHandlers(message);
       };
@@ -233,7 +312,14 @@ export class BroadcastSync<TPayload = unknown> {
       timestamp: Date.now(),
       originId: this.instanceId,
       sequenceNumber: ++this.sequenceCounter,
+      sentAt: Date.now(),
     };
+
+    // Attach state hash for STATE_UPDATE messages
+    if (type === 'STATE_UPDATE' && payload != null) {
+      message.stateHash = computeStateHash(payload);
+      this.lastStateHash = message.stateHash;
+    }
 
     try {
       this.log('Sending message', { type, timestamp: message.timestamp, sequenceNumber: message.sequenceNumber });
@@ -284,6 +370,7 @@ export class BroadcastSync<TPayload = unknown> {
     this.handlers.clear();
     this.recentMessageKeys.clear();
     this.sequenceCounter = 0;
+    this.lastStateHash = null;
     this.isInitialized = false;
     this.setConnectionState('disconnected');
   }
