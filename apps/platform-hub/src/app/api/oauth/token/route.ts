@@ -17,39 +17,29 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { SignJWT } from 'jose';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   generateRefreshToken,
   storeRefreshToken,
   rotateRefreshToken,
 } from '@/lib/refresh-token-store';
-
-// Production guard: E2E mode must never run in production
-if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
-  throw new Error('E2E mode cannot run in production');
-}
-
-// E2E Testing: Secret loaded from environment variable (never hardcoded)
-function getE2EJwtSecret(): Uint8Array {
-  const secret = process.env.E2E_JWT_SECRET;
-  if (!secret) {
-    throw new Error(
-      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
-      'Set it in your .env.local file.'
-    );
-  }
-  return new TextEncoder().encode(secret);
-}
-
-const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
-const E2E_TEST_EMAIL = 'e2e-test@joolie-boolie.test';
 import { tokenRotationLogger } from '@/lib/token-rotation';
 import {
   getE2EAuthorizationByCode,
   updateE2EAuthorization,
   isE2EMode,
 } from '@/lib/oauth/e2e-store';
+import {
+  signTokenPair,
+  signE2EAccessToken,
+  resolveJwtConfig,
+} from '@/lib/oauth/jwt';
+import { OAuthError, withOAuthErrorHandling } from '@/lib/oauth/errors';
+
+// Production guard: E2E mode must never run in production
+if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+  throw new Error('E2E mode cannot run in production');
+}
 
 /**
  * POST /api/oauth/token
@@ -58,8 +48,9 @@ import {
  * 1. authorization_code - Exchange authorization code for tokens
  * 2. refresh_token - Refresh access token with automatic rotation
  */
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withOAuthErrorHandling(
+  '[Token Endpoint]',
+  async (request: NextRequest): Promise<NextResponse> => {
     const contentType = request.headers.get('content-type');
     let body: Record<string, string>;
 
@@ -76,13 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Validate grant_type
     if (!grant_type) {
-      return NextResponse.json(
-        {
-          error: 'invalid_request',
-          error_description: 'Missing grant_type parameter',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_request', 'Missing grant_type parameter');
     }
 
     // Handle authorization_code grant
@@ -104,25 +89,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Unsupported grant type
-    return NextResponse.json(
-      {
-        error: 'unsupported_grant_type',
-        error_description: `Grant type '${grant_type}' is not supported`,
-      },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('[Token Endpoint] Unexpected error:', error);
-
-    return NextResponse.json(
-      {
-        error: 'server_error',
-        error_description: 'An unexpected error occurred',
-      },
-      { status: 500 }
+    throw new OAuthError(
+      'unsupported_grant_type',
+      `Grant type '${grant_type}' is not supported`
     );
   }
-}
+);
 
 /**
  * Handle authorization_code grant
@@ -133,48 +105,21 @@ async function handleAuthorizationCodeGrant(params: {
   client_id?: string;
   redirect_uri?: string;
   code_verifier?: string;
-}) {
+}): Promise<NextResponse> {
   const { code, client_id, redirect_uri, code_verifier } = params;
 
   // Validate required parameters
   if (!code) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing code parameter',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing code parameter');
   }
-
   if (!client_id) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing client_id parameter',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing client_id parameter');
   }
-
   if (!redirect_uri) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing redirect_uri parameter',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing redirect_uri parameter');
   }
-
   if (!code_verifier) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing code_verifier parameter (PKCE required)',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing code_verifier parameter (PKCE required)');
   }
 
   try {
@@ -191,81 +136,37 @@ async function handleAuthorizationCodeGrant(params: {
         .digest('base64url');
 
       if (codeChallenge !== e2eAuth.code_challenge) {
-        return NextResponse.json(
-          {
-            error: 'invalid_grant',
-            error_description: 'Invalid code_verifier',
-          },
-          { status: 400 }
-        );
+        throw new OAuthError('invalid_grant', 'Invalid code_verifier');
       }
 
-      // Validate client_id matches
       if (client_id !== e2eAuth.client_id) {
-        return NextResponse.json(
-          {
-            error: 'invalid_grant',
-            error_description: 'Client ID mismatch',
-          },
-          { status: 400 }
-        );
+        throw new OAuthError('invalid_grant', 'Client ID mismatch');
       }
 
-      // Validate redirect_uri matches
       if (redirect_uri !== e2eAuth.redirect_uri) {
-        return NextResponse.json(
-          {
-            error: 'invalid_grant',
-            error_description: 'Redirect URI mismatch',
-          },
-          { status: 400 }
-        );
+        throw new OAuthError('invalid_grant', 'Redirect URI mismatch');
       }
 
-      // Check if code has expired
       if (e2eAuth.code_expires_at && new Date(e2eAuth.code_expires_at) < new Date()) {
-        return NextResponse.json(
-          {
-            error: 'invalid_grant',
-            error_description: 'Authorization code has expired',
-          },
-          { status: 400 }
-        );
+        throw new OAuthError('invalid_grant', 'Authorization code has expired');
       }
 
       // Mark authorization as used (invalidate code)
       updateE2EAuthorization(e2eAuth.id, {
         code: undefined,
-        status: 'approved', // Keep approved but remove code
+        status: 'approved',
       });
 
-      // Generate E2E test tokens as proper JWTs (so middleware can parse exp claim)
-      const now = Math.floor(Date.now() / 1000);
-      const expiresIn = 3600; // 1 hour
-
-      const accessToken = await new SignJWT({
-        sub: E2E_TEST_USER_ID,
-        email: E2E_TEST_EMAIL,
-        role: 'authenticated',
-        aud: 'authenticated',
-        iss: 'e2e-test',
-        app_metadata: { provider: 'email', providers: ['email'] },
-        user_metadata: { email: E2E_TEST_EMAIL },
-      })
-        .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-        .setIssuedAt(now)
-        .setExpirationTime(now + expiresIn)
-        .sign(getE2EJwtSecret());
-
+      // Generate E2E test tokens (proper JWTs so middleware can parse exp claim)
+      const accessToken = await signE2EAccessToken();
       const refreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
 
       console.log('[Token Endpoint] E2E mode: returning test tokens');
 
-      // Return E2E tokens in OAuth 2.1 format
       return NextResponse.json({
         access_token: accessToken,
         token_type: 'Bearer',
-        expires_in: expiresIn,
+        expires_in: 3600,
         refresh_token: refreshToken,
       });
     }
@@ -293,13 +194,7 @@ async function handleAuthorizationCodeGrant(params: {
 
     if (authError || !authData) {
       console.error('[Token Endpoint] Authorization not found:', authError);
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: 'Invalid authorization code',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_grant', 'Invalid authorization code');
     }
 
     // Validate PKCE code_verifier against code_challenge
@@ -310,49 +205,22 @@ async function handleAuthorizationCodeGrant(params: {
 
     if (computedChallenge !== authData.code_challenge) {
       console.error('[Token Endpoint] PKCE validation failed');
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: 'Invalid code_verifier',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_grant', 'Invalid code_verifier');
     }
 
-    // Validate client_id matches
     if (client_id !== authData.client_id) {
       console.error('[Token Endpoint] Client ID mismatch');
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: 'Client ID mismatch',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_grant', 'Client ID mismatch');
     }
 
-    // Validate redirect_uri matches
     if (redirect_uri !== authData.redirect_uri) {
       console.error('[Token Endpoint] Redirect URI mismatch');
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: 'Redirect URI mismatch',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_grant', 'Redirect URI mismatch');
     }
 
-    // Check if code has expired
     if (authData.code_expires_at && new Date(authData.code_expires_at) < new Date()) {
       console.error('[Token Endpoint] Authorization code expired');
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: 'Authorization code has expired',
-        },
-        { status: 400 }
-      );
+      throw new OAuthError('invalid_grant', 'Authorization code has expired');
     }
 
     // Mark authorization as used (invalidate code)
@@ -369,7 +237,6 @@ async function handleAuthorizationCodeGrant(params: {
     let userEmail: string | undefined;
 
     try {
-      // Use admin API to get user details
       const { data: userData, error: userError } =
         await dbClient.auth.admin.getUserById(userId);
       if (!userError && userData?.user) {
@@ -380,46 +247,8 @@ async function handleAuthorizationCodeGrant(params: {
       console.log('[Token Endpoint] Could not fetch user email, continuing without it');
     }
 
-    // Generate JWT tokens using SUPABASE_JWT_SECRET (preferred) or SESSION_TOKEN_SECRET (fallback)
-    const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
-    const sessionSecret = process.env.SESSION_TOKEN_SECRET;
-    const signingSecret = supabaseJwtSecret || sessionSecret;
-
-    if (!signingSecret) {
-      console.error('[Token Endpoint] Neither SUPABASE_JWT_SECRET nor SESSION_TOKEN_SECRET configured');
-      return NextResponse.json(
-        {
-          error: 'server_error',
-          error_description: 'Server misconfiguration',
-        },
-        { status: 500 }
-      );
-    }
-
-    // When using SUPABASE_JWT_SECRET, use Supabase-compatible issuer
-    // so PostgRES accepts the JWT for RLS enforcement
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const jwtIssuer = supabaseJwtSecret
-      ? `${supabaseUrl}/auth/v1`
-      : 'joolie-boolie-platform';
-
-    const jwtSecret = new TextEncoder().encode(signingSecret);
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 3600; // 1 hour
-
-    const accessToken = await new SignJWT({
-      sub: userId,
-      email: userEmail,
-      role: 'authenticated',
-      aud: 'authenticated',
-      iss: jwtIssuer,
-      app_metadata: { provider: 'email', providers: ['email'] },
-      user_metadata: { email: userEmail },
-    })
-      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-      .setIssuedAt(now)
-      .setExpirationTime(now + expiresIn)
-      .sign(jwtSecret);
+    // Validate JWT config before generating tokens (fail fast with clear error)
+    resolveJwtConfig();
 
     // Generate and persist refresh token (hashed in database)
     const refreshToken = generateRefreshToken();
@@ -437,14 +266,15 @@ async function handleAuthorizationCodeGrant(params: {
         '[Token Endpoint] Failed to store refresh token:',
         storeResult.error
       );
-      return NextResponse.json(
-        {
-          error: 'server_error',
-          error_description: 'Failed to persist refresh token',
-        },
-        { status: 500 }
-      );
+      throw new OAuthError('server_error', 'Failed to persist refresh token', 500);
     }
+
+    // Sign access token and assemble token pair
+    const { accessToken, expiresIn } = await signTokenPair({
+      userId,
+      userEmail,
+      refreshToken,
+    });
 
     tokenRotationLogger.log({
       event_type: 'refresh_success',
@@ -465,15 +295,10 @@ async function handleAuthorizationCodeGrant(params: {
       refresh_token: refreshToken,
     });
   } catch (error) {
-    console.error('[Token Endpoint] Code exchange error:', error);
+    if (error instanceof OAuthError) throw error;
 
-    return NextResponse.json(
-      {
-        error: 'server_error',
-        error_description: 'Failed to exchange authorization code',
-      },
-      { status: 500 }
-    );
+    console.error('[Token Endpoint] Code exchange error:', error);
+    throw new OAuthError('server_error', 'Failed to exchange authorization code', 500);
   }
 }
 
@@ -490,57 +315,28 @@ async function handleAuthorizationCodeGrant(params: {
 async function handleRefreshTokenGrant(params: {
   refresh_token?: string;
   client_id?: string;
-}) {
+}): Promise<NextResponse> {
   const { refresh_token, client_id } = params;
 
   // Validate required parameters
   if (!refresh_token) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing refresh_token parameter',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing refresh_token parameter');
   }
-
   if (!client_id) {
-    return NextResponse.json(
-      {
-        error: 'invalid_request',
-        error_description: 'Missing client_id parameter',
-      },
-      { status: 400 }
-    );
+    throw new OAuthError('invalid_request', 'Missing client_id parameter');
   }
 
   // E2E Testing Mode: Generate new test tokens without database
   if (isE2EMode() && refresh_token.startsWith('e2e-refresh-')) {
     console.log('[Token Endpoint] E2E mode: refreshing test tokens');
 
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 3600; // 1 hour
-
-    const accessToken = await new SignJWT({
-      sub: E2E_TEST_USER_ID,
-      email: E2E_TEST_EMAIL,
-      role: 'authenticated',
-      aud: 'authenticated',
-      iss: 'e2e-test',
-      app_metadata: { provider: 'email', providers: ['email'] },
-      user_metadata: { email: E2E_TEST_EMAIL },
-    })
-      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-      .setIssuedAt(now)
-      .setExpirationTime(now + expiresIn)
-      .sign(getE2EJwtSecret());
-
+    const accessToken = await signE2EAccessToken();
     const newRefreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
 
     return NextResponse.json({
       access_token: accessToken,
       token_type: 'Bearer',
-      expires_in: expiresIn,
+      expires_in: 3600,
       refresh_token: newRefreshToken,
     });
   }
@@ -577,17 +373,13 @@ async function handleRefreshTokenGrant(params: {
         error: rotationResult.error,
       });
 
-      return NextResponse.json(
-        {
-          error: 'invalid_grant',
-          error_description: rotationResult.error || 'Invalid refresh token',
-        },
-        { status: 400 }
+      throw new OAuthError(
+        'invalid_grant',
+        rotationResult.error || 'Invalid refresh token'
       );
     }
 
     // Get user info from the validated token data
-    // We need to look up the token to get user_id
     const dbClient = createServiceRoleClient();
     const { data: tokenData, error: tokenError } = await dbClient
       .from('refresh_tokens')
@@ -597,13 +389,7 @@ async function handleRefreshTokenGrant(params: {
 
     if (tokenError || !tokenData) {
       console.error('[Token Endpoint] Could not find new token data:', tokenError);
-      return NextResponse.json(
-        {
-          error: 'server_error',
-          error_description: 'Failed to refresh token',
-        },
-        { status: 500 }
-      );
+      throw new OAuthError('server_error', 'Failed to refresh token', 500);
     }
 
     const userId = tokenData.user_id;
@@ -619,44 +405,12 @@ async function handleRefreshTokenGrant(params: {
       console.log('[Token Endpoint] Could not fetch user email, continuing without it');
     }
 
-    // Generate new access token using SUPABASE_JWT_SECRET (preferred) or SESSION_TOKEN_SECRET (fallback)
-    const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
-    const sessionSecret = process.env.SESSION_TOKEN_SECRET;
-    const signingSecret = supabaseJwtSecret || sessionSecret;
-
-    if (!signingSecret) {
-      console.error('[Token Endpoint] Neither SUPABASE_JWT_SECRET nor SESSION_TOKEN_SECRET configured');
-      return NextResponse.json(
-        {
-          error: 'server_error',
-          error_description: 'Server misconfiguration',
-        },
-        { status: 500 }
-      );
-    }
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const jwtIssuer = supabaseJwtSecret
-      ? `${supabaseUrl}/auth/v1`
-      : 'joolie-boolie-platform';
-
-    const jwtSecret = new TextEncoder().encode(signingSecret);
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 3600; // 1 hour
-
-    const accessToken = await new SignJWT({
-      sub: userId,
-      email: userEmail,
-      role: 'authenticated',
-      aud: 'authenticated',
-      iss: jwtIssuer,
-      app_metadata: { provider: 'email', providers: ['email'] },
-      user_metadata: { email: userEmail },
-    })
-      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-      .setIssuedAt(now)
-      .setExpirationTime(now + expiresIn)
-      .sign(jwtSecret);
+    // Sign new access token and assemble token pair
+    const { accessToken, expiresIn } = await signTokenPair({
+      userId,
+      userEmail,
+      refreshToken: rotationResult.newToken,
+    });
 
     tokenRotationLogger.log({
       event_type: 'refresh_success',
@@ -677,15 +431,10 @@ async function handleRefreshTokenGrant(params: {
       refresh_token: rotationResult.newToken,
     });
   } catch (error) {
-    console.error('[Token Endpoint] Refresh error:', error);
+    if (error instanceof OAuthError) throw error;
 
-    return NextResponse.json(
-      {
-        error: 'server_error',
-        error_description: 'Failed to refresh token',
-      },
-      { status: 500 }
-    );
+    console.error('[Token Endpoint] Refresh error:', error);
+    throw new OAuthError('server_error', 'Failed to refresh token', 500);
   }
 }
 
