@@ -5,6 +5,8 @@ import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistr
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
 import { SentryClientInit } from '@/components/providers/SentryClientInit';
 import { ToastProvider } from "@joolie-boolie/ui";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -58,6 +60,8 @@ export default function RootLayout({
         </ToastProvider>
         <ServiceWorkerRegistration />
         <SentryClientInit />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

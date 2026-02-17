@@ -10,6 +10,8 @@ import { validateEnvironment } from '@/lib/env-validation';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { SessionTimeoutMonitor } from '@/components/SessionTimeoutMonitor';
 import { ThemeInitializer } from '@/components/ThemeInitializer';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // Validate environment variables at startup
 // This will throw and prevent the app from starting if configuration is invalid
@@ -89,6 +91,8 @@ export default function RootLayout({
         </ErrorBoundaryProvider>
         <ServiceWorkerRegistration />
         <SentryClientInit />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
