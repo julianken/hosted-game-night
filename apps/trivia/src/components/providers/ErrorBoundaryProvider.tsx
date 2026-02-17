@@ -1,13 +1,13 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { ErrorBoundary, logError, configureErrorLogger } from '@joolie-boolie/error-tracking';
 
 // Configure error logger for Trivia app
 if (typeof window !== 'undefined') {
   configureErrorLogger({
     appName: 'TriviaNight',
-    enableConsole: process.env.NODE_ENV !== 'production',
+    enableConsole: true,
     environment: process.env.NODE_ENV,
   });
 }
@@ -21,6 +21,26 @@ interface ErrorBoundaryProviderProps {
  * Wraps children in an ErrorBoundary with app-specific configuration.
  */
 export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) {
+  const sentryInitRef = useRef(false);
+
+  useEffect(() => {
+    if (sentryInitRef.current) return;
+    sentryInitRef.current = true;
+
+    // Wire Sentry backend
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      import('@/lib/observability/sentry-backend')
+        .then(({ SentryErrorBackend }) => {
+          import('@joolie-boolie/error-tracking/client').then(({ setErrorBackend }) => {
+            setErrorBackend(new SentryErrorBackend());
+          });
+        })
+        .catch(() => {
+          // Sentry not available -- continue without it
+        });
+    }
+  }, []);
+
   return (
     <ErrorBoundary
       componentName="TriviaApp"

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
+import { SentryClientInit } from '@/components/providers/SentryClientInit';
 import { ToastProvider } from "@joolie-boolie/ui";
 
 const geistSans = Geist({
@@ -56,6 +57,7 @@ export default function RootLayout({
           </ErrorBoundaryProvider>
         </ToastProvider>
         <ServiceWorkerRegistration />
+        <SentryClientInit />
       </body>
     </html>
   );

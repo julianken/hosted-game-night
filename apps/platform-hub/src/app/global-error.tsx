@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 
 /**
@@ -21,6 +22,17 @@ export default function GlobalError({
       digest: error.digest,
       stack: error.stack,
       timestamp: new Date().toISOString(),
+    });
+
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        app: 'platform-hub',
+        error_boundary: 'global',
+      },
+      extra: {
+        digest: error.digest,
+      },
     });
   }, [error]);
 

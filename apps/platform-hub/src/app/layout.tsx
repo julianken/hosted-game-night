@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Header, Footer } from '@/components';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
+import { SentryClientInit } from '@/components/providers/SentryClientInit';
 import { AuthProvider } from '@joolie-boolie/auth';
 import { ToastProvider } from '@joolie-boolie/ui';
 import { validateEnvironment } from '@/lib/env-validation';
@@ -87,6 +88,7 @@ export default function RootLayout({
           </AuthProvider>
         </ErrorBoundaryProvider>
         <ServiceWorkerRegistration />
+        <SentryClientInit />
       </body>
     </html>
   );

@@ -3,7 +3,15 @@ import { withSerwist } from '@serwist/turbopack';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["esbuild-wasm"],
+  serverExternalPackages: [
+    "esbuild-wasm",
+    "@opentelemetry/api",
+    "@opentelemetry/sdk-trace-base",
+    "@opentelemetry/exporter-trace-otlp-http",
+    "@opentelemetry/resources",
+    "@opentelemetry/semantic-conventions",
+  ],
+  productionBrowserSourceMaps: false,
   transpilePackages: [
     '@joolie-boolie/sync',
     '@joolie-boolie/ui',

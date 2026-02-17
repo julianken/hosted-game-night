@@ -1,20 +1,59 @@
-/**
- * Next.js Instrumentation Hook
- *
- * This file is automatically called by Next.js once at application startup
- * (both dev and production). Use it for one-time initialization tasks like
- * environment validation.
- *
- * See: https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
- */
-
 import { validateEnvironment } from './lib/env-validation';
 
-/**
- * Called once when the Next.js server starts
- */
-export function register() {
-  // Validate all required environment variables at startup
-  // Fails fast with clear error messages if config is missing/invalid
+export async function register() {
   validateEnvironment();
+
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+      const { registerOTel } = await import('@vercel/otel');
+      registerOTel({ serviceName: 'trivia' });
+    }
+
+    await import('../sentry.server.config');
+
+    if (process.env.SENTRY_DSN && process.env.E2E_TESTING !== 'true') {
+      const { setServerErrorBackend } = await import('@joolie-boolie/error-tracking/server');
+      const { SentryErrorBackend } = await import('./lib/observability/sentry-backend');
+      setServerErrorBackend(new SentryErrorBackend());
+    }
+  }
+
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    await import('../sentry.edge.config');
+  }
+}
+
+export async function onRequestError(
+  error: { digest: string } & Error,
+  request: {
+    path: string;
+    method: string;
+    headers: Record<string, string>;
+  },
+  context: {
+    routerKind: 'Pages Router' | 'App Router';
+    routeType: 'render' | 'route' | 'action' | 'middleware';
+    routePath: string;
+    revalidateReason: 'on-demand' | 'stale' | undefined;
+    renderSource:
+      | 'react-server-components'
+      | 'react-server-components-payload'
+      | 'server-rendering'
+      | undefined;
+  }
+): Promise<void> {
+  const { captureServerError } = await import('@joolie-boolie/error-tracking/server');
+
+  captureServerError(error, {
+    component: context.routePath,
+    requestId: error.digest,
+    url: request.path,
+    metadata: {
+      method: request.method,
+      routerKind: context.routerKind,
+      routeType: context.routeType,
+      renderSource: context.renderSource,
+      revalidateReason: context.revalidateReason,
+    },
+  });
 }
