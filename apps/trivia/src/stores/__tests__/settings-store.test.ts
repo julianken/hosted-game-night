@@ -45,6 +45,7 @@ describe('useSettingsStore', () => {
       expect(state.timerDuration).toBe(30);
       expect(state.timerAutoStart).toBe(true);
       expect(state.timerVisible).toBe(true);
+      expect(state.timerAutoReveal).toBe(true);
       expect(state.ttsEnabled).toBe(false);
       expect(state.lastTeamSetup).toBeNull();
     });
@@ -86,6 +87,14 @@ describe('useSettingsStore', () => {
       expect(state.timerAutoStart).toBe(false);
       expect(state.timerVisible).toBe(false);
       expect(state.ttsEnabled).toBe(true);
+    });
+
+    it('should update timerAutoReveal', () => {
+      act(() => {
+        useSettingsStore.getState().updateSetting('timerAutoReveal', false);
+      });
+
+      expect(useSettingsStore.getState().timerAutoReveal).toBe(false);
     });
 
     describe('validation', () => {
@@ -215,6 +224,51 @@ describe('useSettingsStore', () => {
     it('should return null if no team setup saved', () => {
       const teamSetup = useSettingsStore.getState().loadTeamSetup();
       expect(teamSetup).toBeNull();
+    });
+  });
+
+  describe('partialize', () => {
+    it('should include timerAutoReveal in the partialize output', () => {
+      const partialize = useSettingsStore.persist.getOptions().partialize;
+      if (!partialize) throw new Error('partialize not configured');
+
+      const fullState = useSettingsStore.getState();
+      const persisted = partialize(fullState);
+
+      expect(persisted).toHaveProperty('timerAutoReveal');
+    });
+
+    it('should persist timerAutoReveal: false so the setting survives page reload', () => {
+      act(() => {
+        useSettingsStore.getState().updateSetting('timerAutoReveal', false);
+      });
+
+      const partialize = useSettingsStore.persist.getOptions().partialize;
+      if (!partialize) throw new Error('partialize not configured');
+
+      const persisted = partialize(useSettingsStore.getState());
+      expect(persisted.timerAutoReveal).toBe(false);
+    });
+
+    it('should include all expected settings keys in partialize output', () => {
+      const partialize = useSettingsStore.persist.getOptions().partialize;
+      if (!partialize) throw new Error('partialize not configured');
+
+      const persisted = partialize(useSettingsStore.getState());
+      const expectedKeys = [
+        'roundsCount',
+        'questionsPerRound',
+        'timerDuration',
+        'timerAutoStart',
+        'timerVisible',
+        'timerAutoReveal',
+        'ttsEnabled',
+        'lastTeamSetup',
+      ];
+
+      for (const key of expectedKeys) {
+        expect(persisted).toHaveProperty(key);
+      }
     });
   });
 

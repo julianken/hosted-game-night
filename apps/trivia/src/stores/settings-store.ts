@@ -121,6 +121,7 @@ export const useSettingsStore = create<SettingsStore>()(
         timerDuration: state.timerDuration,
         timerAutoStart: state.timerAutoStart,
         timerVisible: state.timerVisible,
+        timerAutoReveal: state.timerAutoReveal,
         ttsEnabled: state.ttsEnabled,
         lastTeamSetup: state.lastTeamSetup,
       }),
