@@ -12,6 +12,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const rotationLogger = createLogger({ service: 'lib-token-rotation' });
 
 /**
  * Token refresh response from Supabase
@@ -75,10 +78,8 @@ class TokenRotationLogger {
 
     this.events.push(logEntry);
 
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Token Rotation]', logEntry);
-    }
+    // Log via structured logger
+    rotationLogger.info('Token rotation event', { event_type: logEntry.event_type, client_id: logEntry.client_id, user_id: logEntry.user_id });
 
     // In production, send to logging service (e.g., Supabase, Sentry)
     // TODO: Implement production logging integration

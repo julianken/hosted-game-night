@@ -19,6 +19,9 @@ import {
   updateE2EAuthorization,
   getE2EClient,
 } from '@/lib/oauth/e2e-store';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'oauth-deny' });
 
 /**
  * Request body schema
@@ -87,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // In E2E mode, try to get authorization from in-memory store
     if (isE2ESession) {
-      console.log('[OAuth Deny] E2E mode: checking in-memory store');
+      logger.info('E2E mode: checking in-memory store');
       const e2eAuth = getE2EAuthorization(authorization_id);
 
       if (e2eAuth && e2eAuth.status === 'pending') {
@@ -223,7 +226,7 @@ export async function POST(request: NextRequest) {
       redirect_url: redirectUrl.toString(),
     });
   } catch (error) {
-    console.error('Error in OAuth denial:', error);
+    logger.error('Error in OAuth denial', { error: error instanceof Error ? error.message : String(error) });
 
     // Log error (without client_id if not available)
     await auditAuthorizationError(

@@ -11,6 +11,9 @@ import { parseJsonQuestions, questionsToTriviaQuestions } from '@/lib/questions'
 import { createTriviaQuestionSet } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaQuestionSetInsert } from '@joolie-boolie/database/types';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-trivia-question-sets-import' });
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ questionSet, parseResult }, { status: 201 });
   } catch (error) {
-    console.error('Error importing question set:', error);
+    logger.error('Error importing question set', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(

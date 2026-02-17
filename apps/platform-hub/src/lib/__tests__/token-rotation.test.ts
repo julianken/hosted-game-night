@@ -309,15 +309,18 @@ describe('Token Rotation Module', () => {
         user_id: 'test-user',
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[Token Rotation]',
-        expect.objectContaining({
-          event_type: 'refresh_success',
-          client_id: 'test-client',
-          user_id: 'test-user',
-          timestamp: expect.any(String),
-        })
-      );
+      // Structured logger outputs JSON string to console.log
+      expect(consoleSpy).toHaveBeenCalled();
+      const loggedJson = JSON.parse(consoleSpy.mock.calls[0][0]);
+      expect(loggedJson).toMatchObject({
+        level: 'info',
+        message: 'Token rotation event',
+        service: 'lib-token-rotation',
+        event_type: 'refresh_success',
+        client_id: 'test-client',
+        user_id: 'test-user',
+        timestamp: expect.any(String),
+      });
 
       consoleSpy.mockRestore();
     });

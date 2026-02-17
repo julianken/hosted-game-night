@@ -11,6 +11,9 @@ import {
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaQuestionSetInsert, TriviaQuestion } from '@joolie-boolie/database/types';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-trivia-question-sets' });
 
 /**
  * Validates trivia questions structure
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ questionSets });
   } catch (error) {
-    console.error('Error listing trivia question sets:', error);
+    logger.error('Error listing trivia question sets', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ questionSet }, { status: 201 });
   } catch (error) {
-    console.error('Error creating trivia question set:', error);
+    logger.error('Error creating trivia question set', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(

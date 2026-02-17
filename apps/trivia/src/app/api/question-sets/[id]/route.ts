@@ -12,6 +12,9 @@ import {
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaQuestionSetUpdate, TriviaQuestion } from '@joolie-boolie/database/types';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-trivia-question-sets' });
 
 type RouteParams = {
   params: Promise<{
@@ -65,7 +68,7 @@ export async function GET(
 
     return NextResponse.json({ questionSet });
   } catch (error) {
-    console.error('Error getting trivia question set:', error);
+    logger.error('Error getting trivia question set', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(
@@ -130,7 +133,7 @@ export async function PATCH(
 
     return NextResponse.json({ questionSet });
   } catch (error) {
-    console.error('Error updating trivia question set:', error);
+    logger.error('Error updating trivia question set', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(
@@ -169,7 +172,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error('Error deleting trivia question set:', error);
+    logger.error('Error deleting trivia question set', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(

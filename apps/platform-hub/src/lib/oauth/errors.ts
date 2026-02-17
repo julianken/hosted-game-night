@@ -8,6 +8,9 @@
  */
 
 import { NextResponse } from 'next/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'lib-oauth-errors' });
 
 // ---------------------------------------------------------------------------
 // RFC 6749 error codes
@@ -102,7 +105,7 @@ export function withOAuthErrorHandling<TArgs extends unknown[]>(
         return err.toResponse();
       }
 
-      console.error(`${label} Unexpected error:`, err);
+      logger.error(`${label} Unexpected error`, { error: err instanceof Error ? err.message : String(err) });
       return NextResponse.json(
         {
           error: 'server_error' as OAuthErrorCode,

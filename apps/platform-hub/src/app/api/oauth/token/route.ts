@@ -35,6 +35,9 @@ import {
   resolveJwtConfig,
 } from '@/lib/oauth/jwt';
 import { OAuthError, withOAuthErrorHandling } from '@/lib/oauth/errors';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'oauth-token' });
 
 // Production guard: E2E mode must never run on actual production (Vercel)
 // Allows local production builds/servers for E2E testing (VERCEL=1 is auto-set by Vercel)
@@ -128,7 +131,7 @@ async function handleAuthorizationCodeGrant(params: {
     const e2eAuth = getE2EAuthorizationByCode(code);
 
     if (e2eAuth && isE2EMode()) {
-      console.log('[Token Endpoint] E2E mode: exchanging in-memory authorization code');
+      logger.info('E2E mode: exchanging in-memory authorization code');
 
       // Validate PKCE code_verifier against code_challenge
       const codeChallenge = crypto
@@ -162,7 +165,7 @@ async function handleAuthorizationCodeGrant(params: {
       const accessToken = await signE2EAccessToken();
       const refreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
 
-      console.log('[Token Endpoint] E2E mode: returning test tokens');
+      logger.info('E2E mode: returning test tokens');
 
       return NextResponse.json({
         access_token: accessToken,
@@ -194,7 +197,7 @@ async function handleAuthorizationCodeGrant(params: {
       .single();
 
     if (authError || !authData) {
-      console.error('[Token Endpoint] Authorization not found:', authError);
+      logger.error('Authorization not found', { error: authError?.message });
       throw new OAuthError('invalid_grant', 'Invalid authorization code');
     }
 
@@ -205,22 +208,22 @@ async function handleAuthorizationCodeGrant(params: {
       .digest('base64url');
 
     if (computedChallenge !== authData.code_challenge) {
-      console.error('[Token Endpoint] PKCE validation failed');
+      logger.error('PKCE validation failed');
       throw new OAuthError('invalid_grant', 'Invalid code_verifier');
     }
 
     if (client_id !== authData.client_id) {
-      console.error('[Token Endpoint] Client ID mismatch');
+      logger.error('Client ID mismatch');
       throw new OAuthError('invalid_grant', 'Client ID mismatch');
     }
 
     if (redirect_uri !== authData.redirect_uri) {
-      console.error('[Token Endpoint] Redirect URI mismatch');
+      logger.error('Redirect URI mismatch');
       throw new OAuthError('invalid_grant', 'Redirect URI mismatch');
     }
 
     if (authData.code_expires_at && new Date(authData.code_expires_at) < new Date()) {
-      console.error('[Token Endpoint] Authorization code expired');
+      logger.error('Authorization code expired');
       throw new OAuthError('invalid_grant', 'Authorization code has expired');
     }
 
@@ -245,7 +248,7 @@ async function handleAuthorizationCodeGrant(params: {
       }
     } catch {
       // If admin API fails, continue without email (user_id is still valid)
-      console.log('[Token Endpoint] Could not fetch user email, continuing without it');
+      logger.info('Could not fetch user email, continuing without it');
     }
 
     // Validate JWT config before generating tokens (fail fast with clear error)
@@ -263,10 +266,7 @@ async function handleAuthorizationCodeGrant(params: {
     );
 
     if (!storeResult.success) {
-      console.error(
-        '[Token Endpoint] Failed to store refresh token:',
-        storeResult.error
-      );
+      logger.error('Failed to store refresh token', { error: storeResult.error });
       throw new OAuthError('server_error', 'Failed to persist refresh token', 500);
     }
 
@@ -298,7 +298,7 @@ async function handleAuthorizationCodeGrant(params: {
   } catch (error) {
     if (error instanceof OAuthError) throw error;
 
-    console.error('[Token Endpoint] Code exchange error:', error);
+    logger.error('Code exchange error', { error: error instanceof Error ? error.message : String(error) });
     throw new OAuthError('server_error', 'Failed to exchange authorization code', 500);
   }
 }
@@ -329,7 +329,7 @@ async function handleRefreshTokenGrant(params: {
 
   // E2E Testing Mode: Generate new test tokens without database
   if (isE2EMode() && refresh_token.startsWith('e2e-refresh-')) {
-    console.log('[Token Endpoint] E2E mode: refreshing test tokens');
+    logger.info('E2E mode: refreshing test tokens');
 
     const accessToken = await signE2EAccessToken();
     const newRefreshToken = `e2e-refresh-${crypto.randomBytes(32).toString('hex')}`;
@@ -389,7 +389,7 @@ async function handleRefreshTokenGrant(params: {
       .single();
 
     if (tokenError || !tokenData) {
-      console.error('[Token Endpoint] Could not find new token data:', tokenError);
+      logger.error('Could not find new token data', { error: tokenError?.message });
       throw new OAuthError('server_error', 'Failed to refresh token', 500);
     }
 
@@ -403,7 +403,7 @@ async function handleRefreshTokenGrant(params: {
         userEmail = userData.user.email;
       }
     } catch {
-      console.log('[Token Endpoint] Could not fetch user email, continuing without it');
+      logger.info('Could not fetch user email, continuing without it');
     }
 
     // Sign new access token and assemble token pair
@@ -434,7 +434,7 @@ async function handleRefreshTokenGrant(params: {
   } catch (error) {
     if (error instanceof OAuthError) throw error;
 
-    console.error('[Token Endpoint] Refresh error:', error);
+    logger.error('Refresh error', { error: error instanceof Error ? error.message : String(error) });
     throw new OAuthError('server_error', 'Failed to refresh token', 500);
   }
 }

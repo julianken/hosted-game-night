@@ -11,6 +11,9 @@ import {
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaPresetInsert } from '@joolie-boolie/database/types';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-trivia-presets' });
 
 /**
  * GET /api/presets
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ presets });
   } catch (error) {
-    console.error('Error listing trivia presets:', error);
+    logger.error('Error listing trivia presets', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ preset }, { status: 201 });
   } catch (error) {
-    console.error('Error creating trivia preset:', error);
+    logger.error('Error creating trivia preset', { error: error instanceof Error ? error.message : String(error) });
 
     if (isDatabaseError(error)) {
       return NextResponse.json(

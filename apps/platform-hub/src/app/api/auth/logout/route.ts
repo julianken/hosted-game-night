@@ -6,6 +6,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'auth-logout' });
 
 export async function POST() {
   try {
@@ -25,7 +28,7 @@ export async function POST() {
         await supabase.auth.signOut();
       } catch (supabaseError) {
         // Log but don't fail the request - cookies will be cleared anyway
-        console.error('Supabase signOut error (non-critical):', supabaseError);
+        logger.error('Supabase signOut error (non-critical)', { error: supabaseError instanceof Error ? supabaseError.message : String(supabaseError) });
       }
     }
 
@@ -42,7 +45,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

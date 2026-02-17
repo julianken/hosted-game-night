@@ -14,6 +14,9 @@
 
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'lib-csrf' });
 
 const CSRF_COOKIE_NAME = 'oauth_csrf_token';
 const CSRF_TOKEN_BYTES = 32;
@@ -90,7 +93,7 @@ export async function validateCsrfToken(token: string | null | undefined): Promi
     return crypto.timingSafeEqual(tokenBuffer, storedBuffer);
   } catch (error) {
     // Handle malformed base64 or other buffer creation errors
-    console.error('CSRF validation error:', error);
+    logger.error('CSRF validation error', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }

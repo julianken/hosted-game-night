@@ -18,6 +18,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify, createRemoteJWKSet, type JWTPayload } from 'jose';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'auth-sync-session' });
 
 // E2E Testing: Same secret used by Platform Hub login API
 const E2E_JWT_SECRET = new TextEncoder().encode(
@@ -164,7 +167,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       domain: cookieDomain,
     });
 
-    console.log('[Sync Session] Session synced successfully for user:', userId);
+    logger.info('Session synced successfully', { user_id: userId });
 
     return NextResponse.json({
       success: true,
@@ -174,7 +177,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error('[Sync Session] Error:', error);
+    logger.error('Sync session error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

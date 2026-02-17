@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { getE2EProfile } from '@/lib/e2e-profile-store';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'api-profile' });
 
 /**
  * GET /api/profile
@@ -58,7 +61,7 @@ export async function GET() {
 
     // PGRST116 = "no rows found" - expected for new users without a profile row
     if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Profile fetch error:', profileError);
+      logger.error('Profile fetch error', { error: profileError.message });
       return NextResponse.json(
         { error: 'Failed to fetch profile' },
         { status: 500 }
@@ -71,7 +74,7 @@ export async function GET() {
       email: user.email || '',
     });
   } catch (error) {
-    console.error('Profile API error:', error);
+    logger.error('Profile API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

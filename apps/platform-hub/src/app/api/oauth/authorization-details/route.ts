@@ -14,6 +14,9 @@ import {
   getE2EAuthorization,
   getE2EClient,
 } from '@/lib/oauth/e2e-store';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'oauth-authorization-details' });
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // In E2E mode, try to get authorization from in-memory store
     if (isE2ESession) {
-      console.log('[Authorization Details] E2E mode: checking in-memory store');
+      logger.info('E2E mode: checking in-memory store');
       const e2eAuth = getE2EAuthorization(authorizationId);
 
       if (e2eAuth && e2eAuth.status === 'pending') {
@@ -129,7 +132,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Authorization Details] Error:', error);
+    logger.error('Error fetching authorization details', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

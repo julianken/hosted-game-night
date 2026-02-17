@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+
+const logger = createLogger({ service: 'auth-reset-password' });
 
 /**
  * Password Reset API Route
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
     });
 
     if (passwordError) {
-      console.error('Password update error:', passwordError);
+      logger.error('Password update error', { error: passwordError.message });
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
@@ -95,7 +98,7 @@ export async function POST(request: Request) {
       message: 'Password reset successfully',
     });
   } catch (error) {
-    console.error('Password reset error:', error);
+    logger.error('Password reset error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
