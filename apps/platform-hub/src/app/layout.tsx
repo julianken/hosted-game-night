@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   description:
     'Fun, accessible games designed for groups and communities - Bingo, Trivia, and more',
   keywords: ['bingo', 'trivia', 'games', 'community', 'accessible', 'inclusive'],
+  icons: {
+    apple: '/icons/icon-192.svg',
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -62,9 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >

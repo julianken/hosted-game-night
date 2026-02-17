@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Trivia - Joolie Boolie',
   description: 'Presenter-controlled trivia for groups and communities',
+  icons: {
+    apple: '/icons/icon-192.svg',
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -43,9 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
