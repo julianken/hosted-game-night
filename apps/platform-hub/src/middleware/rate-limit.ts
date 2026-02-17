@@ -44,7 +44,11 @@ function getRedisRatelimit(): Ratelimit | null {
   const redisToken = process.env.REDIS_TOKEN;
 
   if (!redisUrl || !redisToken) {
-    console.info('[Rate Limit] No REDIS_URL or REDIS_TOKEN found, using in-memory fallback');
+    console.warn(
+      '[Rate Limit] REDIS_URL or REDIS_TOKEN not configured — using in-memory fallback. ' +
+        'Rate limiting is active but will reset on cold starts and is not shared across instances. ' +
+        'Configure Upstash Redis for production-grade rate limiting.'
+    );
     return null;
   }
 
@@ -100,6 +104,11 @@ function startCleanup() {
 
     entriesToDelete.forEach((ip) => rateLimitStore.delete(ip));
   }, CLEANUP_INTERVAL_MS);
+
+  // Allow process to exit naturally even with the timer running
+  if (cleanupTimer && typeof cleanupTimer.unref === 'function') {
+    cleanupTimer.unref();
+  }
 }
 
 // Start cleanup timer for in-memory fallback

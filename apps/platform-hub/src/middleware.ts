@@ -17,7 +17,8 @@ import { checkBodySize } from '@/middleware/body-size';
  * - /api/oauth/* (token, approve, deny, csrf)
  *
  * Rate limited paths:
- * - /oauth/consent (10 req/min per IP)
+ * - /oauth/consent, /oauth/authorize, /oauth/token (10 req/min per IP)
+ * - /api/auth/login, /api/auth/reset-password, /api/auth/sync-session (10 req/min per IP)
  *
  * Note: Middleware runs on Edge Runtime, so only edge-compatible code allowed.
  */
@@ -33,12 +34,16 @@ const OAUTH_API_PATHS = [
 ];
 
 /**
- * OAuth endpoints that require rate limiting
+ * Paths that require rate limiting (OAuth + auth endpoints)
+ * Protects against brute force login, credential stuffing, and DDoS attacks
  */
-const OAUTH_PATHS = [
+const RATE_LIMITED_PATHS = [
   '/oauth/consent',
   '/oauth/authorize',
   '/oauth/token',
+  '/api/auth/login',
+  '/api/auth/reset-password',
+  '/api/auth/sync-session',
 ];
 
 /**
@@ -52,7 +57,7 @@ function requiresCors(pathname: string): boolean {
  * Check if path should be rate limited
  */
 function shouldRateLimit(pathname: string): boolean {
-  return OAUTH_PATHS.some((path) => pathname.startsWith(path));
+  return RATE_LIMITED_PATHS.some((path) => pathname.startsWith(path));
 }
 
 export async function middleware(request: NextRequest) {
@@ -115,7 +120,7 @@ export async function middleware(request: NextRequest) {
     return addCorsHeaders(response, validOrigin);
   }
 
-  // 3. Apply rate limiting to OAuth endpoints (non-API)
+  // 3. Apply rate limiting to OAuth and auth endpoints
   // Skip rate limiting for E2E tests to allow parallel test execution
   if (shouldRateLimit(pathname) && !isE2ETesting) {
     // Check rate limit before processing request

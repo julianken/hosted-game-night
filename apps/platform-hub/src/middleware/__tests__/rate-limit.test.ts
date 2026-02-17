@@ -334,6 +334,55 @@ describe('Rate Limiting Middleware', () => {
     });
   });
 
+  describe('Auth endpoint rate limiting (in-memory fallback)', () => {
+    it('should rate limit /api/auth/login requests', async () => {
+      const request = createMockRequest('http://localhost:3002/api/auth/login');
+
+      // Make 10 requests (at the limit)
+      for (let i = 0; i < 10; i++) {
+        const result = await checkRateLimit(request);
+        expect(result).toBeNull();
+      }
+
+      // 11th request should be blocked
+      const result = await checkRateLimit(request);
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(429);
+    });
+
+    it('should rate limit /api/auth/reset-password requests', async () => {
+      const request = createMockRequest('http://localhost:3002/api/auth/reset-password');
+
+      // Make 10 requests (at the limit)
+      for (let i = 0; i < 10; i++) {
+        await checkRateLimit(request);
+      }
+
+      // 11th request should be blocked
+      const result = await checkRateLimit(request);
+      expect(result?.status).toBe(429);
+    });
+
+    it('should share rate limit counter across auth and OAuth paths for same IP', async () => {
+      const loginRequest = createMockRequest('http://localhost:3002/api/auth/login');
+      const oauthRequest = createMockRequest('http://localhost:3002/oauth/consent');
+
+      // Make 5 requests to login
+      for (let i = 0; i < 5; i++) {
+        await checkRateLimit(loginRequest);
+      }
+
+      // Make 5 requests to OAuth
+      for (let i = 0; i < 5; i++) {
+        await checkRateLimit(oauthRequest);
+      }
+
+      // 11th request (to either endpoint) should be blocked
+      const result = await checkRateLimit(loginRequest);
+      expect(result?.status).toBe(429);
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle missing IP headers gracefully', async () => {
       const request = new NextRequest(TEST_URL);
@@ -377,6 +426,35 @@ describe('Rate Limiting Middleware', () => {
       // 11th request should be blocked (10 limit reached)
       const result = await checkRateLimit(request1);
       expect(result?.status).toBe(429);
+    });
+  });
+
+  describe('Memory cleanup', () => {
+    it('should clean up expired entries when window expires', async () => {
+      vi.useFakeTimers();
+
+      const request = createMockRequest();
+
+      // Make some requests to populate the store
+      for (let i = 0; i < 5; i++) {
+        await checkRateLimit(request);
+      }
+
+      // Verify the entry exists by checking remaining count
+      const headersBefore = await getRateLimitHeaders(request);
+      expect(headersBefore['X-RateLimit-Remaining']).toBe('5');
+
+      // Advance past the rate limit window (60s) AND the cleanup interval (5min)
+      vi.advanceTimersByTime(6 * 60 * 1000);
+
+      // After cleanup, a new request should start fresh
+      const result = await checkRateLimit(request);
+      expect(result).toBeNull(); // allowed (fresh window)
+
+      const headersAfter = await getRateLimitHeaders(request);
+      expect(headersAfter['X-RateLimit-Remaining']).toBe('9'); // 10 - 1 = 9
+
+      vi.useRealTimers();
     });
   });
 
@@ -433,7 +511,7 @@ describe('Rate Limiting Middleware', () => {
     });
 
     it('should fall back to in-memory when Redis is not configured', async () => {
-      const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       delete process.env.REDIS_URL;
       delete process.env.REDIS_TOKEN;
@@ -446,11 +524,11 @@ describe('Rate Limiting Middleware', () => {
       const result = await memCheckRateLimit(request);
 
       expect(result).toBeNull();
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('using in-memory fallback')
       );
 
-      consoleInfoSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
     });
 
     it('should fall back to in-memory when Redis fails', async () => {
