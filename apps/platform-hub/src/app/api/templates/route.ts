@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
+import { createClient } from '@/lib/supabase/server';
 
 const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
 const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
@@ -38,6 +39,40 @@ type TriviaTemplate = {
 export type Template = BingoTemplate | TriviaTemplate;
 
 /**
+ * Authenticate the request using multiple strategies:
+ * 1. OAuth SSO token (jb_access_token cookie) - used by bingo/trivia apps
+ * 2. Supabase session cookies (sb-* cookies) - used by platform-hub native auth
+ *
+ * Returns a user object with id and email, or null if unauthenticated.
+ */
+async function authenticateRequest(
+  request: NextRequest
+): Promise<{ id: string; email: string } | null> {
+  // Strategy 1: Try OAuth SSO token (jb_access_token cookie)
+  const apiUser = await getApiUser(request);
+  if (apiUser) {
+    return apiUser;
+  }
+
+  // Strategy 2: Fall back to Supabase session cookies
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (!error && user) {
+      return { id: user.id, email: user.email || '' };
+    }
+  } catch {
+    // Supabase client creation or auth check failed
+  }
+
+  return null;
+}
+
+/**
  * Aggregation API: Fetch templates from both Bingo and Trivia games
  *
  * GET /api/templates
@@ -46,14 +81,18 @@ export type Template = BingoTemplate | TriviaTemplate;
  * - Combines results with discriminated union type
  * - Sorts by updated_at descending
  *
+ * Authentication:
+ * - Accepts OAuth SSO token (jb_access_token cookie) from game apps
+ * - Accepts Supabase session cookies (sb-*) from platform-hub native auth
+ *
  * Query Parameters:
  * - recent=true: Return only recent templates (3 most recent per game)
  * - limit=N: Maximum total templates to return (default: no limit)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const user = await getApiUser(request);
+    // Verify authentication (OAuth SSO token OR Supabase session)
+    const user = await authenticateRequest(request);
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

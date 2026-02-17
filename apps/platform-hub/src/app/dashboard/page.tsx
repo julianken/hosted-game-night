@@ -19,13 +19,25 @@ const E2E_TEST_EMAIL = 'e2e-test@joolie-boolie.test';
 
 /**
  * Fetch recent templates from aggregation API
+ * Forwards cookies so the API route can authenticate the request.
  */
 async function fetchRecentTemplates(): Promise<Template[]> {
   try {
+    // Forward cookies from the incoming request so the API route
+    // can read Supabase session cookies (sb-*) or OAuth SSO cookies (jb_*)
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore
+      .getAll()
+      .map((c) => `${c.name}=${c.value}`)
+      .join('; ');
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://localhost:3002'}/api/templates?recent=true`,
       {
         cache: 'no-store',
+        headers: {
+          Cookie: cookieHeader,
+        },
       }
     );
 

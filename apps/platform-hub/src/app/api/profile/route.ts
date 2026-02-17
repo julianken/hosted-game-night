@@ -56,7 +56,8 @@ export async function GET() {
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
+    // PGRST116 = "no rows found" - expected for new users without a profile row
+    if (profileError && profileError.code !== 'PGRST116') {
       console.error('Profile fetch error:', profileError);
       return NextResponse.json(
         { error: 'Failed to fetch profile' },

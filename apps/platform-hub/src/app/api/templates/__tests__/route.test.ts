@@ -11,6 +11,18 @@ vi.mock('@joolie-boolie/auth', () => ({
   getApiUser: vi.fn().mockResolvedValue({ id: 'user-1', email: 'test@example.com' }),
 }));
 
+// Mock Supabase server client (fallback auth)
+const mockGetUser = vi.fn();
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(() =>
+    Promise.resolve({
+      auth: {
+        getUser: mockGetUser,
+      },
+    })
+  ),
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -23,17 +35,52 @@ function createMockRequest(url: string = 'http://localhost:3002/api/templates'):
 describe('GET /api/templates', () => {
   beforeEach(() => {
     mockFetch.mockClear();
+    mockGetUser.mockReset();
+    // Default: Supabase session auth also fails (no user)
+    mockGetUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'Not authenticated' },
+    });
   });
 
-  it('should return 401 when not authenticated', async () => {
+  it('should return 401 when not authenticated via any method', async () => {
     const { getApiUser } = await import('@joolie-boolie/auth');
     vi.mocked(getApiUser).mockResolvedValueOnce(null);
+    // Supabase fallback also fails (default mock above)
 
     const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(response.status).toBe(401);
     expect(data.error).toBe('Unauthorized');
+  });
+
+  it('should authenticate via Supabase session when OAuth token is absent', async () => {
+    const { getApiUser } = await import('@joolie-boolie/auth');
+    // OAuth SSO auth fails (no jb_access_token)
+    vi.mocked(getApiUser).mockResolvedValueOnce(null);
+    // Supabase session auth succeeds
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'supabase-user-1', email: 'supabase@example.com' } },
+      error: null,
+    });
+
+    // Mock both game API calls to succeed
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ templates: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ templates: [] }),
+      });
+
+    const response = await GET(createMockRequest());
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.templates).toEqual([]);
   });
 
   it('should fetch and combine templates from both games', async () => {

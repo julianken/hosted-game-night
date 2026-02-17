@@ -163,7 +163,7 @@ describe('GET /api/profile', () => {
     expect(body.facility_name).toBe('Metadata Facility');
   });
 
-  it('should return 500 when profile fetch fails', async () => {
+  it('should return 500 when profile fetch fails with a real database error', async () => {
     const mockUser = {
       id: 'user-123',
       email: 'user@example.com',
@@ -177,7 +177,7 @@ describe('GET /api/profile', () => {
 
     mockSingle.mockResolvedValue({
       data: null,
-      error: { message: 'Database error' },
+      error: { code: 'PGRST000', message: 'Database error' },
     });
 
     const response = await GET();
@@ -185,5 +185,59 @@ describe('GET /api/profile', () => {
 
     expect(response.status).toBe(500);
     expect(body.error).toBe('Failed to fetch profile');
+  });
+
+  it('should return success with fallback values when profile row does not exist (PGRST116)', async () => {
+    const mockUser = {
+      id: 'user-123',
+      email: 'new-user@example.com',
+      user_metadata: { facility_name: 'From Metadata' },
+    };
+
+    mockGetUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
+    });
+
+    // PGRST116 = "Searched for a row but found 0 rows" (no profile row for this user)
+    mockSingle.mockResolvedValue({
+      data: null,
+      error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' },
+    });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.email).toBe('new-user@example.com');
+    // Falls back to user_metadata.facility_name when profile is null
+    expect(body.facility_name).toBe('From Metadata');
+  });
+
+  it('should return empty facility_name when no profile and no metadata', async () => {
+    const mockUser = {
+      id: 'user-123',
+      email: 'new-user@example.com',
+      user_metadata: {},
+    };
+
+    mockGetUser.mockResolvedValue({
+      data: { user: mockUser },
+      error: null,
+    });
+
+    // No profile row exists
+    mockSingle.mockResolvedValue({
+      data: null,
+      error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' },
+    });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.facility_name).toBe('');
   });
 });
