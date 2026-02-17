@@ -56,3 +56,9 @@ export {
   createAuthenticatedClient,
   type ApiUser,
 } from './api-auth';
+
+// PKCE utilities
+export { generatePKCE } from './pkce';
+
+// OAuth 2.1 client
+export { startOAuthFlow } from './oauth-client';
