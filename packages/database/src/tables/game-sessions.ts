@@ -7,7 +7,7 @@
  *
  * Please migrate to the new persistent sessions system:
  * - **Database operations**: Use `persistent-sessions.ts` for database-backed sessions
- * - **Client-side state**: Use `@joolie-boolie/sync/session-store` for BroadcastChannel sync
+ * - **Client-side state**: Use `@joolie-boolie/sync/session-storage` for BroadcastChannel sync
  *
  * ## Why Deprecated?
  *
@@ -25,7 +25,7 @@
  * No new features will be added to this module.
  *
  * @see packages/database/src/tables/persistent-sessions.ts
- * @see packages/sync/src/session-store.ts
+ * @see packages/sync/src/session-storage.ts
  * @see docs/features/persistent-sessions-refined.md
  */
 

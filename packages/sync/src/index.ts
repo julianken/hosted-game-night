@@ -52,12 +52,12 @@ export {
   createChannelName,
 } from './session-link';
 
-// Session store
+// Session storage
 export type {
   SessionParticipant,
   SessionState,
   RecentSession,
-} from './session-store';
+} from './session-storage';
 
 export {
   getSessionState,
@@ -77,7 +77,7 @@ export {
   updateRecentSessionActivity,
   clearRecentSessions,
   removeFromRecentSessions,
-} from './session-store';
+} from './session-storage';
 
 // Room code generator
 export {

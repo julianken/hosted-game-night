@@ -368,7 +368,7 @@ Before refinement, there were 3 different session systems:
    - PIN security integration
    - Room code support
 
-3. **`packages/sync/src/session-store.ts`** (403 lines)
+3. **`packages/sync/src/session-storage.ts`** (403 lines)
    - localStorage-based session state
    - Participant tracking
    - Recent sessions list
@@ -382,7 +382,7 @@ Before refinement, there were 3 different session systems:
 // - Multi-device session recovery
 // Functions: createGameSession, getGameSessionByRoomCode, updateGameSessionState
 
-// 2. UI PREFERENCES (packages/sync/src/session-store.ts)
+// 2. UI PREFERENCES (packages/sync/src/session-storage.ts)
 // - Theme mode (light/dark)
 // - Audio volume levels
 // - Recent sessions list (for UI convenience)
@@ -393,7 +393,7 @@ Before refinement, there were 3 different session systems:
  * @deprecated Use persistent-sessions.ts for database-backed sessions
  * This module will be removed in v0.2.0
  *
- * If you need in-memory sessions, use packages/sync/src/session-store.ts
+ * If you need in-memory sessions, use packages/sync/src/session-storage.ts
  * for UI preferences only.
  */
 ```
