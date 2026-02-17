@@ -65,3 +65,19 @@ export {
 
 // RoomSetupModal
 export { RoomSetupModal, type RoomSetupModalProps } from './room-setup-modal';
+
+// ErrorBoundary
+export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary';
+
+// KeyboardShortcutsModal
+export {
+  KeyboardShortcutsModal,
+  type KeyboardShortcutsModalProps,
+  type KeyboardShortcut,
+} from './keyboard-shortcuts-modal';
+
+// OfflineBanner
+export { OfflineBanner, type OfflineBannerProps } from './offline-banner';
+
+// Hooks
+export { useOnlineStatus, useConnectionInfo } from './hooks/use-online-status';
