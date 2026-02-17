@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BingoBall, VoicePackId, VoiceManifest, VoicePackMetadata, RollSoundType, RollDuration, RevealChimeType, ROLL_SOUND_OPTIONS } from '@/types';
+import {
+  PooledAudio,
+  getPooledAudio,
+  releasePooledAudio,
+  cleanupAllPools as sharedCleanupAllPools,
+  pauseAllActiveAudio,
+  getActiveAudioCount as sharedGetActiveAudioCount,
+  playAudioFile,
+  stopAllSpeech,
+} from '@joolie-boolie/audio';
 
 export interface AudioStore {
   // Persisted state
@@ -63,11 +73,6 @@ export const VOICE_PACK_OPTIONS: { id: VoicePackId; name: string; description: s
 // Audio Pool Management - Prevents memory leaks by reusing audio elements
 // ============================================================================
 
-interface PooledAudio {
-  element: HTMLAudioElement;
-  inUse: boolean;
-}
-
 // Pool for roll sounds (frequently used)
 const rollSoundPool: Map<string, PooledAudio[]> = new Map();
 const ROLL_POOL_SIZE = 2;
@@ -76,123 +81,19 @@ const ROLL_POOL_SIZE = 2;
 const chimeSoundPool: Map<string, PooledAudio[]> = new Map();
 const CHIME_POOL_SIZE = 2;
 
-// Track all active audio elements for cleanup
-const activeAudioElements: Set<HTMLAudioElement> = new Set();
-
-/**
- * Get or create a pooled audio element for a given sound file.
- * Returns null if Audio is not available (SSR).
- */
-function getPooledAudio(
-  pool: Map<string, PooledAudio[]>,
-  soundFile: string,
-  poolSize: number
-): HTMLAudioElement | null {
-  if (typeof Audio === 'undefined') {
-    return null;
-  }
-
-  // Get or create pool for this sound file
-  if (!pool.has(soundFile)) {
-    pool.set(soundFile, []);
-  }
-
-  const soundPool = pool.get(soundFile)!;
-
-  // Find an available element in the pool
-  for (const pooled of soundPool) {
-    if (!pooled.inUse) {
-      pooled.inUse = true;
-      pooled.element.currentTime = 0;
-      activeAudioElements.add(pooled.element);
-      return pooled.element;
-    }
-  }
-
-  // Create new element if pool isn't full
-  if (soundPool.length < poolSize) {
-    const element = new Audio(soundFile);
-    const pooled: PooledAudio = { element, inUse: true };
-    soundPool.push(pooled);
-    activeAudioElements.add(element);
-    return element;
-  }
-
-  // Pool is full and all in use - create a temporary element
-  const tempElement = new Audio(soundFile);
-  activeAudioElements.add(tempElement);
-  return tempElement;
-}
-
-/**
- * Release a pooled audio element back to the pool.
- */
-function releasePooledAudio(
-  pool: Map<string, PooledAudio[]>,
-  soundFile: string,
-  element: HTMLAudioElement
-): void {
-  activeAudioElements.delete(element);
-
-  const soundPool = pool.get(soundFile);
-  if (soundPool) {
-    const pooled = soundPool.find(p => p.element === element);
-    if (pooled) {
-      pooled.inUse = false;
-      return;
-    }
-  }
-
-  // Element wasn't from the pool (temporary) - clean it up
-  cleanupAudioElement(element);
-}
-
-/**
- * Clean up an audio element to release memory.
- */
-function cleanupAudioElement(audio: HTMLAudioElement): void {
-  audio.pause();
-  audio.onended = null;
-  audio.onerror = null;
-  audio.oncanplaythrough = null;
-  audio.src = ''; // Release media resource
-  audio.load(); // Force release of any buffered data
-  activeAudioElements.delete(audio);
-}
-
 /**
  * Clean up all pooled audio elements.
  * Exported for testing purposes.
  */
 export function cleanupAllPools(): void {
-  // Clean up roll sound pool
-  for (const [, soundPool] of rollSoundPool) {
-    for (const pooled of soundPool) {
-      cleanupAudioElement(pooled.element);
-    }
-  }
-  rollSoundPool.clear();
-
-  // Clean up chime sound pool
-  for (const [, soundPool] of chimeSoundPool) {
-    for (const pooled of soundPool) {
-      cleanupAudioElement(pooled.element);
-    }
-  }
-  chimeSoundPool.clear();
-
-  // Clean up any remaining active elements
-  for (const element of activeAudioElements) {
-    cleanupAudioElement(element);
-  }
-  activeAudioElements.clear();
+  sharedCleanupAllPools([rollSoundPool, chimeSoundPool]);
 }
 
 /**
  * Get the count of active audio elements (for testing).
  */
 export function getActiveAudioCount(): number {
-  return activeAudioElements.size;
+  return sharedGetActiveAudioCount();
 }
 
 /**
@@ -408,29 +309,7 @@ export const useAudioStore = create<AudioStore>()(
             const audioPath = getAudioPath(ball, packMetadata);
 
             if (audioPath) {
-              const audio = new Audio(audioPath);
-              audio.volume = voiceVolume;
-
-              await new Promise<void>((resolve) => {
-                const cleanup = () => {
-                  audio.onended = null;
-                  audio.onerror = null;
-                  audio.src = ''; // Release media resource - prevents memory leak
-                };
-
-                audio.onended = () => {
-                  cleanup();
-                  resolve();
-                };
-                audio.onerror = () => {
-                  cleanup();
-                  resolve();
-                };
-                audio.play().catch(() => {
-                  cleanup();
-                  resolve();
-                });
-              });
+              await playAudioFile(audioPath, voiceVolume);
               return;
             }
           }
@@ -470,29 +349,7 @@ export const useAudioStore = create<AudioStore>()(
           const audioPath = getAudioPath(ball, packMetadata);
 
           if (audioPath) {
-            const audio = new Audio(audioPath);
-            audio.volume = voiceVolume;
-
-            await new Promise<void>((resolve) => {
-              const cleanup = () => {
-                audio.onended = null;
-                audio.onerror = null;
-                audio.src = ''; // Release media resource - prevents memory leak
-              };
-
-              audio.onended = () => {
-                cleanup();
-                resolve();
-              };
-              audio.onerror = () => {
-                cleanup();
-                resolve();
-              };
-              audio.play().catch(() => {
-                cleanup();
-                resolve();
-              });
-            });
+            await playAudioFile(audioPath, voiceVolume);
             return;
           }
         }
@@ -540,15 +397,10 @@ export const useAudioStore = create<AudioStore>()(
 
       stopPlayback: () => {
         // Stop any TTS in progress
-        if (typeof window !== 'undefined' && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-        }
+        stopAllSpeech();
 
         // Pause all active audio elements
-        for (const element of activeAudioElements) {
-          element.pause();
-          element.currentTime = 0;
-        }
+        pauseAllActiveAudio();
 
         set({ isPlaying: false });
       },

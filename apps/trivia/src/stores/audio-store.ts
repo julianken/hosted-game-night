@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
+import {
+  PooledAudio,
+  getPooledAudio,
+  releasePooledAudio,
+  cleanupAllPools as sharedCleanupAllPools,
+  pauseAllActiveAudio,
+  getActiveAudioCount as sharedGetActiveAudioCount,
+  stopAllSpeech,
+} from '@joolie-boolie/audio';
 
 // =============================================================================
 // TYPES
@@ -100,107 +109,21 @@ export const ALL_SOUND_EFFECTS: SoundEffectType[] = Object.keys(
 // AUDIO POOL MANAGEMENT
 // =============================================================================
 
-interface PooledAudio {
-  element: HTMLAudioElement;
-  inUse: boolean;
-}
-
 const sfxPool: Map<string, PooledAudio[]> = new Map();
 const SFX_POOL_SIZE = 2;
-const activeAudioElements: Set<HTMLAudioElement> = new Set();
-
-/**
- * Get or create a pooled audio element for a given sound file.
- */
-function getPooledAudio(soundFile: string): HTMLAudioElement | null {
-  if (typeof Audio === 'undefined') {
-    return null;
-  }
-
-  if (!sfxPool.has(soundFile)) {
-    sfxPool.set(soundFile, []);
-  }
-
-  const soundPool = sfxPool.get(soundFile)!;
-
-  // Find available element
-  for (const pooled of soundPool) {
-    if (!pooled.inUse) {
-      pooled.inUse = true;
-      pooled.element.currentTime = 0;
-      activeAudioElements.add(pooled.element);
-      return pooled.element;
-    }
-  }
-
-  // Create new if pool not full
-  if (soundPool.length < SFX_POOL_SIZE) {
-    const element = new Audio(soundFile);
-    const pooled: PooledAudio = { element, inUse: true };
-    soundPool.push(pooled);
-    activeAudioElements.add(element);
-    return element;
-  }
-
-  // Pool full, create temporary
-  const tempElement = new Audio(soundFile);
-  activeAudioElements.add(tempElement);
-  return tempElement;
-}
-
-/**
- * Release a pooled audio element.
- */
-function releasePooledAudio(soundFile: string, element: HTMLAudioElement): void {
-  activeAudioElements.delete(element);
-
-  const soundPool = sfxPool.get(soundFile);
-  if (soundPool) {
-    const pooled = soundPool.find((p) => p.element === element);
-    if (pooled) {
-      pooled.inUse = false;
-      return;
-    }
-  }
-
-  // Not from pool, clean up
-  cleanupAudioElement(element);
-}
-
-/**
- * Clean up an audio element.
- */
-function cleanupAudioElement(audio: HTMLAudioElement): void {
-  audio.pause();
-  audio.onended = null;
-  audio.onerror = null;
-  audio.src = '';
-  audio.load();
-  activeAudioElements.delete(audio);
-}
 
 /**
  * Clean up all pooled audio elements.
  */
 export function cleanupAllPools(): void {
-  for (const [, soundPool] of sfxPool) {
-    for (const pooled of soundPool) {
-      cleanupAudioElement(pooled.element);
-    }
-  }
-  sfxPool.clear();
-
-  for (const element of activeAudioElements) {
-    cleanupAudioElement(element);
-  }
-  activeAudioElements.clear();
+  sharedCleanupAllPools([sfxPool]);
 }
 
 /**
  * Get count of active audio elements (for testing).
  */
 export function getActiveAudioCount(): number {
-  return activeAudioElements.size;
+  return sharedGetActiveAudioCount();
 }
 
 // =============================================================================
@@ -252,8 +175,8 @@ export const useAudioStore = create<AudioStore>()(
       // TTS controls
       setTtsEnabled: (ttsEnabled: boolean) => {
         set({ ttsEnabled });
-        if (!ttsEnabled && typeof window !== 'undefined' && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
+        if (!ttsEnabled) {
+          stopAllSpeech();
         }
       },
 
@@ -291,7 +214,7 @@ export const useAudioStore = create<AudioStore>()(
         }
 
         const soundFile = SOUND_EFFECT_PATHS[effect];
-        const audio = getPooledAudio(soundFile);
+        const audio = getPooledAudio(sfxPool, soundFile, SFX_POOL_SIZE);
 
         if (!audio) {
           return;
@@ -302,7 +225,7 @@ export const useAudioStore = create<AudioStore>()(
 
         return new Promise<void>((resolve) => {
           const cleanup = () => {
-            releasePooledAudio(soundFile, audio);
+            releasePooledAudio(sfxPool, soundFile, audio);
           };
 
           audio.onended = () => {
@@ -325,15 +248,10 @@ export const useAudioStore = create<AudioStore>()(
 
       stopAllAudio: () => {
         // Stop TTS
-        if (typeof window !== 'undefined' && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-        }
+        stopAllSpeech();
 
         // Stop all audio elements
-        for (const element of activeAudioElements) {
-          element.pause();
-          element.currentTime = 0;
-        }
+        pauseAllActiveAudio();
       },
     }),
     {
