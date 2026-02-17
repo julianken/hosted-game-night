@@ -45,7 +45,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
       <header
         ref={ref}
         className={`
-          w-full py-6 px-8
+          w-full py-4 sm:py-6 px-4 sm:px-6 md:px-8
           border-b border-border
           bg-background/80 backdrop-blur-sm
           ${className}
@@ -53,17 +53,17 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
         role="banner"
         {...props}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo and Brand */}
           <Link
             href="/"
-            className="flex items-center gap-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 rounded-lg p-2 -m-2"
+            className="flex items-center gap-2 sm:gap-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50 rounded-lg p-2 -m-2 shrink-0"
             aria-label="Joolie Boolie - Home"
           >
             {/* Joolie Boolie Logo - Simple bird icon */}
-            <div className="w-12 h-12 flex items-center justify-center bg-primary rounded-xl text-primary-foreground">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-primary rounded-xl text-primary-foreground">
               <svg
-                className="w-8 h-8"
+                className="w-6 h-6 sm:w-8 sm:h-8"
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
@@ -72,7 +72,7 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
               </svg>
             </div>
             <div>
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-lg sm:text-2xl font-bold text-foreground">
                 Joolie Boolie
               </span>
               <span className="hidden sm:block text-base text-muted-foreground">
@@ -82,10 +82,10 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
           </Link>
 
           {/* Greeting + Navigation */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-6 min-w-0">
             {!isLoading && user && (
               <span
-                className="text-lg font-medium text-foreground"
+                className="hidden md:inline text-lg font-medium text-foreground truncate"
                 data-testid="facility-greeting"
               >
                 Welcome{user.user_metadata?.facility_name ? `, ${user.user_metadata.facility_name}` : ''}
@@ -93,14 +93,14 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
             )}
 
           <nav aria-label="Main navigation">
-            <ul className="flex items-center gap-4">
+            <ul className="flex items-center gap-1 sm:gap-4">
               <li>
                 <Link
                   href="/"
                   className="
                     inline-flex items-center justify-center
-                    min-h-[44px] px-6 py-2
-                    text-lg font-medium text-foreground
+                    min-h-[44px] px-3 sm:px-6 py-2
+                    text-base sm:text-lg font-medium text-foreground
                     hover:text-primary
                     focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
                     rounded-lg
@@ -114,13 +114,13 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
               {/* Authenticated user navigation */}
               {!isLoading && user && (
                 <>
-                  <li>
+                  <li className="hidden sm:list-item">
                     <Link
                       href="/dashboard"
                       className="
                         inline-flex items-center justify-center
-                        min-h-[44px] px-6 py-2
-                        text-lg font-medium text-foreground
+                        min-h-[44px] px-3 sm:px-6 py-2
+                        text-base sm:text-lg font-medium text-foreground
                         hover:text-primary
                         focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
                         rounded-lg
@@ -130,13 +130,13 @@ export const Header = forwardRef<HTMLElement, HeaderProps>(
                       Dashboard
                     </Link>
                   </li>
-                  <li>
+                  <li className="hidden sm:list-item">
                     <Link
                       href="/settings"
                       className="
                         inline-flex items-center justify-center
-                        min-h-[44px] px-6 py-2
-                        text-lg font-medium text-foreground
+                        min-h-[44px] px-3 sm:px-6 py-2
+                        text-base sm:text-lg font-medium text-foreground
                         hover:text-primary
                         focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
                         rounded-lg

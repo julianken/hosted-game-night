@@ -16,7 +16,7 @@ export const Footer = forwardRef<HTMLElement, FooterProps>(
       <footer
         ref={ref}
         className={`
-          w-full py-8 px-8
+          w-full py-6 sm:py-8 px-4 sm:px-6 md:px-8
           border-t border-border
           bg-muted/5
           ${className}

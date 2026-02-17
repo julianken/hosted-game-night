@@ -77,7 +77,7 @@ export const GameCard = forwardRef<HTMLAnchorElement, GameCardProps>(
         tabIndex={isPlayable ? 0 : -1}
         {...props}
       >
-        <div className="p-8 md:p-10">
+        <div className="p-5 sm:p-8 md:p-10">
           {/* Icon */}
           <div
             className="w-20 h-20 mb-6 flex items-center justify-center rounded-2xl bg-background/50 text-5xl"
@@ -111,8 +111,8 @@ export const GameCard = forwardRef<HTMLAnchorElement, GameCardProps>(
           <div
             className={`
               inline-flex items-center justify-center
-              min-h-[56px] px-8 py-4
-              text-xl font-semibold rounded-lg
+              min-h-[56px] px-6 sm:px-8 py-4
+              text-lg sm:text-xl font-semibold rounded-lg
               transition-colors duration-150
               ${
                 isPlayable
