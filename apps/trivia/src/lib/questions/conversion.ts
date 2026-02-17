@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Question, QuestionCategory } from '@/types';
+import type { Question, QuestionCategory, QuestionId } from '@/types';
 import type { TriviaQuestion } from '@joolie-boolie/database/types';
 
 /**
@@ -62,7 +62,7 @@ export function triviaQuestionToQuestion(
   const correctAnswer = options[tq.correctIndex];
 
   return {
-    id: uuidv4(),
+    id: uuidv4() as QuestionId,
     text: tq.question,
     type,
     correctAnswers: [correctAnswer],

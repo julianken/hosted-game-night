@@ -33,8 +33,9 @@ const PLATFORM_HUB_URL = process.env.NEXT_PUBLIC_PLATFORM_HUB_URL || 'http://loc
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN?.trim() || undefined;
 const OAUTH_CLIENT_ID = process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID;
 
-// Production guard: E2E mode must never run in production
-if (process.env.E2E_TESTING === 'true' && process.env.NODE_ENV === 'production') {
+// Production guard: E2E mode must never run on actual production (Vercel)
+// Allows local production builds/servers for E2E testing (VERCEL=1 is auto-set by Vercel)
+if (process.env.E2E_TESTING === 'true' && process.env.VERCEL === '1') {
   throw new Error('E2E mode cannot run in production');
 }
 

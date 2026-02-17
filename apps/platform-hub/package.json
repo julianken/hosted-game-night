@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@joolie-boolie/auth": "workspace:*",
+    "@joolie-boolie/database": "workspace:*",
     "@joolie-boolie/error-tracking": "workspace:*",
     "@joolie-boolie/theme": "workspace:*",
     "@joolie-boolie/ui": "workspace:*",

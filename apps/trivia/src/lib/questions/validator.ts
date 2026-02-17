@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import type { Question, QuestionType, QuestionCategory } from '@/types';
+import type { Question, QuestionType, QuestionCategory, QuestionId } from '@/types';
 import type {
   RawJsonQuestion,
   RawCsvQuestion,
@@ -276,7 +276,7 @@ function validateSingleJsonQuestion(
 
   // Build the question object
   const question: Question = {
-    id: raw.id || uuidv4(),
+    id: (raw.id || uuidv4()) as QuestionId,
     text: text!.trim(),
     type,
     correctAnswers,
@@ -423,7 +423,7 @@ function validateSingleCsvQuestion(
 
   // Build the question object
   const question: Question = {
-    id: uuidv4(),
+    id: uuidv4() as QuestionId,
     text: text!,
     type,
     correctAnswers: [correctAnswer!],

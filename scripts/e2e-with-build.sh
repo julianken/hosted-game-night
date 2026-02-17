@@ -123,15 +123,15 @@ else
   export E2E_TESTING=true
 
   # Start servers in background, redirecting output to log files
-  pnpm --filter @beak-gaming/bingo start > /tmp/e2e-bingo.log 2>&1 &
+  pnpm --filter @joolie-boolie/bingo start > /tmp/e2e-bingo.log 2>&1 &
   BINGO_PID=$!
   echo "  Bingo server started (PID: $BINGO_PID, port 3000)"
 
-  pnpm --filter @beak-gaming/trivia start > /tmp/e2e-trivia.log 2>&1 &
+  pnpm --filter @joolie-boolie/trivia start > /tmp/e2e-trivia.log 2>&1 &
   TRIVIA_PID=$!
   echo "  Trivia server started (PID: $TRIVIA_PID, port 3001)"
 
-  pnpm --filter @beak-gaming/platform-hub start > /tmp/e2e-hub.log 2>&1 &
+  pnpm --filter @joolie-boolie/platform-hub start > /tmp/e2e-hub.log 2>&1 &
   HUB_PID=$!
   echo "  Platform Hub server started (PID: $HUB_PID, port 3002)"
 

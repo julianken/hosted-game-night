@@ -192,13 +192,13 @@ echo ""
 cd "$SCRIPT_DIR"
 
 echo "Starting Bingo (port $BINGO_PORT)..."
-PORT=$BINGO_PORT pnpm --filter @beak-gaming/bingo dev &
+PORT=$BINGO_PORT pnpm --filter @joolie-boolie/bingo dev &
 
 echo "Starting Trivia (port $TRIVIA_PORT)..."
-PORT=$TRIVIA_PORT pnpm --filter @beak-gaming/trivia dev &
+PORT=$TRIVIA_PORT pnpm --filter @joolie-boolie/trivia dev &
 
 echo "Starting Platform Hub (port $HUB_PORT)..."
-PORT=$HUB_PORT pnpm --filter @beak-gaming/platform-hub dev &
+PORT=$HUB_PORT pnpm --filter @joolie-boolie/platform-hub dev &
 
 echo ""
 echo "All servers starting in background."
@@ -259,9 +259,9 @@ echo "  ./start-e2e-servers.sh"
 echo ""
 echo "Or manually:"
 echo "  source .env.e2e"
-echo "  PORT=\$BINGO_PORT pnpm --filter @beak-gaming/bingo dev &"
-echo "  PORT=\$TRIVIA_PORT pnpm --filter @beak-gaming/trivia dev &"
-echo "  PORT=\$HUB_PORT pnpm --filter @beak-gaming/platform-hub dev &"
+echo "  PORT=\$BINGO_PORT pnpm --filter @joolie-boolie/bingo dev &"
+echo "  PORT=\$TRIVIA_PORT pnpm --filter @joolie-boolie/trivia dev &"
+echo "  PORT=\$HUB_PORT pnpm --filter @joolie-boolie/platform-hub dev &"
 echo ""
 echo "To run E2E tests:"
 echo "  pnpm test:e2e"

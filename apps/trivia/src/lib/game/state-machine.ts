@@ -46,7 +46,7 @@ export const ACTION_RESULTS = {
  * Check if an action is valid for the current game status.
  */
 export function canTransition(status: GameStatus, action: TriviaGameAction): boolean {
-  return VALID_TRANSITIONS[status].includes(action);
+  return (VALID_TRANSITIONS[status] as readonly TriviaGameAction[]).includes(action);
 }
 
 /**

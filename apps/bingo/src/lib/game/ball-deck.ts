@@ -1,4 +1,5 @@
 import {
+  BallNumber,
   BingoBall,
   BingoColumn,
   BallDeck,
@@ -39,7 +40,7 @@ export function createBall(num: number): BingoBall {
   const column = getColumnForNumber(num);
   return {
     column,
-    number: num,
+    number: num as BallNumber,
     label: `${column}-${num}`,
   };
 }
@@ -117,8 +118,8 @@ export function undoDraw(deck: BallDeck): DrawResult | null {
  */
 export function getBallsByColumn(
   balls: BingoBall[]
-): Record<BingoColumn, number[]> {
-  const result: Record<BingoColumn, number[]> = {
+): Record<BingoColumn, BallNumber[]> {
+  const result: Record<BingoColumn, BallNumber[]> = {
     B: [],
     I: [],
     N: [],

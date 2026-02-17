@@ -4,7 +4,7 @@ import { useId, useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useToast } from "@joolie-boolie/ui";
 import type { TriviaTemplate, TriviaQuestion } from '@joolie-boolie/database/types';
-import type { Question } from '@/types';
+import type { Question, QuestionId } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface TemplateSelectorProps {
@@ -31,7 +31,7 @@ function convertTemplateQuestion(
   const correctAnswer = options[dbQuestion.correctIndex];
 
   return {
-    id: uuidv4(),
+    id: uuidv4() as QuestionId,
     text: dbQuestion.question,
     type,
     correctAnswers: [correctAnswer],

@@ -46,7 +46,7 @@ export function RollSoundSelector({ disabled = false }: RollSoundSelectorProps) 
   const handleTypeChange = useCallback(
     (newType: RollSoundType) => {
       const newDurations = ROLL_SOUND_OPTIONS[newType].durations;
-      const newDuration = newDurations.includes(rollDuration)
+      const newDuration = (newDurations as readonly RollDuration[]).includes(rollDuration)
         ? rollDuration
         : newDurations[0];
       setRollSound(newType, newDuration);

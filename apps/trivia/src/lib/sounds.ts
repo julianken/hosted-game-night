@@ -437,7 +437,7 @@ export async function playTone(
     await ctx.resume();
   }
 
-  const preset = TONE_PRESETS[effect];
+  const preset: TonePreset = TONE_PRESETS[effect];
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
 

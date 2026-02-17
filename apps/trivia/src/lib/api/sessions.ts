@@ -9,6 +9,8 @@ import type {
   UpdateSessionHistoryRequest,
   ApiResponse,
   PaginatedResponse,
+  TeamId,
+  QuestionId,
 } from '@/types';
 
 const API_BASE = '/api/sessions';
@@ -127,7 +129,7 @@ export function createSessionFromGameState(
 ): CreateSessionHistoryRequest {
   // Calculate team scores
   const teamScores = gameState.teams.map((team) => ({
-    teamId: team.id,
+    teamId: team.id as TeamId,
     teamName: team.name,
     totalScore: team.score,
     roundScores: team.roundScores,
@@ -146,7 +148,7 @@ export function createSessionFromGameState(
     const teamsIncorrect = answersForQuestion.filter((a) => !a.isCorrect).length;
 
     return {
-      questionId: question.id,
+      questionId: question.id as QuestionId,
       questionText: question.text,
       correctAnswers: question.correctAnswers,
       teamsCorrect,

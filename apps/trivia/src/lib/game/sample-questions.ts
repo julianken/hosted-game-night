@@ -1,4 +1,4 @@
-import type { Question } from '@/types';
+import type { Question, QuestionId } from '@/types';
 
 export const SAMPLE_QUESTIONS: Question[] = [
   // =============================================================================
@@ -7,7 +7,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q1: Music (1940s-80s) - Multiple Choice
   {
-    id: 'r1-q1-music',
+    id: 'r1-q1-music' as QuestionId,
     text: 'Which artist recorded the famous song "Respect" in 1967?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -25,7 +25,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q2: Classic Movies - Multiple Choice
   {
-    id: 'r1-q2-movies',
+    id: 'r1-q2-movies' as QuestionId,
     text: 'In "The Wizard of Oz" (1939), what color were Dorothy\'s famous slippers?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -39,7 +39,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q3: Classic TV - True/False
   {
-    id: 'r1-q3-tv',
+    id: 'r1-q3-tv' as QuestionId,
     text: '"I Love Lucy" was the first TV show to be filmed in front of a live studio audience.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -53,7 +53,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q4: U.S. History - Multiple Choice
   {
-    id: 'r1-q4-history',
+    id: 'r1-q4-history' as QuestionId,
     text: 'Which president served the longest term in U.S. history?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -72,7 +72,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q5: Mixed - True/False
   {
-    id: 'r1-q5-music',
+    id: 'r1-q5-music' as QuestionId,
     text: 'Elvis Presley performed concerts in Europe during his career.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -90,7 +90,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q6: Movies - Multiple Choice
   {
-    id: 'r2-q1-movies',
+    id: 'r2-q1-movies' as QuestionId,
     text: 'Who played Scarlett O\'Hara in "Gone with the Wind" (1939)?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -109,7 +109,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q7: Music - True/False
   {
-    id: 'r2-q2-music',
+    id: 'r2-q2-music' as QuestionId,
     text: 'The Beatles made their first appearance on The Ed Sullivan Show in 1964.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -123,7 +123,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q8: TV - Multiple Choice
   {
-    id: 'r2-q3-tv',
+    id: 'r2-q3-tv' as QuestionId,
     text: 'Which western TV series featured a character named Matt Dillon?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -137,7 +137,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q9: History - Multiple Choice
   {
-    id: 'r2-q4-history',
+    id: 'r2-q4-history' as QuestionId,
     text: 'In what year did man first walk on the moon?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -151,7 +151,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q10: Movies - True/False
   {
-    id: 'r2-q5-movies',
+    id: 'r2-q5-movies' as QuestionId,
     text: 'Marilyn Monroe starred in the original "Some Like It Hot" (1959).',
     type: 'true_false',
     options: ['True', 'False'],
@@ -169,7 +169,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q11: Music - Multiple Choice
   {
-    id: 'r3-q1-music',
+    id: 'r3-q1-music' as QuestionId,
     text: 'Which singer was known as "The King of Rock and Roll"?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -183,7 +183,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q12: TV - Multiple Choice
   {
-    id: 'r3-q2-tv',
+    id: 'r3-q2-tv' as QuestionId,
     text: 'What was the name of the space ship in the original "Star Trek" series?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -197,7 +197,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q13: History - True/False
   {
-    id: 'r3-q3-history',
+    id: 'r3-q3-history' as QuestionId,
     text: 'The Berlin Wall fell in 1989.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -211,7 +211,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q14: Movies - Multiple Choice
   {
-    id: 'r3-q4-movies',
+    id: 'r3-q4-movies' as QuestionId,
     text: 'Who directed the classic film "Casablanca" (1942)?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -230,7 +230,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q15: Music - True/False
   {
-    id: 'r3-q5-music',
+    id: 'r3-q5-music' as QuestionId,
     text: 'Frank Sinatra won an Academy Award for acting.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -248,7 +248,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q16: Geography - Multiple Choice
   {
-    id: 'r4-q1-geography',
+    id: 'r4-q1-geography' as QuestionId,
     text: 'What is the capital city of France?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -262,7 +262,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q17: Science - Multiple Choice
   {
-    id: 'r4-q2-science',
+    id: 'r4-q2-science' as QuestionId,
     text: 'How many planets are in our solar system?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -276,7 +276,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q18: General Knowledge - Multiple Choice
   {
-    id: 'r4-q3-general',
+    id: 'r4-q3-general' as QuestionId,
     text: 'What is the national bird of the United States?',
     type: 'multiple_choice',
     options: ['A', 'B', 'C', 'D'],
@@ -290,7 +290,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q19: History - True/False
   {
-    id: 'r4-q4-history',
+    id: 'r4-q4-history' as QuestionId,
     text: 'The Titanic sank on its maiden voyage in 1912.',
     type: 'true_false',
     options: ['True', 'False'],
@@ -304,7 +304,7 @@ export const SAMPLE_QUESTIONS: Question[] = [
 
   // Q20: Movies - True/False
   {
-    id: 'r4-q5-movies',
+    id: 'r4-q5-movies' as QuestionId,
     text: 'Alfred Hitchcock won an Academy Award for Best Director.',
     type: 'true_false',
     options: ['True', 'False'],

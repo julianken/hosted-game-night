@@ -418,7 +418,7 @@ const GameSessionSchema = z.object({
   failed_pin_attempts: z.number(),
   last_failed_attempt_at: z.string().nullable(),
   status: z.enum(['active', 'paused', 'completed', 'expired']),
-  game_state: z.record(z.unknown()),
+  game_state: z.record(z.string(), z.unknown()),
   user_id: z.string().nullable(),
   last_sync_at: z.string(),
   sequence_number: z.number(),

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { TriviaGameState, Team } from '@/types';
+import type { TriviaGameState, Team, TeamId } from '@/types';
 import { DEFAULT_TEAM_PREFIX, MAX_TEAMS } from '@/types';
 import { deepFreeze } from './helpers';
 
@@ -15,7 +15,7 @@ export function addTeam(
 
   const tableNumber = state.teams.length + 1;
   const newTeam: Team = {
-    id: uuidv4(),
+    id: uuidv4() as TeamId,
     name: name || `${DEFAULT_TEAM_PREFIX} ${tableNumber}`,
     score: 0,
     tableNumber,
@@ -54,7 +54,7 @@ export function renameTeam(
  */
 export function updateTeamOrder(
   state: TriviaGameState,
-  orderedTeamIds: string[]
+  orderedTeamIds: TeamId[]
 ): TriviaGameState {
   const teamMap = new Map(state.teams.map((t) => [t.id, t]));
   const reordered = orderedTeamIds

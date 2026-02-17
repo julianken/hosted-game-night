@@ -195,6 +195,9 @@ importers:
       '@joolie-boolie/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@joolie-boolie/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@joolie-boolie/error-tracking':
         specifier: workspace:*
         version: link:../../packages/error-tracking

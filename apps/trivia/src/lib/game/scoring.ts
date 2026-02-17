@@ -1,4 +1,4 @@
-import type { TriviaGameState, TeamAnswer } from '@/types';
+import type { TriviaGameState, TeamAnswer, TeamId, QuestionId } from '@/types';
 import { deepFreeze, padRoundScores } from './helpers';
 
 // =============================================================================
@@ -94,8 +94,8 @@ export function setTeamRoundScore(
  */
 export function recordTeamAnswer(
   state: TriviaGameState,
-  teamId: string,
-  questionId: string,
+  teamId: TeamId,
+  questionId: QuestionId,
   answer: string,
   pointsAwarded: number
 ): TriviaGameState {

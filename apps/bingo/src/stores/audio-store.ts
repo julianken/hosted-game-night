@@ -468,7 +468,7 @@ export const useAudioStore = create<AudioStore>()(
         const rollSoundType = merged.rollSoundType as RollSoundType;
         const rollDuration = merged.rollDuration as RollDuration;
         const validDurations = ROLL_SOUND_OPTIONS[rollSoundType].durations;
-        if (!validDurations.includes(rollDuration)) {
+        if (!(validDurations as readonly RollDuration[]).includes(rollDuration)) {
           merged.rollDuration = validDurations[0];
         }
         return merged as unknown as AudioStore;

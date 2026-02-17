@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BingoBall, BingoColumn, COLUMNS, COLUMN_RANGES } from '@/types';
+import { BallNumber, BingoBall, BingoColumn, COLUMNS, COLUMN_RANGES } from '@/types';
 
 export interface AudienceBingoBoardProps {
   calledBalls: BingoBall[];
@@ -37,9 +37,9 @@ export function AudienceBingoBoard({ calledBalls }: AudienceBingoBoardProps) {
   const boardData = useMemo(() => {
     return COLUMNS.map((column) => {
       const [min, max] = COLUMN_RANGES[column];
-      const numbers: number[] = [];
+      const numbers: BallNumber[] = [];
       for (let n = min; n <= max; n++) {
-        numbers.push(n);
+        numbers.push(n as BallNumber);
       }
       return { column, numbers };
     });

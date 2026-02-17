@@ -156,7 +156,7 @@ export function getCategoryFilterActiveClasses(id: QuestionCategory): string {
  * Returns the original ID if no mapping exists.
  */
 export function normalizeCategoryId(id: string): QuestionCategory {
-  const legacyMapping = LEGACY_CATEGORY_MAPPING[id];
+  const legacyMapping = LEGACY_CATEGORY_MAPPING[id as keyof typeof LEGACY_CATEGORY_MAPPING];
   if (legacyMapping) {
     return legacyMapping;
   }
