@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import type { TriviaGameState } from '@/types';
 import {
   createInitialState,
@@ -289,19 +290,19 @@ export function useGameSelectors() {
 
 // Timer-specific selector for optimized re-renders
 export function useTimerState() {
-  return useGameStore((state) => ({
+  return useGameStore(useShallow((state) => ({
     remaining: state.timer.remaining,
     duration: state.timer.duration,
     isRunning: state.timer.isRunning,
-  }));
+  })));
 }
 
 // Timer actions for components
 export function useTimerActions() {
-  return useGameStore((state) => ({
+  return useGameStore(useShallow((state) => ({
     startTimer: state.startTimer,
     stopTimer: state.stopTimer,
     resetTimer: state.resetTimer,
     tickTimer: state.tickTimer,
-  }));
+  })));
 }

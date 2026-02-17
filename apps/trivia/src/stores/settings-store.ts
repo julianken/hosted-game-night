@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 
 // =============================================================================
 // TYPES
@@ -133,27 +134,27 @@ export const useSettingsStore = create<SettingsStore>()(
 // =============================================================================
 
 export function useSettings() {
-  return useSettingsStore((state) => ({
+  return useSettingsStore(useShallow((state) => ({
     roundsCount: state.roundsCount,
     questionsPerRound: state.questionsPerRound,
     timerDuration: state.timerDuration,
     timerAutoStart: state.timerAutoStart,
     timerVisible: state.timerVisible,
     ttsEnabled: state.ttsEnabled,
-  }));
+  })));
 }
 
 export function useGameSettings() {
-  return useSettingsStore((state) => ({
+  return useSettingsStore(useShallow((state) => ({
     roundsCount: state.roundsCount,
     questionsPerRound: state.questionsPerRound,
-  }));
+  })));
 }
 
 export function useTimerSettings() {
-  return useSettingsStore((state) => ({
+  return useSettingsStore(useShallow((state) => ({
     timerDuration: state.timerDuration,
     timerAutoStart: state.timerAutoStart,
     timerVisible: state.timerVisible,
-  }));
+  })));
 }
