@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { resolveDisplayName } from '@/lib/resolve-display-name';
 import {
   WelcomeHeader,
   DashboardGameCard,
@@ -290,7 +291,7 @@ export default async function DashboardPage() {
     const recentSessions: GameSession[] = [];
     const gameStats = calculateGameStats(recentSessions);
     const games = getGamesConfig(gameStats);
-    const userName = E2E_TEST_EMAIL.split('@')[0];
+    const userName = resolveDisplayName(null, E2E_TEST_EMAIL, 'Activity Director');
     const recentTemplates = await fetchRecentTemplates();
 
     // Fetch profile from E2E store (includes avatar + notification preferences)
@@ -329,11 +330,12 @@ export default async function DashboardPage() {
   // Fetch user profile (including avatar + notification preferences)
   const profile = await fetchProfile(user.id);
 
-  // Extract user name from metadata or email
-  const userName =
-    user.user_metadata?.full_name ||
-    user.email?.split('@')[0] ||
-    'Activity Director';
+  // Extract user name from metadata with robust fallback chain
+  const userName = resolveDisplayName(
+    user.user_metadata,
+    user.email,
+    'Activity Director'
+  );
 
   return (
     <DashboardContent
