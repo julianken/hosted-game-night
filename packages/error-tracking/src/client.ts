@@ -17,13 +17,19 @@ import type {
   AppErrorOptions,
 } from './types';
 
-// Severity level ordering for filtering
-const severityLevels: Record<ErrorSeverity, number> = {
-  low: 1,
-  medium: 2,
-  high: 3,
-  critical: 4,
-};
+import {
+  severityLevels,
+  generateErrorId,
+  isTrackedError,
+  isAppError,
+  shouldCapture,
+  formatForConsole,
+  getDefaultUserMessage,
+  BaseAppError,
+} from './core';
+
+// Re-export severityLevels for any consumer that imports it from this module.
+export { severityLevels };
 
 /**
  * Default configuration
@@ -123,36 +129,7 @@ export function addBreadcrumb(breadcrumb: Omit<Breadcrumb, 'timestamp'>): void {
 }
 
 /**
- * Generate a unique error ID
- */
-function generateErrorId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `err_${timestamp}_${random}`;
-}
-
-/**
- * Get default user-friendly message based on error category
- */
-function getDefaultUserMessage(category: ErrorCategory): string {
-  const messages: Record<ErrorCategory, string> = {
-    network:
-      'We are having trouble connecting to our servers. Please check your internet connection and try again.',
-    auth: 'There was a problem with your login. Please sign in again.',
-    game: 'Something went wrong with the game. Please try refreshing the page.',
-    sync: 'The display screens are having trouble syncing. Please refresh both windows.',
-    storage:
-      'We could not save your data. Please make sure you have enough storage space.',
-    validation: 'Please check your input and try again.',
-    unknown:
-      'Something unexpected happened. Please try again or contact support if the problem continues.',
-  };
-
-  return messages[category];
-}
-
-/**
- * Auto-categorize an error based on its properties
+ * Auto-categorize an error based on its properties (browser-specific patterns)
  */
 function categorizeError(error: Error): ErrorCategory {
   const message = error.message.toLowerCase();
@@ -292,69 +269,15 @@ export function normalizeError(
 }
 
 /**
- * Check if a value is a TrackedError
- */
-function isTrackedError(value: unknown): value is TrackedError {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'id' in value &&
-    'message' in value &&
-    'category' in value &&
-    'severity' in value &&
-    'context' in value
-  );
-}
-
-/**
- * Check if a value is an AppError
- */
-function isAppError(value: unknown): boolean {
-  return (
-    value instanceof Error &&
-    'category' in value &&
-    'severity' in value &&
-    'context' in value
-  );
-}
-
-/**
- * Check if an error should be logged based on severity
- */
-function shouldCapture(severity: ErrorSeverity): boolean {
-  const minLevel = severityLevels[config.minSeverity ?? 'low'];
-  const errorLevel = severityLevels[severity];
-  return errorLevel >= minLevel;
-}
-
-/**
- * Format error for console output
- */
-function formatForConsole(error: TrackedError): string {
-  const parts = [
-    `[${error.severity.toUpperCase()}]`,
-    `[${error.category}]`,
-    error.message,
-  ];
-
-  if (error.context.component) {
-    parts.push(`in ${error.context.component}`);
-  }
-
-  if (error.context.userAction) {
-    parts.push(`(action: ${error.context.userAction})`);
-  }
-
-  return parts.join(' ');
-}
-
-/**
  * Log error to console
  */
 function logToConsole(error: TrackedError): void {
   if (!config.enableConsole) return;
 
-  const formatted = formatForConsole(error);
+  const suffix =
+    error.context.userAction ? `(action: ${error.context.userAction})` : undefined;
+  const formatted = formatForConsole(error, suffix);
+
   const consoleMethod =
     error.severity === 'critical' || error.severity === 'high'
       ? 'error'
@@ -390,7 +313,7 @@ export function captureError(
     }
   }
 
-  if (shouldCapture(trackedError.severity)) {
+  if (shouldCapture(trackedError.severity, config)) {
     // Log to console in development
     logToConsole(trackedError);
 
@@ -425,7 +348,7 @@ export function captureMessage(
   severity: ErrorSeverity = 'low',
   context?: Partial<ErrorContext>
 ): void {
-  if (!shouldCapture(severity)) return;
+  if (!shouldCapture(severity, config)) return;
 
   if (config.enableConsole) {
     const consoleMethod = severity === 'critical' || severity === 'high' ? 'error' : 'log';
@@ -503,58 +426,23 @@ function setupGlobalHandlers(): void {
 }
 
 /**
- * Custom application error class
+ * Custom application error class (browser client).
+ * Extends BaseAppError from core with browser-specific context (window.location.href, userId).
  */
-export class AppError extends Error {
-  public readonly category: ErrorCategory;
-  public readonly severity: ErrorSeverity;
-  public readonly context: ErrorContext;
-  public readonly recoverable: boolean;
-  public readonly userMessage: string;
-  public readonly id: string;
-  public readonly statusCode?: number;
-
+export class AppError extends BaseAppError {
   constructor(message: string, options: AppErrorOptions = {}) {
-    super(message);
+    super(message, {
+      ...options,
+      contextExtras: {
+        url: typeof window !== 'undefined' ? window.location.href : undefined,
+        userId: config.user?.id,
+      },
+    });
     this.name = 'AppError';
 
-    this.id = generateErrorId();
-    this.category = options.category ?? 'unknown';
-    this.severity = options.severity ?? 'medium';
-    this.recoverable = options.recoverable ?? false;
-    this.userMessage =
-      options.userMessage ?? getDefaultUserMessage(this.category);
-    this.statusCode = options.statusCode;
-
-    this.context = {
-      timestamp: Date.now(),
-      userAction: options.userAction,
-      component: options.component,
-      url: typeof window !== 'undefined' ? window.location.href : undefined,
-      requestId: options.requestId,
-      userId: config.user?.id,
-      metadata: options.metadata,
-    };
-
-    // Maintains proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, AppError);
     }
-  }
-
-  /**
-   * Convert to TrackedError format
-   */
-  toTrackedError(): TrackedError {
-    return {
-      id: this.id,
-      message: this.message,
-      category: this.category,
-      severity: this.severity,
-      context: this.context,
-      stack: this.stack,
-      originalError: this,
-    };
   }
 }
 
@@ -602,3 +490,6 @@ export type {
   Breadcrumb,
   AppErrorOptions,
 };
+
+// Re-export shared core utilities for consumers that may need them
+export { getDefaultUserMessage };

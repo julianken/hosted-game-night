@@ -17,16 +17,20 @@ import type {
   AppErrorOptions,
 } from './types';
 
-// Severity level ordering
-const severityLevels: Record<ErrorSeverity, number> = {
-  low: 1,
-  medium: 2,
-  high: 3,
-  critical: 4,
-};
+import {
+  severityLevels,
+  generateErrorId,
+  shouldCapture,
+  formatForConsole,
+  getDefaultUserMessage,
+  BaseAppError,
+} from './core';
+
+// Re-export severityLevels for any consumer that imports it from this module.
+export { severityLevels };
 
 /**
- * Server configuration (similar to client but optimized for server)
+ * Server configuration (optimized for server; no browser globals)
  */
 const defaultConfig: ErrorTrackerConfig = {
   enableConsole: process.env.NODE_ENV !== 'production',
@@ -82,16 +86,8 @@ export function resetServerErrorTracking(): void {
 }
 
 /**
- * Generate unique error ID
- */
-function generateErrorId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `err_srv_${timestamp}_${random}`;
-}
-
-/**
- * Auto-categorize error
+ * Auto-categorize error (server-specific patterns: ECONNREFUSED, ENOTFOUND,
+ * jwt, postgres, supabase, etc.)
  */
 function categorizeError(error: Error): ErrorCategory {
   const message = error.message.toLowerCase();
@@ -137,42 +133,15 @@ function categorizeError(error: Error): ErrorCategory {
 }
 
 /**
- * Check if error should be captured
- */
-function shouldCapture(severity: ErrorSeverity): boolean {
-  const minLevel = severityLevels[config.minSeverity ?? 'low'];
-  const errorLevel = severityLevels[severity];
-  return errorLevel >= minLevel;
-}
-
-/**
- * Format error for console
- */
-function formatForConsole(error: TrackedError): string {
-  const parts = [
-    `[${error.severity.toUpperCase()}]`,
-    `[${error.category}]`,
-    error.message,
-  ];
-
-  if (error.context.component) {
-    parts.push(`in ${error.context.component}`);
-  }
-
-  if (error.context.requestId) {
-    parts.push(`(request: ${error.context.requestId})`);
-  }
-
-  return parts.join(' ');
-}
-
-/**
- * Log error to console
+ * Log error to console (server format includes ":Server" in app name prefix)
  */
 function logToConsole(error: TrackedError): void {
   if (!config.enableConsole) return;
 
-  const formatted = formatForConsole(error);
+  const suffix =
+    error.context.requestId ? `(request: ${error.context.requestId})` : undefined;
+  const formatted = formatForConsole(error, suffix);
+
   const consoleMethod =
     error.severity === 'critical' || error.severity === 'high'
       ? 'error'
@@ -188,7 +157,7 @@ function logToConsole(error: TrackedError): void {
 }
 
 /**
- * Normalize any value to TrackedError
+ * Normalize any value to TrackedError (server variant)
  */
 export function normalizeServerError(
   error: unknown,
@@ -208,7 +177,7 @@ export function normalizeServerError(
 
   if (error instanceof Error) {
     return {
-      id: generateErrorId(),
+      id: generateErrorId('srv'),
       message: error.message,
       category: categorizeError(error),
       severity: 'medium',
@@ -223,7 +192,7 @@ export function normalizeServerError(
 
   if (typeof error === 'string') {
     return {
-      id: generateErrorId(),
+      id: generateErrorId('srv'),
       message: error,
       category: 'unknown',
       severity: 'medium',
@@ -235,7 +204,7 @@ export function normalizeServerError(
   }
 
   return {
-    id: generateErrorId(),
+    id: generateErrorId('srv'),
     message: 'An unknown server error occurred',
     category: 'unknown',
     severity: 'medium',
@@ -264,7 +233,7 @@ export function captureServerError(
     }
   }
 
-  if (shouldCapture(trackedError.severity)) {
+  if (shouldCapture(trackedError.severity, config)) {
     logToConsole(trackedError);
 
     if (backend) {
@@ -296,7 +265,7 @@ export function captureServerMessage(
   severity: ErrorSeverity = 'low',
   context?: Partial<ErrorContext>
 ): void {
-  if (!shouldCapture(severity)) return;
+  if (!shouldCapture(severity, config)) return;
 
   if (config.enableConsole) {
     const consoleMethod = severity === 'critical' || severity === 'high' ? 'error' : 'log';
@@ -328,45 +297,33 @@ export function createRequestLogger(requestId: string, route?: string) {
 }
 
 /**
- * Server-side application error
+ * Server-side application error.
+ * Extends BaseAppError from core with server-specific fields (HTTP status codes,
+ * API response helpers).
  */
-export class ServerAppError extends Error {
-  public readonly category: ErrorCategory;
-  public readonly severity: ErrorSeverity;
-  public readonly context: ErrorContext;
-  public readonly recoverable: boolean;
-  public readonly userMessage: string;
-  public readonly id: string;
+export class ServerAppError extends BaseAppError {
   public readonly statusCode: number;
 
   constructor(
     message: string,
     options: AppErrorOptions & { statusCode?: number } = {}
   ) {
-    super(message);
+    const category = options.category ?? 'unknown';
+    super(message, {
+      ...options,
+      // Provide server-specific user message fallback (overrides client-facing defaults)
+      userMessageFallback: ServerAppError.getServerDefaultMessage(category),
+    });
     this.name = 'ServerAppError';
 
-    this.id = generateErrorId();
-    this.category = options.category ?? 'unknown';
-    this.severity = options.severity ?? 'medium';
-    this.recoverable = options.recoverable ?? false;
-    this.userMessage = options.userMessage ?? this.getDefaultMessage();
-    this.statusCode = options.statusCode ?? this.getDefaultStatusCode();
-
-    this.context = {
-      timestamp: Date.now(),
-      userAction: options.userAction,
-      component: options.component,
-      requestId: options.requestId,
-      metadata: options.metadata,
-    };
+    this.statusCode = options.statusCode ?? ServerAppError.getDefaultStatusCode(this.category);
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ServerAppError);
     }
   }
 
-  private getDefaultMessage(): string {
+  private static getServerDefaultMessage(category: ErrorCategory): string {
     const messages: Record<ErrorCategory, string> = {
       network: 'Unable to connect to external service',
       auth: 'Authentication required',
@@ -376,10 +333,10 @@ export class ServerAppError extends Error {
       validation: 'Invalid request data',
       unknown: 'An unexpected error occurred',
     };
-    return messages[this.category];
+    return messages[category];
   }
 
-  private getDefaultStatusCode(): number {
+  private static getDefaultStatusCode(category: ErrorCategory): number {
     const codes: Record<ErrorCategory, number> = {
       network: 502,
       auth: 401,
@@ -389,7 +346,7 @@ export class ServerAppError extends Error {
       validation: 400,
       unknown: 500,
     };
-    return codes[this.category];
+    return codes[category];
   }
 
   /**
@@ -400,21 +357,6 @@ export class ServerAppError extends Error {
       error: this.userMessage,
       code: this.category.toUpperCase(),
       id: this.id,
-    };
-  }
-
-  /**
-   * Convert to TrackedError
-   */
-  toTrackedError(): TrackedError {
-    return {
-      id: this.id,
-      message: this.message,
-      category: this.category,
-      severity: this.severity,
-      context: this.context,
-      stack: this.stack,
-      originalError: this,
     };
   }
 }
@@ -466,7 +408,7 @@ export function createApiHandler<T>(
   options?: { route?: string }
 ) {
   return async (): Promise<T> => {
-    const requestId = generateErrorId().replace('err_srv_', 'req_');
+    const requestId = generateErrorId('srv').replace('err_srv_', 'req_');
 
     try {
       return await handler(requestId);
@@ -492,3 +434,6 @@ export type {
   Breadcrumb,
   AppErrorOptions,
 };
+
+// Re-export shared core utilities for consumers that may need them
+export { getDefaultUserMessage };
