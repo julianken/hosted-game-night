@@ -4,25 +4,26 @@ A unified gaming platform for groups and communities, featuring Bingo, Trivia, a
 
 ## Current Status
 
-| App/Package | Status | Completion | Description |
-|-------------|--------|------------|-------------|
-| **[Bingo](./apps/bingo/README.md)** | ✅ Production Ready | 85% | 75-ball bingo with audio, patterns, themes, dual-screen sync, PWA |
-| **[Trivia](./apps/trivia/README.md)** | ✅ Production Ready | 95% | Team trivia with rounds, scoring, TTS, themes, dual-screen sync, PWA |
-| **[Platform Hub](./apps/platform-hub/README.md)** | 🚧 Backend Complete | 55-60% | OAuth 2.1 server, game selector UI, auth forms. Dashboard/profile TODO |
-| **[@joolie-boolie/sync](./packages/sync/README.md)** | ✅ Complete | 100% | BroadcastChannel dual-screen synchronization |
-| **[@joolie-boolie/ui](./packages/ui/README.md)** | ✅ Complete | 100% | Button, Toggle, Slider, Card, Modal, Toast components |
-| **[@joolie-boolie/theme](./packages/theme/README.md)** | ✅ Complete | 100% | Design tokens, 10+ themes, accessible typography |
-| **[@joolie-boolie/database](./packages/database/README.md)** | ✅ Complete | 98% | Type-safe Supabase client wrappers (268 exports) |
-| **[@joolie-boolie/auth](./packages/auth/README.md)** | ✅ Complete | 95% | Supabase authentication wrappers (34 exports) |
-| **[@joolie-boolie/types](./packages/types/README.md)** | ✅ Complete | 100% | Shared TypeScript type definitions (30 exports) |
-| **[@joolie-boolie/game-engine](./packages/game-engine/README.md)** | ⚠️ Partial | 40% | Abstract game state machine |
-| **[@joolie-boolie/testing](./packages/testing/README.md)** | ✅ Complete | 100% | BroadcastChannel and Audio mocks for tests |
+| App/Package | Status | Description |
+|-------------|--------|-------------|
+| **[Bingo](./apps/bingo/README.md)** | ✅ Production Ready | 75-ball bingo with audio, 29 patterns, themes, dual-screen sync, PWA |
+| **[Trivia](./apps/trivia/README.md)** | ✅ Production Ready | Team trivia with rounds, scoring, TTS, buzz-in, themes, dual-screen sync, PWA |
+| **[Platform Hub](./apps/platform-hub/README.md)** | ✅ Production Ready | OAuth 2.1 server, auth, dashboard, settings, templates, middleware stack |
+| **[@joolie-boolie/sync](./packages/sync/README.md)** | ✅ Complete | BroadcastChannel dual-screen synchronization |
+| **[@joolie-boolie/ui](./packages/ui/README.md)** | ✅ Complete | Shared UI components (Button, Modal, Input, Toast, Toggle, Skeleton, etc.) |
+| **[@joolie-boolie/theme](./packages/theme/README.md)** | ✅ Complete | Design tokens, 10+ themes, accessible typography |
+| **[@joolie-boolie/database](./packages/database/README.md)** | ✅ Complete | Type-safe Supabase client wrappers |
+| **[@joolie-boolie/auth](./packages/auth/README.md)** | ✅ Complete | Supabase authentication wrappers |
+| **[@joolie-boolie/types](./packages/types/README.md)** | ✅ Complete | Shared TypeScript type definitions |
+| **[@joolie-boolie/game-engine](./packages/game-engine/README.md)** | ✅ Shared Types | Base game state types, transitions, statistics. Actual engines live in each app. |
+| **[@joolie-boolie/error-tracking](./packages/error-tracking/README.md)** | ✅ Complete | Error logging and tracking utilities |
+| **[@joolie-boolie/testing](./packages/testing/README.md)** | ✅ Complete | BroadcastChannel and Audio mocks for tests |
 
 ## Features
 
 ### Bingo
 - 75-ball bingo (B:1-15, I:16-30, N:31-45, G:46-60, O:61-75)
-- 15+ bingo patterns (lines, corners, frames, shapes, letters, blackout)
+- 29 bingo patterns (lines, corners, frames, shapes, letters, blackout)
 - Voice packs with British slang variant and hall reverb options
 - Configurable roll sounds (metal cage, tumbler, lottery)
 - Auto-call mode with adjustable speed (5-30 seconds)
@@ -47,7 +48,8 @@ A unified gaming platform for groups and communities, featuring Bingo, Trivia, a
 - Game selection interface with links to Bingo and Trivia
 - Login/registration forms with Supabase authentication
 - CORS configuration, rate limiting, security middleware
-- (Planned: Dashboard, user profiles, template management)
+- Dashboard with game stats, recent sessions, and template management
+- User settings (facility name, theme, password change)
 
 ## Tech Stack
 
@@ -96,8 +98,8 @@ joolie-boolie-platform/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/joolie-boolie-platform.git
-cd joolie-boolie-platform
+git clone https://github.com/julianken/joolie-boolie.git
+cd joolie-boolie
 
 # Install dependencies
 pnpm install
@@ -233,8 +235,8 @@ Repeat the same steps with:
 - **Project Name:** `jb-platform-hub`
 - Add additional environment variables:
   ```
-  NEXT_PUBLIC_BINGO_URL=https://bingo.joolie-boolie.com.vercel.app
-  NEXT_PUBLIC_TRIVIA_URL=https://trivia.joolie-boolie.com.vercel.app
+  NEXT_PUBLIC_BINGO_URL=https://bingo.joolie-boolie.com
+  NEXT_PUBLIC_TRIVIA_URL=https://trivia.joolie-boolie.com
   ```
 
 ### Custom Domains
@@ -242,14 +244,14 @@ Repeat the same steps with:
 After deployment, you can add custom domains:
 
 1. Go to your project's **Settings > Domains**
-2. Add your domain (e.g., `bingo.joolieboolie.com`)
+2. Add your domain (e.g., `bingo.joolie-boolie.com`)
 3. Configure DNS as instructed
 4. Update `NEXT_PUBLIC_APP_URL` to match the custom domain
 
 Recommended domain structure:
-- `joolieboolie.com` or `hub.joolieboolie.com` - Platform Hub
-- `bingo.joolieboolie.com` - Bingo
-- `trivia.joolieboolie.com` - Trivia
+- `joolie-boolie.com` or `hub.joolie-boolie.com` - Platform Hub
+- `bingo.joolie-boolie.com` - Bingo
+- `trivia.joolie-boolie.com` - Trivia
 
 ### Enable Turbo Remote Caching (Optional)
 
@@ -273,11 +275,11 @@ Remote caching speeds up builds by sharing cache across deployments:
 | All | `NEXT_PUBLIC_SUPABASE_URL` | `https://abc123.supabase.co` |
 | All | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIs...` |
 | All | `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOiJIUzI1NiIs...` |
-| Bingo | `NEXT_PUBLIC_APP_URL` | `https://bingo.joolieboolie.com` |
-| Trivia | `NEXT_PUBLIC_APP_URL` | `https://trivia.joolieboolie.com` |
-| Hub | `NEXT_PUBLIC_APP_URL` | `https://joolieboolie.com` |
-| Hub | `NEXT_PUBLIC_BINGO_URL` | `https://bingo.joolieboolie.com` |
-| Hub | `NEXT_PUBLIC_TRIVIA_URL` | `https://trivia.joolieboolie.com` |
+| Bingo | `NEXT_PUBLIC_APP_URL` | `https://bingo.joolie-boolie.com` |
+| Trivia | `NEXT_PUBLIC_APP_URL` | `https://trivia.joolie-boolie.com` |
+| Hub | `NEXT_PUBLIC_APP_URL` | `https://joolie-boolie.com` |
+| Hub | `NEXT_PUBLIC_BINGO_URL` | `https://bingo.joolie-boolie.com` |
+| Hub | `NEXT_PUBLIC_TRIVIA_URL` | `https://trivia.joolie-boolie.com` |
 
 ### Deployment Architecture
 
@@ -491,12 +493,13 @@ Each shared package has API documentation:
 | Package | README | Description |
 |---------|--------|-------------|
 | **[@joolie-boolie/sync](./packages/sync/README.md)** | [README](./packages/sync/README.md) | BroadcastChannel dual-screen synchronization |
-| **[@joolie-boolie/ui](./packages/ui/README.md)** | [README](./packages/ui/README.md) | 6 accessible UI components |
+| **[@joolie-boolie/ui](./packages/ui/README.md)** | [README](./packages/ui/README.md) | Shared UI components (Button, Modal, Input, Toast, etc.) |
 | **[@joolie-boolie/theme](./packages/theme/README.md)** | [README](./packages/theme/README.md) | Design tokens and CSS variables |
-| **[@joolie-boolie/database](./packages/database/README.md)** | [README](./packages/database/README.md) | Type-safe Supabase utilities (268 exports) |
-| **[@joolie-boolie/auth](./packages/auth/README.md)** | [README](./packages/auth/README.md) | Authentication wrappers (34 exports) |
-| **[@joolie-boolie/types](./packages/types/README.md)** | [README](./packages/types/README.md) | Shared TypeScript types (30 exports) |
-| **[@joolie-boolie/game-engine](./packages/game-engine/README.md)** | [README](./packages/game-engine/README.md) | Abstract game state machine |
+| **[@joolie-boolie/database](./packages/database/README.md)** | [README](./packages/database/README.md) | Type-safe Supabase utilities |
+| **[@joolie-boolie/auth](./packages/auth/README.md)** | [README](./packages/auth/README.md) | Authentication wrappers |
+| **[@joolie-boolie/types](./packages/types/README.md)** | [README](./packages/types/README.md) | Shared TypeScript types |
+| **[@joolie-boolie/game-engine](./packages/game-engine/README.md)** | [README](./packages/game-engine/README.md) | Base game state types and transitions |
+| **[@joolie-boolie/error-tracking](./packages/error-tracking/README.md)** | [README](./packages/error-tracking/README.md) | Error logging and tracking |
 | **[@joolie-boolie/testing](./packages/testing/README.md)** | [README](./packages/testing/README.md) | Test utilities and mocks |
 
 ### Other Documentation

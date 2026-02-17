@@ -30,16 +30,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | App/Package | Status | Notes |
 |-------------|--------|-------|
-| `apps/bingo` | **Production Ready (85%)** | 75-ball bingo, 29 patterns, audio, themes, dual-screen, PWA, OAuth |
-| `apps/trivia` | **Production Ready (95%)** | Trivia, rounds, scoring, TTS, themes, dual-screen, PWA, OAuth, CSV import |
-| `apps/platform-hub` | **Backend Complete (55-60%)** | OAuth 2.1 server, CORS, rate limiting, security. Missing: BEA-319 to BEA-329 |
-| `packages/sync` | **Complete (100%)** | BroadcastChannel sync, Zustand store, React hook |
-| `packages/ui` | **Partial (88%)** | 15 components. Missing: Card |
-| `packages/theme` | **Complete (100%)** | Design tokens (3 modes (light/dark/system), typography, spacing, touch targets) |
-| `packages/game-engine` | **Partial (40%)** | Base GameStatus type, transition functions, statistics |
-| `packages/auth` | **Complete (95%)** | AuthProvider, hooks, ProtectedRoute. Integrated in platform-hub, bingo, trivia (middleware-based) |
-| `packages/database` | **Complete (98%)** | Type-safe client, CRUD, pagination, hooks, PIN security, API factories |
-| `packages/testing` | **Complete (100%)** | BroadcastChannel and Audio mocks |
+| `apps/bingo` | **Production Ready** | 75-ball bingo, 29 patterns, audio, themes, dual-screen, PWA, OAuth |
+| `apps/trivia` | **Production Ready** | Trivia, rounds, scoring, TTS, buzz-in, themes, dual-screen, PWA, OAuth |
+| `apps/platform-hub` | **Production Ready** | OAuth 2.1 server, auth, dashboard, settings, templates, middleware stack |
+| `packages/sync` | **Complete** | BroadcastChannel sync, Zustand store, React hook |
+| `packages/ui` | **Complete** | Shared UI components (Button, Modal, Input, Toast, Toggle, Skeleton, etc.) |
+| `packages/theme` | **Complete** | Design tokens (3 modes, typography, spacing, touch targets) |
+| `packages/game-engine` | **Shared Types** | Base GameStatus, transition functions, statistics. Actual engines live in each app. |
+| `packages/auth` | **Complete** | AuthProvider, hooks, ProtectedRoute. Integrated in platform-hub, bingo, trivia |
+| `packages/database` | **Complete** | Type-safe client, CRUD, pagination, hooks, PIN security, API factories |
+| `packages/testing` | **Complete** | BroadcastChannel and Audio mocks |
 | `packages/types` | **Complete** | Shared TypeScript types |
 | `packages/error-tracking` | **Complete** | Error logging and tracking |
 
@@ -59,9 +59,14 @@ pnpm dev                  # Run all apps (dev:bingo, dev:trivia, dev:hub for ind
 pnpm build                # Build all apps and packages
 pnpm test                 # Run all tests (test:run for single run, test:coverage for coverage)
 pnpm lint                 # Lint all apps and packages
+pnpm typecheck            # Type check all packages
 pnpm clean                # Clean all build artifacts
 pnpm test:e2e             # Build + run E2E tests
 pnpm test:e2e:summary     # Show E2E pass/fail counts
+pnpm test:e2e:dev         # E2E tests against dev servers (no build)
+pnpm test:e2e:bingo       # E2E tests for bingo only
+pnpm test:e2e:trivia      # E2E tests for trivia only
+pnpm dev:e2e              # Dev mode with E2E_TESTING=true
 ```
 
 ### Production Test Account
@@ -78,10 +83,24 @@ Structure: `{ email, password, supabase_user_id, urls: { platform_hub, bingo, tr
 
 Create `.env.local` in each app:
 ```
+# Required for all apps
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SESSION_TOKEN_SECRET=your-64-character-hex-string  # openssl rand -hex 32
+
+# Required for bingo/trivia (JWT verification in middleware)
+SUPABASE_JWT_SECRET=your-supabase-jwt-secret
+
+# Required for bingo/trivia (OAuth flow)
+NEXT_PUBLIC_PLATFORM_HUB_URL=http://localhost:3002
+NEXT_PUBLIC_OAUTH_CLIENT_ID=your-oauth-client-id
+
+# Required for E2E testing
+E2E_JWT_SECRET=your-e2e-jwt-secret
+
+# Optional (production only)
+COOKIE_DOMAIN=.joolie-boolie.com                   # Cross-app SSO cookies
 # Optional (platform-hub only): REDIS_URL, REDIS_TOKEN (Upstash, for production rate limiting)
 # Optional (platform-hub only): CRON_SECRET (for Vercel Cron job authentication)
 ```

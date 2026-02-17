@@ -258,16 +258,7 @@ Some PWA tests require service worker functionality that only works in productio
 
 ### Running Production E2E Tests
 
-```bash
-# Option 1: Automated script (builds, starts, tests, kills)
-pnpm test:e2e:prod
-
-# Option 2: Manual control
-pnpm build              # Build all apps
-pnpm start              # Start production servers
-pnpm test:e2e  # Run E2E tests
-# Kill servers when done (Ctrl+C)
-```
+The standard `pnpm test:e2e` command already builds all apps before testing (via `./scripts/e2e-with-build.sh`). For PWA-specific tests that need service workers, ensure the build completes successfully before running E2E.
 
 ### Which Tests Require Production?
 

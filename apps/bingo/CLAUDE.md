@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | PWA | Serwist (Service Worker) |
 | Hosting | Vercel |
 
-## Implemented Features
+## Features
 
 ### Game Engine
 - 75-ball format: B:1-15, I:16-30, N:31-45, G:46-60, O:61-75
@@ -48,6 +48,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Separate volume controls: Voice, Roll Sound, Chime
 - Web Speech API fallback for TTS
 - Audio pooling to prevent memory leaks
+- Audio logic in `hooks/use-audio.ts` and `stores/audio-store.ts`
 
 ### Theme System
 - Light/Dark/System mode
@@ -63,7 +64,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Dual-Screen Sync
 - Presenter view (`/play`): Game controls, pattern selector, audio settings
 - Audience view (`/display`): Large ball display, bingo board, pattern visualization
-- BroadcastChannel API for same-device sync
+- BroadcastChannel API for same-device sync via `@joolie-boolie/sync`
 - Message types: `GAME_STATE_UPDATE`, `BALL_CALLED`, `GAME_RESET`, `PATTERN_CHANGED`, `REQUEST_SYNC`
 
 ### PWA Support
@@ -73,58 +74,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Offline-capable game play
 - Cache management hooks
 
-### Fullscreen Mode
-- Fullscreen toggle for audience display
-- Keyboard shortcut support
-
 ### Room Creation Flow
 - **Online Mode:** Create room with Supabase session, generates 4-digit PIN (1000-9999)
 - **Offline Mode:** Local-only session with 6-character session ID (no ambiguous chars: 0, O, 1, I)
 - **Join Room:** Enter room code and 4-digit PIN to join existing session
 - **Session Recovery:** Automatic recovery from localStorage on page refresh
-- **Create New Game:** Clear current session and start fresh (with confirmation if game active)
 
 #### PIN Generation
 - Uses `crypto.getRandomValues()` for cryptographic security (no `Math.random()`)
 - 4-digit PINs: Range 1000-9999 (9000 possible values)
 - Stored in localStorage key: `bingo_pin`
-- Persists across page refreshes for session recovery
 
 #### Offline Session IDs
 - 6-character alphanumeric IDs (uppercase)
 - Character set: `23456789ABCDEFGHJKLMNPQRSTUVWXYZ` (32 chars, excludes 0/O/1/I)
-- Stored in localStorage key: `bingo_offline_session_id`
-- Session data stored in key: `bingo_offline_session_{sessionId}`
 - Total possibilities: 32^6 = 1,073,741,824
 
-#### localStorage Schema
-```typescript
-// PIN storage
-localStorage.setItem('bingo_pin', '1234');
+## Shared Packages
 
-// Offline session ID
-localStorage.setItem('bingo_offline_session_id', 'A3B7K9');
+- `@joolie-boolie/sync` - Dual-screen synchronization
+- `@joolie-boolie/ui` - Shared UI components
+- `@joolie-boolie/theme` - Accessible design tokens
+- `@joolie-boolie/auth` - Auth utilities (token refresh, JWT verification)
+- `@joolie-boolie/database` - Database utilities
+- `@joolie-boolie/types` - Shared TypeScript types
+- `@joolie-boolie/error-tracking` - Error logging
 
-// Offline session data
-localStorage.setItem('bingo_offline_session_A3B7K9', JSON.stringify({
-  sessionId: 'A3B7K9',
-  isOffline: true,
-  gameState: { /* serialized game state */ },
-  createdAt: '2024-01-20T12:00:00.000Z',
-  lastUpdated: '2024-01-20T12:30:00.000Z',
-}));
-```
-
-## Architecture
-
-Frontend never talks directly to Supabase. All requests go through API routes (BFF pattern).
-
-**Dual-Screen System:**
-- Presenter window (controls): Game controls, pattern selector, speed control, audio toggle
-- Audience window (projection): Large ball display, full bingo board, winning pattern
-- Sync via BroadcastChannel API for same-device window communication
-
-## Key Commands
+## Commands
 
 ```bash
 # From monorepo root
@@ -138,6 +114,30 @@ pnpm test:run         # Run tests once
 pnpm test:coverage    # Run tests with coverage
 ```
 
+## Routes
+
+### Page Routes
+
+| Route | Description |
+|-------|-------------|
+| `/play` | Presenter view (host controls) |
+| `/display` | Audience view (projector/TV) |
+| `/auth/callback` | OAuth callback handler |
+
+### API Routes
+
+| Route | Methods | Description |
+|-------|---------|-------------|
+| `/api/health` | GET | Health check endpoint |
+| `/api/auth/logout` | POST | Logout and clear session |
+| `/api/auth/token` | POST | Token exchange/refresh |
+| `/api/templates` | GET, POST | Template CRUD |
+| `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
+| `/api/sessions` | POST | Create game session |
+| `/api/sessions/room` | GET | Get session by room code |
+| `/api/sessions/join-by-pin` | POST | Join session with PIN |
+| `/api/sessions/[roomCode]` | GET | Get session details |
+
 ## Keyboard Shortcuts
 
 | Key | Action |
@@ -148,41 +148,14 @@ pnpm test:coverage    # Run tests with coverage
 | U | Undo last call |
 | M | Mute/unmute audio |
 
-## Project Structure
+## Architecture Notes
 
-```
-src/
-├── app/
-│   ├── api/health/    # Health check endpoint
-│   ├── play/          # Presenter view (page.tsx)
-│   ├── display/       # Audience view (page.tsx)
-│   ├── sw.ts          # Service worker (@serwist/turbopack)
-│   └── layout.tsx     # Root layout with theme provider
-├── components/
-│   ├── presenter/     # ControlPanel, PatternSelector, BallDisplay, ThemeSelector, etc.
-│   ├── audience/      # AudienceBallDisplay, AudienceBoard
-│   └── ui/            # Button, Modal, Toggle, Card, Toast, etc.
-├── contexts/          # React contexts
-├── hooks/
-│   ├── use-game.ts    # Game state + keyboard shortcuts
-│   ├── use-audio.ts   # Audio playback hook
-│   ├── use-sync.ts    # Dual-screen sync hook
-│   ├── use-theme.ts   # Theme management
-│   ├── use-fullscreen.ts
-│   ├── use-online-status.ts
-│   └── use-sw-cache.ts
-├── lib/
-│   ├── game/          # engine.ts, patterns.ts, state-machine.ts, ball-deck.ts
-│   ├── session/       # secure-generation.ts (PIN/session ID), serializer.ts
-│   └── sync/          # broadcast.ts (BroadcastChannel), session.ts, offline-session.ts
-├── stores/
-│   ├── game-store.ts  # Zustand game state
-│   ├── audio-store.ts # Zustand audio state (persisted)
-│   ├── sync-store.ts  # Zustand sync state
-│   └── theme-store.ts # Zustand theme state (persisted)
-├── types/             # TypeScript types
-└── test/              # Test utilities and mocks
-```
+- **BFF Pattern:** Frontend never talks directly to Supabase. All requests go through API routes.
+- **Game Engine:** Pure functions in `lib/game/engine.ts` transform `GameState`. Zustand store wraps these for React integration.
+- **Auth:** OAuth 2.1 via Platform Hub with middleware-based JWT verification. OAuth client utilities in `lib/auth/` (oauth-client.ts, pkce.ts). Middleware uses lazy JWKS initialization to avoid server hang.
+- **Audio:** Audio logic lives in `hooks/use-audio.ts` and `stores/audio-store.ts`. The `lib/audio/` directory is a placeholder (`.gitkeep` only).
+- **Sync:** Session sync wrapper in `lib/sync/session.ts` and `lib/sync/offline-session.ts`, built on `@joolie-boolie/sync`
+- **Patterns:** 29 patterns defined in `lib/game/patterns/` across 7 category files using `createPattern()`
 
 ## Design Requirements
 
@@ -192,14 +165,13 @@ src/
 
 ## Testing
 
-Tests are located alongside the code in `__tests__` directories:
+Tests are located alongside code in `__tests__` directories:
 - `stores/__tests__/` - Store tests
 - `hooks/__tests__/` - Hook tests
 - `components/**/__tests__/` - Component tests
 - `lib/game/__tests__/` - Engine tests
 - `app/api/**/__tests__/` - API route tests
 
-Run with:
 ```bash
 pnpm test             # Watch mode
 pnpm test:run         # Single run

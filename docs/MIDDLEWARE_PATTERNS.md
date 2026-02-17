@@ -59,6 +59,7 @@ export async function middleware(request: NextRequest) {
 
 - `apps/bingo/src/middleware.ts` - OAuth token verification
 - `apps/trivia/src/middleware.ts` - OAuth token verification
-- `e2e/fixtures/auth.ts` - E2E test authentication
+
+**Note:** Platform Hub uses a different middleware architecture — a multi-layer approach with separate files for CORS, rate limiting, body size validation, and session management, orchestrated by a root `middleware.ts`. See `apps/platform-hub/CLAUDE.md` for details.
 
 **Related:** See `docs/plans/2026-01-23-fix-e2e-auth.md` for full debugging analysis of the server hanging issue.
