@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 
 // =============================================================================
 // TYPES
@@ -380,7 +381,7 @@ export const useAudioStore = create<AudioStore>()(
 // =============================================================================
 
 export function useAudioSettings() {
-  return useAudioStore((state) => ({
+  return useAudioStore(useShallow((state) => ({
     enabled: state.enabled,
     volume: state.volume,
     ttsEnabled: state.ttsEnabled,
@@ -389,22 +390,22 @@ export function useAudioSettings() {
     ttsPitch: state.ttsPitch,
     sfxEnabled: state.sfxEnabled,
     sfxVolume: state.sfxVolume,
-  }));
+  })));
 }
 
 export function useTtsSettings() {
-  return useAudioStore((state) => ({
+  return useAudioStore(useShallow((state) => ({
     enabled: state.enabled && state.ttsEnabled,
     voice: state.ttsVoice,
     rate: state.ttsRate,
     pitch: state.ttsPitch,
     volume: state.volume,
-  }));
+  })));
 }
 
 export function useSfxSettings() {
-  return useAudioStore((state) => ({
+  return useAudioStore(useShallow((state) => ({
     enabled: state.enabled && state.sfxEnabled,
     volume: state.volume * state.sfxVolume,
-  }));
+  })));
 }
