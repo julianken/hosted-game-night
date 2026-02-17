@@ -21,8 +21,6 @@ describe('audio-store', () => {
     // Reset store
     useAudioStore.setState({
       ...AUDIO_DEFAULTS,
-      isSpeaking: false,
-      isPlayingSfx: false,
     });
 
     // Mock Audio
@@ -62,14 +60,6 @@ describe('audio-store', () => {
 
     it('has no voice selected by default', () => {
       expect(useAudioStore.getState().ttsVoice).toBeNull();
-    });
-
-    it('is not speaking', () => {
-      expect(useAudioStore.getState().isSpeaking).toBe(false);
-    });
-
-    it('is not playing SFX', () => {
-      expect(useAudioStore.getState().isPlayingSfx).toBe(false);
     });
   });
 
@@ -292,7 +282,6 @@ describe('audio-store', () => {
 
       // Should not throw - using a non-existent sound effect to test error handling
       await useAudioStore.getState().playSoundEffect('timer-warning' as unknown as import('../audio-store').SoundEffectType);
-      expect(useAudioStore.getState().isPlayingSfx).toBe(false);
     });
 
     it('handles play rejection gracefully', async () => {
@@ -310,7 +299,6 @@ describe('audio-store', () => {
 
       // Should not throw
       await useAudioStore.getState().playSoundEffect('timer-expired');
-      expect(useAudioStore.getState().isPlayingSfx).toBe(false);
     });
 
     it('applies combined volume (master * sfx)', async () => {
@@ -340,16 +328,14 @@ describe('audio-store', () => {
   });
 
   describe('stopAllAudio', () => {
-    it('sets isSpeaking to false', () => {
-      useAudioStore.setState({ isSpeaking: true });
+    it('calls speechSynthesis.cancel when available', () => {
+      const mockCancel = vi.fn();
+      vi.stubGlobal('window', {
+        ...window,
+        speechSynthesis: { cancel: mockCancel },
+      });
       useAudioStore.getState().stopAllAudio();
-      expect(useAudioStore.getState().isSpeaking).toBe(false);
-    });
-
-    it('sets isPlayingSfx to false', () => {
-      useAudioStore.setState({ isPlayingSfx: true });
-      useAudioStore.getState().stopAllAudio();
-      expect(useAudioStore.getState().isPlayingSfx).toBe(false);
+      expect(mockCancel).toHaveBeenCalled();
     });
   });
 
@@ -396,21 +382,4 @@ describe('audio-store', () => {
     });
   });
 
-  describe('internal state setters', () => {
-    it('_setIsSpeaking updates isSpeaking', () => {
-      useAudioStore.getState()._setIsSpeaking(true);
-      expect(useAudioStore.getState().isSpeaking).toBe(true);
-
-      useAudioStore.getState()._setIsSpeaking(false);
-      expect(useAudioStore.getState().isSpeaking).toBe(false);
-    });
-
-    it('_setIsPlayingSfx updates isPlayingSfx', () => {
-      useAudioStore.getState()._setIsPlayingSfx(true);
-      expect(useAudioStore.getState().isPlayingSfx).toBe(true);
-
-      useAudioStore.getState()._setIsPlayingSfx(false);
-      expect(useAudioStore.getState().isPlayingSfx).toBe(false);
-    });
-  });
 });

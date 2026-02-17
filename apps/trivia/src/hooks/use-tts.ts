@@ -67,8 +67,7 @@ export function useTTS(): UseTTSReturn {
   const ttsRate = useAudioStore((s) => s.ttsRate);
   const ttsPitch = useAudioStore((s) => s.ttsPitch);
   const volume = useAudioStore((s) => s.volume);
-  const isSpeaking = useAudioStore((s) => s.isSpeaking);
-  const setIsSpeaking = useAudioStore((s) => s._setIsSpeaking);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Check availability and load voices
   useEffect(() => {
@@ -170,7 +169,7 @@ export function useTTS(): UseTTSReturn {
 
       window.speechSynthesis.speak(utterance);
     },
-    [isAvailable, enabled, ttsEnabled, ttsRate, ttsPitch, volume, findBestVoice, setIsSpeaking]
+    [isAvailable, enabled, ttsEnabled, ttsRate, ttsPitch, volume, findBestVoice]
   );
 
   // Stop function
@@ -180,7 +179,7 @@ export function useTTS(): UseTTSReturn {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     utteranceRef.current = null;
-  }, [isAvailable, setIsSpeaking]);
+  }, [isAvailable]);
 
   // Cleanup on unmount
   useEffect(() => {

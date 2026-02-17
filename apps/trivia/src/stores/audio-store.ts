@@ -29,9 +29,6 @@ export interface AudioState {
   sfxEnabled: boolean;
   sfxVolume: number; // 0-1, sound effects volume
 
-  // Playback state (non-persisted)
-  isSpeaking: boolean;
-  isPlayingSfx: boolean;
 }
 
 export interface AudioActions {
@@ -53,10 +50,6 @@ export interface AudioActions {
   // Playback
   playSoundEffect: (effect: SoundEffectType) => Promise<void>;
   stopAllAudio: () => void;
-
-  // State setters (for internal use)
-  _setIsSpeaking: (isSpeaking: boolean) => void;
-  _setIsPlayingSfx: (isPlayingSfx: boolean) => void;
 }
 
 export interface AudioStore extends AudioState, AudioActions {}
@@ -79,8 +72,6 @@ export const AUDIO_DEFAULTS: AudioState = {
   ttsPitch: DEFAULT_TTS_PITCH,
   sfxEnabled: true,
   sfxVolume: DEFAULT_SFX_VOLUME,
-  isSpeaking: false,
-  isPlayingSfx: false,
 };
 
 // =============================================================================
@@ -308,12 +299,9 @@ export const useAudioStore = create<AudioStore>()(
         // Combined volume
         audio.volume = volume * sfxVolume;
 
-        set({ isPlayingSfx: true });
-
         return new Promise<void>((resolve) => {
           const cleanup = () => {
             releasePooledAudio(soundFile, audio);
-            set({ isPlayingSfx: false });
           };
 
           audio.onended = () => {
@@ -345,17 +333,6 @@ export const useAudioStore = create<AudioStore>()(
           element.pause();
           element.currentTime = 0;
         }
-
-        set({ isSpeaking: false, isPlayingSfx: false });
-      },
-
-      // Internal state setters
-      _setIsSpeaking: (isSpeaking: boolean) => {
-        set({ isSpeaking });
-      },
-
-      _setIsPlayingSfx: (isPlayingSfx: boolean) => {
-        set({ isPlayingSfx });
       },
     }),
     {

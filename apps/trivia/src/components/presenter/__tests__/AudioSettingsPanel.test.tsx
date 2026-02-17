@@ -60,8 +60,6 @@ describe('AudioSettingsPanel', () => {
     // Reset store
     useAudioStore.setState({
       ...AUDIO_DEFAULTS,
-      isSpeaking: false,
-      isPlayingSfx: false,
     });
 
     // Clear mock calls
