@@ -33,7 +33,7 @@ export { severityLevels };
  * Server configuration (optimized for server; no browser globals)
  */
 const defaultConfig: ErrorTrackerConfig = {
-  enableConsole: process.env.NODE_ENV !== 'production',
+  enableConsole: true, // Always -- Vercel captures console for Axiom log drain
   minSeverity: 'low',
   environment: process.env.NODE_ENV ?? 'development',
   appName: 'JoolieBoolie',
