@@ -1,4 +1,37 @@
 // =============================================================================
+// TYPE GUARDS & DISCRIMINATED UNION
+// =============================================================================
+
+export {
+  // State variant types
+  type SetupState,
+  type PlayingState,
+  type BetweenRoundsState,
+  type PausedState,
+  type EndedState,
+  type GameStateVariant,
+  // Type guard functions
+  isSetupState,
+  isPlayingState,
+  isBetweenRoundsState,
+  isPausedState,
+  isEndedState,
+  isGameActive,
+  canPauseState,
+  isConfigurable,
+  // Accessors
+  getEffectiveDisplayStatus,
+  getResumeTarget,
+  // Assertion helpers
+  assertNever,
+  assertSetupState,
+  assertPlayingState,
+  assertBetweenRoundsState,
+  assertPausedState,
+  assertEndedState,
+} from './guards';
+
+// =============================================================================
 // CONSTANTS
 // =============================================================================
 
