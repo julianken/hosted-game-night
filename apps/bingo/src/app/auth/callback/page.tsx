@@ -4,11 +4,12 @@
  * OAuth 2.1 Callback Handler for Bingo App
  * Receives authorization code from Platform Hub and completes the OAuth flow.
  *
- * IMPORTANT: Uses a form POST (full navigation) instead of fetch() to exchange
- * the authorization code. Service workers strip Set-Cookie headers from fetch()
- * responses (per Chrome's implementation of the Fetch spec), which prevents auth
- * cookies from being stored. A form POST triggers a navigation whose redirect
- * response preserves Set-Cookie headers.
+ * IMPORTANT: Unregisters the service worker before submitting the form POST.
+ * Chrome strips Set-Cookie headers from ANY response that passes through a
+ * service worker's fetch event handler — even for navigation requests and even
+ * when respondWith() is never called. By unregistering the SW first, the form
+ * POST goes directly to the network and the 303 redirect's Set-Cookie headers
+ * are preserved. The SW will re-register on the next page load.
  */
 
 import { Suspense, useEffect, useRef, useState } from 'react';
@@ -21,7 +22,7 @@ function CallbackHandler() {
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    function handleCallback() {
+    async function handleCallback() {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const errorParam = searchParams.get('error');
@@ -69,11 +70,17 @@ function CallbackHandler() {
       const returnTo = sessionStorage.getItem('jb_oauth_return_to') || '/';
       sessionStorage.removeItem('jb_oauth_return_to');
 
+      // Unregister ALL service workers before submitting the form.
+      // Chrome strips Set-Cookie from responses that pass through a SW fetch
+      // handler, even for navigations. The SW will re-register on the next load.
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+      }
+
       // Submit the form — this triggers a full-page navigation (POST) to the
       // token-redirect endpoint. The server exchanges the code, sets auth
       // cookies on a redirect response, and the browser follows the redirect.
-      // Unlike fetch(), form navigation preserves Set-Cookie headers even when
-      // a service worker is active.
       const form = formRef.current;
       if (form) {
         (form.elements.namedItem('code') as HTMLInputElement).value = code;
