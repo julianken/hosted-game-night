@@ -66,7 +66,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     // Emit ball called event with context
     if (newState.currentBall) {
       lifecycleLogger.emit('game.ball_called', {
-        ball: `${newState.currentBall.letter}-${newState.currentBall.number}`,
+        ball: newState.currentBall.label,
         ballsCalled: getBallsCalled(newState),
         ballsRemaining: getBallsRemaining(newState),
       });
@@ -83,7 +83,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     set(undoLastCallEngine(state));
     if (previousBall) {
       lifecycleLogger.emit('game.ball_undone', {
-        ball: `${previousBall.letter}-${previousBall.number}`,
+        ball: previousBall.label,
       });
     }
     return previousBall;
