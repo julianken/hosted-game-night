@@ -142,4 +142,18 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
   }
 });
 
+// Auth API routes MUST bypass the service worker entirely.
+// When a service worker handles a fetch via respondWith(), browsers strip
+// Set-Cookie headers from the response (per the Fetch spec). This breaks
+// OAuth token storage since /api/auth/token sets httpOnly cookies.
+// By stopping propagation before Serwist's listener, no respondWith() is
+// called, so the browser handles the request natively and preserves cookies.
+self.addEventListener('fetch', (event: FetchEvent) => {
+  const url = new URL(event.request.url);
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/auth/')) {
+    event.stopImmediatePropagation();
+    return; // Browser handles natively — Set-Cookie headers preserved
+  }
+});
+
 serwist.addEventListeners();
