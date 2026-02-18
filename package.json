@@ -60,5 +60,9 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@grafana/faro-react": "^2.2.4",
+    "@grafana/faro-web-sdk": "^2.2.4"
   }
 }

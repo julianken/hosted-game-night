@@ -4,6 +4,7 @@ import './globals.css';
 import { Header, Footer } from '@/components';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
 import { SentryClientInit } from '@/components/providers/SentryClientInit';
+import { FaroInit } from '@/components/providers/FaroInit';
 import { AuthProvider } from '@joolie-boolie/auth';
 import { ToastProvider } from '@joolie-boolie/ui';
 import { validateEnvironment } from '@/lib/env-validation';
@@ -91,6 +92,7 @@ export default function RootLayout({
         </ErrorBoundaryProvider>
         <ServiceWorkerRegistration />
         <SentryClientInit />
+        <FaroInit />
         <Analytics />
         <SpeedInsights />
       </body>

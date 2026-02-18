@@ -4,6 +4,7 @@ import './globals.css';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
 import { SentryClientInit } from '@/components/providers/SentryClientInit';
+import { FaroInit } from '@/components/providers/FaroInit';
 import { ToastProvider } from "@joolie-boolie/ui";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -60,6 +61,7 @@ export default function RootLayout({
         </ToastProvider>
         <ServiceWorkerRegistration />
         <SentryClientInit />
+        <FaroInit />
         <Analytics />
         <SpeedInsights />
       </body>

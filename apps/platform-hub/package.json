@@ -17,6 +17,8 @@
   "dependencies": {
     "@joolie-boolie/auth": "workspace:*",
     "@joolie-boolie/database": "workspace:*",
+    "@grafana/faro-react": "^2.2.4",
+    "@grafana/faro-web-sdk": "^2.2.4",
     "@joolie-boolie/error-tracking": "workspace:*",
     "@joolie-boolie/theme": "workspace:*",
     "@joolie-boolie/ui": "workspace:*",
