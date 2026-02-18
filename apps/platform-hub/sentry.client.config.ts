@@ -20,6 +20,5 @@ if (dsn) {
     initialScope: {
       tags: { app: 'platform-hub' },
     },
-    tunnel: '/api/monitoring-tunnel',
   });
 }

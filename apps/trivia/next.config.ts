@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 import { withSerwist } from '@serwist/turbopack';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
@@ -53,4 +54,9 @@ const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-export default withAnalyzer(withSerwist(nextConfig));
+export default withSentryConfig(withAnalyzer(withSerwist(nextConfig)), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  tunnelRoute: '/monitoring',
+  silent: !process.env.CI,
+});

@@ -14,6 +14,5 @@ if (dsn) {
     initialScope: {
       tags: { app: 'trivia' },
     },
-    tunnel: '/api/monitoring-tunnel',
   });
 }
