@@ -2,89 +2,84 @@
 
 /**
  * OAuth 2.1 Callback Handler for Trivia App
- * Receives authorization code from Platform Hub and completes the OAuth flow
+ * Receives authorization code from Platform Hub and completes the OAuth flow.
+ *
+ * IMPORTANT: Uses a form POST (full navigation) instead of fetch() to exchange
+ * the authorization code. Service workers strip Set-Cookie headers from fetch()
+ * responses (per Chrome's implementation of the Fetch spec), which prevents auth
+ * cookies from being stored. A form POST triggers a navigation whose redirect
+ * response preserves Set-Cookie headers.
  */
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    async function handleCallback() {
-      try {
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const errorParam = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+    function handleCallback() {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      const errorParam = searchParams.get('error');
+      const errorDescription = searchParams.get('error_description');
 
-        // Handle OAuth errors from authorization server
-        if (errorParam) {
-          console.error('OAuth authorization error:', errorParam, errorDescription);
-          setError(errorDescription || errorParam);
-          setTimeout(() => router.push('/'), 3000);
-          return;
-        }
-
-        // Validate required parameters
-        if (!code || !state) {
-          console.error('Missing code or state parameter');
-          setError('Invalid callback: missing parameters');
-          setTimeout(() => router.push('/'), 3000);
-          return;
-        }
-
-        // Validate state parameter (CSRF protection)
-        // Using cross-app SSO prefix for consistency
-        const storedState = sessionStorage.getItem(`jb_oauth_state_${state}`);
-        if (!storedState || storedState !== state) {
-          console.error('State mismatch - possible CSRF attack');
-          setError('Security validation failed');
-          setTimeout(() => router.push('/'), 3000);
-          return;
-        }
-
-        // Retrieve code_verifier from sessionStorage
-        const codeVerifier = sessionStorage.getItem(`jb_pkce_verifier_${state}`);
-        if (!codeVerifier) {
-          console.error('Missing code_verifier in sessionStorage');
-          setError('Session expired - please try again');
-          setTimeout(() => router.push('/'), 3000);
-          return;
-        }
-
-        // Exchange authorization code for tokens via server API
-        const response = await fetch('/api/auth/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            codeVerifier,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Token exchange failed');
-        }
-
-        // Clean up sessionStorage
-        sessionStorage.removeItem(`jb_pkce_verifier_${state}`);
-        sessionStorage.removeItem(`jb_oauth_state_${state}`);
-
-        // Redirect to original destination or home
-        const returnTo = sessionStorage.getItem('jb_oauth_return_to') || '/';
-        sessionStorage.removeItem('jb_oauth_return_to');
-        router.push(returnTo);
-      } catch (err) {
-        console.error('OAuth callback error:', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
+      // Handle OAuth errors from authorization server
+      if (errorParam) {
+        console.error('OAuth authorization error:', errorParam, errorDescription);
+        setError(errorDescription || errorParam);
         setTimeout(() => router.push('/'), 3000);
+        return;
+      }
+
+      // Validate required parameters
+      if (!code || !state) {
+        console.error('Missing code or state parameter');
+        setError('Invalid callback: missing parameters');
+        setTimeout(() => router.push('/'), 3000);
+        return;
+      }
+
+      // Validate state parameter (CSRF protection)
+      const storedState = sessionStorage.getItem(`jb_oauth_state_${state}`);
+      if (!storedState || storedState !== state) {
+        console.error('State mismatch - possible CSRF attack');
+        setError('Security validation failed');
+        setTimeout(() => router.push('/'), 3000);
+        return;
+      }
+
+      // Retrieve code_verifier from sessionStorage
+      const codeVerifier = sessionStorage.getItem(`jb_pkce_verifier_${state}`);
+      if (!codeVerifier) {
+        console.error('Missing code_verifier in sessionStorage');
+        setError('Session expired - please try again');
+        setTimeout(() => router.push('/'), 3000);
+        return;
+      }
+
+      // Clean up sessionStorage before navigation
+      sessionStorage.removeItem(`jb_pkce_verifier_${state}`);
+      sessionStorage.removeItem(`jb_oauth_state_${state}`);
+
+      // Get return destination
+      const returnTo = sessionStorage.getItem('jb_oauth_return_to') || '/';
+      sessionStorage.removeItem('jb_oauth_return_to');
+
+      // Submit the form — this triggers a full-page navigation (POST) to the
+      // token-redirect endpoint. The server exchanges the code, sets auth
+      // cookies on a redirect response, and the browser follows the redirect.
+      // Unlike fetch(), form navigation preserves Set-Cookie headers even when
+      // a service worker is active.
+      const form = formRef.current;
+      if (form) {
+        (form.elements.namedItem('code') as HTMLInputElement).value = code;
+        (form.elements.namedItem('codeVerifier') as HTMLInputElement).value = codeVerifier;
+        (form.elements.namedItem('returnTo') as HTMLInputElement).value = returnTo;
+        form.submit();
       }
     }
 
@@ -110,6 +105,17 @@ function CallbackHandler() {
           </>
         )}
       </div>
+      {/* Hidden form for token exchange via navigation POST */}
+      <form
+        ref={formRef}
+        method="POST"
+        action="/api/auth/token-redirect"
+        style={{ display: 'none' }}
+      >
+        <input type="hidden" name="code" />
+        <input type="hidden" name="codeVerifier" />
+        <input type="hidden" name="returnTo" />
+      </form>
     </main>
   );
 }
