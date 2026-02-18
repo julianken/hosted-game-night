@@ -7,6 +7,7 @@ import type { Question, QuestionCategory } from '@/types';
 import { questionsToTriviaQuestions } from '@/lib/questions/conversion';
 import {
   DEFAULT_CATEGORIES,
+  getApiCategoriesForInternal,
   getCategoryBadgeClasses,
   getCategoryFilterActiveClasses,
   getCategoryName,
@@ -112,7 +113,10 @@ export function TriviaApiImporter({
       const params = new URLSearchParams();
       params.set('limit', String(count));
       if (selectedCategories.length > 0) {
-        params.set('categories', selectedCategories.join(','));
+        const apiCategories = selectedCategories.flatMap(getApiCategoriesForInternal);
+        if (apiCategories.length > 0) {
+          params.set('categories', apiCategories.join(','));
+        }
       }
       if (difficulty !== 'mixed') {
         params.set('difficulties', difficulty);
