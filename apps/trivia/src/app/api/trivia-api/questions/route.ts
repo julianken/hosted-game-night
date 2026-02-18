@@ -14,7 +14,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
-import { isDatabaseError } from '@joolie-boolie/database/errors';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 import { fetchTriviaApiQuestions } from '@/lib/trivia-api/client';
 import type { TriviaApiCategory, TriviaApiDifficulty, TriviaApiParams } from '@/lib/trivia-api/client';
@@ -178,8 +177,15 @@ export async function GET(request: NextRequest) {
         responseStatus: String(statusCode),
       });
 
+      const clientMessage =
+        statusCode === 429
+          ? 'Trivia API rate limit exceeded. Please try again later.'
+          : statusCode === 503
+            ? 'Trivia API is temporarily unavailable. Please try again.'
+            : 'Failed to fetch questions from Trivia API.';
+
       return NextResponse.json(
-        { error: result.error },
+        { error: clientMessage },
         { status: statusCode }
       );
     }
@@ -219,10 +225,6 @@ export async function GET(request: NextRequest) {
       event: 'trivia_api_unexpected_error',
       error: error instanceof Error ? error.message : String(error),
     });
-
-    if (isDatabaseError(error)) {
-      return NextResponse.json({ error: error.message }, { status: error.statusCode });
-    }
 
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

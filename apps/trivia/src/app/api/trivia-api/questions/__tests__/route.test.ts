@@ -10,10 +10,6 @@ vi.mock('@joolie-boolie/auth', () => ({
   createAuthenticatedClient: vi.fn(),
 }));
 
-vi.mock('@joolie-boolie/database/errors', () => ({
-  isDatabaseError: vi.fn(),
-}));
-
 vi.mock('@joolie-boolie/error-tracking/server-logger', () => ({
   createLogger: () => ({
     info: vi.fn(),
@@ -35,7 +31,6 @@ vi.mock('@/lib/trivia-api/cache', () => ({
 
 vi.mock('@/lib/questions/api-adapter', () => ({
   triviaApiQuestionsToQuestions: vi.fn(),
-  filterNicheQuestions: vi.fn((qs: unknown[]) => qs),
 }));
 
 // ---------------------------------------------------------------------------
@@ -46,10 +41,7 @@ import { GET } from '../route';
 import { getApiUser } from '@joolie-boolie/auth';
 import { fetchTriviaApiQuestions } from '@/lib/trivia-api/client';
 import { getCached, setCached } from '@/lib/trivia-api/cache';
-import {
-  triviaApiQuestionsToQuestions,
-  filterNicheQuestions,
-} from '@/lib/questions/api-adapter';
+import { triviaApiQuestionsToQuestions } from '@/lib/questions/api-adapter';
 
 import { SCIENCE_HISTORY_BATCH } from '@/lib/trivia-api/__fixtures__/trivia-api';
 
@@ -59,7 +51,6 @@ const mockFetch = fetchTriviaApiQuestions as ReturnType<typeof vi.fn>;
 const mockGetCached = getCached as ReturnType<typeof vi.fn>;
 const mockSetCached = setCached as ReturnType<typeof vi.fn>;
 const mockAdapt = triviaApiQuestionsToQuestions as ReturnType<typeof vi.fn>;
-const mockFilterNiche = filterNicheQuestions as ReturnType<typeof vi.fn>;
 
 const MOCK_USER = { id: 'user-123', email: 'test@example.com' };
 
@@ -100,7 +91,6 @@ describe('GET /api/trivia-api/questions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetCached.mockReturnValue(null);
-    mockFilterNiche.mockImplementation((qs: unknown[]) => qs);
   });
 
   // -----------------------------------------------------------------------

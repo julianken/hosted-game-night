@@ -371,7 +371,7 @@ export function TriviaApiImporter({
               onClick={() => setExcludeNiche((prev) => !prev)}
               aria-labelledby={`${excludeNicheId}-label`}
               className={`
-                relative inline-flex min-h-[28px] w-12 shrink-0 items-center
+                relative inline-flex min-h-[44px] w-12 shrink-0 items-center
                 rounded-full border-2 transition-colors
                 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1
                 ${excludeNiche ? 'bg-primary border-primary' : 'bg-muted border-border'}
