@@ -81,7 +81,7 @@ export type ConnectionState = 'disconnected' | 'connected' | 'error';
  * Error context provided to error callbacks.
  */
 export interface BroadcastError {
-  code: 'INIT_FAILED' | 'SEND_FAILED' | 'HANDLER_ERROR' | 'CHANNEL_UNAVAILABLE';
+  code: 'INIT_FAILED' | 'SEND_FAILED' | 'HANDLER_ERROR' | 'CHANNEL_UNAVAILABLE' | 'MESSAGE_TIMEOUT';
   message: string;
   originalError?: unknown;
   context?: Record<string, unknown>;
@@ -95,4 +95,51 @@ export interface BroadcastSyncOptions {
   onError?: (error: BroadcastError) => void;
   /** Enable verbose logging of all messages and state changes. */
   debug?: boolean;
+  /**
+   * Timeout in milliseconds for detecting when no messages are received.
+   * After initialization, if no message arrives within this window, a timeout
+   * event is logged and the onTimeout callback is invoked.
+   * Set to 0 to disable. @default 0 (disabled)
+   */
+  messageTimeoutMs?: number;
+  /**
+   * Called when no messages are received within the messageTimeoutMs window.
+   * Provides the elapsed time since the last received message.
+   */
+  onTimeout?: (elapsedMs: number) => void;
+}
+
+/**
+ * Heartbeat message type used for periodic state hash comparison.
+ */
+export interface HeartbeatMessage {
+  type: 'HEARTBEAT';
+  stateHash: string;
+  timestamp: number;
+  originId: string;
+  role: SyncRole;
+}
+
+/**
+ * Configuration for SyncHeartbeat.
+ */
+export interface SyncHeartbeatConfig {
+  /** Interval in milliseconds between heartbeat checks. @default 5000 */
+  intervalMs?: number;
+  /** Duration in milliseconds of sustained divergence before logging a warning. @default 5000 */
+  divergenceThresholdMs?: number;
+  /** Called when state divergence is detected and persists beyond the threshold. */
+  onDivergence?: (details: HeartbeatDivergence) => void;
+  /** Called when a previously diverged state converges back. */
+  onConvergence?: () => void;
+}
+
+/**
+ * Details about a detected heartbeat divergence.
+ */
+export interface HeartbeatDivergence {
+  localHash: string;
+  remoteHash: string;
+  divergedForMs: number;
+  channel: string;
 }

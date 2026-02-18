@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef, useMemo } from 'react';
-import { useSyncStore, type SyncRole } from '@joolie-boolie/sync';
+import { useSyncStore, useSyncHeartbeat, type SyncRole } from '@joolie-boolie/sync';
 import { useGameStore } from '@/stores/game-store';
 import { BroadcastSync } from '@joolie-boolie/sync';
 import { getChannelName } from '@/lib/sync/session';
@@ -316,6 +316,18 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
     return unsubscribe;
   }, [role, broadcastSync]);
+
+  // Heartbeat monitoring for state divergence detection
+  const getHeartbeatState = useCallback(() => {
+    return getCurrentState() as BingoSyncPayload;
+  }, [getCurrentState]);
+
+  useSyncHeartbeat({
+    broadcastSync,
+    getState: getHeartbeatState,
+    role,
+    channelName: getChannelName(sessionId),
+  });
 
   return {
     isConnected: useSyncStore((state) => state.isConnected),
