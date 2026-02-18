@@ -11,7 +11,8 @@
     "./server": "./src/server.ts",
     "./react": "./src/react.tsx",
     "./types": "./src/types.ts",
-    "./server-logger": "./src/server-logger.ts"
+    "./server-logger": "./src/server-logger.ts",
+    "./faro": "./src/faro.ts"
   },
   "scripts": {
     "lint": "eslint src/",
@@ -19,6 +20,10 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@grafana/faro-react": "^2.2.4",
+    "@grafana/faro-web-sdk": "^2.2.4"
   },
   "peerDependencies": {
     "react": "^19.0.0",
