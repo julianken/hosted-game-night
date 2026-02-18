@@ -14,6 +14,5 @@ if (dsn) {
     initialScope: {
       tags: { app: 'bingo' },
     },
-    tunnel: '/api/monitoring-tunnel',
   });
 }
