@@ -5,8 +5,27 @@ export async function register() {
 
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
-      const { registerOTel } = await import('@vercel/otel');
-      registerOTel({ serviceName: 'platform-hub' });
+      const { registerOTel, OTLPHttpProtoTraceExporter } = await import('@vercel/otel');
+      const { BatchSpanProcessor } = await import('@opentelemetry/sdk-trace-base');
+
+      // On Vercel, @vercel/otel's "auto" only sends to Vercel's internal collector.
+      // Add an explicit exporter for Grafana Cloud so traces reach both destinations.
+      const headers: Record<string, string> = {};
+      if (process.env.OTEL_EXPORTER_OTLP_HEADERS) {
+        for (const pair of process.env.OTEL_EXPORTER_OTLP_HEADERS.split(',')) {
+          const [key, ...rest] = pair.split('=');
+          if (key && rest.length) headers[key.trim()] = rest.join('=').trim();
+        }
+      }
+      const grafanaExporter = new OTLPHttpProtoTraceExporter({
+        url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
+        headers,
+      });
+
+      registerOTel({
+        serviceName: 'platform-hub',
+        spanProcessors: ['auto', new BatchSpanProcessor(grafanaExporter)],
+      });
     }
 
     await import('../sentry.server.config');
