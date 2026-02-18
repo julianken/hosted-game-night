@@ -119,7 +119,22 @@ export const useGameStore = create<GameStore>()((set) => ({
   },
 
   setDisplayQuestion: (index: number | null) => {
-    set((state) => setDisplayQuestionEngine(state, index));
+    set((state) => {
+      if (index !== null) {
+        const question = state.questions[index];
+        emitLifecycleEvent('game.question_displayed', {
+          questionIndex: index,
+          round: state.currentRound,
+          category: question?.category,
+        });
+      } else if (state.displayQuestionIndex !== null) {
+        emitLifecycleEvent('game.question_hidden', {
+          questionIndex: state.displayQuestionIndex,
+          round: state.currentRound,
+        });
+      }
+      return setDisplayQuestionEngine(state, index);
+    });
   },
 
   addTeam: (name?: string) => {

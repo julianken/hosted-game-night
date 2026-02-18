@@ -18,7 +18,7 @@ const LATENCY_THRESHOLD_MS = 1000;
  * Compute a simple hash of a state payload for divergence detection.
  * Uses a basic string-based approach suitable for client-side use.
  */
-function computeStateHash(payload: unknown): string {
+export function computeStateHash(payload: unknown): string {
   try {
     const str = JSON.stringify(payload);
     // Simple DJB2 hash - fast, good distribution for string comparison
@@ -60,6 +60,7 @@ const DEDUP_CONFIG = {
  * Sync observability:
  * - State hash divergence detection on STATE_UPDATE messages
  * - Message latency monitoring with configurable threshold
+ * - Message timeout detection when no messages arrive within a configurable window
  */
 export class BroadcastSync<TPayload = unknown> {
   private channel: BroadcastChannel | null = null;
@@ -78,6 +79,10 @@ export class BroadcastSync<TPayload = unknown> {
   private sequenceCounter = 0;
   /** Last known state hash for divergence detection */
   private lastStateHash: string | null = null;
+  /** Timestamp of the last received message (for timeout detection) */
+  private lastMessageReceivedAt: number | null = null;
+  /** Timer ID for the message timeout checker */
+  private timeoutTimerId: ReturnType<typeof setInterval> | null = null;
 
   constructor(channelName: string, options: BroadcastSyncOptions = {}) {
     this.channelName = channelName;
@@ -172,6 +177,63 @@ export class BroadcastSync<TPayload = unknown> {
   }
 
   /**
+   * Start the message timeout detection timer.
+   * Checks periodically whether the time since the last received message
+   * exceeds the configured threshold.
+   */
+  private startTimeoutDetection(): void {
+    const timeoutMs = this.options.messageTimeoutMs;
+    if (!timeoutMs || timeoutMs <= 0) return;
+
+    // Check at half the timeout interval for responsiveness
+    const checkIntervalMs = Math.max(timeoutMs / 2, 1000);
+
+    this.timeoutTimerId = setInterval(() => {
+      if (this.lastMessageReceivedAt === null) return;
+
+      const elapsed = Date.now() - this.lastMessageReceivedAt;
+      if (elapsed >= timeoutMs) {
+        this.log(`Message timeout: ${elapsed}ms since last message (threshold: ${timeoutMs}ms)`);
+
+        console.warn(JSON.stringify({
+          event: 'sync.message.timeout',
+          channel: this.channelName,
+          elapsedMs: elapsed,
+          thresholdMs: timeoutMs,
+          timestamp: new Date().toISOString(),
+        }));
+
+        this.handleError({
+          code: 'MESSAGE_TIMEOUT',
+          message: `No messages received for ${elapsed}ms (threshold: ${timeoutMs}ms)`,
+          context: {
+            channelName: this.channelName,
+            elapsedMs: elapsed,
+            thresholdMs: timeoutMs,
+          },
+        });
+
+        if (this.options.onTimeout) {
+          this.options.onTimeout(elapsed);
+        }
+
+        // Reset to avoid repeated timeout firings for the same gap
+        this.lastMessageReceivedAt = Date.now();
+      }
+    }, checkIntervalMs);
+  }
+
+  /**
+   * Stop the message timeout detection timer.
+   */
+  private stopTimeoutDetection(): void {
+    if (this.timeoutTimerId !== null) {
+      clearInterval(this.timeoutTimerId);
+      this.timeoutTimerId = null;
+    }
+  }
+
+  /**
    * Get the unique instance ID for this BroadcastSync.
    * Useful for testing and debugging.
    */
@@ -206,6 +268,9 @@ export class BroadcastSync<TPayload = unknown> {
         const message = event.data;
         this.log('Message received', { type: message.type, timestamp: message.timestamp });
 
+        // Update last received timestamp for timeout detection
+        this.lastMessageReceivedAt = Date.now();
+
         // SYNC LOOP PROTECTION 1: Ignore messages from self
         if (message.originId === this.instanceId) {
           this.log('Ignoring message from self');
@@ -235,6 +300,10 @@ export class BroadcastSync<TPayload = unknown> {
       };
       this.isInitialized = true;
       this.setConnectionState('connected');
+
+      // Start timeout detection if configured
+      this.startTimeoutDetection();
+
       return true;
     } catch (err) {
       this.handleError({
@@ -363,6 +432,7 @@ export class BroadcastSync<TPayload = unknown> {
    */
   close(): void {
     this.log('Closing channel');
+    this.stopTimeoutDetection();
     if (this.channel) {
       this.channel.close();
       this.channel = null;
@@ -371,6 +441,7 @@ export class BroadcastSync<TPayload = unknown> {
     this.recentMessageKeys.clear();
     this.sequenceCounter = 0;
     this.lastStateHash = null;
+    this.lastMessageReceivedAt = null;
     this.isInitialized = false;
     this.setConnectionState('disconnected');
   }

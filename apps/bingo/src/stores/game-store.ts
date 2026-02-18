@@ -73,6 +73,14 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     }
     const newState = callNextBallEngine(state);
     set(newState);
+    // Emit ball called event with context
+    if (newState.currentBall) {
+      emitLifecycleEvent('game.ball_called', {
+        ball: `${newState.currentBall.letter}-${newState.currentBall.number}`,
+        ballsCalled: getBallsCalled(newState),
+        ballsRemaining: getBallsRemaining(newState),
+      });
+    }
     return newState.currentBall;
   },
 
@@ -83,6 +91,11 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     }
     const previousBall = state.currentBall;
     set(undoLastCallEngine(state));
+    if (previousBall) {
+      emitLifecycleEvent('game.ball_undone', {
+        ball: `${previousBall.letter}-${previousBall.number}`,
+      });
+    }
     return previousBall;
   },
 
