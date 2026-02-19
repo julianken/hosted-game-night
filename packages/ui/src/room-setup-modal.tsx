@@ -180,7 +180,7 @@ export function RoomSetupModal({
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-semibold mb-1">Create New Game</h3>
-              <p className="text-base text-muted">
+              <p className="text-base text-muted-foreground">
                 Start a new {gameLabel} session and share with players
               </p>
             </div>
@@ -250,7 +250,7 @@ export function RoomSetupModal({
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-semibold mb-1">Join Existing Game</h3>
-              <p className="text-base text-muted">
+              <p className="text-base text-muted-foreground">
                 Enter room code and PIN to join a game in progress
               </p>
             </div>
@@ -376,7 +376,7 @@ export function RoomSetupModal({
             </div>
             <div className="flex-1">
               <h3 className="text-xl font-semibold mb-1">Play Offline</h3>
-              <p className="text-base text-muted">
+              <p className="text-base text-muted-foreground">
                 Play without internet connection or room sharing
               </p>
             </div>

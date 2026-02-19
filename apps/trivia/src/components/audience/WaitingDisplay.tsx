@@ -21,7 +21,7 @@ export function WaitingDisplay({ message }: WaitingDisplayProps) {
         aria-hidden="true"
       />
       <p className="text-3xl md:text-4xl text-muted-foreground">{message}</p>
-      <p className="text-xl text-muted">
+      <p className="text-xl text-muted-foreground">
         The game will appear here when the presenter is ready.
       </p>
     </div>

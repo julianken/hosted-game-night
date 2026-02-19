@@ -160,7 +160,7 @@ export function Modal({
               min-h-[44px] min-w-[44px]
               flex items-center justify-center
               rounded-lg
-              text-muted hover:text-foreground
+              text-muted-foreground hover:text-foreground
               hover:bg-muted/20
               transition-colors
               focus:outline-none focus:ring-4 focus:ring-primary/50

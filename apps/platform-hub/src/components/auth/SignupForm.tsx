@@ -154,7 +154,7 @@ export function SignupForm() {
           htmlFor="name"
           className="block text-lg font-semibold text-foreground mb-2"
         >
-          Name <span className="font-normal text-muted">(optional)</span>
+          Name <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
         <input
           id="name"
@@ -262,7 +262,7 @@ export function SignupForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             disabled={isLoading}
           >

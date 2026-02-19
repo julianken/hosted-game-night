@@ -73,7 +73,7 @@ export function PauseOverlay({ emergencyBlank = false, timer }: PauseOverlayProp
       {/* Pulsing indicator */}
       <div className="mt-12 flex items-center gap-3">
         <div className="w-4 h-4 rounded-full bg-warning animate-pulse motion-reduce:animate-none" />
-        <span className="text-xl text-muted">Paused</span>
+        <span className="text-xl text-muted-foreground">Paused</span>
       </div>
     </div>
   );

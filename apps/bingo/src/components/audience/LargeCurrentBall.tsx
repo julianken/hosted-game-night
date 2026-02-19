@@ -29,7 +29,7 @@ export function LargeCurrentBall({ ball }: LargeCurrentBallProps) {
         "
         aria-label="Waiting for first ball"
       >
-        <span className="text-8xl md:text-9xl text-muted font-bold">?</span>
+        <span className="text-8xl md:text-9xl text-muted-foreground font-bold">?</span>
       </div>
     );
   }

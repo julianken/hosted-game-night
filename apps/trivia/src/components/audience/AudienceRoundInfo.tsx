@@ -50,7 +50,7 @@ export function AudienceRoundInfo({
             <span className="text-4xl lg:text-5xl font-bold text-foreground">
               {roundNumber}
             </span>
-            <span className="text-2xl lg:text-3xl font-medium text-muted">
+            <span className="text-2xl lg:text-3xl font-medium text-muted-foreground">
               /{totalRounds}
             </span>
           </div>
@@ -71,7 +71,7 @@ export function AudienceRoundInfo({
             <span className="text-4xl lg:text-5xl font-bold text-primary">
               {questionNumber}
             </span>
-            <span className="text-2xl lg:text-3xl font-medium text-muted">
+            <span className="text-2xl lg:text-3xl font-medium text-muted-foreground">
               /{totalQuestions}
             </span>
           </div>

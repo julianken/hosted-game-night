@@ -219,7 +219,7 @@ export function Select({
           `}
         >
           <span
-            className={selectedOption ? 'text-foreground' : 'text-muted'}
+            className={selectedOption ? 'text-foreground' : 'text-muted-foreground'}
           >
             {selectedOption?.label || placeholder}
           </span>
@@ -280,7 +280,7 @@ export function Select({
               className="max-h-[240px] overflow-auto py-1"
             >
               {filteredOptions.length === 0 ? (
-                <li className="px-4 py-3 text-lg text-muted">
+                <li className="px-4 py-3 text-lg text-muted-foreground">
                   No options found
                 </li>
               ) : (

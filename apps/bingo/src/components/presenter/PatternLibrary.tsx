@@ -428,7 +428,7 @@ export function PatternLibrary({
                         {pattern.description}
                       </p>
                     )}
-                    <p className="text-base text-muted mt-1">
+                    <p className="text-base text-muted-foreground mt-1">
                       {pattern.cells.length} cells
                     </p>
                   </div>

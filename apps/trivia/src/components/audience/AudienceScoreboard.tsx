@@ -132,7 +132,7 @@ export function AudienceScoreboard({
       {/* Next round indicator */}
       {!isLastRound && (
         <div className="text-center mt-4" role="status" aria-live="polite">
-          <p className="text-xl text-muted animate-pulse motion-reduce:animate-none">
+          <p className="text-xl text-muted-foreground animate-pulse motion-reduce:animate-none">
             Next round starting soon...
           </p>
         </div>

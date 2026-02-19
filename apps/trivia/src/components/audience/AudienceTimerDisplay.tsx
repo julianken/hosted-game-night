@@ -120,7 +120,7 @@ export function AudienceTimerDisplay({
             fill="none"
             stroke="currentColor"
             strokeWidth={strokeWidth}
-            className="text-muted/20"
+            className="text-muted-foreground/20"
           />
           {/* Progress ring */}
           <circle

@@ -34,7 +34,7 @@ export function BallDisplay({ ball, size = 'lg' }: BallDisplayProps) {
         `}
         aria-label="No ball called yet"
       >
-        <span className="text-muted">?</span>
+        <span className="text-muted-foreground">?</span>
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function RecentBalls({ balls, maxDisplay = 5 }: RecentBallsProps) {
       <h3 className="text-lg font-semibold text-muted-foreground">Recent Calls</h3>
       <div className="flex gap-2 flex-wrap">
         {displayBalls.length === 0 ? (
-          <p className="text-muted text-base">No balls called yet</p>
+          <p className="text-muted-foreground text-base">No balls called yet</p>
         ) : (
           displayBalls.map((ball, index) => (
             <BallDisplay

@@ -49,7 +49,7 @@ function InvalidSessionError({ type: _type }: { type: 'room' | 'session' }) {
         <p className="text-xl text-muted-foreground">
           This display link is invalid or has expired.
         </p>
-        <p className="text-lg text-muted">
+        <p className="text-lg text-muted-foreground">
           Please use the &quot;Open Display&quot; button from the presenter window to open a valid display.
         </p>
       </div>

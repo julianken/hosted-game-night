@@ -127,7 +127,7 @@ export function PatternPreview({ pattern }: PatternPreviewProps) {
     return (
       <div className="flex flex-col gap-2">
         <h3 className="text-lg font-semibold text-muted-foreground">Pattern Preview</h3>
-        <p className="text-base text-muted">No pattern selected</p>
+        <p className="text-base text-muted-foreground">No pattern selected</p>
       </div>
     );
   }

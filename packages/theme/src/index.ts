@@ -47,3 +47,6 @@ export {
   type ThemeStore,
   type ThemeMode,
 } from './create-theme-store';
+
+// Font loading utilities (Space Grotesk + Plus Jakarta Sans via next/font/google)
+export { fontDisplay, fontSans } from './fonts';

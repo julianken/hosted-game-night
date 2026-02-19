@@ -57,7 +57,7 @@ function InvalidSessionError() {
         <p className="text-xl text-muted-foreground">
           This display link is invalid or has expired.
         </p>
-        <p className="text-lg text-muted">
+        <p className="text-lg text-muted-foreground">
           Please use the &quot;Open Display&quot; button from the presenter window to open a valid display.
         </p>
       </div>
@@ -449,7 +449,7 @@ function AudienceDisplay({
               <p className="text-3xl md:text-4xl text-muted-foreground">
                 {isResolvingRoomCode ? 'Connecting to room...' : 'Waiting for presenter...'}
               </p>
-              <p className="text-xl text-muted">
+              <p className="text-xl text-muted-foreground">
                 {isResolvingRoomCode
                   ? 'Establishing connection with the game session.'
                   : 'Open the presenter view in another window to start the game.'}
