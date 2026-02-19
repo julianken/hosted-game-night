@@ -255,9 +255,10 @@ function AudienceDisplay({
       </a>
 
       <main
-        className="h-screen flex flex-col overflow-hidden"
+        className="flex flex-col overflow-hidden"
         role="main"
         style={{
+          height: '100dvh',
           background: 'radial-gradient(ellipse 80% 60% at 50% 35%, #0d1225 0%, #0a0e1a 100%)',
         }}
       >

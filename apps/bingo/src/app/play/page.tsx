@@ -15,6 +15,7 @@ import { Button } from "@joolie-boolie/ui";
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
 import { RevealChimeSelector } from '@/components/presenter/RevealChimeSelector';
+import { VoiceVolumeControl } from '@/components/presenter/VoiceVolumeControl';
 import { ThemeSelector } from '@joolie-boolie/ui';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 import { useApplyTheme } from '@/hooks/use-theme';
@@ -76,7 +77,7 @@ export default function PlayPage() {
 
   // Audio preloading and controls
   const { preloadProgress } = useAudioPreload();
-  const { voicePack, setVoicePack } = useAudio();
+  const { voicePack, setVoicePack, voiceVolume, setVoiceVolume } = useAudio();
 
   // Auto-sync game state to database (only in online mode)
   const gameState = useGameStore();
@@ -429,6 +430,12 @@ export default function PlayPage() {
                       selectedVoice={voicePack}
                       onSelect={setVoicePack}
                       preloadProgress={preloadProgress}
+                    />
+
+                    {/* Voice volume + preview */}
+                    <VoiceVolumeControl
+                      volume={voiceVolume}
+                      onVolumeChange={setVoiceVolume}
                     />
 
                     {/* Roll sound selector */}
