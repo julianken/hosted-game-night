@@ -1,6 +1,7 @@
 'use client';
 
 import { HTMLAttributes, forwardRef } from 'react';
+import { Badge, Card } from '@joolie-boolie/ui';
 
 export type GameType = 'bingo' | 'trivia';
 
@@ -28,10 +29,10 @@ export interface RecentSessionsProps extends HTMLAttributes<HTMLElement> {
   maxSessions?: number;
 }
 
-const gameConfig: Record<GameType, { label: string; colorClass: string; icon: React.ReactNode }> = {
+const gameConfig: Record<GameType, { label: string; badgeColor: 'info' | 'success'; icon: React.ReactNode }> = {
   bingo: {
     label: 'Bingo',
-    colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    badgeColor: 'info',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -53,7 +54,7 @@ const gameConfig: Record<GameType, { label: string; colorClass: string; icon: Re
   },
   trivia: {
     label: 'Trivia',
-    colorClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    badgeColor: 'success',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -104,9 +105,9 @@ const placeholderSessions: GameSession[] = [
 ];
 
 /**
- * RecentSessions - Displays a list of recent game sessions.
- * Shows game type, when it was played, duration, and participant count.
- * Designed for users with clear visual hierarchy and readable text.
+ * RecentSessions - Timeline view of recent game sessions.
+ * Uses Badge component for game type indicators.
+ * Foreground-secondary for timestamps per design plan.
  */
 export const RecentSessions = forwardRef<HTMLElement, RecentSessionsProps>(
   (
@@ -150,36 +151,37 @@ export const RecentSessions = forwardRef<HTMLElement, RecentSessionsProps>(
     return (
       <section
         ref={ref}
-        className={`
-          p-6 md:p-8
-          bg-background
-          rounded-2xl border border-border
-          ${className}
-        `.trim()}
+        className={['rounded-xl border', className].filter(Boolean).join(' ')}
+        style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
         aria-labelledby="recent-sessions-heading"
         {...props}
       >
-        <div className="flex items-center justify-between mb-6">
+        {/* Section header */}
+        <div
+          className="flex items-center justify-between px-5 py-4 border-b"
+          style={{ borderColor: 'var(--border-subtle)' }}
+        >
           <h2
             id="recent-sessions-heading"
-            className="text-2xl md:text-3xl font-bold text-foreground"
+            className="text-lg font-bold text-foreground"
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             Recent Sessions
           </h2>
           <a
             href="/history"
             className="
-              inline-flex items-center gap-2
-              text-lg text-primary hover:text-primary/80
-              min-h-[44px] px-4 py-2
+              inline-flex items-center gap-1.5
+              text-sm text-primary hover:text-primary/80
+              min-h-[44px] px-3 py-2
               rounded-lg
-              focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
               transition-colors duration-150
             "
           >
             View All
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -195,145 +197,130 @@ export const RecentSessions = forwardRef<HTMLElement, RecentSessionsProps>(
           </a>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse flex items-center gap-4 p-4 rounded-xl bg-muted/10">
-                <div className="w-12 h-12 rounded-lg bg-muted/30" />
-                <div className="flex-1">
-                  <div className="h-5 w-32 bg-muted/30 rounded mb-2" />
-                  <div className="h-4 w-48 bg-muted/20 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : displaySessions.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-muted/10">
-              <svg
-                className="w-8 h-8 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-xl text-muted-foreground">No recent sessions</p>
-            <p className="text-base text-muted-foreground mt-1">
-              Start a game to see your history here
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-3" role="list" aria-label="Recent game sessions">
-            {displaySessions.map((session) => {
-              const config = gameConfig[session.gameType];
-              return (
-                <li
-                  key={session.id}
-                  className="
-                    flex items-center gap-4 p-4
-                    rounded-xl border border-border/50
-                    hover:bg-muted/5 hover:border-border
-                    transition-colors duration-150
-                  "
+        <div className="p-5">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse flex items-center gap-4 p-3 rounded-lg"
+                  style={{ background: 'var(--muted)' }}
                 >
-                  {/* Game Icon */}
                   <div
-                    className={`
-                      flex-shrink-0 w-12 h-12 md:w-14 md:h-14
-                      flex items-center justify-center
-                      rounded-lg ${config.colorClass}
-                    `}
+                    className="w-10 h-10 rounded-lg"
+                    style={{ background: 'var(--surface-hover)' }}
+                  />
+                  <div className="flex-1 space-y-2">
+                    <div
+                      className="h-4 w-32 rounded"
+                      style={{ background: 'var(--surface-hover)' }}
+                    />
+                    <div
+                      className="h-3 w-48 rounded"
+                      style={{ background: 'var(--surface-elevated)' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : displaySessions.length === 0 ? (
+            <div className="text-center py-10">
+              <div
+                className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full"
+                style={{ background: 'var(--muted)' }}
+              >
+                <svg
+                  className="w-7 h-7 text-foreground-secondary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <p className="text-base text-foreground-secondary">No recent sessions</p>
+              <p className="text-sm text-foreground-secondary mt-1">
+                Start a game to see your history here
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2" role="list" aria-label="Recent game sessions">
+              {displaySessions.map((session) => {
+                const config = gameConfig[session.gameType];
+                return (
+                  <li
+                    key={session.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border transition-colors duration-150"
+                    style={{ borderColor: 'var(--border-subtle)' }}
                   >
-                    {config.icon}
-                  </div>
-
-                  {/* Session Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg md:text-xl font-semibold text-foreground truncate">
-                        {session.name || config.label}
-                      </span>
-                      <span
-                        className={`
-                          inline-flex items-center px-2.5 py-0.5
-                          text-base font-medium rounded-full
-                          ${config.colorClass}
-                        `}
-                      >
-                        {config.label}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-muted-foreground">
-                      <span>{formatDate(session.startedAt)}</span>
-                      <span className="flex items-center gap-1">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        {formatDuration(session.durationMinutes)}
-                      </span>
-                      {session.participants && (
-                        <span className="flex items-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          {session.participants} players
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Action Arrow */}
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="w-6 h-6 text-muted-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
+                    {/* Game icon */}
+                    <div
+                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg"
+                      style={{
+                        background: session.gameType === 'bingo'
+                          ? 'color-mix(in srgb, var(--game-bingo) 15%, transparent)'
+                          : 'color-mix(in srgb, var(--game-trivia) 15%, transparent)',
+                        color: session.gameType === 'bingo'
+                          ? 'var(--game-bingo)'
+                          : 'var(--game-trivia)',
+                      }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                      {config.icon}
+                    </div>
+
+                    {/* Session info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-base font-semibold text-foreground truncate">
+                          {session.name || config.label}
+                        </span>
+                        {/* Badge for game type — Issue 4.8 */}
+                        <Badge
+                          color={config.badgeColor}
+                          badgeStyle="outline"
+                          size="sm"
+                        >
+                          {config.label}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-foreground-secondary">
+                        <span>{formatDate(session.startedAt)}</span>
+                        <span>{formatDuration(session.durationMinutes)}</span>
+                        {session.participants && (
+                          <span>{session.participants} players</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="w-5 h-5 text-foreground-secondary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </section>
     );
   }

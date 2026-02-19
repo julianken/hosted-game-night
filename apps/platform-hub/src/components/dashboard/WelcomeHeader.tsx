@@ -12,8 +12,9 @@ export interface WelcomeHeaderProps extends HTMLAttributes<HTMLElement> {
 }
 
 /**
- * WelcomeHeader - Displays a personalized welcome message for authenticated users.
- * Designed for users with large, readable text.
+ * WelcomeHeader - Compact welcome bar for the dashboard.
+ * Single-row greeting with user name and session stats.
+ * Uses design token CSS variables for colors.
  */
 export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
   ({ userName, userEmail, isLoading = false, className = '', ...props }, ref) => {
@@ -29,30 +30,42 @@ export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
     return (
       <section
         ref={ref}
-        className={`
-          py-8 md:py-12 px-6 md:px-8
-          bg-gradient-to-r from-primary/10 via-primary/5 to-transparent
-          rounded-2xl border border-border
-          ${className}
-        `.trim()}
+        className={[
+          'py-6 md:py-8 px-6 md:px-8',
+          'rounded-xl border',
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={{
+          background: 'linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)) 0%, var(--surface) 100%)',
+          borderColor: 'var(--border-subtle)',
+        }}
         aria-labelledby="welcome-heading"
         {...props}
       >
         <div className="max-w-4xl">
           {isLoading ? (
             <div className="animate-pulse">
-              <div className="h-10 w-64 bg-muted/30 rounded-lg mb-4" />
-              <div className="h-6 w-96 bg-muted/20 rounded-lg" />
+              <div
+                className="h-9 w-64 rounded-lg mb-4"
+                style={{ background: 'var(--muted)' }}
+              />
+              <div
+                className="h-5 w-80 rounded-lg"
+                style={{ background: 'var(--muted)' }}
+              />
             </div>
           ) : (
             <div>
               <h1
                 id="welcome-heading"
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3"
+                className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2"
+                style={{ fontFamily: 'var(--font-display)' }}
               >
-                {getGreeting()}, {displayName}!
+                {getGreeting()}, {displayName}
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <p className="text-base text-foreground-secondary">
                 Welcome to your Joolie Boolie dashboard. Ready to play?
               </p>
             </div>
@@ -60,13 +73,13 @@ export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
         </div>
 
         {/* Quick Stats Summary */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <QuickStat
             label="Games Played"
             value={isLoading ? '-' : '12'}
             icon={
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -92,7 +105,7 @@ export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
             value={isLoading ? '-' : '3'}
             icon={
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -112,7 +125,7 @@ export const WelcomeHeader = forwardRef<HTMLElement, WelcomeHeaderProps>(
             value={isLoading ? '-' : 'Bingo'}
             icon={
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -143,13 +156,25 @@ interface QuickStatProps {
 
 function QuickStat({ label, value, icon }: QuickStatProps) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-background/50 rounded-xl border border-border/50">
-      <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <div
+      className="flex items-center gap-3 p-3 rounded-lg border"
+      style={{
+        background: 'color-mix(in srgb, var(--background) 60%, transparent)',
+        borderColor: 'var(--border-subtle)',
+      }}
+    >
+      <div
+        className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg"
+        style={{
+          background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+          color: 'var(--primary)',
+        }}
+      >
         {icon}
       </div>
       <div>
-        <p className="text-base text-muted-foreground">{label}</p>
-        <p className="text-xl md:text-2xl font-bold text-foreground">{value}</p>
+        <p className="text-sm text-foreground-secondary">{label}</p>
+        <p className="text-lg font-bold text-foreground">{value}</p>
       </div>
     </div>
   );

@@ -117,14 +117,14 @@ export default function SettingsPage() {
 
   if (authLoading && !hasE2ECookies) {
     return (
-      <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
+      <main className="flex-1 py-8 md:py-12 px-4 md:px-8 pb-20 md:pb-12">
         <div className="max-w-2xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-muted/20 rounded w-1/3 mb-8"></div>
+            <div className="h-8 rounded w-1/3 mb-8" style={{ background: 'var(--muted)' }}></div>
             <div className="space-y-6">
-              <div className="h-20 bg-muted/20 rounded"></div>
-              <div className="h-20 bg-muted/20 rounded"></div>
-              <div className="h-20 bg-muted/20 rounded"></div>
+              <div className="h-20 rounded" style={{ background: 'var(--muted)' }}></div>
+              <div className="h-20 rounded" style={{ background: 'var(--muted)' }}></div>
+              <div className="h-20 rounded" style={{ background: 'var(--muted)' }}></div>
             </div>
           </div>
         </div>
@@ -138,19 +138,39 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="flex-1 py-8 md:py-12 px-4 md:px-8">
+    <main className="flex-1 py-8 md:py-12 px-4 md:px-8 pb-20 md:pb-12">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
-          Account Settings
-        </h1>
+        {/* Page header */}
+        <div className="mb-8">
+          <h1
+            className="text-3xl md:text-4xl font-bold text-foreground mb-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Account Settings
+          </h1>
+          <p className="text-base text-foreground-secondary">
+            Manage your profile, appearance, and security settings.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Facility Information */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ================================================================
               Facility Information
-            </h2>
-            <div className="space-y-4">
+              ================================================================ */}
+          <section
+            className="rounded-xl border overflow-hidden"
+            style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            {/* Section header */}
+            <div
+              className="px-6 py-4 border-b"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <h2 className="text-lg font-semibold text-foreground">
+                Facility Information
+              </h2>
+            </div>
+            <div className="px-6 py-5">
               <Input
                 id="facilityName"
                 label="Facility Name"
@@ -163,12 +183,22 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Account Information */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
+          {/* ================================================================
               Account Information
-            </h2>
-            <div className="space-y-4">
+              ================================================================ */}
+          <section
+            className="rounded-xl border overflow-hidden"
+            style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div
+              className="px-6 py-4 border-b"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <h2 className="text-lg font-semibold text-foreground">
+                Account Information
+              </h2>
+            </div>
+            <div className="px-6 py-5">
               <Input
                 id="email"
                 label="Email Address"
@@ -182,56 +212,115 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* Theme Preference */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Theme Preference
-            </h2>
-            <p className="text-base text-muted-foreground mb-6">
-              Choose your preferred color theme. Changes apply immediately.
-            </p>
-            <div className="space-y-3">
-              {THEME_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/10"
-                  style={{
-                    borderColor: theme === option.value ? 'var(--color-primary)' : 'var(--color-border)',
-                    backgroundColor: theme === option.value ? 'var(--color-primary-light)' : 'transparent',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="theme"
-                    value={option.value}
-                    checked={theme === option.value}
-                    onChange={(e) => setTheme(e.target.value as ThemeMode)}
-                    className="w-6 h-6 min-w-[24px] min-h-[24px] mr-4 accent-primary cursor-pointer"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xl font-medium text-foreground">
-                      {option.label}
-                    </span>
-                    {option.value === 'system' && (
-                      <p className="text-base text-muted-foreground mt-1">
-                        Automatically switches between light and dark based on your device settings
-                      </p>
-                    )}
-                  </div>
-                </label>
-              ))}
+          {/* ================================================================
+              Theme Preference — visual selector cards
+              ================================================================ */}
+          <section
+            className="rounded-xl border overflow-hidden"
+            style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div
+              className="px-6 py-4 border-b"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <h2 className="text-lg font-semibold text-foreground">
+                Theme Preference
+              </h2>
+              <p className="text-sm text-foreground-secondary mt-1">
+                Choose your preferred color theme. Changes apply immediately.
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {THEME_OPTIONS.map((option) => {
+                  const isSelected = theme === option.value;
+                  return (
+                    <label
+                      key={option.value}
+                      className="relative flex flex-col items-center p-4 rounded-lg border-2 cursor-pointer transition-all"
+                      style={{
+                        borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+                        background: isSelected
+                          ? 'color-mix(in srgb, var(--primary) 8%, transparent)'
+                          : 'var(--surface-elevated)',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="theme"
+                        value={option.value}
+                        checked={isSelected}
+                        onChange={(e) => setTheme(e.target.value as ThemeMode)}
+                        className="sr-only"
+                      />
+
+                      {/* Theme preview swatch */}
+                      <div
+                        className="w-10 h-10 rounded-lg mb-3 flex items-center justify-center border"
+                        style={{
+                          background:
+                            option.value === 'light'
+                              ? '#FAF9FB'
+                              : option.value === 'dark'
+                              ? '#0F0D13'
+                              : 'linear-gradient(135deg, #0F0D13 50%, #FAF9FB 50%)',
+                          borderColor: 'var(--border)',
+                        }}
+                        aria-hidden="true"
+                      >
+                        {isSelected && (
+                          <svg
+                            className="w-5 h-5"
+                            style={{
+                              color: option.value === 'light' ? '#0F0D13' : '#EDEDEF',
+                            }}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            aria-hidden="true"
+                          >
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+
+                      <span
+                        className="text-base font-medium"
+                        style={{ color: isSelected ? 'var(--primary)' : 'var(--foreground)' }}
+                      >
+                        {option.label}
+                      </span>
+
+                      {option.value === 'system' && (
+                        <p className="text-xs text-foreground-secondary mt-1 text-center leading-snug">
+                          Follows device
+                        </p>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
-          {/* Password Change */}
-          <section className="p-6 bg-background rounded-2xl border border-border">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Change Password
-            </h2>
-            <p className="text-base text-muted-foreground mb-6">
-              Leave blank if you don't want to change your password
-            </p>
-            <div className="space-y-4">
+          {/* ================================================================
+              Password Change
+              ================================================================ */}
+          <section
+            className="rounded-xl border overflow-hidden"
+            style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
+          >
+            <div
+              className="px-6 py-4 border-b"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <h2 className="text-lg font-semibold text-foreground">
+                Change Password
+              </h2>
+              <p className="text-sm text-foreground-secondary mt-1">
+                Leave blank if you do not want to change your password.
+              </p>
+            </div>
+            <div className="px-6 py-5 space-y-4">
               <Input
                 id="currentPassword"
                 label="Current Password"
@@ -268,7 +357,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Actions */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-2">
             <Button
               type="submit"
               variant="primary"

@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, forwardRef, AnchorHTMLAttributes } from 'react';
-import { Button } from '@joolie-boolie/ui';
+import { Button, Card } from '@joolie-boolie/ui';
 
 export interface DashboardGameCardProps
   extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
@@ -17,14 +17,14 @@ export interface DashboardGameCardProps
   lastPlayed?: Date | string | null;
   /** Number of times played */
   timesPlayed?: number;
-  /** Background color/style class */
+  /** Background color/style class (kept for backward compat) */
   colorClass?: string;
 }
 
 /**
  * DashboardGameCard - A compact card for quick access to games from the dashboard.
+ * Uses shared Card component. Dark surface styling with token-based colors.
  * Shows game info with last played status and quick launch button.
- * Designed for users with large touch targets and clear visual hierarchy.
  */
 export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCardProps>(
   (
@@ -35,7 +35,7 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
       icon,
       lastPlayed,
       timesPlayed = 0,
-      colorClass = '',
+      colorClass: _colorClass,
       className = '',
       ...props
     },
@@ -57,20 +57,16 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
     };
 
     return (
-      <article
-        className={`
-          group rounded-2xl border-2 border-border
-          transition-all duration-200 ease-in-out
-          hover:border-primary hover:shadow-lg
-          ${colorClass}
-          ${className}
-        `.trim()}
-      >
-        <div className="p-6 md:p-8">
-          <div className="flex items-start gap-6">
+      <Card variant="interactive" className={['group', className].filter(Boolean).join(' ')}>
+        <div className="p-5 md:p-6">
+          <div className="flex items-start gap-4">
             {/* Icon */}
             <div
-              className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-2xl bg-background/50 text-4xl md:text-5xl"
+              className="flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-xl"
+              style={{
+                background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+                color: 'var(--primary)',
+              }}
               aria-hidden="true"
             >
               {icon}
@@ -78,18 +74,21 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              <h3
+                className="text-xl md:text-2xl font-bold text-foreground mb-1"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
                 {title}
               </h3>
-              <p className="text-base md:text-lg text-muted-foreground mb-3 line-clamp-2">
+              <p className="text-sm text-foreground-secondary mb-3 line-clamp-2 leading-relaxed">
                 {description}
               </p>
 
               {/* Stats Row */}
-              <div className="flex flex-wrap items-center gap-4 text-base md:text-lg text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-foreground-secondary">
                 <span className="flex items-center gap-1.5">
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -107,7 +106,7 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
                 {timesPlayed > 0 && (
                   <span className="flex items-center gap-1.5">
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -128,7 +127,7 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
           </div>
 
           {/* Action Button */}
-          <div className="mt-6">
+          <div className="mt-5">
             <a
               ref={ref}
               href={href}
@@ -138,13 +137,13 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
             >
               <Button
                 variant="primary"
-                size="lg"
-                className="w-full group-hover:bg-primary/90"
+                size="md"
+                className="w-full"
                 tabIndex={-1}
               >
                 Play Now
                 <svg
-                  className="ml-2 w-6 h-6"
+                  className="ml-2 w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -161,7 +160,7 @@ export const DashboardGameCard = forwardRef<HTMLAnchorElement, DashboardGameCard
             </a>
           </div>
         </div>
-      </article>
+      </Card>
     );
   }
 );

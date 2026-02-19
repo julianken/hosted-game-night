@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, forwardRef, AnchorHTMLAttributes } from 'react';
+import { Card } from '@joolie-boolie/ui';
 
 export type GameStatus = 'available' | 'coming_soon' | 'maintenance';
 
@@ -15,8 +16,10 @@ export interface GameCardProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEleme
   icon: ReactNode;
   /** Current availability status */
   status?: GameStatus;
-  /** Background color/style class */
+  /** Background color/style class (kept for backward compat) */
   colorClass?: string;
+  /** CSS color value for the left accent border (e.g. var(--game-bingo)) */
+  accentColor?: string;
 }
 
 const statusConfig: Record<GameStatus, { label: string; className: string }> = {
@@ -30,13 +33,14 @@ const statusConfig: Record<GameStatus, { label: string; className: string }> = {
   },
   maintenance: {
     label: 'Maintenance',
-    className: 'bg-muted/20 text-muted-foreground',
+    className: 'bg-muted-foreground/20 text-muted-foreground',
   },
 };
 
 /**
  * GameCard - A large, accessible card for selecting games.
- * Designed for users with large touch targets, high contrast, and clear CTAs.
+ * Uses shared Card component (variant="interactive") with game-brand accent border.
+ * Designed with 44px minimum touch targets and high contrast per accessibility audit.
  */
 export const GameCard = forwardRef<HTMLAnchorElement, GameCardProps>(
   (
@@ -46,102 +50,123 @@ export const GameCard = forwardRef<HTMLAnchorElement, GameCardProps>(
       href,
       icon,
       status = 'available',
-      colorClass = '',
+      colorClass: _colorClass,
+      accentColor,
       className = '',
       ...props
     },
-    ref
+    _ref
   ) => {
     const isPlayable = status === 'available';
     const statusInfo = statusConfig[status];
 
     return (
-      <a
-        ref={ref}
-        href={isPlayable ? href : undefined}
-        aria-disabled={!isPlayable}
-        aria-label={`${title} - ${statusInfo.label}. ${description}`}
-        className={`
-          block rounded-2xl border-2 border-border
-          transition-all duration-200 ease-in-out
-          focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
-          ${colorClass}
-          ${
-            isPlayable
-              ? 'cursor-pointer hover:border-primary hover:shadow-xl hover:scale-[1.02] active:scale-[0.99]'
-              : 'cursor-not-allowed opacity-75'
-          }
-          ${className}
-        `.trim()}
-        role="article"
-        tabIndex={isPlayable ? 0 : -1}
-        {...props}
+      <Card
+        variant={isPlayable ? 'interactive' : 'default'}
+        className={[
+          'relative',
+          !isPlayable ? 'opacity-75' : '',
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={
+          accentColor
+            ? { borderLeft: `3px solid ${accentColor}` }
+            : undefined
+        }
       >
-        <div className="p-5 sm:p-8 md:p-10">
-          {/* Icon */}
-          <div
-            className="w-20 h-20 mb-6 flex items-center justify-center rounded-2xl bg-background/50 text-5xl"
-            aria-hidden="true"
-          >
-            {icon}
+        <a
+          href={isPlayable ? href : undefined}
+          aria-disabled={!isPlayable}
+          aria-label={`${title} - ${statusInfo.label}. ${description}`}
+          className={[
+            'block p-5 sm:p-6',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-xl',
+            isPlayable ? 'cursor-pointer' : 'cursor-not-allowed',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          role="article"
+          tabIndex={isPlayable ? 0 : -1}
+          {...props}
+        >
+          {/* Icon + Status row */}
+          <div className="flex items-start justify-between mb-4">
+            {/* Icon */}
+            <div
+              className="w-16 h-16 flex items-center justify-center rounded-xl"
+              style={{
+                background: accentColor
+                  ? `color-mix(in srgb, ${accentColor} 15%, transparent)`
+                  : 'color-mix(in srgb, var(--primary) 12%, transparent)',
+                color: accentColor || 'var(--primary)',
+              }}
+              aria-hidden="true"
+            >
+              {icon}
+            </div>
+
+            {/* Status badge */}
+            <span
+              className={[
+                'inline-block px-3 py-1 rounded-full text-sm font-semibold',
+                statusInfo.className,
+              ].join(' ')}
+              role="status"
+            >
+              {statusInfo.label}
+            </span>
           </div>
 
-          {/* Status Badge */}
-          <span
-            className={`
-              inline-block px-4 py-2 rounded-full text-base font-semibold mb-4
-              ${statusInfo.className}
-            `.trim()}
-            role="status"
-          >
-            {statusInfo.label}
-          </span>
-
           {/* Title */}
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+          <h2
+            className="text-2xl md:text-3xl font-bold text-foreground mb-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             {title}
           </h2>
 
           {/* Description */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-6 leading-relaxed">
+          <p className="text-base text-foreground-secondary mb-5 leading-relaxed">
             {description}
           </p>
 
-          {/* CTA Button */}
-          <div
-            className={`
-              inline-flex items-center justify-center
-              min-h-[56px] px-6 sm:px-8 py-4
-              text-lg sm:text-xl font-semibold rounded-lg
-              transition-colors duration-150
-              ${
+          {/* CTA row */}
+          <div className="flex items-center gap-2">
+            <div
+              className={[
+                'inline-flex items-center justify-center',
+                'min-h-[44px] px-5 py-2',
+                'text-base font-semibold rounded-lg',
+                'transition-colors duration-150',
                 isPlayable
-                  ? 'bg-primary text-primary-foreground group-hover:bg-primary/90'
-                  : 'bg-muted/30 text-muted-foreground'
-              }
-            `.trim()}
-            aria-hidden="true"
-          >
-            {isPlayable ? 'Play Now' : statusInfo.label}
-            {isPlayable && (
-              <svg
-                className="ml-2 w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            )}
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted-foreground/20 text-muted-foreground',
+              ].join(' ')}
+              aria-hidden="true"
+            >
+              {isPlayable ? 'Play Now' : statusInfo.label}
+              {isPlayable && (
+                <svg
+                  className="ml-2 w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              )}
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </Card>
     );
   }
 );

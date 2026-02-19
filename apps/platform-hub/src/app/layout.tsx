@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono } from 'next/font/google';
+import { fontDisplay, fontSans } from '@joolie-boolie/theme';
+
+const geistMono = Geist_Mono({
+  variable: '--font-mono',
+  subsets: ['latin'],
+  display: 'swap',
+});
 import './globals.css';
 import { Header, Footer } from '@/components';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
@@ -20,16 +27,6 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 if (process.env.NEXT_PHASE !== 'phase-production-build') {
   validateEnvironment();
 }
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: 'Joolie Boolie',
@@ -68,10 +65,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${fontDisplay.variable} ${fontSans.variable} ${geistMono.variable}`}
+    >
       <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col overflow-x-hidden`}
+        className="antialiased min-h-screen flex flex-col overflow-x-hidden"
       >
         <ThemeInitializer />
         <a
