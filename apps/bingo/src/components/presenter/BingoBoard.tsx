@@ -71,7 +71,7 @@ export function BingoBoard({ calledBalls }: BingoBoardProps) {
             `}
             data-column={column}
           >
-            {column}
+            <span className="relative z-[2]">{column}</span>
           </div>
         ))}
       </div>

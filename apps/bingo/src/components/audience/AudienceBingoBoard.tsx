@@ -26,6 +26,14 @@ const columnHeaderText: Record<BingoColumn, string> = {
   O: '#422006',
 };
 
+const columnGlowColor: Record<BingoColumn, string> = {
+  B: 'rgba(59, 130, 246, 0.25)',
+  I: 'rgba(239, 68, 68, 0.25)',
+  N: 'rgba(232, 230, 235, 0.12)',
+  G: 'rgba(34, 197, 94, 0.25)',
+  O: 'rgba(245, 158, 11, 0.25)',
+};
+
 /**
  * Called cell styles using per-column bingo token colors.
  * Uses pre-computed values (not OKLCH) for projector/TV compatibility. Issue 3.6.
@@ -33,29 +41,29 @@ const columnHeaderText: Record<BingoColumn, string> = {
 function getCalledCellStyle(column: BingoColumn): React.CSSProperties {
   const styles: Record<BingoColumn, { bg: string; color: string; boxShadow: string }> = {
     B: {
-      bg: 'rgba(59, 130, 246, 0.22)',
-      color: '#60a5fa',
-      boxShadow: 'inset 0 0 0 1px rgba(59, 130, 246, 0.40)',
+      bg: 'rgba(59, 130, 246, 0.30)',
+      color: '#e8f1fe',
+      boxShadow: 'inset 0 0 0 1.5px rgba(59, 130, 246, 0.95), 0 0 7px rgba(59, 130, 246, 0.42), 0 0 17px rgba(59, 130, 246, 0.20)',
     },
     I: {
-      bg: 'rgba(239, 68, 68, 0.22)',
-      color: '#f87171',
-      boxShadow: 'inset 0 0 0 1px rgba(239, 68, 68, 0.40)',
+      bg: 'rgba(239, 68, 68, 0.30)',
+      color: '#fee0e2',
+      boxShadow: 'inset 0 0 0 1.5px rgba(239, 68, 68, 0.95), 0 0 7px rgba(239, 68, 68, 0.42), 0 0 17px rgba(239, 68, 68, 0.20)',
     },
     N: {
-      bg: 'rgba(232, 230, 235, 0.15)',
-      color: '#e8e6eb',
-      boxShadow: 'inset 0 0 0 1px rgba(232, 230, 235, 0.30)',
+      bg: 'rgba(232, 230, 235, 0.20)',
+      color: '#f6f7f9',
+      boxShadow: 'inset 0 0 0 1.5px rgba(232, 230, 235, 0.80), 0 0 7px rgba(232, 230, 235, 0.25), 0 0 17px rgba(232, 230, 235, 0.10)',
     },
     G: {
-      bg: 'rgba(34, 197, 94, 0.22)',
-      color: '#34d399',
-      boxShadow: 'inset 0 0 0 1px rgba(34, 197, 94, 0.40)',
+      bg: 'rgba(34, 197, 94, 0.30)',
+      color: '#defcf0',
+      boxShadow: 'inset 0 0 0 1.5px rgba(34, 197, 94, 0.95), 0 0 7px rgba(34, 197, 94, 0.42), 0 0 17px rgba(34, 197, 94, 0.20)',
     },
     O: {
-      bg: 'rgba(245, 158, 11, 0.22)',
-      color: '#fbbf24',
-      boxShadow: 'inset 0 0 0 1px rgba(245, 158, 11, 0.40)',
+      bg: 'rgba(245, 158, 11, 0.30)',
+      color: '#fef7e4',
+      boxShadow: 'inset 0 0 0 1.5px rgba(245, 158, 11, 0.95), 0 0 7px rgba(245, 158, 11, 0.42), 0 0 17px rgba(245, 158, 11, 0.20)',
     },
   };
   const s = styles[column];
@@ -92,50 +100,82 @@ export function AudienceBingoBoard({ calledBalls }: AudienceBingoBoardProps) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-px" data-testid="called-numbers-board">
-      {/* Column headers — using gradient ball styling */}
-      <div className="grid grid-cols-5 gap-px">
-        {COLUMNS.map((column) => (
+    // min-h-0: this component is a flex child of the board section wrapper;
+    // without min-h-0 it refuses to shrink below its natural content height.
+    //
+    // --board-gap is the single source of truth for ALL spacing in this grid.
+    // Using px ensures the gap resolves to the same pixel value in both the
+    // horizontal (cell-to-cell) and vertical (row-to-row) directions, satisfying
+    // the requirement for identical spacing on both axes.
+    // At 1920×1080: 4px gap → cells ≈ 106×115px (nearly square, ~0.92 ratio).
+    // At 1280×720:  4px gap → cells ≈  70× 76px (same ratio, same gap in px).
+    // At 1366×768:  4px gap → cells ≈  75× 81px (same ratio, same gap in px).
+    <div
+      className="flex flex-col h-full min-h-0 overflow-hidden"
+      style={{ gap: 'var(--board-gap)', '--board-gap': '14px' } as React.CSSProperties}
+      data-testid="called-numbers-board"
+    >
+      {/* Horizontal rows: each BINGO column is a row with circular header + 15 numbers */}
+      {boardData.map(({ column, numbers }) => (
+        // items-stretch so cells fill the full row height — this is what allows
+        // them to be approximately square without aspect-square forcing overflow.
+        <div
+          key={column}
+          className="flex items-stretch flex-1 min-h-0"
+          style={{ gap: 'calc(var(--board-gap) * 2)' }}
+        >
+          {/* Circular column header ball — scales with row height, capped at 72px.
+              aspect-square is safe here because the header is flex-shrink-0 and
+              its width is driven by its computed height, not the other way around. */}
           <div
-            key={column}
-            className="h-14 md:h-16 lg:h-20 flex items-center justify-center font-bold rounded-t-lg"
+            className="flex-shrink-0 rounded-full flex items-center justify-center font-bold aspect-square self-center"
             style={{
+              height: '75%',
+              maxHeight: '72px',
               background: columnHeaderBg[column],
               color: columnHeaderText[column],
-              fontSize: 'clamp(1.25rem, 3vw, 2rem)',
-              boxShadow: 'inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 1px 4px rgba(255,255,255,0.20)',
+              // vh-anchored so the header letter scales with section height, not viewport width.
+              fontSize: 'clamp(0.9rem, 3.2vh, 1.6rem)',
+              boxShadow: `inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 1px 4px rgba(255,255,255,0.20), 0 0 12px ${columnGlowColor[column]}`,
             }}
           >
             {column}
           </div>
-        ))}
-      </div>
 
-      {/* Number grid */}
-      <div className="grid grid-cols-5 gap-px">
-        {boardData.map(({ column, numbers }) => (
-          <div key={column} className="flex flex-col gap-px">
+          {/* 15 number cells in a horizontal row.
+              align-content: stretch ensures rows fill the grid height even though
+              this is a single-row grid — needed for cells to inherit row height. */}
+          <div
+            className="flex-1 grid grid-cols-15 min-h-0"
+            style={{ gap: 'var(--board-gap)', alignContent: 'stretch' }}
+          >
             {numbers.map((num) => {
               const isCalled = calledNumbers.has(num);
               return (
+                // No aspect-square: cell height is driven by the flex row height
+                // (items-stretch on the parent row), and width by grid-cols-15.
+                // This prevents the fixed 1:1 ratio from forcing overflow at small
+                // viewports — cells gracefully lose height as space compresses.
                 <div
                   key={num}
                   className={`
-                    h-12 md:h-14 lg:h-16 flex items-center justify-center
-                    text-xl md:text-2xl lg:text-3xl font-bold
-                    rounded transition-all duration-300
+                    flex items-center justify-center
+                    font-bold rounded-lg transition-all duration-300
+                    overflow-hidden
                     ${isCalled ? 'cell-flash-audience-animation' : ''}
                   `}
                   style={{
+                    // vh-anchored: the board fills flex-[2.5] of screen height.
+                    // At 1080px that section is ~592px, 5 rows → ~114px each.
+                    // 3.8vh ≈ 41px at 1080px — legible without overflowing the cell.
+                    fontSize: 'clamp(1rem, 3.8vh, 2.5rem)',
                     ...(isCalled
                       ? getCalledCellStyle(column)
                       : {
-                          /* Uncalled: deliberately near-invisible for audience.
-                             Audience focus is the hero ball, not the full number list.
-                             See accessibility note A-24. */
-                          backgroundColor: 'transparent',
+                          backgroundColor: 'rgba(255, 255, 255, 0.025)',
                           color: 'var(--bingo-text-muted)',
-                          opacity: 0.4,
+                          opacity: 0.5,
+                          border: '1px solid rgba(255, 255, 255, 0.04)',
                         }
                     ),
                   }}
@@ -145,8 +185,8 @@ export function AudienceBingoBoard({ calledBalls }: AudienceBingoBoardProps) {
               );
             })}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

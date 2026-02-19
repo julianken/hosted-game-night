@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
-import { useSyncStore } from '@joolie-boolie/sync';
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
@@ -11,7 +10,6 @@ import { isValidRoomCode } from '@joolie-boolie/sync';
 import { RoomCodeDisplay } from '@joolie-boolie/ui';
 import {
   BallReveal,
-  GlowBackdrop,
   AudienceBingoBoard,
   PatternDisplay,
   BallsCalledCounter,
@@ -118,8 +116,9 @@ function DisplayContent() {
 
 /**
  * Audience Display Component
- * Center-dominant layout: 60% ball theater, 25% board, 15% pattern/counter.
- * Optimized for projector/large TV, readable from 10-30 feet.
+ * Board-dominant layout: board fills bottom 2/3, ball + pattern in top 1/3.
+ * No header bar — full-screen immersive display for projector/TV.
+ * Keyboard shortcuts (F=fullscreen, ?=help) remain active.
  */
 function AudienceDisplay({
   roomCode,
@@ -187,7 +186,7 @@ function AudienceDisplay({
     sessionId: effectiveSessionId,
   });
 
-  const { isFullscreen, toggleFullscreen } = useFullscreen();
+  const { toggleFullscreen } = useFullscreen();
   const [showHelp, setShowHelp] = useState(false);
   const toggleHelp = useCallback(() => setShowHelp((prev) => !prev), []);
   const closeHelp = useCallback(() => setShowHelp(false), []);
@@ -202,8 +201,6 @@ function AudienceDisplay({
   const autoCallEnabled = useGameStore((state) => state.autoCallEnabled);
   const autoCallSpeed = useGameStore((state) => state.autoCallSpeed);
   const { ballsCalled, ballsRemaining } = useGameSelectors();
-
-  const lastSyncTimestamp = useSyncStore((state) => state.lastSyncTimestamp);
 
   // Request sync on visibility change
   useEffect(() => {
@@ -245,10 +242,6 @@ function AudienceDisplay({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleFullscreen, showHelp, toggleHelp]);
 
-  const lastSyncFormatted = lastSyncTimestamp
-    ? new Date(lastSyncTimestamp).toLocaleTimeString()
-    : 'Never';
-
   const hasContent = isConnected || (currentBall !== null) || calledBalls.length > 0;
 
   return (
@@ -261,103 +254,18 @@ function AudienceDisplay({
         Skip to main display
       </a>
 
-      <main className="min-h-screen bg-background flex flex-col" role="main">
-
-        {/* Minimal status bar header */}
-        <header
-          className="px-4 py-2 flex items-center justify-between"
-          style={{
-            borderBottom: '1px solid var(--border-subtle)',
-            backdropFilter: 'blur(12px)',
-            background: 'rgba(10, 14, 26, 0.85)',
-          }}
-        >
-          {/* Left: title + room code */}
-          <div className="flex items-center gap-4">
-            <h1
-              className="text-xl font-bold text-foreground"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Bingo
-            </h1>
-            {roomCode && (
-              <span className="text-sm font-mono text-foreground-secondary">
-                Room: <span className="text-foreground font-semibold">{roomCode}</span>
-              </span>
-            )}
-          </div>
-
-          {/* Right: controls + status */}
-          <div className="flex items-center gap-3">
-            {/* Game status */}
-            {status !== 'idle' && (
-              <span
-                className="text-sm font-medium px-2 py-0.5 rounded"
-                style={{
-                  backgroundColor: status === 'playing' ? 'rgba(34, 197, 94, 0.15)' : status === 'paused' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  color: status === 'playing' ? 'var(--success)' : status === 'paused' ? 'var(--warning)' : 'var(--error)',
-                }}
-              >
-                {status === 'playing' && 'Live'}
-                {status === 'paused' && 'Paused'}
-                {status === 'ended' && 'Ended'}
-              </span>
-            )}
-
-            {/* Fullscreen button — 44px minimum (A-11) */}
-            <button
-              onClick={toggleFullscreen}
-              className="rounded-lg hover:bg-surface-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-              style={{ minWidth: '44px', minHeight: '44px', padding: '10px' }}
-              title={isFullscreen ? 'Exit fullscreen (F)' : 'Enter fullscreen (F)'}
-              aria-label={isFullscreen ? 'Exit fullscreen (press F)' : 'Enter fullscreen (press F)'}
-            >
-              {isFullscreen ? (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                </svg>
-              )}
-            </button>
-
-            {/* Help button */}
-            <button
-              onClick={toggleHelp}
-              className="p-2 rounded-lg hover:bg-surface-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-              style={{ minWidth: '44px', minHeight: '44px' }}
-              title="Keyboard shortcuts (?)"
-              aria-label="Show keyboard shortcuts"
-            >
-              <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-
-            {/* Connection status */}
-            <div
-              className="flex items-center gap-2"
-              role="status"
-              aria-live="polite"
-              aria-label={isConnected ? `Connected to presenter, synced at ${lastSyncFormatted}` : 'Waiting for presenter'}
-            >
-              <div
-                className={`w-3 h-3 rounded-full motion-reduce:animate-none ${isConnected ? 'bg-success animate-pulse' : 'bg-error'}`}
-                aria-hidden="true"
-              />
-              <span className="text-sm text-foreground-secondary hidden md:block">
-                {isConnected ? `Synced ${lastSyncFormatted}` : 'Waiting...'}
-              </span>
-            </div>
-          </div>
-        </header>
+      <main
+        className="h-screen flex flex-col overflow-hidden"
+        role="main"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 35%, #0d1225 0%, #0a0e1a 100%)',
+        }}
+      >
 
         {/* Error banner */}
         {(connectionError || dbError) && (
           <div
-            className="px-4 py-3 text-center font-medium"
+            className="px-4 py-3 text-center font-medium flex-shrink-0"
             role="alert"
             style={{ backgroundColor: 'rgba(239, 68, 68, 0.10)', borderBottom: '1px solid var(--error)', color: 'var(--error)' }}
           >
@@ -366,9 +274,9 @@ function AudienceDisplay({
         )}
 
         {/* Main display content */}
-        <div id="main-display" className="flex-1 flex flex-col" aria-label="Audience display">
+        <div id="main-display" className="flex-1 flex flex-col overflow-hidden" aria-label="Audience display">
 
-          {/* Room Code Display - only shown when using room code */}
+          {/* Room Code Display — shown when using room code and waiting */}
           {roomCode && !hasContent && (
             <div className="p-4">
               <RoomCodeDisplay
@@ -402,103 +310,150 @@ function AudienceDisplay({
             </div>
           )}
 
-          {/* Center-dominant 3-column layout: 60% ball / 25% board / 15% pattern */}
+          {/* Game layout: top 1/3 (ball + info + pattern), bottom 2/3 (board) */}
           {hasContent && (
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6">
+            <div
+              className="flex-1 flex flex-col overflow-hidden"
+              style={{ padding: '2.5vh 3vw 1.5vh 3vw', gap: '1.5vh' }}
+            >
 
-              {/* Center: Hero ball theater — 60% width on desktop */}
+              {/* Top row: Ball + counter + pattern */}
               <section
-                className="lg:col-span-7 lg:order-2 flex flex-col items-center justify-center relative"
+                className="min-h-0 flex items-center"
+                style={{ flex: '1.15', padding: '0 0 0 0.5vw', gap: '3vw' }}
                 aria-label="Current ball"
               >
-                {/* Game status */}
-                {status !== 'idle' && (
-                  <div
-                    className="mb-6 px-6 py-2 rounded-full text-2xl font-semibold"
-                    role="status"
-                    aria-live="polite"
-                    style={{
-                      backgroundColor: status === 'playing' ? 'rgba(34, 197, 94, 0.15)' : status === 'paused' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(107, 113, 137, 0.15)',
-                      color: status === 'playing' ? 'var(--success)' : status === 'paused' ? 'var(--warning)' : 'var(--foreground-muted)',
-                    }}
-                  >
-                    {status === 'playing' && 'Game in Progress'}
-                    {status === 'paused' && 'Game Paused'}
-                    {status === 'ended' && 'Game Ended'}
-                  </div>
-                )}
-
-                {/* Ball display with ambient glow */}
-                <div className="relative flex items-center justify-center">
-                  {/* GlowBackdrop behind ball */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute pointer-events-none"
-                    style={{
-                      width: '500px',
-                      height: '500px',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  >
-                    <GlowBackdrop
-                      column={currentBall?.column ?? null}
-                      visible={!!currentBall}
-                    />
-                  </div>
-
-                  {/* Spring-animated ball */}
-                  <div className="relative z-10">
-                    <BallReveal
-                      ball={currentBall}
-                      autoCallInterval={autoCallSpeed}
-                      isAutoCall={autoCallEnabled}
-                    />
-                  </div>
+                {/* Ball with absolute status badge overlay */}
+                <div className="flex-shrink-0 relative flex items-center justify-center">
+                  <BallReveal
+                    ball={currentBall}
+                    autoCallInterval={autoCallSpeed}
+                    isAutoCall={autoCallEnabled}
+                    size="display"
+                  />
+                  {(status !== 'idle' || !isConnected) && (
+                    <span
+                      className="absolute font-semibold rounded-full flex items-center"
+                      style={{
+                        bottom: '0',
+                        right: '-0.3vw',
+                        padding: '0.5vh 1vw',
+                        fontSize: 'clamp(0.75rem, 1.5vh, 1.15rem)',
+                        gap: '0.4vw',
+                        backgroundColor: !isConnected
+                          ? 'rgba(239, 68, 68, 0.20)'
+                          : status === 'playing'
+                            ? 'rgba(34, 197, 94, 0.20)'
+                            : status === 'paused'
+                              ? 'rgba(234, 179, 8, 0.20)'
+                              : 'rgba(107, 113, 137, 0.20)',
+                        color: !isConnected
+                          ? 'var(--error)'
+                          : status === 'playing'
+                            ? 'var(--success)'
+                            : status === 'paused'
+                              ? 'var(--warning)'
+                              : 'var(--foreground-muted)',
+                        border: `1px solid ${
+                          !isConnected
+                            ? 'rgba(239, 68, 68, 0.40)'
+                            : status === 'playing'
+                              ? 'rgba(34, 197, 94, 0.40)'
+                              : status === 'paused'
+                                ? 'rgba(234, 179, 8, 0.40)'
+                                : 'rgba(107, 113, 137, 0.30)'
+                        }`,
+                        backdropFilter: 'blur(8px)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                        zIndex: 10,
+                      }}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {(status === 'playing' || !isConnected) && (
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full motion-reduce:animate-none ${
+                            !isConnected ? 'bg-error animate-pulse' : 'bg-success animate-pulse'
+                          }`}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {!isConnected
+                        ? 'Offline'
+                        : status === 'playing'
+                          ? 'Live'
+                          : status === 'paused'
+                            ? 'Paused'
+                            : status === 'ended'
+                              ? 'Ended'
+                              : null}
+                    </span>
+                  )}
                 </div>
 
-                {/* Balls called counter below ball */}
-                <div className="mt-8">
+                {/* Counter — glass-like container */}
+                <div
+                  className="flex-shrink min-w-0 rounded-2xl"
+                  style={{
+                    padding: '1.8vh 2.5vw',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+                  }}
+                >
                   <BallsCalledCounter called={ballsCalled} remaining={ballsRemaining} />
                 </div>
-              </section>
 
-              {/* Left: Bingo Board — 25% width on desktop */}
-              <section className="lg:col-span-3 lg:order-1" aria-label="Bingo board">
-                <div
-                  className="rounded-xl p-3 h-full"
-                  style={{
-                    backgroundColor: 'var(--surface)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  <h2
-                    className="text-xl font-semibold mb-3 text-center text-foreground-secondary"
-                    style={{ fontFamily: 'var(--font-display)' }}
+                {/* Spacer */}
+                <div className="flex-1 min-w-0" />
+
+                {/* Pattern display (compact) -- explicit square size relative to ball */}
+                <div className="flex-shrink-0 flex flex-col items-center gap-1" aria-label="Winning pattern">
+                  {pattern && (
+                    <span
+                      className="font-bold text-foreground leading-tight truncate text-center"
+                      style={{ fontSize: 'clamp(0.85rem, 1.8vh, 1.3rem)', maxWidth: 'clamp(100px, 24vh, 280px)' }}
+                    >
+                      {pattern.name}
+                    </span>
+                  )}
+                  <div
+                    className="rounded-2xl overflow-hidden"
+                    style={{
+                      width: 'clamp(100px, 24vh, 280px)',
+                      height: 'clamp(100px, 24vh, 280px)',
+                      padding: '1.2vh',
+                      backgroundColor: 'var(--surface)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      boxShadow: '0 2px 16px rgba(0, 0, 0, 0.12)',
+                    }}
                   >
-                    Called
-                  </h2>
-                  <AudienceBingoBoard calledBalls={calledBalls} />
+                    <PatternDisplay pattern={pattern} compact hideLabel />
+                  </div>
                 </div>
               </section>
 
-              {/* Right: Pattern display — 15% width on desktop */}
-              <section className="lg:col-span-2 lg:order-3" aria-label="Winning pattern">
+              {/* Board: takes majority of vertical space */}
+              <section style={{ flex: '2.5' }} className="min-h-0 flex flex-col items-stretch justify-center" aria-label="Bingo board">
                 <div
-                  className="rounded-xl p-3 h-full"
+                  className="rounded-2xl flex flex-col justify-center overflow-hidden"
                   style={{
-                    backgroundColor: 'var(--surface)',
-                    border: '1px solid var(--border-subtle)',
+                    height: '88%',
+                    padding: '26px',
+                    backgroundColor: 'rgba(26, 23, 32, 0.85)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(16px)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
                   }}
                 >
-                  <PatternDisplay pattern={pattern} />
+                  <AudienceBingoBoard calledBalls={calledBalls} />
                 </div>
               </section>
             </div>
           )}
         </div>
-        {/* Footer removed per design plan Part 5 */}
+
       </main>
 
       <KeyboardShortcutsModal
@@ -513,7 +468,7 @@ function AudienceDisplay({
 /**
  * Audience Display Page
  * Optimized for projector/large TV display.
- * Center-dominant layout (60% ball, 25% board, 15% pattern).
+ * Board-dominant layout: top 1/3 ball + pattern, bottom 2/3 board.
  * Syncs state from presenter window via BroadcastChannel.
  * Readable from 10-30 feet (Issue A-23: projector readability).
  */
