@@ -259,13 +259,16 @@ export function FinalPodiumScene() {
               animate="visible"
               role="listitem"
             >
-              {/* Crown emoji above winner */}
-              <div
-                className="text-center"
-                style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}
-                aria-hidden="true"
-              >
-                {'\uD83D\uDC51'}
+              {/* Crown icon above winner (SVG, not emoji) */}
+              <div className="flex justify-center">
+                <svg
+                  style={{ width: 'clamp(2rem, 4vw, 3.5rem)', height: 'clamp(2rem, 4vw, 3.5rem)', color: firstColor.bg }}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2L9 9H2l5.5 4-2 7 6.5-4.5L18 20l-2-7L21.5 9H15L12 2z" />
+                </svg>
               </div>
               <PodiumCard
                 team={first}
