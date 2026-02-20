@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useGameStore, useGameSelectors } from '@/stores/game-store';
+
 import { useSyncStore } from '@joolie-boolie/sync';
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
@@ -11,13 +11,7 @@ import { isValidRoomCode } from '@joolie-boolie/sync';
 import { RoomCodeDisplay } from '@joolie-boolie/ui';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
-import {
-  WaitingDisplay,
-  AudienceScoreboard,
-  GameEndDisplay,
-  PauseOverlay,
-  AudienceQuestion,
-} from '@/components/audience';
+import { SceneRouter } from '@/components/audience/scenes';
 
 /**
  * Invalid Session Error Component
@@ -204,20 +198,6 @@ function AudienceDisplay({
   const displayTheme = useThemeStore((state) => state.displayTheme);
   useApplyTheme(displayTheme);
 
-  // Get game state from store (hydrated by sync) - use individual selectors to minimize re-renders
-  const status = useGameStore((state) => state.status);
-  const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
-  const questions = useGameStore((state) => state.questions);
-  const teams = useGameStore((state) => state.teams);
-  const currentRound = useGameStore((state) => state.currentRound);
-  const totalRounds = useGameStore((state) => state.totalRounds);
-  const emergencyBlank = useGameStore((state) => state.emergencyBlank);
-  const timer = useGameStore((state) => state.timer);
-  const settings = useGameStore((state) => state.settings);
-
-  // Get computed selectors
-  const { teamsSortedByScore, displayQuestion } = useGameSelectors();
-
   // Get sync status
   const lastSyncTimestamp = useSyncStore((state) => state.lastSyncTimestamp);
 
@@ -237,59 +217,6 @@ function AudienceDisplay({
   const lastSyncFormatted = lastSyncTimestamp
     ? new Date(lastSyncTimestamp).toLocaleTimeString()
     : 'Never';
-
-  // Calculate question position in round for display
-  const questionsPerRound = Math.ceil(questions.length / totalRounds) || 5;
-  const questionInRound = displayQuestionIndex !== null
-    ? (displayQuestionIndex % questionsPerRound) + 1
-    : null;
-
-  // Render content based on game state
-  const renderContent = () => {
-    // 0. Paused state - show pause overlay
-    if (status === 'paused') {
-      return <PauseOverlay emergencyBlank={emergencyBlank} timer={timer} />;
-    }
-
-    // 1. Not connected - waiting for presenter
-    if (!isConnected && !displayQuestionIndex && teams.length === 0) {
-      return <WaitingDisplay message={isResolvingRoomCode ? "Connecting to room..." : "Waiting for presenter..."} />;
-    }
-
-    // 2. Game ended - show final results
-    if (status === 'ended') {
-      return <GameEndDisplay teams={teamsSortedByScore} />;
-    }
-
-    // 3. Between rounds - show scoreboard
-    if (status === 'between_rounds') {
-      return (
-        <AudienceScoreboard
-          teams={teamsSortedByScore}
-          currentRound={currentRound}
-          totalRounds={totalRounds}
-        />
-      );
-    }
-
-    // 4. Question being displayed - use enhanced AudienceQuestion with timer
-    if (displayQuestionIndex !== null && displayQuestion) {
-      return (
-        <AudienceQuestion
-          question={displayQuestion}
-          questionNumber={questionInRound ?? 1}
-          totalQuestions={questionsPerRound}
-          roundNumber={currentRound + 1}
-          totalRounds={totalRounds}
-          timer={timer}
-          timerVisible={settings.timerVisible}
-        />
-      );
-    }
-
-    // 5. Playing but no question shown yet
-    return <WaitingDisplay message="Get ready..." />;
-  };
 
   return (
     <>
@@ -376,7 +303,7 @@ function AudienceDisplay({
               />
             </div>
           )}
-          {renderContent()}
+          <SceneRouter isConnected={isConnected} isResolvingRoomCode={isResolvingRoomCode} />
         </div>
       </div>
 

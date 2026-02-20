@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import type { QuestionType } from '@/types';
+import type { RevealPhase } from '@/types/audience-scene';
 import { answerOptionStagger, answerOption, springAnswerReveal } from '@/lib/motion/presets';
 
 export interface AudienceAnswerOptionsProps {
@@ -13,6 +14,19 @@ export interface AudienceAnswerOptionsProps {
   optionTexts: string[];
   /** Currently revealed answer (null if not revealed yet) */
   revealedAnswer?: string | null;
+  /**
+   * Reveal phase for the 5-beat choreography.
+   *
+   * When provided, renders phase-aware visuals per beat:
+   *   - freeze:       all options at full opacity, answer-flash CSS class applied
+   *   - dim_wrong:    incorrect options at 32% opacity with saturate(0.2) filter
+   *   - illuminate:   correct option glows green (#34D399), scale 1.06x, green box-shadow
+   *   - score_update: same as illuminate, scores shown by parent
+   *   - breathing:    settled glow pulse at scale 1.03
+   *
+   * When null/undefined: existing snap reveal behavior preserved (backward compat).
+   */
+  revealPhase?: RevealPhase | null;
 }
 
 /**
@@ -89,21 +103,107 @@ const defaultConfig = {
  *
  * Text sizes ensure minimum 40px effective on 1920x1080.
  */
+/**
+ * Compute per-option visual state for the phase-aware reveal choreography.
+ *
+ * revealPhase beats:
+ *   freeze:       full opacity, flash CSS class applied to container
+ *   dim_wrong:    incorrect at 32% opacity, saturate(0.2) filter
+ *   illuminate:   correct glows green (#34D399), scale 1.06x
+ *   score_update: same as illuminate (scores shown by parent)
+ *   breathing:    settled glow at scale 1.03
+ */
+function getPhaseStyles(
+  isCorrect: boolean,
+  revealPhase: RevealPhase | null | undefined,
+  shouldReduceMotion: boolean | null,
+): {
+  opacity: number;
+  scale: number;
+  filter: string;
+  boxShadow: string;
+  isCorrectPhaseActive: boolean;
+} {
+  const noMotion = shouldReduceMotion ?? false;
+
+  // No phase — return neutral state
+  if (!revealPhase) {
+    return { opacity: 1, scale: 1, filter: 'saturate(1)', boxShadow: 'none', isCorrectPhaseActive: false };
+  }
+
+  switch (revealPhase) {
+    case 'freeze':
+      return { opacity: 1, scale: 1, filter: 'saturate(1)', boxShadow: 'none', isCorrectPhaseActive: false };
+    case 'dim_wrong':
+      if (isCorrect) {
+        return { opacity: 1, scale: 1, filter: 'saturate(1)', boxShadow: 'none', isCorrectPhaseActive: false };
+      }
+      return {
+        opacity: noMotion ? 0.5 : 0.32,
+        scale: 1,
+        filter: noMotion ? 'saturate(1)' : 'saturate(0.2)',
+        boxShadow: 'none',
+        isCorrectPhaseActive: false,
+      };
+    case 'illuminate':
+    case 'score_update':
+      if (isCorrect) {
+        return {
+          opacity: 1,
+          scale: noMotion ? 1.0 : 1.06,
+          filter: 'saturate(1)',
+          boxShadow: noMotion ? 'none' : '0 0 28px 8px rgba(52, 211, 153, 0.45)',
+          isCorrectPhaseActive: true,
+        };
+      }
+      return {
+        opacity: noMotion ? 0.5 : 0.32,
+        scale: 1,
+        filter: noMotion ? 'saturate(1)' : 'saturate(0.2)',
+        boxShadow: 'none',
+        isCorrectPhaseActive: false,
+      };
+    case 'breathing':
+      if (isCorrect) {
+        return {
+          opacity: 1,
+          scale: noMotion ? 1.0 : 1.03,
+          filter: 'saturate(1)',
+          boxShadow: noMotion ? 'none' : '0 0 24px 6px rgba(52, 211, 153, 0.35)',
+          isCorrectPhaseActive: true,
+        };
+      }
+      return {
+        opacity: noMotion ? 0.5 : 0.32,
+        scale: 1,
+        filter: noMotion ? 'saturate(1)' : 'saturate(0.2)',
+        boxShadow: 'none',
+        isCorrectPhaseActive: false,
+      };
+    default:
+      return { opacity: 1, scale: 1, filter: 'saturate(1)', boxShadow: 'none', isCorrectPhaseActive: false };
+  }
+}
+
 export function AudienceAnswerOptions({
   type,
   options,
   optionTexts,
   revealedAnswer,
+  revealPhase,
 }: AudienceAnswerOptionsProps) {
   const shouldReduceMotion = useReducedMotion();
   const hasReveal = revealedAnswer !== null && revealedAnswer !== undefined;
   const isMultipleChoice = type === 'multiple_choice';
   const isTrueFalse = type === 'true_false';
 
+  // Determine whether we're in phase-aware mode or legacy snap-reveal mode
+  const isPhaseMode = revealPhase !== null && revealPhase !== undefined;
+
   if (isMultipleChoice) {
     return (
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 w-full max-w-5xl"
+        className={`grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 w-full max-w-5xl${isPhaseMode && revealPhase === 'freeze' ? ' answer-flash' : ''}`}
         variants={answerOptionStagger}
         initial={shouldReduceMotion ? 'visible' : 'hidden'}
         animate="visible"
@@ -113,17 +213,38 @@ export function AudienceAnswerOptions({
         {options.map((option) => {
           const config = optionConfig[option] || defaultConfig;
           const isCorrect = revealedAnswer === option;
-          const isIncorrect = hasReveal && !isCorrect;
 
-          // Determine background for current reveal state
-          const bgColor = isCorrect
-            ? config.bgRevealed
-            : isIncorrect
-              ? config.bgDimmed
-              : config.bg;
+          let opacity: number;
+          let scale: number;
+          let boxShadow: string;
+          let bgColor: string;
+          let filter: string | undefined;
 
-          const opacity = isIncorrect && !shouldReduceMotion ? 0.4 : 1;
-          const scale = isCorrect && !shouldReduceMotion ? 1.03 : 1;
+          if (isPhaseMode) {
+            // Phase-aware mode: use 5-beat choreography
+            const phaseStyle = getPhaseStyles(isCorrect, revealPhase, shouldReduceMotion);
+            opacity = phaseStyle.opacity;
+            scale = phaseStyle.scale;
+            boxShadow = phaseStyle.boxShadow;
+            filter = phaseStyle.filter;
+            bgColor = phaseStyle.isCorrectPhaseActive ? '#1a4a3a' : config.bg;
+          } else {
+            // Legacy snap-reveal mode (backward compat)
+            const isIncorrect = hasReveal && !isCorrect;
+            bgColor = isCorrect
+              ? config.bgRevealed
+              : isIncorrect
+                ? config.bgDimmed
+                : config.bg;
+            opacity = isIncorrect && !shouldReduceMotion ? 0.4 : 1;
+            scale = isCorrect && !shouldReduceMotion ? 1.03 : 1;
+            boxShadow = isCorrect ? '0 0 24px 6px rgba(52, 211, 153, 0.35)' : 'none';
+            filter = undefined;
+          }
+
+          const isCorrectPhaseActive = isPhaseMode && isCorrect && (
+            revealPhase === 'illuminate' || revealPhase === 'score_update' || revealPhase === 'breathing'
+          );
 
           return (
             <motion.div
@@ -133,16 +254,15 @@ export function AudienceAnswerOptions({
               animate={{
                 opacity,
                 scale,
-                boxShadow: isCorrect
-                  ? '0 0 24px 6px rgba(52, 211, 153, 0.35)'
-                  : 'none',
+                boxShadow,
+                filter,
               }}
               role="listitem"
               aria-label={`Option ${option}: ${optionTexts[options.indexOf(option)]}`}
               className="flex items-center gap-4 rounded-xl overflow-hidden"
               style={{
-                background: bgColor,
-                borderLeft: `4px solid ${config.border}`,
+                background: isCorrectPhaseActive ? 'rgba(52, 211, 153, 0.12)' : bgColor,
+                borderLeft: `4px solid ${isCorrectPhaseActive ? '#34D399' : config.border}`,
                 padding: '20px 24px',
                 transition: shouldReduceMotion ? 'none' : 'background 200ms ease, opacity 200ms ease',
                 transitionDelay: isCorrect ? '200ms' : '0ms',

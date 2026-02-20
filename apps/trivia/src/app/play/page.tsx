@@ -227,21 +227,8 @@ export default function PlayPage() {
     [game]
   );
 
-  /** Audience scene name for the indicator (Issue 2.3) */
-  const getAudienceScene = (): string => {
-    switch (game.status) {
-      case 'setup':       return 'Waiting';
-      case 'playing':
-        if (game.displayQuestionIndex !== null) {
-          return `Question ${(game.displayQuestionIndex ?? 0) + 1}`;
-        }
-        return 'Waiting for Question';
-      case 'paused':      return game.emergencyBlank ? 'Emergency Blank' : 'Paused';
-      case 'between_rounds': return 'Scoreboard';
-      case 'ended':       return 'Game Over';
-      default:            return 'Waiting';
-    }
-  };
+  /** Read audienceScene directly from the store (Issue 2.3, T1.13) */
+  const audienceScene = useGameStore((state) => state.audienceScene);
 
   /** Status badge for the presenter header */
   const getStatusDisplay = () => {
@@ -328,7 +315,7 @@ export default function PlayPage() {
               {statusDisplay.text}
             </span>
             <span className="text-sm text-foreground-secondary font-medium hidden md:block">
-              Audience: {getAudienceScene()}
+              Audience: {audienceScene.replace(/_/g, ' ')}
             </span>
           </div>
 

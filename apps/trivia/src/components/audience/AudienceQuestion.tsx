@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import type { Question, Timer } from '@/types';
+import type { RevealPhase } from '@/types/audience-scene';
 import { AudienceTimer } from './AudienceTimer';
 import { AudienceAnswerOptions } from './AudienceAnswerOptions';
 import { AudienceRoundInfo } from './AudienceRoundInfo';
@@ -24,6 +25,11 @@ export interface AudienceQuestionProps {
   timerVisible?: boolean;
   /** Currently revealed answer (null if not revealed yet) */
   revealedAnswer?: string | null;
+  /**
+   * Reveal phase for 5-beat choreography (from AnswerRevealScene).
+   * When provided, AudienceAnswerOptions enters phase-aware mode.
+   */
+  revealPhase?: RevealPhase | null;
 }
 
 // Category color mappings for visual distinction — using CSS vars for hex values
@@ -58,6 +64,7 @@ export function AudienceQuestion({
   timer,
   timerVisible = true,
   revealedAnswer,
+  revealPhase,
 }: AudienceQuestionProps) {
   const shouldReduceMotion = useReducedMotion();
   const categoryStyle = categoryColors[question.category] || defaultCategoryColor;
@@ -138,6 +145,7 @@ export function AudienceQuestion({
             options={question.options}
             optionTexts={question.optionTexts}
             revealedAnswer={revealedAnswer}
+            revealPhase={revealPhase}
           />
         </div>
       </section>

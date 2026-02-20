@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useGame } from './use-game';
 import { useFullscreen } from './use-fullscreen';
 import { useGameStore } from '@/stores/game-store';
+import type { AudienceScene } from '@/types/audience-scene';
 
 /**
  * Keyboard shortcut hook for trivia game controls.
@@ -15,8 +16,8 @@ import { useGameStore } from '@/stores/game-store';
  * - Space = Peek answer (toggle, local only - original behavior preserved)
  *
  * Game controls:
- * - P = Pause/Resume game
- * - E = Emergency pause (blanks display)
+ * - P = Pause/Resume game (scene-aware: sets/restores audienceScene)
+ * - E = Emergency pause (blanks display, scene-aware)
  * - R = Reset game
  * - N = Next round (when in between_rounds state)
  *
@@ -27,6 +28,11 @@ import { useGameStore } from '@/stores/game-store';
  *
  * Audio:
  * - M = Mute/unmute TTS
+ *
+ * Scene-aware shortcuts (T1.12):
+ * - T key (KeyT, no modifier): Start timer — NOT toggle. Transitions to question_active.
+ * - S key: Context-dependent scene transitions.
+ * - Enter: Skip timed scenes.
  *
  * Help:
  * - ? = Show help modal
@@ -58,6 +64,10 @@ export function useGameKeyboard() {
       ) {
         return;
       }
+
+      // Read current scene at event time (avoids stale closure)
+      const currentScene: AudienceScene = useGameStore.getState().audienceScene;
+      const store = useGameStore.getState();
 
       switch (event.code) {
         // Navigation
@@ -92,19 +102,28 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Pause/Resume game
+        // Pause/Resume game — scene-aware
         case 'KeyP':
           if (game.canPause) {
             game.pauseGame();
+            store.setAudienceScene('paused');
           } else if (game.canResume) {
             game.resumeGame();
+            // Restore previous scene on resume (sceneBeforePause is set by engine)
+            const sceneBeforePause = useGameStore.getState().sceneBeforePause;
+            if (sceneBeforePause) {
+              store.setAudienceScene(sceneBeforePause);
+            } else {
+              store.setAudienceScene('waiting');
+            }
           }
           break;
 
-        // Emergency pause - blanks audience display
+        // Emergency pause - blanks audience display — scene-aware
         case 'KeyE':
           if (game.canPause || game.canResume) {
             game.emergencyPause();
+            store.setAudienceScene('emergency_blank');
           }
           break;
 
@@ -126,9 +145,96 @@ export function useGameKeyboard() {
           toggleTTS();
           break;
 
-        // Toggle scoreboard on display
+        // T key — start timer and transition to question_active scene
+        // NOT a toggle: if timer is already running, no-op for the timer start.
+        // Scene transition always fires when in question_reading scene.
         case 'KeyT':
-          toggleScoreboard();
+          if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            // Check if we're in a question scene where starting the timer makes sense
+            if (
+              currentScene === 'question_reading' ||
+              currentScene === 'question_anticipation'
+            ) {
+              // Only start timer if not already running
+              if (!store.timer.isRunning) {
+                store.startTimer();
+              }
+              store.setAudienceScene('question_active');
+            } else {
+              // Fallback: toggle scoreboard (legacy T behavior for non-question scenes)
+              toggleScoreboard();
+            }
+          } else {
+            toggleScoreboard();
+          }
+          break;
+
+        // S key — context-dependent scene transitions
+        case 'KeyS':
+          if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            switch (currentScene) {
+              case 'question_reading':
+                // Skip timer — transition directly to answer reveal (or question_closed)
+                // In instant mode, go to answer_reveal; otherwise question_closed
+                if (store.settings.revealMode === 'instant') {
+                  store.setAudienceScene('answer_reveal');
+                } else {
+                  store.setAudienceScene('question_closed');
+                }
+                break;
+              case 'question_active':
+                // Close question — transition to question_closed
+                store.stopTimer();
+                store.setAudienceScene('question_closed');
+                break;
+              case 'question_closed':
+                // Enter scoring — in instant mode go to answer_reveal
+                if (store.settings.revealMode === 'instant') {
+                  store.setAudienceScene('answer_reveal');
+                } else {
+                  store.setAudienceScene('scoring_pause');
+                }
+                break;
+              default:
+                break;
+            }
+          }
+          break;
+
+        // Enter — skip timed scenes
+        case 'Enter':
+          switch (currentScene) {
+            case 'game_intro':
+              store.setAudienceScene('round_intro');
+              break;
+            case 'round_intro':
+              store.setAudienceScene('question_anticipation');
+              break;
+            case 'question_anticipation':
+              store.setAudienceScene('question_reading');
+              break;
+            case 'answer_reveal':
+              store.setAudienceScene('score_flash');
+              break;
+            case 'score_flash':
+              // Advance to next question (question_reading of next Q)
+              store.setAudienceScene('question_reading');
+              break;
+            case 'final_buildup':
+              store.setAudienceScene('final_podium');
+              break;
+            case 'round_reveal_intro':
+              store.advanceCeremony();
+              break;
+            case 'round_reveal_question':
+              store.advanceCeremony();
+              break;
+            case 'round_reveal_answer':
+              store.advanceCeremony();
+              break;
+            default:
+              break;
+          }
           break;
 
         // Toggle fullscreen
