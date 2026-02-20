@@ -16,6 +16,12 @@ import { QuestionClosedScene } from './QuestionClosedScene';
 import { ScoreFlashScene } from './ScoreFlashScene';
 import { RoundIntroScene } from './RoundIntroScene';
 import { RoundSummaryScene } from './RoundSummaryScene';
+// T2.5 batch reveal ceremony scenes
+import { QuestionTransitionScene } from './QuestionTransitionScene';
+import { ScoringPauseScene } from './ScoringPauseScene';
+import { RoundRevealIntroScene } from './RoundRevealIntroScene';
+import { RoundRevealQuestionScene } from './RoundRevealQuestionScene';
+import { RoundRevealAnswerScene } from './RoundRevealAnswerScene';
 
 // Fallback components for scenes not yet built in T2 scope
 import { GameEndDisplay } from '@/components/audience/GameEndDisplay';
@@ -75,6 +81,12 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'answer_reveal':
       case 'question_closed':
       case 'score_flash':
+        return `${audienceScene}-${displayQuestionIndex ?? 'none'}`;
+
+      // Batch mode transition scenes: key by displayQuestionIndex so they
+      // remount when the presenter moves to the next question
+      case 'scoring_pause':
+      case 'question_transition':
         return `${audienceScene}-${displayQuestionIndex ?? 'none'}`;
 
       case 'round_reveal_intro':
@@ -137,20 +149,21 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'score_flash':
         return <ScoreFlashScene />;
 
+      // -- T2.5 batch reveal ceremony scenes (fully implemented) ---------------
       case 'scoring_pause':
-        return <WaitingScene message="Scoring in progress..." />;
+        return <ScoringPauseScene />;
 
       case 'question_transition':
-        return <WaitingScene message="Next question coming up..." />;
+        return <QuestionTransitionScene />;
 
       case 'round_reveal_intro':
-        return <WaitingScene message="Revealing answers..." />;
+        return <RoundRevealIntroScene />;
 
       case 'round_reveal_question':
-        return <QuestionReadingScene />;
+        return <RoundRevealQuestionScene />;
 
       case 'round_reveal_answer':
-        return <AnswerRevealScene />;
+        return <RoundRevealAnswerScene />;
 
       default:
         return <WaitingScene />;
