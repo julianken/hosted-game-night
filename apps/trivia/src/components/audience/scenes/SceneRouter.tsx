@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useGameStore, useGameSelectors } from '@/stores/game-store';
+import { useGameStore } from '@/stores/game-store';
 import { sceneWrapper, sceneWrapperReduced } from '@/lib/motion/presets';
 
 // Scene components
@@ -11,9 +11,13 @@ import { QuestionActiveScene } from './QuestionActiveScene';
 import { AnswerRevealScene } from './AnswerRevealScene';
 import { PausedScene } from './PausedScene';
 import { EmergencyBlankScene } from './EmergencyBlankScene';
+// T2 scenes
+import { QuestionClosedScene } from './QuestionClosedScene';
+import { ScoreFlashScene } from './ScoreFlashScene';
+import { RoundIntroScene } from './RoundIntroScene';
+import { RoundSummaryScene } from './RoundSummaryScene';
 
-// Fallback components for scenes not yet built in T1 scope
-import { AudienceScoreboard } from '@/components/audience/AudienceScoreboard';
+// Fallback components for scenes not yet built in T2 scope
 import { GameEndDisplay } from '@/components/audience/GameEndDisplay';
 
 export interface SceneRouterProps {
@@ -47,9 +51,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
   );
   const currentRound = useGameStore((state) => state.currentRound);
 
-  const { teamsSortedByScore } = useGameSelectors();
   const teams = useGameStore((state) => state.teams);
-  const totalRounds = useGameStore((state) => state.totalRounds);
 
   // Emergency blank: render immediately outside AnimatePresence (no exit transition)
   if (audienceScene === 'emergency_blank') {
@@ -111,15 +113,9 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'paused':
         return <PausedScene />;
 
-      // -- Later-tier scenes: status-based fallbacks ------------------------
+      // -- T2 scenes (fully implemented) ------------------------------------
       case 'round_summary':
-        return (
-          <AudienceScoreboard
-            teams={teamsSortedByScore}
-            currentRound={currentRound}
-            totalRounds={totalRounds}
-          />
-        );
+        return <RoundSummaryScene />;
 
       case 'final_buildup':
       case 'final_podium':
@@ -130,23 +126,16 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
         return <WaitingScene message="Starting game..." />;
 
       case 'round_intro':
-        return <WaitingScene message={`Round ${currentRound + 1}`} />;
+        return <RoundIntroScene />;
 
       case 'question_anticipation':
         return <WaitingScene message="Get ready for the next question..." />;
 
       case 'question_closed':
-        // question closed — timer expired, waiting for scoring
-        return <QuestionActiveScene />;
+        return <QuestionClosedScene />;
 
       case 'score_flash':
-        return (
-          <AudienceScoreboard
-            teams={teamsSortedByScore}
-            currentRound={currentRound}
-            totalRounds={totalRounds}
-          />
-        );
+        return <ScoreFlashScene />;
 
       case 'scoring_pause':
         return <WaitingScene message="Scoring in progress..." />;

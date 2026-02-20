@@ -6,6 +6,7 @@ import { useFullscreen } from './use-fullscreen';
 import { useGameStore } from '@/stores/game-store';
 import type { AudienceScene } from '@/types/audience-scene';
 import { REVEAL_TIMING } from '@/types/audience-scene';
+import { useQuickScore } from './use-quick-score';
 
 /**
  * Keyboard shortcut hook for trivia game controls.
@@ -35,9 +36,25 @@ import { REVEAL_TIMING } from '@/types/audience-scene';
  * - S key: Context-dependent scene transitions.
  * - Enter: Skip timed scenes.
  *
+ * Quick Score shortcuts (T2.4):
+ * - 1-9 (Digit1-Digit9): During scoring phases, toggle score for team N.
+ *   1 = team at index 0, 9 = team at index 8.
+ * - 0 (Digit0): During scoring phases, toggle score for team at index 9.
+ * - Shift+1-9: During scoring phases, remove a point from team N.
+ * - Ctrl/Cmd+Z: Undo last score action.
+ *
+ * Scoring phase scenes (when 1-9 keys are active):
+ * - scoring_pause (batch mode)
+ * - question_closed (both modes)
+ * - answer_reveal (instant mode)
+ * - score_flash (instant mode)
+ * - round_reveal_question (batch ceremony)
+ * - round_reveal_answer (batch ceremony)
+ *
  * Help:
  * - ? = Show help modal
  */
+
 /** Scenes that trigger the POST_REVEAL_LOCK */
 const REVEAL_LOCK_SCENES: ReadonlySet<AudienceScene> = new Set([
   'answer_reveal',
@@ -51,11 +68,43 @@ const LOCKED_KEY_CODES: ReadonlySet<string> = new Set([
   'Space',
 ]);
 
+/**
+ * Scenes where 1-9/0 quick-score keys and Shift+digit/-score keys are active.
+ */
+const SCORING_PHASE_SCENES: ReadonlySet<AudienceScene> = new Set([
+  'scoring_pause',
+  'question_closed',
+  'answer_reveal',
+  'score_flash',
+  'round_reveal_question',
+  'round_reveal_answer',
+]);
+
+/**
+ * Map from event.code (Digit1-Digit9, Digit0) to team index (0-based).
+ * Digit1 -> 0, Digit2 -> 1, ..., Digit9 -> 8, Digit0 -> 9.
+ */
+const DIGIT_TO_TEAM_INDEX: Record<string, number> = {
+  Digit1: 0,
+  Digit2: 1,
+  Digit3: 2,
+  Digit4: 3,
+  Digit5: 4,
+  Digit6: 5,
+  Digit7: 6,
+  Digit8: 7,
+  Digit9: 8,
+  Digit0: 9,
+};
+
 export function useGameKeyboard() {
   const game = useGame();
   const fullscreen = useFullscreen();
   const [peekAnswer, setPeekAnswer] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Quick score — keyed by selectedQuestionIndex so it resets per question
+  const quickScore = useQuickScore(game.selectedQuestionIndex);
 
   // POST_REVEAL_LOCK: prevents premature advancement during reveal animation
   const isLockedRef = useRef(false);
@@ -126,6 +175,32 @@ export function useGameKeyboard() {
       // Read current scene at event time (avoids stale closure)
       const currentScene: AudienceScene = useGameStore.getState().audienceScene;
       const store = useGameStore.getState();
+
+      // -- Quick score: 1-9 / 0 digit keys (T2.4) --
+      // Handle before the main switch so digit keys don't fall through
+      if (event.code in DIGIT_TO_TEAM_INDEX) {
+        // Ctrl+Z or Cmd+Z: Undo (note: 'z' not a digit, handled below in switch)
+        // During scoring phases: toggle or remove team score
+        if (SCORING_PHASE_SCENES.has(currentScene)) {
+          const teamIndex = DIGIT_TO_TEAM_INDEX[event.code];
+          const teams = useGameStore.getState().teams;
+          const team = teams[teamIndex];
+
+          if (team) {
+            if (event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+              // Shift+Digit: remove a point from team N (direct -1, no toggle tracking)
+              event.preventDefault();
+              store.adjustTeamScore(team.id, -1);
+            } else if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+              // Plain digit: toggle score for team N
+              event.preventDefault();
+              quickScore.toggleTeam(team.id);
+            }
+          }
+          return;
+        }
+        // Outside scoring phase — fall through to allow digit keys for other uses
+      }
 
       switch (event.code) {
         // Navigation
@@ -300,6 +375,16 @@ export function useGameKeyboard() {
           fullscreen.toggleFullscreen();
           break;
 
+        // Ctrl/Cmd+Z — undo last score action (T2.4)
+        case 'KeyZ':
+          if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
+            if (SCORING_PHASE_SCENES.has(currentScene)) {
+              event.preventDefault();
+              quickScore.undo();
+            }
+          }
+          break;
+
         // Show help modal (? = Shift + /)
         case 'Slash':
           if (event.shiftKey) {
@@ -314,7 +399,7 @@ export function useGameKeyboard() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [game, fullscreen, toggleScoreboard, toggleTTS]);
+  }, [game, fullscreen, toggleScoreboard, toggleTTS, quickScore]);
 
   return {
     ...game,
@@ -328,5 +413,7 @@ export function useGameKeyboard() {
     // Additional toggles
     toggleScoreboard,
     toggleTTS,
+    // Quick score (T2.4/T2.5)
+    quickScore,
   };
 }
