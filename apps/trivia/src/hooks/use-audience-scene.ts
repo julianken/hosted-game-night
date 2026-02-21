@@ -13,7 +13,7 @@ import {
 
 export interface UseAudienceSceneOptions {
   /**
-   * 'presenter' -- this instance owns the scene and calls setAudienceScene.
+   * 'presenter' -- this instance owns the scene and drives transitions.
    * 'audience'  -- this instance reads scene from the synced store only.
    *
    * Only ONE presenter instance should exist at a time. Multiple audience
@@ -75,7 +75,6 @@ export function useAudienceScene(
 
   // ---- Store selectors (fine-grained to avoid re-render thrash) ----
   const scene = useGameStore((s) => s.audienceScene);
-  const setAudienceScene = useGameStore((s) => s.setAudienceScene);
   const currentRound = useGameStore((s) => s.currentRound);
   const totalRounds = useGameStore((s) => s.totalRounds);
 
@@ -138,7 +137,7 @@ export function useAudienceScene(
       if (timerRef.current) clearTimeout(timerRef.current);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [scene, isPresenter, getSceneDurationForCurrent, setAudienceScene]);
+  }, [scene, isPresenter, getSceneDurationForCurrent]);
 
   // ---- skipScene: cancel timer and signal skip ----
   const skipScene = useCallback(() => {

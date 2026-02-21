@@ -122,10 +122,10 @@ export function useTimerAutoReveal({
       // Mark as auto-revealed for this question
       autoRevealedForQuestionRef.current = selectedQuestionIndex;
 
-      // T3.7: Transition to question_closed scene instead of directly revealing.
+      // T3.7: Transition to question_closed scene via advanceScene.
       // This decouples timer expiry from answer reveal, letting the presenter
       // control when the answer is shown (via S key in useGameKeyboard).
-      useGameStore.getState().setAudienceScene('question_closed');
+      useGameStore.getState().advanceScene('auto');
 
       // Trigger flash effect
       triggerFlash();

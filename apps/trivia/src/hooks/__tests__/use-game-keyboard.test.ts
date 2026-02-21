@@ -295,6 +295,9 @@ describe('useGameKeyboard', () => {
       });
       act(() => {
         result.current.completeRound();
+        // completeRound() only handles status transition; set scene manually
+        // to simulate the advanceScene() flow that would normally set this.
+        useGameStore.getState().setAudienceScene('round_summary');
       });
 
       expect(result.current.status).toBe('between_rounds');

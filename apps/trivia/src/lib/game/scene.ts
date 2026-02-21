@@ -16,6 +16,28 @@ import {
 } from '@/types/audience-scene';
 
 // =============================================================================
+// SCENE TRIGGERS
+// =============================================================================
+
+/**
+ * Canonical trigger strings for scene transitions.
+ *
+ * These are the only valid trigger values that advanceScene() and
+ * getNextScene() accept. Keyboard handlers, auto-advance timers,
+ * and store actions all use these constants instead of ad-hoc strings.
+ */
+export const SCENE_TRIGGERS = {
+  AUTO: 'auto',
+  SKIP: 'skip',
+  CLOSE: 'close',
+  REVEAL: 'reveal',
+  ADVANCE: 'advance',
+  NEXT_ROUND: 'next_round',
+  START_GAME: 'start_game',
+  DISPLAY_QUESTION: 'display_question',
+} as const;
+
+// =============================================================================
 // DERIVE SCENE FROM STATUS
 // =============================================================================
 
@@ -193,18 +215,15 @@ export function getNextScene(
 
     // -- Answer reveal ------------------------------------------------------
     case 'answer_reveal':
-      if (trigger === 'auto' || trigger === 'advance') return 'score_flash';
+      if (trigger === 'auto' || trigger === 'advance' || trigger === 'skip') return 'score_flash';
       return null;
 
     case 'score_flash':
-      if (trigger === 'auto' || trigger === 'advance') {
+      if (trigger === 'auto' || trigger === 'advance' || trigger === 'skip') {
         if (isLastQuestion) {
           return isLastRound ? 'final_buildup' : 'round_summary';
         }
         return 'question_anticipation';
-      }
-      if (trigger === 'complete' && isLastQuestion) {
-        return isLastRound ? 'final_buildup' : 'round_summary';
       }
       return null;
 

@@ -114,6 +114,7 @@ export {
 // Scene (audience display layer)
 export type { SceneTransitionContext } from './scene';
 export {
+  SCENE_TRIGGERS,
   deriveSceneFromStatus,
   isSceneValidForStatus,
   getSceneDuration,

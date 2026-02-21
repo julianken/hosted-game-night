@@ -43,7 +43,9 @@ import {
   getRoundWinners,
   getOverallLeaders,
   getTeamsSortedByScore,
+  getNextScene,
 } from '@/lib/game/engine';
+import type { SceneTransitionContext } from '@/lib/game/engine';
 
 const lifecycleLogger = createGameLifecycleLogger({ game: 'trivia' });
 
@@ -89,6 +91,13 @@ export interface GameStore extends TriviaGameState {
   /** Set the audience display scene and record sceneTimestamp. */
   setAudienceScene: (scene: AudienceScene) => void;
 
+  /**
+   * Advance the audience scene by consulting getNextScene().
+   * This is the SINGLE AUTHORITY for all scene transitions (except pause/emergency).
+   * The trigger is one of the SCENE_TRIGGERS constants.
+   */
+  advanceScene: (trigger: string) => void;
+
   /** Set the reveal phase. Null clears an active reveal. */
   setRevealPhase: (phase: RevealPhase) => void;
 
@@ -96,7 +105,7 @@ export interface GameStore extends TriviaGameState {
   setScoreDeltasBatch: (deltas: ScoreDelta[]) => void;
 }
 
-export const useGameStore = create<GameStore>()((set) => ({
+export const useGameStore = create<GameStore>()((set, get) => ({
   // Initial state
   ...createInitialState(),
   _isHydrating: false,
@@ -189,25 +198,18 @@ export const useGameStore = create<GameStore>()((set) => ({
   completeRound: () => {
     set((state) => {
       lifecycleLogger.emit('game.round_completed', { round: state.currentRound, totalRounds: state.totalRounds });
-      const baseUpdate = completeRoundEngine(state);
-      return {
-        ...baseUpdate,
-        audienceScene: 'round_summary' as AudienceScene,
-        sceneTimestamp: Date.now(),
-      };
+      // Only handle status transition (playing -> between_rounds).
+      // Scene ownership is handled by advanceScene().
+      return completeRoundEngine(state);
     });
   },
 
   nextRound: () => {
     set((state) => {
       lifecycleLogger.emit('game.round_started', { round: state.currentRound + 1, totalRounds: state.totalRounds });
-      const baseUpdate = nextRoundEngine(state);
-      return {
-        ...baseUpdate,
-        // FIX Bug #8: nextRound should go to round_intro, not waiting
-        audienceScene: 'round_intro' as AudienceScene,
-        sceneTimestamp: Date.now(),
-      };
+      // Only handle status transition (between_rounds -> playing with next round).
+      // Scene ownership is handled by advanceScene().
+      return nextRoundEngine(state);
     });
   },
 
@@ -327,6 +329,48 @@ export const useGameStore = create<GameStore>()((set) => ({
 
   setAudienceScene: (scene: AudienceScene) => {
     set({ audienceScene: scene, sceneTimestamp: Date.now() });
+  },
+
+  advanceScene: (trigger: string) => {
+    const state = get();
+
+    // Compute transition context from current state.
+    // Uses the same logic as the keyboard handler's isLastQuestionInRound/isLastRoundNow helpers.
+    const roundQuestions = state.questions.filter(
+      (q) => q.roundIndex === state.currentRound
+    );
+    const displayIdx = state.displayQuestionIndex;
+    const currentRoundQIndex = displayIdx !== null
+      ? roundQuestions.findIndex((q) => state.questions.indexOf(q) === displayIdx)
+      : -1;
+    const lastQuestion = currentRoundQIndex >= 0 && currentRoundQIndex >= roundQuestions.length - 1;
+    const lastRound = state.currentRound >= state.totalRounds - 1;
+
+    const context: SceneTransitionContext = {
+      isLastQuestion: lastQuestion,
+      isLastRound: lastRound,
+    };
+
+    const nextScene = getNextScene(state.audienceScene, trigger, context);
+
+    if (nextScene && nextScene !== state.audienceScene) {
+      // Side effect: call completeRound engine when transitioning from score_flash to round_summary.
+      // This handles the status transition (playing -> between_rounds) that the scene change implies.
+      if (state.audienceScene === 'score_flash' && nextScene === 'round_summary') {
+        set((s) => {
+          lifecycleLogger.emit('game.round_completed', { round: s.currentRound, totalRounds: s.totalRounds });
+          const baseUpdate = completeRoundEngine(s);
+          return {
+            ...baseUpdate,
+            audienceScene: nextScene,
+            sceneTimestamp: Date.now(),
+          };
+        });
+        return;
+      }
+
+      set({ audienceScene: nextScene, sceneTimestamp: Date.now() });
+    }
   },
 
   setRevealPhase: (phase: RevealPhase) => {
