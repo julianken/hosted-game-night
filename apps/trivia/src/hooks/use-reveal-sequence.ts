@@ -40,7 +40,7 @@ export interface UseRevealSequenceReturn {
   revealPhase: RevealPhase;
 
   /**
-   * Begin the 5-beat reveal sequence.
+   * Begin the 3-beat reveal sequence.
    * No-op if revealedAnswer is null or isRevealing is true.
    */
   triggerReveal: () => void;
@@ -153,22 +153,10 @@ export function useRevealSequence(
       // hooks into onPhaseChange to trigger the correct-answer chime.
     });
 
-    // Beat 4: Score update visible
-    schedule(REVEAL_TIMING.SCORE_UPDATE_START_MS, () => {
-      setPhase('score_update');
-    });
-
     // POST_REVEAL_LOCK expires: presenter may advance
     schedule(REVEAL_TIMING.POST_REVEAL_LOCK_MS, () => {
       setIsRevealing(false);
       onRevealCompleteRef.current?.();
-      // Phase stays at 'score_update' / transitions to 'breathing' below
-    });
-
-    // Beat 5: Breathing (hold for room reaction)
-    // Fires immediately after lock; phase is now presenter-held
-    schedule(REVEAL_TIMING.POST_REVEAL_LOCK_MS + 50, () => {
-      setPhase('breathing');
     });
   }, [revealedAnswer, isRevealing, getTeams, setPhase]);
 

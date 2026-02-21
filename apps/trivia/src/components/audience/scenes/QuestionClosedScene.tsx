@@ -99,7 +99,7 @@ export function QuestionClosedScene() {
               className="text-red-300 mt-2"
               style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}
             >
-              Waiting for scores...
+              Waiting for the answer...
             </p>
           </div>
         </motion.div>

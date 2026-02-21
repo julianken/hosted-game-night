@@ -2,14 +2,14 @@
  * T4.5: next-action-hints mapping table
  *
  * Extracted from components/presenter/NextActionHint.tsx for standalone use.
- * Maps all 13 AudienceScene values to one-liner presenter action hints.
+ * Maps all 12 AudienceScene values to one-liner presenter action hints.
  */
 
 import type { AudienceScene } from '@/types/audience-scene';
 
 /**
  * Context-sensitive presenter instructions for each audience scene.
- * Maps all 13 AudienceScene values to one-liner action hints.
+ * Maps all 12 AudienceScene values to one-liner action hints.
  */
 export const NEXT_ACTION_HINTS: Record<AudienceScene, string> = {
   waiting: 'Add teams and questions, then press Start Game',
@@ -23,6 +23,5 @@ export const NEXT_ACTION_HINTS: Record<AudienceScene, string> = {
   final_podium: 'Winner displayed! Press R when ready for a new game.',
   paused: 'Game paused. Press P to resume.',
   emergency_blank: 'EMERGENCY: Display blanked. Press E to restore.',
-  answer_reveal: 'Answer revealed. Press S for scores, or Right Arrow for next.',
-  score_flash: 'Scores showing. Right Arrow for next question, C to complete round.',
+  answer_reveal: 'Answer revealed. Score teams with 1-9, then Right Arrow or Enter for next.',
 };

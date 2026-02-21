@@ -15,14 +15,12 @@ export interface AudienceAnswerOptionsProps {
   /** Currently revealed answer (null if not revealed yet) */
   revealedAnswer?: string | null;
   /**
-   * Reveal phase for the 5-beat choreography.
+   * Reveal phase for the 3-beat choreography.
    *
    * When provided, renders phase-aware visuals per beat:
    *   - freeze:       all options at full opacity, answer-flash CSS class applied
    *   - dim_wrong:    incorrect options at 32% opacity with saturate(0.2) filter
    *   - illuminate:   correct option glows green (#34D399), scale 1.06x, green box-shadow
-   *   - score_update: same as illuminate, scores shown by parent
-   *   - breathing:    settled glow pulse at scale 1.03
    *
    * When null/undefined: existing snap reveal behavior preserved (backward compat).
    */
@@ -110,8 +108,6 @@ const defaultConfig = {
  *   freeze:       full opacity, flash CSS class applied to container
  *   dim_wrong:    incorrect at 32% opacity, saturate(0.2) filter
  *   illuminate:   correct glows green (#34D399), scale 1.06x
- *   score_update: same as illuminate (scores shown by parent)
- *   breathing:    settled glow at scale 1.03
  */
 function getPhaseStyles(
   isCorrect: boolean,
@@ -146,30 +142,12 @@ function getPhaseStyles(
         isCorrectPhaseActive: false,
       };
     case 'illuminate':
-    case 'score_update':
       if (isCorrect) {
         return {
           opacity: 1,
           scale: noMotion ? 1.0 : 1.06,
           filter: 'saturate(1)',
           boxShadow: noMotion ? 'none' : '0 0 28px 8px rgba(52, 211, 153, 0.45)',
-          isCorrectPhaseActive: true,
-        };
-      }
-      return {
-        opacity: noMotion ? 0.5 : 0.32,
-        scale: 1,
-        filter: noMotion ? 'saturate(1)' : 'saturate(0.2)',
-        boxShadow: 'none',
-        isCorrectPhaseActive: false,
-      };
-    case 'breathing':
-      if (isCorrect) {
-        return {
-          opacity: 1,
-          scale: noMotion ? 1.0 : 1.03,
-          filter: 'saturate(1)',
-          boxShadow: noMotion ? 'none' : '0 0 24px 6px rgba(52, 211, 153, 0.35)',
           isCorrectPhaseActive: true,
         };
       }
@@ -244,7 +222,7 @@ export function AudienceAnswerOptions({
           }
 
           const isCorrectPhaseActive = isPhaseMode && isCorrect && (
-            revealPhase === 'illuminate' || revealPhase === 'score_update' || revealPhase === 'breathing'
+            revealPhase === 'illuminate'
           );
 
           return (

@@ -44,6 +44,7 @@ export function nextRound(state: TriviaGameState): TriviaGameState {
     currentRound: nextRoundIndex,
     selectedQuestionIndex: nextRoundFirstQuestion >= 0 ? nextRoundFirstQuestion : 0,
     displayQuestionIndex: null,
+    scoreDeltas: [],
   });
 }
 

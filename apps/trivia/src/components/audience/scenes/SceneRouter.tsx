@@ -12,8 +12,8 @@ import { PausedScene } from './PausedScene';
 import { EmergencyBlankScene } from './EmergencyBlankScene';
 // T2 scenes
 import { QuestionClosedScene } from './QuestionClosedScene';
-import { ScoreFlashScene } from './ScoreFlashScene';
 import { RoundIntroScene } from './RoundIntroScene';
+import { QuestionAnticipationScene } from './QuestionAnticipationScene';
 import { RoundSummaryScene } from './RoundSummaryScene';
 // T3 new scenes
 import { GameIntroScene } from './GameIntroScene';
@@ -69,7 +69,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'question_display':
       case 'answer_reveal':
       case 'question_closed':
-      case 'score_flash':
+      case 'question_anticipation':
         return `${audienceScene}-${displayQuestionIndex ?? 'none'}`;
 
       case 'round_intro':
@@ -118,13 +118,10 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
         return <RoundIntroScene />;
 
       case 'question_anticipation':
-        return <WaitingScene message="Get ready for the next question..." />;
+        return <QuestionAnticipationScene />;
 
       case 'question_closed':
         return <QuestionClosedScene />;
-
-      case 'score_flash':
-        return <ScoreFlashScene />;
 
       default:
         return <WaitingScene />;

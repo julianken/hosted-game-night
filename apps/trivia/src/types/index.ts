@@ -241,7 +241,7 @@ export interface TriviaGameState {
   sceneTimestamp: number;
 
   /**
-   * Current phase of the 5-beat reveal choreography.
+   * Current phase of the 3-beat reveal choreography.
    * null when no reveal is in progress.
    *
    * SYNCED (not presenter-local) so the audience display can render the
@@ -252,8 +252,8 @@ export interface TriviaGameState {
 
   /**
    * Score changes for the most recent scoring event.
-   * Per-question deltas shown in score_flash.
-   * Cleared when the scene that displays them advances.
+   * Per-question deltas shown in round_summary.
+   * Cleared when advancing to the next round.
    */
   scoreDeltas: import('./audience-scene').ScoreDelta[];
 

@@ -113,8 +113,6 @@ export function getSceneDuration(
       return SCENE_TIMING.QUESTION_ANTICIPATION_MS;
     case 'answer_reveal':
       return SCENE_TIMING.ANSWER_REVEAL_MS;
-    case 'score_flash':
-      return SCENE_TIMING.SCORE_FLASH_MS;
     case 'final_buildup':
       return SCENE_TIMING.FINAL_BUILDUP_MS;
     default:
@@ -215,10 +213,6 @@ export function getNextScene(
 
     // -- Answer reveal ------------------------------------------------------
     case 'answer_reveal':
-      if (trigger === 'auto' || trigger === 'advance' || trigger === 'skip') return 'score_flash';
-      return null;
-
-    case 'score_flash':
       if (trigger === 'auto' || trigger === 'advance' || trigger === 'skip') {
         if (isLastQuestion) {
           return isLastRound ? 'final_buildup' : 'round_summary';

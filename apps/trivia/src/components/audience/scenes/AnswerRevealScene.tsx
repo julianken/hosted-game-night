@@ -9,7 +9,7 @@ import type { RevealPhase } from '@/types/audience-scene';
 /**
  * AnswerRevealScene (T1.9)
  *
- * The 5-beat reveal choreography scene for instant mode.
+ * The 3-beat reveal choreography scene for instant mode.
  *
  * Reads revealPhase from the game store and passes it to AudienceAnswerOptions
  * (via AudienceQuestion) to drive phase-aware visuals:
@@ -17,8 +17,6 @@ import type { RevealPhase } from '@/types/audience-scene';
  *   Beat 1 - freeze:       Tension pause, all options at full opacity
  *   Beat 2 - dim_wrong:    Incorrect options dim to 32% opacity
  *   Beat 3 - illuminate:   Correct option glows green, scale 1.06x
- *   Beat 4 - score_update: Scores shown by parent overlay
- *   Beat 5 - breathing:    Settled glow pulse at scale 1.03
  *
  * The revealedAnswer is derived from the question's correctAnswers.
  * Timer is not shown (question is closed).

@@ -76,7 +76,6 @@ const LOCKED_KEY_CODES: ReadonlySet<string> = new Set([
 const SCORING_PHASE_SCENES: ReadonlySet<AudienceScene> = new Set([
   'question_closed',
   'answer_reveal',
-  'score_flash',
 ]);
 
 /**
@@ -210,7 +209,7 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Right Arrow -- advance trigger (answer_reveal -> score_flash -> next)
+        // Right Arrow -- advance trigger (answer_reveal -> next)
         case 'ArrowRight':
           event.preventDefault();
           store.advanceScene(SCENE_TRIGGERS.ADVANCE);

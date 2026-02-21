@@ -15,13 +15,13 @@
 // =============================================================================
 
 /**
- * All 13 audience scene values.
+ * All 12 audience scene values.
  *
  * Scene validity by GameStatus:
  *   setup          -> waiting
  *   playing        -> game_intro, round_intro, question_anticipation,
  *                    question_display, question_closed,
- *                    answer_reveal, score_flash,
+ *                    answer_reveal,
  *                    waiting, paused, emergency_blank
  *   between_rounds -> round_summary, paused, emergency_blank
  *   paused         -> paused, emergency_blank
@@ -34,16 +34,14 @@ export type AudienceScene =
   | 'game_intro'
   /** "ROUND N" + category + question count + standings (round 2+). 4s auto. */
   | 'round_intro'
-  /** "QUESTION N" + category badge. 1.5s auto-advance. Skippable with D/Enter. */
+  /** "QUESTION N of M" + category badge. 2s auto-advance. Skippable with D/Enter. */
   | 'question_anticipation'
   /** Question text + answer options. Timer state controlled by answersEnabled prop. */
   | 'question_display'
   /** "TIME'S UP!" badge replaces timer. Question/options remain visible. Indefinite. */
   | 'question_closed'
-  /** Per-question answer reveal with 5-beat choreography. 4s auto-advance to score_flash. */
+  /** Per-question answer reveal with 3-beat choreography. 3s auto-advance to next scene. */
   | 'answer_reveal'
-  /** Compact scoreboard with score deltas ("+N this question"). 5s auto-advance. */
-  | 'score_flash'
   /** Full scoreboard + round winner callout + score deltas. Indefinite. */
   | 'round_summary'
   /** "GAME OVER" scales in dramatically. 3s auto-advance. */
@@ -60,7 +58,7 @@ export type AudienceScene =
 // =============================================================================
 
 /**
- * Sub-state controlling the 5-beat reveal choreography.
+ * Sub-state controlling the 3-beat reveal choreography.
  *
  * Applies during the answer_reveal scene.
  *
@@ -71,16 +69,12 @@ export type AudienceScene =
  * Timing reference (REVEAL_TIMING constants below):
  *   freeze       -> 0ms-300ms    : tension pause, vignette fades in
  *   dim_wrong    -> 300ms-600ms  : incorrect options dim to 32% opacity
- *   illuminate   -> 600ms-800ms  : correct option glows green, scale 1.06x
- *   score_update -> 800ms-1200ms : score deltas visible
- *   breathing    -> 1200ms+      : hold; presenter controls advance
+ *   illuminate   -> 600ms+       : correct option glows green, scale 1.06x
  */
 export type RevealPhase =
   | 'freeze'        // Beat 1: tension pause
   | 'dim_wrong'     // Beat 2: incorrect options dim
   | 'illuminate'    // Beat 3: correct answer glows + sound
-  | 'score_update'  // Beat 4: score deltas visible
-  | 'breathing'     // Beat 5: hold for audience reaction
   | null;           // No reveal in progress
 
 // =============================================================================
@@ -123,12 +117,10 @@ export const SCENE_TIMING = {
   ROUND_INTRO_MS: 4000,
   /** round_intro (final round variant): 5 seconds */
   ROUND_INTRO_FINAL_MS: 5000,
-  /** question_anticipation: "QUESTION N" badge -- 1.5 seconds */
-  QUESTION_ANTICIPATION_MS: 1500,
-  /** answer_reveal (instant mode): auto-advance to score_flash -- 4 seconds */
-  ANSWER_REVEAL_MS: 4000,
-  /** score_flash (instant mode): auto-advance to next question -- 5 seconds */
-  SCORE_FLASH_MS: 5000,
+  /** question_anticipation: "QUESTION N of M" badge -- 2 seconds */
+  QUESTION_ANTICIPATION_MS: 2000,
+  /** answer_reveal: auto-advance to next scene -- 3 seconds */
+  ANSWER_REVEAL_MS: 3000,
   /** final_buildup: "GAME OVER" -- 3 seconds */
   FINAL_BUILDUP_MS: 3000,
 } as const;
@@ -147,15 +139,11 @@ export const REVEAL_TIMING = {
   DIM_WRONG_START_MS: 300,
   /** Beat 3 starts: correct option begins glowing. Sound fires here. */
   ILLUMINATE_START_MS: 600,
-  /** Beat 4 starts: score deltas visible. */
-  SCORE_UPDATE_START_MS: 800,
   /**
    * Lock expires: presenter can advance after this point.
    * Queued keypresses fire at this boundary.
    */
   POST_REVEAL_LOCK_MS: 1100,
-  /** Beat 5 starts: breathing phase. Presenter holds as long as needed. */
-  BREATHING_START_MS: 1200,
 } as const;
 
 // =============================================================================
@@ -172,7 +160,6 @@ export const TIMED_SCENES = new Set<AudienceScene>([
   'round_intro',
   'question_anticipation',
   'answer_reveal',
-  'score_flash',
   'final_buildup',
 ]);
 
@@ -185,7 +172,7 @@ export const VALID_SCENES_BY_STATUS: Record<string, ReadonlySet<AudienceScene>> 
   playing: new Set<AudienceScene>([
     'game_intro', 'round_intro', 'question_anticipation',
     'question_display', 'question_closed',
-    'answer_reveal', 'score_flash',
+    'answer_reveal',
     'waiting', 'paused', 'emergency_blank',
   ]),
   between_rounds: new Set<AudienceScene>([

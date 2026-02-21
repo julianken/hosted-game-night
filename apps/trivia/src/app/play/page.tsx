@@ -252,8 +252,7 @@ export default function PlayPage() {
   /** Scoring-phase scenes where QuickScoreGrid should appear (T3.6) */
   const isScoringScene = (
     audienceScene === 'answer_reveal' ||
-    audienceScene === 'question_closed' ||
-    audienceScene === 'score_flash'
+    audienceScene === 'question_closed'
   );
 
   /** Status badge for the presenter header */
