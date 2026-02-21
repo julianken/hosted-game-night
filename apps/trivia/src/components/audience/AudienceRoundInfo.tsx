@@ -9,8 +9,6 @@ export interface AudienceRoundInfoProps {
   questionNumber: number;
   /** Total questions in this round */
   totalQuestions: number;
-  /** Optional category/theme for the current question */
-  category?: string;
 }
 
 /**
@@ -28,7 +26,6 @@ export function AudienceRoundInfo({
   totalRounds,
   questionNumber,
   totalQuestions,
-  category,
 }: AudienceRoundInfoProps) {
   // Calculate progress percentage for visual bar
   const progressPercentage = totalQuestions > 0 ? (questionNumber / totalQuestions) * 100 : 0;
@@ -114,17 +111,6 @@ export function AudienceRoundInfo({
         </div>
       </div>
 
-      {/* Category badge (if provided) */}
-      {category && (
-        <div
-          className="px-6 py-2 rounded-full bg-primary/10 border border-primary/20"
-          aria-label={`Category: ${category}`}
-        >
-          <span className="text-xl lg:text-2xl font-semibold text-primary capitalize">
-            {category}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

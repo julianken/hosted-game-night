@@ -588,7 +588,7 @@ export default function PlayPage() {
                 <RoundSummary
                   currentRound={game.currentRound}
                   totalRounds={game.totalRounds}
-                  roundWinners={game.roundWinners}
+                  roundWinners={(game.isLastRound || game.status === 'ended') ? game.overallLeaders : game.roundWinners}
                   teamsSortedByScore={game.teamsSortedByScore}
                   isLastRound={game.isLastRound || game.status === 'ended'}
                   onNextRound={handleNextRound}

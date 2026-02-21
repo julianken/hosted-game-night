@@ -150,7 +150,12 @@ export const useGameStore = create<GameStore>()((set) => ({
   endGame: () => {
     set((state) => {
       lifecycleLogger.emit('game.ended', { currentRound: state.currentRound, totalRounds: state.totalRounds, teamCount: state.teams.length });
-      return endGameEngine(state);
+      const baseUpdate = endGameEngine(state);
+      return {
+        ...baseUpdate,
+        audienceScene: 'final_buildup' as AudienceScene,
+        sceneTimestamp: Date.now(),
+      };
     });
   },
 
@@ -178,7 +183,26 @@ export const useGameStore = create<GameStore>()((set) => ({
           round: state.currentRound,
         });
       }
-      return setDisplayQuestionEngine(state, index);
+      const baseUpdate = setDisplayQuestionEngine(state, index);
+
+      // Transition audience scene when showing/hiding a question on display.
+      // 'display_question' trigger: waiting → question_anticipation (scene.ts)
+      if (index !== null && state.audienceScene === 'waiting') {
+        return {
+          ...baseUpdate,
+          audienceScene: 'question_anticipation' as AudienceScene,
+          sceneTimestamp: Date.now(),
+        };
+      }
+      // Hiding question: return to waiting if currently in a question scene
+      if (index === null) {
+        return {
+          ...baseUpdate,
+          audienceScene: 'waiting' as AudienceScene,
+          sceneTimestamp: Date.now(),
+        };
+      }
+      return baseUpdate;
     });
   },
 
@@ -205,14 +229,24 @@ export const useGameStore = create<GameStore>()((set) => ({
   completeRound: () => {
     set((state) => {
       lifecycleLogger.emit('game.round_completed', { round: state.currentRound, totalRounds: state.totalRounds });
-      return completeRoundEngine(state);
+      const baseUpdate = completeRoundEngine(state);
+      return {
+        ...baseUpdate,
+        audienceScene: 'round_summary' as AudienceScene,
+        sceneTimestamp: Date.now(),
+      };
     });
   },
 
   nextRound: () => {
     set((state) => {
       lifecycleLogger.emit('game.round_started', { round: state.currentRound + 1, totalRounds: state.totalRounds });
-      return nextRoundEngine(state);
+      const baseUpdate = nextRoundEngine(state);
+      return {
+        ...baseUpdate,
+        audienceScene: 'waiting' as AudienceScene,
+        sceneTimestamp: Date.now(),
+      };
     });
   },
 

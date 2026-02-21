@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { AudienceQuestion } from '@/components/audience/AudienceQuestion';
 import { WaitingDisplay } from '@/components/audience/WaitingDisplay';
@@ -28,12 +29,13 @@ export function AnswerRevealScene() {
   const totalRounds = useGameStore((state) => state.totalRounds);
   const settings = useGameStore((state) => state.settings);
   const revealPhase = useGameStore((state) => state.revealPhase) as RevealPhase | null;
-  const timer = useGameStore((state) => state.timer);
 
   const { displayQuestion } = useGameSelectors();
 
-  const questionsInRound = useGameStore((state) =>
-    state.questions.filter((q) => q.roundIndex === state.currentRound)
+  const questions = useGameStore((state) => state.questions);
+  const questionsInRound = useMemo(
+    () => questions.filter((q) => q.roundIndex === currentRound),
+    [questions, currentRound],
   );
   const questionsPerRound = questionsInRound.length || settings.questionsPerRound;
 
@@ -56,8 +58,6 @@ export function AnswerRevealScene() {
       totalQuestions={questionsPerRound}
       roundNumber={currentRound + 1}
       totalRounds={totalRounds}
-      timer={timer}
-      timerVisible={false}
       revealedAnswer={revealedAnswer}
       revealPhase={revealPhase}
     />

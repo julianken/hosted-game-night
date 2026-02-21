@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { AudienceQuestion } from '@/components/audience/AudienceQuestion';
@@ -21,12 +22,14 @@ export function QuestionClosedScene() {
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
-  const settings = useGameStore((state) => state.settings);
-
   const { displayQuestion } = useGameSelectors();
 
-  const questionsInRound = useGameStore((state) =>
-    state.questions.filter((q) => q.roundIndex === state.currentRound),
+  const settings = useGameStore((state) => state.settings);
+
+  const questions = useGameStore((state) => state.questions);
+  const questionsInRound = useMemo(
+    () => questions.filter((q) => q.roundIndex === currentRound),
+    [questions, currentRound],
   );
   const questionsPerRound = questionsInRound.length || settings.questionsPerRound;
 
@@ -49,7 +52,6 @@ export function QuestionClosedScene() {
           totalQuestions={questionsPerRound}
           roundNumber={currentRound + 1}
           totalRounds={totalRounds}
-          timerVisible={false}
         />
       </div>
 

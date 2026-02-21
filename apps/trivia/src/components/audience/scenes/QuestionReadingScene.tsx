@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { AudienceQuestion } from '@/components/audience/AudienceQuestion';
 import { WaitingDisplay } from '@/components/audience/WaitingDisplay';
@@ -11,21 +12,22 @@ import { WaitingDisplay } from '@/components/audience/WaitingDisplay';
  * Used when the presenter is reading the question aloud before starting the clock.
  *
  * Reads question data from the game store.
- * Timer is passed but should not be visible (timerVisible=false).
  */
 export function QuestionReadingScene() {
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
+  const questions = useGameStore((state) => state.questions);
   const settings = useGameStore((state) => state.settings);
-  const timer = useGameStore((state) => state.timer);
 
   const { displayQuestion } = useGameSelectors();
 
-  const questionsInRound = useGameStore((state) =>
-    state.questions.filter((q) => q.roundIndex === state.currentRound)
-  );
-  const questionsPerRound = questionsInRound.length || settings.questionsPerRound;
+  // Memoize to avoid creating a new array reference on every render
+  // (useGameStore selectors must return stable references)
+  const questionsPerRound = useMemo(() => {
+    const count = questions.filter((q) => q.roundIndex === currentRound).length;
+    return count || settings.questionsPerRound;
+  }, [questions, currentRound, settings.questionsPerRound]);
 
   const questionInRound = displayQuestionIndex !== null
     ? (displayQuestionIndex % Math.max(questionsPerRound, 1)) + 1
@@ -42,8 +44,6 @@ export function QuestionReadingScene() {
       totalQuestions={questionsPerRound}
       roundNumber={currentRound + 1}
       totalRounds={totalRounds}
-      timer={timer}
-      timerVisible={false}
     />
   );
 }

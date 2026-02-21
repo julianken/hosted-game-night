@@ -203,7 +203,8 @@ export function AudienceAnswerOptions({
   if (isMultipleChoice) {
     return (
       <motion.div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 w-full max-w-5xl${isPhaseMode && revealPhase === 'freeze' ? ' answer-flash' : ''}`}
+        className={`grid grid-cols-1 md:grid-cols-2 w-full${isPhaseMode && revealPhase === 'freeze' ? ' answer-flash' : ''}`}
+        style={{ gap: 'clamp(12px, 1.5vh, 24px)', maxWidth: '92vw' }}
         variants={answerOptionStagger}
         initial={shouldReduceMotion ? 'visible' : 'hidden'}
         animate="visible"
@@ -259,34 +260,36 @@ export function AudienceAnswerOptions({
               }}
               role="listitem"
               aria-label={`Option ${option}: ${optionTexts[options.indexOf(option)]}`}
-              className="flex items-center gap-4 rounded-xl overflow-hidden"
+              className="flex items-center overflow-hidden"
               style={{
                 background: isCorrectPhaseActive ? 'rgba(52, 211, 153, 0.12)' : bgColor,
-                borderLeft: `4px solid ${isCorrectPhaseActive ? '#34D399' : config.border}`,
-                padding: '20px 24px',
+                borderLeft: `clamp(5px, 0.5vw, 8px) solid ${isCorrectPhaseActive ? '#34D399' : config.border}`,
+                padding: 'clamp(16px, 2.2vh, 36px) clamp(20px, 2vw, 40px)',
+                gap: 'clamp(12px, 1.5vw, 28px)',
+                borderRadius: 'clamp(12px, 1.2vw, 20px)',
                 transition: shouldReduceMotion ? 'none' : 'background 200ms ease, opacity 200ms ease',
                 transitionDelay: isCorrect ? '200ms' : '0ms',
               }}
             >
-              {/* Option badge */}
+              {/* Option badge — large enough to read from back of auditorium */}
               <span
                 aria-hidden="true"
                 className="flex items-center justify-center rounded-full font-bold flex-shrink-0 text-white"
                 style={{
                   background: isCorrect ? 'rgba(255,255,255,0.25)' : config.badgeBg,
-                  width: '60px',
-                  height: '60px',
-                  fontSize: 'clamp(1.25rem, 2.5vw, 1.875rem)',
-                  minWidth: '60px',
+                  width: 'clamp(52px, 5.5vh, 90px)',
+                  height: 'clamp(52px, 5.5vh, 90px)',
+                  fontSize: 'clamp(1.5rem, 3.2vw, 2.75rem)',
+                  minWidth: 'clamp(52px, 5.5vh, 90px)',
                 }}
               >
                 {option}
               </span>
 
-              {/* Option text */}
+              {/* Option text — bold and large for projection */}
               <span
-                className="font-medium leading-snug text-foreground flex-1"
-                style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}
+                className="font-semibold leading-snug text-foreground flex-1"
+                style={{ fontSize: 'clamp(1.5rem, 3vw, 3rem)' }}
               >
                 {optionTexts[options.indexOf(option)]}
               </span>
@@ -296,7 +299,7 @@ export function AudienceAnswerOptions({
                 <span className="ml-auto flex-shrink-0" aria-label="Correct answer">
                   <svg
                     className="text-white"
-                    style={{ width: '40px', height: '40px' }}
+                    style={{ width: 'clamp(36px, 4vh, 64px)', height: 'clamp(36px, 4vh, 64px)' }}
                     fill="currentColor"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
@@ -318,7 +321,8 @@ export function AudienceAnswerOptions({
 
     return (
       <motion.div
-        className="flex flex-col sm:flex-row gap-6 lg:gap-10 justify-center w-full max-w-4xl"
+        className="flex flex-col sm:flex-row justify-center w-full"
+        style={{ gap: 'clamp(20px, 3vw, 48px)', maxWidth: '85vw' }}
         variants={answerOptionStagger}
         initial={shouldReduceMotion ? 'visible' : 'hidden'}
         animate="visible"
@@ -334,19 +338,21 @@ export function AudienceAnswerOptions({
           animate={{
             opacity: (hasReveal && !isTrue && !shouldReduceMotion) ? 0.4 : 1,
             scale: (isTrue && !shouldReduceMotion) ? 1.04 : 1,
-            boxShadow: isTrue ? '0 0 24px 6px rgba(16, 185, 129, 0.40)' : 'none',
+            boxShadow: isTrue ? '0 0 40px 12px rgba(16, 185, 129, 0.45)' : 'none',
           }}
-          className="flex-1 max-w-md rounded-2xl text-center"
+          className="flex-1 text-center"
           style={{
             background: isTrue ? '#10B981' : 'rgba(16, 185, 129, 0.10)',
-            border: `4px solid #10B981`,
-            padding: '40px',
+            border: `clamp(4px, 0.4vw, 6px) solid #10B981`,
+            padding: 'clamp(32px, 5vh, 72px) clamp(24px, 3vw, 48px)',
+            borderRadius: 'clamp(16px, 1.5vw, 28px)',
+            maxWidth: '40vw',
           }}
         >
           <span
             className="font-bold block"
             style={{
-              fontSize: 'clamp(2rem, 5vw, 3.75rem)',
+              fontSize: 'clamp(2.5rem, 6vw, 5.5rem)',
               color: isTrue ? '#ffffff' : '#10B981',
             }}
           >
@@ -354,8 +360,8 @@ export function AudienceAnswerOptions({
           </span>
           {isTrue && (
             <svg
-              className="mx-auto mt-4 text-white"
-              style={{ width: '64px', height: '64px' }}
+              className="mx-auto text-white"
+              style={{ width: 'clamp(48px, 6vh, 80px)', height: 'clamp(48px, 6vh, 80px)', marginTop: 'clamp(12px, 1.5vh, 24px)' }}
               fill="currentColor"
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -374,19 +380,21 @@ export function AudienceAnswerOptions({
           animate={{
             opacity: (hasReveal && !isFalse && !shouldReduceMotion) ? 0.4 : 1,
             scale: (isFalse && !shouldReduceMotion) ? 1.04 : 1,
-            boxShadow: isFalse ? '0 0 24px 6px rgba(239, 68, 68, 0.40)' : 'none',
+            boxShadow: isFalse ? '0 0 40px 12px rgba(239, 68, 68, 0.45)' : 'none',
           }}
-          className="flex-1 max-w-md rounded-2xl text-center"
+          className="flex-1 text-center"
           style={{
             background: isFalse ? '#EF4444' : 'rgba(239, 68, 68, 0.10)',
-            border: `4px solid #EF4444`,
-            padding: '40px',
+            border: `clamp(4px, 0.4vw, 6px) solid #EF4444`,
+            padding: 'clamp(32px, 5vh, 72px) clamp(24px, 3vw, 48px)',
+            borderRadius: 'clamp(16px, 1.5vw, 28px)',
+            maxWidth: '40vw',
           }}
         >
           <span
             className="font-bold block"
             style={{
-              fontSize: 'clamp(2rem, 5vw, 3.75rem)',
+              fontSize: 'clamp(2.5rem, 6vw, 5.5rem)',
               color: isFalse ? '#ffffff' : '#EF4444',
             }}
           >
@@ -394,8 +402,8 @@ export function AudienceAnswerOptions({
           </span>
           {isFalse && (
             <svg
-              className="mx-auto mt-4 text-white"
-              style={{ width: '64px', height: '64px' }}
+              className="mx-auto text-white"
+              style={{ width: 'clamp(48px, 6vh, 80px)', height: 'clamp(48px, 6vh, 80px)', marginTop: 'clamp(12px, 1.5vh, 24px)' }}
               fill="currentColor"
               viewBox="0 0 24 24"
               aria-hidden="true"
