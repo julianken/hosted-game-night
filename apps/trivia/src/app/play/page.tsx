@@ -198,7 +198,6 @@ export default function PlayPage() {
     timerAutoStart,
     timerVisible,
     ttsEnabled,
-    revealMode,
     lastTeamSetup,
     updateSetting,
     saveTeamSetup,
@@ -248,12 +247,9 @@ export default function PlayPage() {
 
   /** Scoring-phase scenes where QuickScoreGrid should appear (T3.6) */
   const isScoringScene = (
-    audienceScene === 'scoring_pause' ||
     audienceScene === 'answer_reveal' ||
     audienceScene === 'question_closed' ||
-    audienceScene === 'score_flash' ||
-    audienceScene === 'round_reveal_question' ||
-    audienceScene === 'round_reveal_answer'
+    audienceScene === 'score_flash'
   );
 
   /** Status badge for the presenter header */
@@ -565,7 +561,6 @@ export default function PlayPage() {
                 timerAutoStart={timerAutoStart}
                 timerVisible={timerVisible}
                 ttsEnabled={ttsEnabled}
-                revealMode={revealMode}
                 lastTeamSetup={lastTeamSetup}
                 currentTeams={game.teams}
                 onUpdateSetting={updateSetting}

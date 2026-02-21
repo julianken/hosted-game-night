@@ -45,15 +45,12 @@ function useGameStateSnapshot(): TriviaGameState {
   const emergencyBlank = useGameStore((s) => s.emergencyBlank);
   const ttsEnabled = useGameStore((s) => s.ttsEnabled);
 
-  // Scene / ceremony fields (BEA-568)
+  // Scene fields (BEA-568)
   const audienceScene = useGameStore((s) => s.audienceScene);
   const sceneBeforePause = useGameStore((s) => s.sceneBeforePause);
   const sceneTimestamp = useGameStore((s) => s.sceneTimestamp);
   const revealPhase = useGameStore((s) => s.revealPhase);
   const scoreDeltas = useGameStore((s) => s.scoreDeltas);
-  const revealCeremonyQuestionIndex = useGameStore((s) => s.revealCeremonyQuestionIndex);
-  const revealCeremonyResults = useGameStore((s) => s.revealCeremonyResults);
-  const revealCeremonyAnswerShown = useGameStore((s) => s.revealCeremonyAnswerShown);
 
   return useMemo<TriviaGameState>(() => ({
     sessionId,
@@ -71,15 +68,12 @@ function useGameStateSnapshot(): TriviaGameState {
     showScoreboard,
     emergencyBlank,
     ttsEnabled,
-    // Scene / ceremony fields (BEA-568)
+    // Scene fields (BEA-568)
     audienceScene,
     sceneBeforePause,
     sceneTimestamp,
     revealPhase,
     scoreDeltas,
-    revealCeremonyQuestionIndex,
-    revealCeremonyResults,
-    revealCeremonyAnswerShown,
   }), [
     sessionId,
     status,
@@ -96,15 +90,12 @@ function useGameStateSnapshot(): TriviaGameState {
     showScoreboard,
     emergencyBlank,
     ttsEnabled,
-    // Scene / ceremony fields (BEA-568)
+    // Scene fields (BEA-568)
     audienceScene,
     sceneBeforePause,
     sceneTimestamp,
     revealPhase,
     scoreDeltas,
-    revealCeremonyQuestionIndex,
-    revealCeremonyResults,
-    revealCeremonyAnswerShown,
   ]);
 }
 

@@ -259,9 +259,6 @@ export function getNextScene(
 /**
  * Returns a partial state update that correctly sets the audience scene
  * and records the timestamp. Used by store actions to build new state.
- *
- * Does NOT validate mode compatibility -- callers must ensure the scene
- * is valid for the current revealMode (use isSceneValidForMode()).
  */
 export function buildSceneUpdate(scene: AudienceScene): {
   audienceScene: AudienceScene;

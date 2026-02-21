@@ -44,7 +44,7 @@ export function createInitialState(): TriviaGameState {
 
     // -- Audience Scene Layer --
     // All new fields from the phase 5 redesign. Default values represent the
-    // pre-game waiting state with no reveal or ceremony in progress.
+    // pre-game waiting state with no reveal in progress.
     audienceScene: 'waiting',
     sceneBeforePause: null,
     sceneTimestamp: 0, // 0 = never set (waiting is the initial state, not timed)

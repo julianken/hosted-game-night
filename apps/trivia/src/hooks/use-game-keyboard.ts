@@ -21,7 +21,7 @@ import { useQuickScore } from './use-quick-score';
  * Game controls:
  * - P = Pause/Resume game (scene-aware: sets/restores audienceScene)
  * - E = Emergency pause (blanks display, scene-aware)
- * - R = Reset game (double-press required)
+ * - R = Reset game
  * - N = Next round (when in between_rounds state AND scene is round_summary)
  *
  * Display:
@@ -48,10 +48,6 @@ import { useQuickScore } from './use-quick-score';
  * - question_closed
  * - answer_reveal
  * - score_flash
- *
- * Reset confirmation:
- * - R (first press): Show "Press R again to reset" warning
- * - R (second press within 2s): Execute reset
  *
  * Help:
  * - ? = Show help modal
@@ -95,19 +91,11 @@ const DIGIT_TO_TEAM_INDEX: Record<string, number> = {
   Digit0: 9,
 };
 
-/** Duration for R key double-press confirmation window (ms) */
-const RESET_CONFIRM_MS = 2000;
-
 export function useGameKeyboard() {
   const game = useGame();
   const fullscreen = useFullscreen();
   const [peekAnswer, setPeekAnswer] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-
-  // R key double-press state
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const resetConfirmRef = useRef(false);
-  const resetConfirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Quick score -- keyed by selectedQuestionIndex so it resets per question
   const quickScore = useQuickScore(game.selectedQuestionIndex);
@@ -384,32 +372,11 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Reset game -- double-press confirmation
+        // Reset game
         case 'KeyR':
-          if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
-            if (resetConfirmRef.current) {
-              // Second press within 2s -- execute reset
-              if (resetConfirmTimerRef.current) {
-                clearTimeout(resetConfirmTimerRef.current);
-                resetConfirmTimerRef.current = null;
-              }
-              resetConfirmRef.current = false;
-              setShowResetConfirm(false);
-              game.resetGame();
-              setPeekAnswer(false);
-              store.setAudienceScene('waiting');
-            } else {
-              // First press -- request confirmation
-              resetConfirmRef.current = true;
-              setShowResetConfirm(true);
-
-              resetConfirmTimerRef.current = setTimeout(() => {
-                resetConfirmRef.current = false;
-                setShowResetConfirm(false);
-                resetConfirmTimerRef.current = null;
-              }, RESET_CONFIRM_MS);
-            }
-          }
+          game.resetGame();
+          setPeekAnswer(false);
+          store.setAudienceScene('waiting');
           break;
 
         // Next round (only when between rounds AND scene is round_summary)
@@ -539,23 +506,12 @@ export function useGameKeyboard() {
     };
   }, [game, fullscreen, toggleScoreboard, toggleTTS, quickScore, isLastQuestionInRound, isLastRoundNow]);
 
-  // Cleanup reset confirm timer on unmount
-  useEffect(() => {
-    return () => {
-      if (resetConfirmTimerRef.current) {
-        clearTimeout(resetConfirmTimerRef.current);
-      }
-    };
-  }, []);
-
   return {
     ...game,
     peekAnswer,
     setPeekAnswer,
     showHelp,
     setShowHelp,
-    // R key double-press confirmation state
-    showResetConfirm,
     // Fullscreen state and controls
     isFullscreen: fullscreen.isFullscreen,
     toggleFullscreen: fullscreen.toggleFullscreen,

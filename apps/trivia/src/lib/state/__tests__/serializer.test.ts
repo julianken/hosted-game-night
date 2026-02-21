@@ -78,7 +78,6 @@ describe('serializer', () => {
     timerAutoStart: false,
     timerVisible: true,
     ttsEnabled: false,
-    revealMode: 'batch',
   };
 
   const createMockGameState = (
@@ -99,15 +98,12 @@ describe('serializer', () => {
     showScoreboard: false,
     emergencyBlank: false,
     ttsEnabled: false,
-    // Scene / ceremony fields (BEA-568)
+    // Scene fields
     audienceScene: 'waiting',
     sceneBeforePause: null,
     sceneTimestamp: 0,
     revealPhase: null,
     scoreDeltas: [],
-    revealCeremonyQuestionIndex: null,
-    revealCeremonyResults: null,
-    revealCeremonyAnswerShown: false,
     ...overrides,
   });
 
@@ -224,7 +220,6 @@ describe('serializer', () => {
         timerAutoStart: true,
         timerVisible: false,
         ttsEnabled: true,
-        revealMode: 'batch',
       };
       const state = createMockGameState({
         settings: customSettings,
@@ -791,7 +786,6 @@ describe('serializer', () => {
           timerAutoStart: true,
           timerVisible: true,
           ttsEnabled: true,
-          revealMode: 'batch',
         },
         showScoreboard: true,
         emergencyBlank: false,

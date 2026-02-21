@@ -107,17 +107,12 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       emergencyBlank: state.emergencyBlank,
       ttsEnabled: state.ttsEnabled,
 
-      // -- NEW: Scene fields ------------------------------------------------
+      // -- Scene fields -----------------------------------------------------
       audienceScene: state.audienceScene,
       sceneBeforePause: state.sceneBeforePause,
       sceneTimestamp: state.sceneTimestamp,
       scoreDeltas: state.scoreDeltas,
       revealPhase: state.revealPhase,
-
-      // -- NEW: Ceremony fields ---------------------------------------------
-      revealCeremonyQuestionIndex: state.revealCeremonyQuestionIndex,
-      revealCeremonyResults: state.revealCeremonyResults,
-      revealCeremonyAnswerShown: state.revealCeremonyAnswerShown,
     };
   }, []);
 
@@ -292,17 +287,12 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
           emergencyBlank: state.emergencyBlank,
           ttsEnabled: state.ttsEnabled,
 
-          // -- NEW: Scene fields --------------------------------------------
+          // -- Scene fields -------------------------------------------------
           audienceScene: state.audienceScene,
           sceneBeforePause: state.sceneBeforePause,
           sceneTimestamp: state.sceneTimestamp,
           scoreDeltas: state.scoreDeltas,
           revealPhase: state.revealPhase,
-
-          // -- NEW: Ceremony fields -----------------------------------------
-          revealCeremonyQuestionIndex: state.revealCeremonyQuestionIndex,
-          revealCeremonyResults: state.revealCeremonyResults,
-          revealCeremonyAnswerShown: state.revealCeremonyAnswerShown,
         });
       }
     });

@@ -294,7 +294,7 @@ describe('useSettingsStore', () => {
       // Verify persist middleware is properly configured
       expect(useSettingsStore.persist).toBeDefined();
       expect(useSettingsStore.persist.getOptions().name).toBe('trivia-settings');
-      expect(useSettingsStore.persist.getOptions().version).toBe(2);
+      expect(useSettingsStore.persist.getOptions().version).toBe(3);
     });
   });
 

@@ -286,10 +286,6 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
         // Time runs out
         sounds.playTimerExpired();
         break;
-      case 'round_reveal_intro':
-        // Ceremony begins
-        sounds.playRoundComplete();
-        break;
       case 'final_buildup':
         // Game ending
         sounds.playGameWin();
@@ -297,15 +293,6 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
       case 'final_podium':
         // Winner revealed — delayed by 4.8s to match podium timing
         setTimeout(() => sounds.playCorrectAnswer(), 4800);
-        break;
-      case 'round_reveal_question':
-        // Next ceremony question advances
-        if (
-          prevScene === 'round_reveal_answer' ||
-          prevScene === 'round_reveal_intro'
-        ) {
-          sounds.playQuestionReveal();
-        }
         break;
       default:
         break;

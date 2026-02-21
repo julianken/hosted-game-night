@@ -64,9 +64,7 @@ export type AudienceScene =
 /**
  * Sub-state controlling the 5-beat reveal choreography.
  *
- * Applies during:
- *   - instant mode: answer_reveal scene
- *   - batch mode: round_reveal_answer scene
+ * Applies during the answer_reveal scene.
  *
  * SYNCED via TriviaGameState (not presenter-local). The audience display uses
  * this field in settled-state rendering for reconnect scenarios -- it does not
@@ -76,14 +74,14 @@ export type AudienceScene =
  *   freeze       -> 0ms-300ms    : tension pause, vignette fades in
  *   dim_wrong    -> 300ms-600ms  : incorrect options dim to 32% opacity
  *   illuminate   -> 600ms-800ms  : correct option glows green, scale 1.06x
- *   score_update -> 800ms-1200ms : score deltas (instant) or team count (batch)
+ *   score_update -> 800ms-1200ms : score deltas visible
  *   breathing    -> 1200ms+      : hold; presenter controls advance
  */
 export type RevealPhase =
   | 'freeze'        // Beat 1: tension pause
   | 'dim_wrong'     // Beat 2: incorrect options dim
   | 'illuminate'    // Beat 3: correct answer glows + sound
-  | 'score_update'  // Beat 4: score deltas (instant) / team count (batch)
+  | 'score_update'  // Beat 4: score deltas visible
   | 'breathing'     // Beat 5: hold for audience reaction
   | null;           // No reveal in progress
 
@@ -93,10 +91,7 @@ export type RevealPhase =
 
 /**
  * Score change for a single team at a scene transition.
- *
- * In instant mode: delta = points earned on the just-closed question.
- * In batch mode:   delta = total points earned for the entire round.
- * Both modes use this same type; the caller computes the appropriate delta.
+ * Delta = points earned on the just-closed question.
  */
 export interface ScoreDelta {
   /** Branded TeamId. */
@@ -143,7 +138,7 @@ export const SCENE_TIMING = {
 /**
  * Reveal choreography timing (milliseconds from scene mount).
  *
- * Applies to both instant mode (answer_reveal) and batch mode (round_reveal_answer).
+ * Applies to the answer_reveal scene.
  * The audience CSS animation uses these as keyframe offsets.
  * The presenter's RevealPhase state advances at these intervals.
  */
@@ -154,15 +149,13 @@ export const REVEAL_TIMING = {
   DIM_WRONG_START_MS: 300,
   /** Beat 3 starts: correct option begins glowing. Sound fires here. */
   ILLUMINATE_START_MS: 600,
-  /** Beat 4 starts: score deltas (instant) or team count (batch) visible. */
+  /** Beat 4 starts: score deltas visible. */
   SCORE_UPDATE_START_MS: 800,
   /**
    * Lock expires: presenter can advance after this point.
    * Queued keypresses fire at this boundary.
    */
   POST_REVEAL_LOCK_MS: 1100,
-  /** Team count line fades in (batch ceremony only). */
-  TEAM_COUNT_FADE_IN_MS: 1200,
   /** Beat 5 starts: breathing phase. Presenter holds as long as needed. */
   BREATHING_START_MS: 1200,
 } as const;

@@ -221,7 +221,7 @@ export const sceneWrapperReduced: Variants = {
 };
 
 /**
- * Hero text scenes (game_intro, round_intro, final_buildup, round_reveal_intro).
+ * Hero text scenes (game_intro, round_intro, final_buildup).
  * Scales from slightly below 1 with overshoot — "arrives with authority".
  */
 export const heroSceneEnter: Variants = {

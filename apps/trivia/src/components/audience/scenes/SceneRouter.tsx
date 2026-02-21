@@ -16,12 +16,6 @@ import { QuestionClosedScene } from './QuestionClosedScene';
 import { ScoreFlashScene } from './ScoreFlashScene';
 import { RoundIntroScene } from './RoundIntroScene';
 import { RoundSummaryScene } from './RoundSummaryScene';
-// T2.5 batch reveal ceremony scenes
-import { QuestionTransitionScene } from './QuestionTransitionScene';
-import { ScoringPauseScene } from './ScoringPauseScene';
-import { RoundRevealIntroScene } from './RoundRevealIntroScene';
-import { RoundRevealQuestionScene } from './RoundRevealQuestionScene';
-import { RoundRevealAnswerScene } from './RoundRevealAnswerScene';
 // T3 new scenes
 import { GameIntroScene } from './GameIntroScene';
 import { FinalBuildupScene } from './FinalBuildupScene';
@@ -53,9 +47,6 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
 
   const audienceScene = useGameStore((state) => state.audienceScene);
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
-  const revealCeremonyQuestionIndex = useGameStore(
-    (state) => state.revealCeremonyQuestionIndex
-  );
   const currentRound = useGameStore((state) => state.currentRound);
 
   // Emergency blank: render immediately outside AnimatePresence (no exit transition)
@@ -81,17 +72,6 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'question_closed':
       case 'score_flash':
         return `${audienceScene}-${displayQuestionIndex ?? 'none'}`;
-
-      // Batch mode transition scenes: key by displayQuestionIndex so they
-      // remount when the presenter moves to the next question
-      case 'scoring_pause':
-      case 'question_transition':
-        return `${audienceScene}-${displayQuestionIndex ?? 'none'}`;
-
-      case 'round_reveal_intro':
-      case 'round_reveal_question':
-      case 'round_reveal_answer':
-        return `${audienceScene}-${revealCeremonyQuestionIndex ?? 'none'}`;
 
       case 'round_intro':
       case 'round_summary':
@@ -149,22 +129,6 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
 
       case 'score_flash':
         return <ScoreFlashScene />;
-
-      // -- T2.5 batch reveal ceremony scenes (fully implemented) ---------------
-      case 'scoring_pause':
-        return <ScoringPauseScene />;
-
-      case 'question_transition':
-        return <QuestionTransitionScene />;
-
-      case 'round_reveal_intro':
-        return <RoundRevealIntroScene />;
-
-      case 'round_reveal_question':
-        return <RoundRevealQuestionScene />;
-
-      case 'round_reveal_answer':
-        return <RoundRevealAnswerScene />;
 
       default:
         return <WaitingScene />;

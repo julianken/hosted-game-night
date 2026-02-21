@@ -5,7 +5,6 @@ import { useGameStore } from '@/stores/game-store';
 import type { AudienceScene } from '@/types/audience-scene';
 import {
   SCENE_TIMING,
-  BATCH_REVEAL_TIMING,
 } from '@/types/audience-scene';
 
 // =============================================================================
@@ -59,10 +58,8 @@ const TIMED_SCENE_DURATIONS: Partial<Record<AudienceScene, number>> = {
   game_intro:            SCENE_TIMING.GAME_INTRO_MS,           // 6000ms
   round_intro:           SCENE_TIMING.ROUND_INTRO_MS,          // 4000ms (5000 for final round)
   question_anticipation: SCENE_TIMING.QUESTION_ANTICIPATION_MS, // 1500ms
-  round_reveal_intro:    BATCH_REVEAL_TIMING.ROUND_REVEAL_INTRO_MS, // 2500ms
-  question_transition:   BATCH_REVEAL_TIMING.QUESTION_TRANSITION_MS, // 1500ms
-  answer_reveal:         SCENE_TIMING.ANSWER_REVEAL_MS,        // 4000ms (instant mode only)
-  score_flash:           SCENE_TIMING.SCORE_FLASH_MS,          // 5000ms (instant mode only)
+  answer_reveal:         SCENE_TIMING.ANSWER_REVEAL_MS,        // 4000ms
+  score_flash:           SCENE_TIMING.SCORE_FLASH_MS,          // 5000ms
   final_buildup:         SCENE_TIMING.FINAL_BUILDUP_MS,        // 3000ms
 } as const;
 

@@ -41,7 +41,6 @@ export interface SetupWizardProps {
   timerAutoStart: boolean;
   timerVisible: boolean;
   ttsEnabled: boolean;
-  revealMode: 'instant' | 'batch';
   lastTeamSetup: TeamSetup | null;
   currentTeams: Team[];
   onUpdateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
@@ -80,7 +79,6 @@ export function SetupWizard({
   timerAutoStart,
   timerVisible,
   ttsEnabled,
-  revealMode,
   lastTeamSetup,
   currentTeams,
   onUpdateSetting,
@@ -182,7 +180,6 @@ export function SetupWizard({
                 timerAutoStart={timerAutoStart}
                 timerVisible={timerVisible}
                 ttsEnabled={ttsEnabled}
-                revealMode={revealMode}
                 lastTeamSetup={lastTeamSetup}
                 currentTeams={currentTeams}
                 onUpdateSetting={onUpdateSetting}

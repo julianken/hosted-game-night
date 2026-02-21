@@ -205,7 +205,7 @@ export interface TriviaGameState {
   settings: GameSettings;
 
   // -- Display settings (legacy flags, preserved for compatibility) --
-  showScoreboard: boolean; // Manual toggle (intercepted in batch mode)
+  showScoreboard: boolean; // Manual toggle
   emergencyBlank: boolean; // Emergency pause blanks audience
 
   // -- Audio --
@@ -252,8 +252,7 @@ export interface TriviaGameState {
 
   /**
    * Score changes for the most recent scoring event.
-   * In instant mode: per-question deltas shown in score_flash.
-   * In batch mode: full-round deltas shown in round_summary.
+   * Per-question deltas shown in score_flash.
    * Cleared when the scene that displays them advances.
    */
   scoreDeltas: import('./audience-scene').ScoreDelta[];
