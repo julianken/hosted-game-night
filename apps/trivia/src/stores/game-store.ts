@@ -339,7 +339,6 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     const state = get();
 
     // Compute transition context from current state.
-    // Uses the same logic as the keyboard handler's isLastQuestionInRound/isLastRoundNow helpers.
     const roundQuestions = state.questions.filter(
       (q) => q.roundIndex === state.currentRound
     );
@@ -355,12 +354,37 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       isLastRound: lastRound,
     };
 
+    // -- Round-end answer review: cycle through questions within answer_reveal --
+    // When in answer_reveal during between_rounds, Right Arrow advances to the
+    // next question's answer. getNextScene returns null for non-last questions,
+    // so we handle the cycling here before consulting the state machine.
+    if (
+      state.audienceScene === 'answer_reveal' &&
+      state.status === 'between_rounds' &&
+      (trigger === 'advance' || trigger === 'skip')
+    ) {
+      if (!lastQuestion) {
+        const nextQIndex = currentRoundQIndex + 1;
+        if (nextQIndex < roundQuestions.length) {
+          const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
+          set({
+            displayQuestionIndex: globalIndex,
+            selectedQuestionIndex: globalIndex,
+            sceneTimestamp: Date.now(),
+            revealPhase: null, // Reset for fresh reveal animation on next question
+          });
+          return;
+        }
+      }
+      // Last question: fall through to getNextScene for round_intro / final_buildup
+    }
+
     const nextScene = getNextScene(state.audienceScene, trigger, context);
 
     if (nextScene && nextScene !== state.audienceScene) {
-      // Side effect: call completeRound engine when transitioning from answer_reveal to round_summary.
-      // This handles the status transition (playing -> between_rounds) that the scene change implies.
-      if (state.audienceScene === 'answer_reveal' && nextScene === 'round_summary') {
+      // Side effect: completeRound when question_closed → round_summary (last Q).
+      // Transitions status: playing → between_rounds.
+      if (state.audienceScene === 'question_closed' && nextScene === 'round_summary') {
         set((s) => {
           lifecycleLogger.emit('game.round_completed', { round: s.currentRound, totalRounds: s.totalRounds });
           const baseUpdate = completeRoundEngine(s);
@@ -373,11 +397,24 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         return;
       }
 
-      // Side effect: call endGame engine when transitioning from answer_reveal to final_buildup.
-      // This handles the status transition (playing -> ended) that the scene change implies.
-      // Without this, the game stays in 'playing' status while showing final_buildup,
-      // which is not in VALID_SCENES_BY_STATUS.playing, causing WaitingScene to render.
-      if (state.audienceScene === 'answer_reveal' && nextScene === 'final_buildup') {
+      // Side effect: start answer review when round_summary → answer_reveal.
+      // Sets displayQuestionIndex to the first question of the current round.
+      if (state.audienceScene === 'round_summary' && nextScene === 'answer_reveal') {
+        const firstQ = roundQuestions[0];
+        const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
+        set({
+          audienceScene: nextScene,
+          sceneTimestamp: Date.now(),
+          displayQuestionIndex: globalIndex,
+          selectedQuestionIndex: globalIndex,
+          revealPhase: null,
+        });
+        return;
+      }
+
+      // Side effect: endGame when transitioning to final_buildup.
+      // Handles status transition (between_rounds/playing → ended).
+      if (nextScene === 'final_buildup') {
         set((s) => {
           lifecycleLogger.emit('game.ended', { currentRound: s.currentRound, totalRounds: s.totalRounds, teamCount: s.teams.length });
           const baseUpdate = endGameEngine(s);
@@ -390,15 +427,25 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         return;
       }
 
+      // Side effect: nextRound when transitioning to round_intro.
+      // Handles status transition (between_rounds → playing with next round).
+      if (nextScene === 'round_intro' && state.status === 'between_rounds') {
+        set((s) => {
+          lifecycleLogger.emit('game.round_started', { round: s.currentRound + 1, totalRounds: s.totalRounds });
+          return {
+            ...nextRoundEngine(s),
+            audienceScene: nextScene,
+            sceneTimestamp: Date.now(),
+          };
+        });
+        return;
+      }
+
       // Side effect: auto-show question when entering question_anticipation.
-      // From round_intro: show the currently selected question (first of the round).
-      // From answer_reveal: advance to the next question in the round and show it.
       if (nextScene === 'question_anticipation') {
-        if (state.audienceScene === 'answer_reveal') {
-          // Find the next question in the current round
-          const nextQIndex = roundQuestions.findIndex(
-            (q) => state.questions.indexOf(q) === displayIdx
-          ) + 1;
+        if (state.audienceScene === 'question_closed') {
+          // From question_closed: advance to the next question in the round
+          const nextQIndex = currentRoundQIndex + 1;
           if (nextQIndex < roundQuestions.length) {
             const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
             set({
@@ -515,7 +562,6 @@ export function useGameSelectors() {
       audienceScene === 'game_intro' ||
       audienceScene === 'round_intro' ||
       audienceScene === 'question_anticipation' ||
-      audienceScene === 'answer_reveal' ||
       audienceScene === 'final_buildup'
     ),
   };

@@ -286,17 +286,15 @@ export function RoundSummaryScene() {
         )}
       </motion.div>
 
-      {/* Next round indicator */}
-      {!isLastRound && (
-        <div className="text-center mt-4" role="status" aria-live="polite">
-          <p
-            className="text-foreground-secondary motion-safe:animate-pulse"
-            style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}
-          >
-            Next round starting soon...
-          </p>
-        </div>
-      )}
+      {/* Scoring status indicator */}
+      <div className="text-center mt-4" role="status" aria-live="polite">
+        <p
+          className="text-foreground-secondary motion-safe:animate-pulse"
+          style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}
+        >
+          Scoring in progress...
+        </p>
+      </div>
     </section>
   );
 }

@@ -40,7 +40,7 @@ export type AudienceScene =
   | 'question_display'
   /** "TIME'S UP!" badge replaces timer. Question/options remain visible. Indefinite. */
   | 'question_closed'
-  /** Per-question answer reveal with 3-beat choreography. 3s auto-advance to next scene. */
+  /** Round-end answer review with 3-beat choreography. Presenter-paced (no auto-advance). */
   | 'answer_reveal'
   /** Full scoreboard + round winner callout + score deltas. Indefinite. */
   | 'round_summary'
@@ -119,8 +119,6 @@ export const SCENE_TIMING = {
   ROUND_INTRO_FINAL_MS: 5000,
   /** question_anticipation: "QUESTION N of M" badge -- 2 seconds */
   QUESTION_ANTICIPATION_MS: 2000,
-  /** answer_reveal: auto-advance to next scene -- 3 seconds */
-  ANSWER_REVEAL_MS: 3000,
   /** final_buildup: "GAME OVER" -- 3 seconds */
   FINAL_BUILDUP_MS: 3000,
 } as const;
@@ -159,7 +157,6 @@ export const TIMED_SCENES = new Set<AudienceScene>([
   'game_intro',
   'round_intro',
   'question_anticipation',
-  'answer_reveal',
   'final_buildup',
 ]);
 
@@ -172,11 +169,10 @@ export const VALID_SCENES_BY_STATUS: Record<string, ReadonlySet<AudienceScene>> 
   playing: new Set<AudienceScene>([
     'game_intro', 'round_intro', 'question_anticipation',
     'question_display', 'question_closed',
-    'answer_reveal',
     'waiting', 'paused', 'emergency_blank',
   ]),
   between_rounds: new Set<AudienceScene>([
-    'round_summary', 'paused', 'emergency_blank',
+    'round_summary', 'answer_reveal', 'paused', 'emergency_blank',
   ]),
   paused: new Set<AudienceScene>(['paused', 'emergency_blank']),
   ended: new Set<AudienceScene>([

@@ -76,6 +76,7 @@ const LOCKED_KEY_CODES: ReadonlySet<string> = new Set([
 const SCORING_PHASE_SCENES: ReadonlySet<AudienceScene> = new Set([
   'question_closed',
   'answer_reveal',
+  'round_summary',
 ]);
 
 /**
@@ -209,7 +210,7 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Right Arrow -- advance trigger (answer_reveal -> next)
+        // Right Arrow -- advance trigger (round_summary -> answer review -> next)
         case 'ArrowRight':
           event.preventDefault();
           store.advanceScene(SCENE_TRIGGERS.ADVANCE);
@@ -275,13 +276,10 @@ export function useGameKeyboard() {
           store.setAudienceScene('waiting');
           break;
 
-        // Next round (scene advance first, then status transition)
-        // advanceScene must run before nextRound so isLastRound is computed
-        // from the CURRENT round (the one being summarized), not the next.
+        // Next round (advanceScene handles both scene change and nextRound side effect)
         case 'KeyN':
-          if (game.status === 'between_rounds' && currentScene === 'round_summary') {
+          if (game.status === 'between_rounds' && (currentScene === 'round_summary' || currentScene === 'answer_reveal')) {
             store.advanceScene(SCENE_TRIGGERS.NEXT_ROUND);
-            store.nextRound();
           }
           break;
 
@@ -309,18 +307,16 @@ export function useGameKeyboard() {
           }
           break;
 
-        // S key -- close question or reveal answer
+        // S key -- close question (pub trivia: no per-question reveals)
         case 'KeyS':
           if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
             if (currentScene === 'question_display') {
               if (store.timer.isRunning) {
                 store.stopTimer();
-                store.advanceScene(SCENE_TRIGGERS.CLOSE);
-              } else {
-                store.advanceScene(SCENE_TRIGGERS.REVEAL);
               }
+              store.advanceScene(SCENE_TRIGGERS.CLOSE);
             } else if (currentScene === 'question_closed') {
-              store.advanceScene(SCENE_TRIGGERS.REVEAL);
+              store.advanceScene(SCENE_TRIGGERS.CLOSE);
             }
           }
           break;

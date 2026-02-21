@@ -111,8 +111,6 @@ export function getSceneDuration(
         : SCENE_TIMING.ROUND_INTRO_MS;
     case 'question_anticipation':
       return SCENE_TIMING.QUESTION_ANTICIPATION_MS;
-    case 'answer_reveal':
-      return SCENE_TIMING.ANSWER_REVEAL_MS;
     case 'final_buildup':
       return SCENE_TIMING.FINAL_BUILDUP_MS;
     default:
@@ -202,27 +200,43 @@ export function getNextScene(
 
     case 'question_display':
       if (trigger === 'close') return 'question_closed';
-      if (trigger === 'reveal') return 'answer_reveal';
       if (trigger === 'auto') return 'question_closed'; // timer expired
       return null;
 
     case 'question_closed':
-      if (trigger === 'close') return 'answer_reveal';
-      if (trigger === 'reveal') return 'answer_reveal';
-      return null;
-
-    // -- Answer reveal ------------------------------------------------------
-    case 'answer_reveal':
-      if (trigger === 'auto' || trigger === 'advance' || trigger === 'skip') {
+      // Pub trivia: host reads answers aloud, no per-question reveal on screen.
+      // S/advance goes directly to next question or round_summary (last Q).
+      if (trigger === 'close' || trigger === 'advance') {
         if (isLastQuestion) {
-          return isLastRound ? 'final_buildup' : 'round_summary';
+          return 'round_summary';
         }
         return 'question_anticipation';
       }
       return null;
 
-    // -- Round summary ------------------------------------------------------
+    // -- Answer review (round-end only) ------------------------------------
+    // Only reachable from round_summary. Presenter cycles through each
+    // question's answer. Store handles advancing displayQuestionIndex.
+    case 'answer_reveal':
+      if (trigger === 'advance' || trigger === 'skip') {
+        // Last question reviewed → move to next round or game end
+        if (isLastQuestion) {
+          return isLastRound ? 'final_buildup' : 'round_intro';
+        }
+        // Not last question: store handles cycling (returns null here)
+        return null;
+      }
+      // N key: skip remaining answers and go to next round
+      if (trigger === 'next_round') {
+        return isLastRound ? 'final_buildup' : 'round_intro';
+      }
+      return null;
+
+    // -- Round summary (scoring wait screen) --------------------------------
     case 'round_summary':
+      // Right Arrow: start answer review
+      if (trigger === 'advance') return 'answer_reveal';
+      // N key: skip answer review, go directly to next round
       if (trigger === 'next_round') {
         return isLastRound ? 'final_buildup' : 'round_intro';
       }

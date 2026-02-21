@@ -58,7 +58,6 @@ const TIMED_SCENE_DURATIONS: Partial<Record<AudienceScene, number>> = {
   game_intro:            SCENE_TIMING.GAME_INTRO_MS,           // 6000ms
   round_intro:           SCENE_TIMING.ROUND_INTRO_MS,          // 4000ms (5000 for final round)
   question_anticipation: SCENE_TIMING.QUESTION_ANTICIPATION_MS, // 2000ms
-  answer_reveal:         SCENE_TIMING.ANSWER_REVEAL_MS,        // 3000ms
   final_buildup:         SCENE_TIMING.FINAL_BUILDUP_MS,        // 3000ms
 } as const;
 
