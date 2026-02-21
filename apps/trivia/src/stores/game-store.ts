@@ -6,7 +6,6 @@ import type {
   AudienceScene,
   RevealPhase,
   ScoreDelta,
-  RevealCeremonyQuestion,
 } from '@/types';
 import {
   createInitialState,
@@ -45,7 +44,6 @@ import {
   getOverallLeaders,
   getTeamsSortedByScore,
 } from '@/lib/game/engine';
-import { useSettingsStore } from '@/stores/settings-store';
 
 const lifecycleLogger = createGameLifecycleLogger({ game: 'trivia' });
 
@@ -87,7 +85,7 @@ export interface GameStore extends TriviaGameState {
   // Hydration for sync
   _hydrate: (state: Partial<TriviaGameState>) => void;
 
-  // -- NEW: Scene control ---------------------------------------------------
+  // -- Scene control ---------------------------------------------------
   /** Set the audience display scene and record sceneTimestamp. */
   setAudienceScene: (scene: AudienceScene) => void;
 
@@ -96,44 +94,6 @@ export interface GameStore extends TriviaGameState {
 
   /** Replace the scoreDeltas array atomically (new reference guaranteed). */
   setScoreDeltasBatch: (deltas: ScoreDelta[]) => void;
-
-  // -- NEW: Reveal mode -----------------------------------------------------
-  /**
-   * Change revealMode. Permitted only from 'setup' or 'between_rounds'.
-   * Side-effect: also updates settings-store for cross-session persistence.
-   */
-  updateRevealMode: (mode: 'instant' | 'batch') => void;
-
-  // -- NEW: Batch reveal ceremony -------------------------------------------
-  /**
-   * Snapshot current teamAnswers into RevealCeremonyResults, set
-   * revealCeremonyQuestionIndex = 0, transition to 'round_reveal_intro'.
-   * No-op if revealMode !== 'batch'.
-   */
-  startRevealCeremony: () => void;
-
-  /**
-   * Advance the ceremony by one step.
-   * 'round_reveal_intro'  -> 'round_reveal_question' (index 0)
-   * 'round_reveal_question' -> 'round_reveal_answer' (same index)
-   * 'round_reveal_answer' (more Qs) -> 'round_reveal_question' (index + 1)
-   * 'round_reveal_answer' (last Q) -> 'round_summary', clears ceremony state
-   */
-  advanceCeremony: () => void;
-
-  /**
-   * Retreat the ceremony by one step.
-   * 'round_reveal_answer' -> 'round_reveal_question' (same index, answerShown: false)
-   * 'round_reveal_question' (index > 0) -> 'round_reveal_answer' (index - 1, settled)
-   * 'round_reveal_question' (index 0) -> 'round_reveal_intro'
-   */
-  retreatCeremony: () => void;
-
-  /**
-   * Abort: clear all ceremony state, jump directly to 'round_summary'.
-   * Scores are preserved -- they were recorded during the round.
-   */
-  abortCeremony: () => void;
 }
 
 export const useGameStore = create<GameStore>()((set) => ({
@@ -186,7 +146,7 @@ export const useGameStore = create<GameStore>()((set) => ({
       const baseUpdate = setDisplayQuestionEngine(state, index);
 
       // Transition audience scene when showing/hiding a question on display.
-      // 'display_question' trigger: waiting → question_anticipation (scene.ts)
+      // 'display_question' trigger: waiting -> question_anticipation (scene.ts)
       if (index !== null && state.audienceScene === 'waiting') {
         return {
           ...baseUpdate,
@@ -244,7 +204,8 @@ export const useGameStore = create<GameStore>()((set) => ({
       const baseUpdate = nextRoundEngine(state);
       return {
         ...baseUpdate,
-        audienceScene: 'waiting' as AudienceScene,
+        // FIX Bug #8: nextRound should go to round_intro, not waiting
+        audienceScene: 'round_intro' as AudienceScene,
         sceneTimestamp: Date.now(),
       };
     });
@@ -303,28 +264,10 @@ export const useGameStore = create<GameStore>()((set) => ({
         updatedState.teamAnswers = [...newState.teamAnswers.map((a) => ({ ...a }))];
       }
 
-      // -- NEW: scoreDeltas array -------------------------------------------
+      // -- scoreDeltas array -------------------------------------------
       // Force new reference so subscribers detect the change.
-      // `undefined` means the sender didn't include this field (partial state);
-      // treat as "no change" rather than "clear to empty".
       if (newState.scoreDeltas !== undefined) {
         updatedState.scoreDeltas = [...(newState.scoreDeltas ?? [])];
-      }
-
-      // -- NEW: revealCeremonyResults nested array --------------------------
-      // The outer object reference is new (from structured clone via BroadcastChannel),
-      // but we also copy the inner questions array so that components subscribed to
-      // ceremony questions via useGameStore((s) => s.revealCeremonyResults?.questions)
-      // get a new reference and re-render correctly.
-      if (newState.revealCeremonyResults !== undefined) {
-        if (newState.revealCeremonyResults === null) {
-          updatedState.revealCeremonyResults = null;
-        } else {
-          updatedState.revealCeremonyResults = {
-            ...newState.revealCeremonyResults,
-            questions: [...newState.revealCeremonyResults.questions],
-          };
-        }
       }
 
       return updatedState;
@@ -361,17 +304,12 @@ export const useGameStore = create<GameStore>()((set) => ({
         emergencyBlank: state.emergencyBlank,
         ttsEnabled: state.ttsEnabled,
 
-        // -- NEW: Scene fields (carry current values) -----------------------
+        // -- Scene fields (carry current values) -----------------------
         audienceScene: state.audienceScene,
         sceneBeforePause: state.sceneBeforePause,
         sceneTimestamp: state.sceneTimestamp,
         scoreDeltas: [],             // Fresh empty array -- no deltas during setup
         revealPhase: state.revealPhase,
-
-        // -- NEW: Ceremony fields (always reset -- no ceremony during setup) -
-        revealCeremonyQuestionIndex: null,
-        revealCeremonyResults: null,
-        revealCeremonyAnswerShown: false,
       };
 
       for (const name of names) {
@@ -385,7 +323,7 @@ export const useGameStore = create<GameStore>()((set) => ({
     set((state) => importQuestionsEngine(state, questions, mode));
   },
 
-  // -- NEW: Scene control actions -------------------------------------------
+  // -- Scene control actions -------------------------------------------
 
   setAudienceScene: (scene: AudienceScene) => {
     set({ audienceScene: scene, sceneTimestamp: Date.now() });
@@ -399,207 +337,6 @@ export const useGameStore = create<GameStore>()((set) => ({
     // Explicit copy ensures Zustand detects reference change even if
     // the caller passes the same array reference across multiple calls.
     set({ scoreDeltas: [...deltas] });
-  },
-
-  updateRevealMode: (mode: 'instant' | 'batch') => {
-    set((state) => {
-      if (state.status !== 'setup' && state.status !== 'between_rounds') {
-        return state;
-      }
-      return { settings: { ...state.settings, revealMode: mode } };
-    });
-    // Persist preference so it survives game reset (settings-store is the
-    // persistence layer; game-store state is not persisted to localStorage).
-    useSettingsStore.getState().updateSetting('revealMode', mode);
-  },
-
-  // -- NEW: Batch reveal ceremony actions -----------------------------------
-
-  startRevealCeremony: () => {
-    set((state) => {
-      if (state.settings.revealMode !== 'batch') return state;
-
-      const roundQuestions = state.questions.filter(
-        (q) => q.roundIndex === state.currentRound
-      );
-
-      // Degenerate: no questions in this round
-      if (roundQuestions.length === 0) {
-        return {
-          audienceScene: 'round_summary' as AudienceScene,
-          sceneTimestamp: Date.now(),
-        };
-      }
-
-      const ceremonyQuestions: import('@/types').RevealCeremonyQuestion[] = roundQuestions.map(
-        (question) => {
-          const globalIndex = state.questions.indexOf(question);
-
-          // Find correct option index: first option key that appears in correctAnswers
-          const correctOptionIndex = question.options.findIndex((opt) =>
-            question.correctAnswers.includes(opt)
-          );
-
-          const teamResults: Record<string, boolean> = {};
-          let teamsCorrect = 0;
-
-          for (const team of state.teams) {
-            const answer = state.teamAnswers.find(
-              (a) => a.teamId === team.id && a.questionId === question.id
-            );
-            const correct = answer?.isCorrect ?? false;
-            teamResults[team.id] = correct;
-            if (correct) teamsCorrect++;
-          }
-
-          return {
-            questionIndex: globalIndex,
-            questionText: question.text,
-            options: question.options,
-            optionTexts: question.optionTexts,
-            correctOptionIndex: correctOptionIndex >= 0 ? correctOptionIndex : 0,
-            explanation: question.explanation ?? null,
-            teamsCorrect,
-            teamsTotal: state.teams.length,
-            teamResults,
-          };
-        }
-      );
-
-      // Compute score deltas for this round
-      const deltas: ScoreDelta[] = state.teams.map((team) => {
-        const correctCount = ceremonyQuestions.reduce(
-          (sum, q) => sum + (q.teamResults[team.id] ? 1 : 0),
-          0,
-        );
-        return {
-          teamId: team.id,
-          teamName: team.name,
-          delta: correctCount,
-          newScore: team.score,
-          newRank: 0,
-          previousRank: 0,
-        };
-      });
-
-      // Compute current ranks (by newScore descending)
-      const byNew = [...deltas].sort((a, b) => b.newScore - a.newScore);
-      byNew.forEach((d, i) => { d.newRank = i + 1; });
-
-      // Compute previous ranks (by score before this round)
-      const byPrev = [...deltas].sort(
-        (a, b) => (b.newScore - b.delta) - (a.newScore - a.delta),
-      );
-      byPrev.forEach((d, i) => { d.previousRank = i + 1; });
-
-      return {
-        revealCeremonyResults: { roundIndex: state.currentRound, questions: ceremonyQuestions },
-        revealCeremonyQuestionIndex: 0,
-        revealCeremonyAnswerShown: false,
-        audienceScene: 'round_reveal_intro' as AudienceScene,
-        sceneTimestamp: Date.now(),
-        scoreDeltas: deltas,
-      };
-    });
-  },
-
-  advanceCeremony: () => {
-    set((state) => {
-      const { audienceScene, revealCeremonyQuestionIndex, revealCeremonyResults } = state;
-      if (!revealCeremonyResults) return state;
-
-      const total = revealCeremonyResults.questions.length;
-      const idx = revealCeremonyQuestionIndex ?? 0;
-
-      switch (audienceScene) {
-        case 'round_reveal_intro':
-          return {
-            audienceScene: 'round_reveal_question' as AudienceScene,
-            revealCeremonyQuestionIndex: 0,
-            revealCeremonyAnswerShown: false,
-            sceneTimestamp: Date.now(),
-          };
-
-        case 'round_reveal_question':
-          return {
-            audienceScene: 'round_reveal_answer' as AudienceScene,
-            revealCeremonyAnswerShown: true,
-            sceneTimestamp: Date.now(),
-          };
-
-        case 'round_reveal_answer': {
-          const next = idx + 1;
-          if (next < total) {
-            return {
-              audienceScene: 'round_reveal_question' as AudienceScene,
-              revealCeremonyQuestionIndex: next,
-              revealCeremonyAnswerShown: false,
-              sceneTimestamp: Date.now(),
-            };
-          }
-          // Last question: ceremony complete
-          return {
-            audienceScene: 'round_summary' as AudienceScene,
-            revealCeremonyQuestionIndex: null,
-            revealCeremonyResults: null,
-            revealCeremonyAnswerShown: false,
-            sceneTimestamp: Date.now(),
-          };
-        }
-
-        default:
-          return state;
-      }
-    });
-  },
-
-  retreatCeremony: () => {
-    set((state) => {
-      const { audienceScene, revealCeremonyQuestionIndex, revealCeremonyResults } = state;
-      if (!revealCeremonyResults) return state;
-
-      const idx = revealCeremonyQuestionIndex ?? 0;
-
-      switch (audienceScene) {
-        case 'round_reveal_answer':
-          // Step back to the question display (same index)
-          return {
-            audienceScene: 'round_reveal_question' as AudienceScene,
-            revealCeremonyAnswerShown: false,
-            sceneTimestamp: Date.now(),
-          };
-
-        case 'round_reveal_question':
-          if (idx === 0) {
-            // First question: step back to the "ANSWERS" intro card
-            return {
-              audienceScene: 'round_reveal_intro' as AudienceScene,
-              revealCeremonyAnswerShown: false,
-              sceneTimestamp: Date.now(),
-            };
-          }
-          // Step back to previous question's revealed answer in settled state.
-          return {
-            audienceScene: 'round_reveal_answer' as AudienceScene,
-            revealCeremonyQuestionIndex: idx - 1,
-            revealCeremonyAnswerShown: true,
-            sceneTimestamp: Date.now(),
-          };
-
-        default:
-          return state;
-      }
-    });
-  },
-
-  abortCeremony: () => {
-    set({
-      audienceScene: 'round_summary' as AudienceScene,
-      revealCeremonyQuestionIndex: null,
-      revealCeremonyResults: null,
-      revealCeremonyAnswerShown: false,
-      sceneTimestamp: Date.now(),
-    });
   },
 }));
 
@@ -619,15 +356,8 @@ export function useGameSelectors() {
   const teamAnswers = useGameStore((state) => state.teamAnswers);
   const settings = useGameStore((state) => state.settings);
 
-  // NEW: Scene layer subscriptions
+  // Scene layer subscriptions
   const audienceScene = useGameStore((state) => state.audienceScene);
-  const revealCeremonyQuestionIndex = useGameStore(
-    (state) => state.revealCeremonyQuestionIndex
-  );
-  const revealCeremonyResults = useGameStore((state) => state.revealCeremonyResults);
-  const revealCeremonyAnswerShown = useGameStore(
-    (state) => state.revealCeremonyAnswerShown
-  );
   const revealPhase = useGameStore((state) => state.revealPhase);
 
   // CRITICAL FIX (BEA-374): Build state object from reactive subscriptions
@@ -651,17 +381,12 @@ export function useGameSelectors() {
     emergencyBlank: false,           // Not used by any selector
     ttsEnabled: false,               // Not used by any selector
 
-    // -- NEW: Scene fields --------------------------------------------------
+    // -- Scene fields --------------------------------------------------
     audienceScene,
     sceneBeforePause: null,          // Not used for selector computation
     sceneTimestamp: 0,               // Not used for selector computation
     scoreDeltas: [],                 // Not used for selector computation
     revealPhase,
-
-    // -- NEW: Ceremony fields -----------------------------------------------
-    revealCeremonyQuestionIndex,
-    revealCeremonyResults,
-    revealCeremonyAnswerShown,
   };
 
   return {
@@ -684,46 +409,22 @@ export function useGameSelectors() {
     canPause: status === 'playing' || status === 'between_rounds',
     canResume: status === 'paused',
 
-    // -- NEW: Scene layer ---------------------------------------------------
+    // -- Scene layer ---------------------------------------------------
     /** Current audience display scene. */
     audienceScene,
 
-    /** True when any reveal-related scene is active (instant or batch). */
-    isRevealActive: (
-      audienceScene === 'answer_reveal' ||
-      audienceScene === 'round_reveal_intro' ||
-      audienceScene === 'round_reveal_question' ||
-      audienceScene === 'round_reveal_answer'
-    ),
+    /** True when answer_reveal scene is active. */
+    isRevealActive: audienceScene === 'answer_reveal',
 
     /** True when the current scene has an auto-advance timer running. */
     isSceneTimedAutoAdvance: (
       audienceScene === 'game_intro' ||
       audienceScene === 'round_intro' ||
       audienceScene === 'question_anticipation' ||
-      audienceScene === 'question_transition' ||
-      audienceScene === 'round_reveal_intro' ||
       audienceScene === 'answer_reveal' ||
       audienceScene === 'score_flash' ||
       audienceScene === 'final_buildup'
     ),
-
-    /** True when the batch reveal ceremony is in progress. */
-    isCeremonyActive: (
-      revealCeremonyResults !== null &&
-      (
-        audienceScene === 'round_reveal_intro' ||
-        audienceScene === 'round_reveal_question' ||
-        audienceScene === 'round_reveal_answer'
-      )
-    ),
-
-    /** The RevealCeremonyQuestion at the current ceremony index, or null. */
-    currentCeremonyQuestion: (
-      revealCeremonyResults !== null && revealCeremonyQuestionIndex !== null
-        ? (revealCeremonyResults.questions[revealCeremonyQuestionIndex] ?? null)
-        : null
-    ) as RevealCeremonyQuestion | null,
   };
 }
 

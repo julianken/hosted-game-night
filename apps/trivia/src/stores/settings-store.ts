@@ -20,7 +20,6 @@ export interface SettingsState {
   timerVisible: boolean; // default true
   timerAutoReveal: boolean; // default true - auto-reveal answer when timer reaches 0
   ttsEnabled: boolean; // default false
-  revealMode: 'instant' | 'batch'; // default 'batch' -- pub quiz style
 
   // Team persistence
   lastTeamSetup: TeamSetup | null;
@@ -50,7 +49,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
   timerVisible: true,
   timerAutoReveal: true,
   ttsEnabled: false,
-  revealMode: 'batch',  // pub quiz style is the primary use case
   lastTeamSetup: null,
 };
 
@@ -116,7 +114,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'trivia-settings',
-      version: 2,  // BUMPED from 1 -- added revealMode
+      version: 3,  // BUMPED from 2 -- removed revealMode (BEA-582)
       // Only persist certain fields, excluding methods
       partialize: (state) => ({
         roundsCount: state.roundsCount,
@@ -126,21 +124,18 @@ export const useSettingsStore = create<SettingsStore>()(
         timerVisible: state.timerVisible,
         timerAutoReveal: state.timerAutoReveal,
         ttsEnabled: state.ttsEnabled,
-        revealMode: state.revealMode,  // NEW -- add to persist list
         lastTeamSetup: state.lastTeamSetup,
       }),
-      // Migration from version 1 to version 2
       // Zustand persist calls migrate(storedData, storedVersion) when
       // the stored version is less than the current version.
       migrate: (persistedState: unknown, fromVersion: number) => {
         const stored = persistedState as Record<string, unknown>;
 
-        if (fromVersion === 1) {
-          // Version 1 had no revealMode. Add the new default.
-          return {
-            ...stored,
-            revealMode: 'batch' as const,
-          };
+        if (fromVersion <= 2) {
+          // v1 had no revealMode; v2 added it. Either way, strip it out.
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { revealMode: _rm, ...rest } = stored;
+          return rest;
         }
 
         // Unknown version: return as-is and let Zustand merge with SETTINGS_DEFAULTS.
@@ -162,7 +157,6 @@ export function useSettings() {
     timerAutoStart: state.timerAutoStart,
     timerVisible: state.timerVisible,
     ttsEnabled: state.ttsEnabled,
-    revealMode: state.revealMode,  // NEW
   })));
 }
 
