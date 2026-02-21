@@ -51,7 +51,7 @@ const mockGetE2EAuthorization = vi.fn();
 const mockUpdateE2EAuthorization = vi.fn();
 const mockGetE2EClient = vi.fn();
 vi.mock('@/lib/oauth/e2e-store', () => ({
-  E2E_TEST_USER_ID: 'e2e-test-user-00000000-0000-0000-0000-000000000000',
+  E2E_TEST_USER_ID: '00000000-0000-4000-a000-000000000e2e',
   getE2EAuthorization: (...args: unknown[]) => mockGetE2EAuthorization(...args),
   updateE2EAuthorization: (...args: unknown[]) => mockUpdateE2EAuthorization(...args),
   getE2EClient: (...args: unknown[]) => mockGetE2EClient(...args),

@@ -23,7 +23,7 @@ if (process.env.E2E_TESTING === 'true' && process.env.VERCEL === '1') {
 
 // E2E Testing constants
 const E2E_TEST_EMAIL = 'e2e-test@joolie-boolie.test';
-const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
+const E2E_TEST_USER_ID = '00000000-0000-4000-a000-000000000e2e';
 
 // E2E Testing: Secret loaded from environment variable (never hardcoded)
 function getE2EJwtSecret(): Uint8Array {

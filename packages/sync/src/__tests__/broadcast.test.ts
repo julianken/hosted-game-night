@@ -299,18 +299,48 @@ describe('BroadcastSync', () => {
     });
   });
 
+  describe('onConnectionChange callback', () => {
+    it('should call onConnectionChange when initialized', () => {
+      const onConnectionChange = vi.fn();
+      const sync = new BroadcastSync('test-channel', { onConnectionChange });
+
+      sync.initialize();
+      expect(onConnectionChange).toHaveBeenCalledWith('connected');
+    });
+
+    it('should call onConnectionChange when closed', () => {
+      const onConnectionChange = vi.fn();
+      const sync = new BroadcastSync('test-channel', { onConnectionChange });
+
+      sync.initialize();
+      onConnectionChange.mockClear();
+
+      sync.close();
+      expect(onConnectionChange).toHaveBeenCalledWith('disconnected');
+    });
+
+    it('should call onConnectionChange with error on failed initialization', () => {
+      // @ts-expect-error - Testing unsupported environment
+      delete globalThis.BroadcastChannel;
+
+      const onConnectionChange = vi.fn();
+      const sync = new BroadcastSync('test-channel', { onConnectionChange });
+      sync.initialize();
+
+      expect(onConnectionChange).toHaveBeenCalledWith('error');
+      mockBroadcastChannel();
+    });
+  });
+
   describe('error observability', () => {
-    it('should call onError when send fails on uninitialized channel', () => {
+    it('should silently skip send on uninitialized channel (not an error)', () => {
       const onError = vi.fn();
       const sync = new BroadcastSync('test-channel', { onError });
 
       sync.send('TEST', { data: 'test' });
 
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-        code: 'CHANNEL_UNAVAILABLE',
-        message: expect.stringContaining('channel not initialized'),
-      }));
+      // Should NOT call onError — sending before init is an expected timing condition
+      expect(onError).not.toHaveBeenCalled();
     });
 
     it('should call onError when initialization fails', () => {
@@ -409,29 +439,36 @@ describe('BroadcastSync', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should use provided onError callback', () => {
+    it('should use provided onError callback on actual errors', () => {
       const onError = vi.fn();
       const sync = createDebugBroadcastSync('debug-channel', onError);
+      sync.initialize();
 
-      // Trigger an error by sending before initialization
-      sync.send('TEST', { data: 'test' });
+      // Subscribe a failing handler to trigger a real error
+      sync.subscribe(() => { throw new Error('test error'); });
+
+      // Send a message — the handler error should trigger onError
+      const sender = createDebugBroadcastSync('debug-channel');
+      sender.initialize();
+      sender.send('TEST', { data: 'test' });
 
       expect(onError).toHaveBeenCalled();
     });
 
-    it('should use default error handler when none provided', () => {
+    it('should use default error handler on actual errors', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const sync = createDebugBroadcastSync('debug-channel');
-      sync.send('TEST', { data: 'test' });
+      sync.initialize();
+
+      // Subscribe a failing handler to trigger a real error
+      sync.subscribe(() => { throw new Error('test error'); });
+
+      const sender = createDebugBroadcastSync('debug-channel');
+      sender.initialize();
+      sender.send('TEST', { data: 'test' });
 
       expect(consoleErrorSpy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[BroadcastSync Debug]',
-        expect.any(String),
-        expect.any(String),
-        expect.any(Object)
-      );
 
       consoleErrorSpy.mockRestore();
     });

@@ -147,6 +147,9 @@ export class SyncHeartbeat<TPayload = unknown> {
    * Send a heartbeat message containing the current state hash.
    */
   private sendHeartbeat(): void {
+    if (!this.broadcastSync.connected) {
+      return;
+    }
     const state = this.getState();
     const hash = computeStateHash(state);
 

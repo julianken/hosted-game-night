@@ -10,7 +10,7 @@
 
 // E2E Testing constants (must match across all OAuth endpoints)
 export const E2E_TEST_EMAIL = 'e2e-test@joolie-boolie.test';
-export const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
+export const E2E_TEST_USER_ID = '00000000-0000-4000-a000-000000000e2e';
 
 // E2E Mock OAuth clients (matches migration data)
 // Includes localhost (dev), Vercel preview (staging), and custom domain (production) URLs

@@ -107,6 +107,8 @@ export interface BroadcastSyncOptions {
    * Provides the elapsed time since the last received message.
    */
   onTimeout?: (elapsedMs: number) => void;
+  /** Called whenever connection state transitions (e.g. connected, disconnected, error). */
+  onConnectionChange?: (state: ConnectionState) => void;
 }
 
 /**

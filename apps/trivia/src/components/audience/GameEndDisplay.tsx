@@ -37,7 +37,8 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
 
   return (
     <section
-      className="flex flex-col items-center h-full min-h-[60vh] gap-8 py-6 px-4"
+      className="flex flex-col items-center h-full w-full"
+      style={{ gap: 'clamp(16px, 2.5vh, 36px)', padding: '2vh 3vw' }}
       role="region"
       aria-label="Final game results"
     >
@@ -47,12 +48,12 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
       </div>
 
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center flex-shrink-0">
         <h1
           className="font-bold text-foreground"
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+            fontSize: 'clamp(3rem, 7vw, 6rem)',
             letterSpacing: '-0.03em',
           }}
         >
@@ -61,7 +62,10 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
       </div>
 
       {/* Podium: 2nd | 1st | 3rd */}
-      <div className="flex items-end justify-center gap-4 w-full max-w-4xl">
+      <div
+        className="flex items-end justify-center w-full"
+        style={{ gap: 'clamp(12px, 1.5vw, 28px)', maxWidth: '90vw', flex: '1', minHeight: 0 }}
+      >
 
         {/* 2nd place — left flanking */}
         {second && secondColor && (
@@ -72,29 +76,35 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
             transition={shouldReduceMotion ? { duration: 0 } : { ...springSceneTransition, delay: 0.3 }}
             role="article"
             aria-label={`2nd place: ${second.name} with ${second.score} points`}
-            className="flex-1 max-w-xs flex flex-col items-center text-center rounded-2xl overflow-hidden"
+            className="flex-1 flex flex-col items-center text-center overflow-hidden"
             style={{
               background: secondColor.subtle,
-              border: `2px solid ${secondColor.border}`,
-              padding: '24px 16px',
+              border: `clamp(2px, 0.2vw, 4px) solid ${secondColor.border}`,
+              padding: 'clamp(20px, 3vh, 40px) clamp(12px, 1.5vw, 28px)',
               alignSelf: 'flex-end',
-              minHeight: '200px',
+              minHeight: 'clamp(160px, 22vh, 280px)',
+              maxWidth: '30vw',
+              borderRadius: 'clamp(16px, 1.5vw, 28px)',
             }}
           >
             <span
-              className="font-bold mb-1"
+              className="font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+                fontSize: 'clamp(1.25rem, 2.5vw, 2rem)',
                 color: secondColor.bg,
+                marginBottom: 'clamp(4px, 0.5vh, 12px)',
               }}
               aria-hidden="true"
             >
               2ND
             </span>
             <h3
-              className="font-bold text-foreground mb-2"
-              style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.875rem)' }}
+              className="font-bold text-foreground"
+              style={{
+                fontSize: 'clamp(1.5rem, 3vw, 2.75rem)',
+                marginBottom: 'clamp(4px, 0.5vh, 12px)',
+              }}
             >
               {second.name}
             </h3>
@@ -103,7 +113,7 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
               className="font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                fontSize: 'clamp(2rem, 3.5vw, 3rem)',
                 color: secondColor.bg,
               }}
             />
@@ -120,23 +130,26 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
             transition={shouldReduceMotion ? { duration: 0 } : { ...springSceneTransition, delay: 0.1 }}
             role="article"
             aria-label={`Winner: ${winner.name} with ${winner.score} points`}
-            className="flex-1 max-w-sm flex flex-col items-center text-center rounded-2xl overflow-hidden"
+            className="flex-1 flex flex-col items-center text-center overflow-hidden"
             style={{
               background: winnerColor.subtle,
-              border: `3px solid ${winnerColor.border}`,
-              boxShadow: shouldReduceMotion ? 'none' : `0 0 40px 12px ${winnerColor.glow}`,
-              padding: '32px 20px',
-              minHeight: '280px',
+              border: `clamp(3px, 0.3vw, 5px) solid ${winnerColor.border}`,
+              boxShadow: shouldReduceMotion ? 'none' : `0 0 60px 20px ${winnerColor.glow}`,
+              padding: 'clamp(28px, 4vh, 56px) clamp(16px, 2vw, 36px)',
+              minHeight: 'clamp(220px, 32vh, 400px)',
+              maxWidth: '36vw',
+              borderRadius: 'clamp(16px, 1.5vw, 28px)',
             }}
           >
             {/* WINNER label — NO emoji */}
             <span
-              className="font-bold tracking-widest uppercase mb-2"
+              className="font-bold tracking-widest uppercase"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+                fontSize: 'clamp(1.25rem, 2.5vw, 2rem)',
                 color: winnerColor.bg,
                 letterSpacing: '0.12em',
+                marginBottom: 'clamp(4px, 0.5vh, 12px)',
               }}
               aria-hidden="true"
             >
@@ -145,8 +158,12 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
 
             {/* Crown icon (SVG, not emoji) */}
             <svg
-              className="mb-3"
-              style={{ width: '48px', height: '48px', color: winnerColor.bg }}
+              style={{
+                width: 'clamp(48px, 6vh, 80px)',
+                height: 'clamp(48px, 6vh, 80px)',
+                color: winnerColor.bg,
+                marginBottom: 'clamp(8px, 1vh, 20px)',
+              }}
               fill="currentColor"
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -155,11 +172,12 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
             </svg>
 
             <h2
-              className="font-bold text-foreground mb-3"
+              className="font-bold text-foreground"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1.75rem, 3.5vw, 3rem)',
+                fontSize: 'clamp(2.25rem, 4.5vw, 4rem)',
                 letterSpacing: '-0.02em',
+                marginBottom: 'clamp(8px, 1vh, 20px)',
               }}
             >
               {winner.name}
@@ -169,14 +187,14 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
               className="font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
                 color: winnerColor.bg,
               }}
             />
             <span className="sr-only">points</span>
             <p
-              className="mt-1 text-foreground-secondary"
-              style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}
+              className="text-foreground-secondary"
+              style={{ fontSize: 'clamp(1.25rem, 2vw, 1.75rem)', marginTop: 'clamp(2px, 0.3vh, 8px)' }}
               aria-hidden="true"
             >
               points
@@ -193,29 +211,35 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
             transition={shouldReduceMotion ? { duration: 0 } : { ...springSceneTransition, delay: 0.5 }}
             role="article"
             aria-label={`3rd place: ${third.name} with ${third.score} points`}
-            className="flex-1 max-w-xs flex flex-col items-center text-center rounded-2xl overflow-hidden"
+            className="flex-1 flex flex-col items-center text-center overflow-hidden"
             style={{
               background: thirdColor.subtle,
-              border: `2px solid ${thirdColor.border}`,
-              padding: '24px 16px',
+              border: `clamp(2px, 0.2vw, 4px) solid ${thirdColor.border}`,
+              padding: 'clamp(20px, 3vh, 40px) clamp(12px, 1.5vw, 28px)',
               alignSelf: 'flex-end',
-              minHeight: '180px',
+              minHeight: 'clamp(140px, 18vh, 240px)',
+              maxWidth: '28vw',
+              borderRadius: 'clamp(16px, 1.5vw, 28px)',
             }}
           >
             <span
-              className="font-bold mb-1"
+              className="font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+                fontSize: 'clamp(1.25rem, 2.5vw, 2rem)',
                 color: thirdColor.bg,
+                marginBottom: 'clamp(4px, 0.5vh, 12px)',
               }}
               aria-hidden="true"
             >
               3RD
             </span>
             <h3
-              className="font-bold text-foreground mb-2"
-              style={{ fontSize: 'clamp(1.125rem, 2vw, 1.75rem)' }}
+              className="font-bold text-foreground"
+              style={{
+                fontSize: 'clamp(1.5rem, 2.5vw, 2.5rem)',
+                marginBottom: 'clamp(4px, 0.5vh, 12px)',
+              }}
             >
               {third.name}
             </h3>
@@ -224,7 +248,7 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
               className="font-bold"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1.25rem, 2.5vw, 2rem)',
+                fontSize: 'clamp(1.75rem, 3vw, 2.75rem)',
                 color: thirdColor.bg,
               }}
             />
@@ -235,21 +259,21 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
 
       {/* Other teams */}
       {otherTeams.length > 0 && (
-        <div className="w-full max-w-3xl px-4">
+        <div className="w-full flex-shrink-0" style={{ maxWidth: '80vw', padding: '0 2vw' }}>
           <h3
             id="other-participants-heading"
-            className="font-semibold text-foreground-secondary text-center mb-4"
-            style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.125rem)' }}
+            className="font-semibold text-foreground-secondary text-center"
+            style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)', marginBottom: 'clamp(8px, 1vh, 20px)' }}
           >
             Other Participants
           </h3>
           <motion.ul
-            className="space-y-2"
             role="list"
             aria-labelledby="other-participants-heading"
             variants={scoreboardRowStagger}
             initial={shouldReduceMotion ? 'visible' : 'hidden'}
             animate="visible"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 0.8vh, 16px)' }}
           >
             <AnimatePresence>
               {otherTeams.map((team, index) => {
@@ -259,25 +283,26 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
                     key={team.id}
                     variants={scoreboardRow}
                     transition={shouldReduceMotion ? { duration: 0 } : { delay: index * 0.07 }}
-                    className="flex items-center justify-between rounded-xl overflow-hidden"
+                    className="flex items-center justify-between overflow-hidden"
                     style={{
                       background: 'rgba(26, 23, 32, 0.6)',
-                      borderLeft: `3px solid ${teamColor.bg}`,
-                      padding: '12px 20px',
+                      borderLeft: `clamp(4px, 0.4vw, 6px) solid ${teamColor.bg}`,
+                      padding: 'clamp(10px, 1.5vh, 24px) clamp(16px, 2vw, 32px)',
+                      borderRadius: 'clamp(12px, 1.2vw, 20px)',
                     }}
                     aria-label={`${index + 4}th place: ${team.name} with ${team.score} points`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center" style={{ gap: 'clamp(8px, 1vw, 20px)' }}>
                       <span
-                        className="font-semibold text-foreground-secondary w-8"
-                        style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.125rem)' }}
+                        className="font-semibold text-foreground-secondary"
+                        style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)', minWidth: 'clamp(28px, 3vw, 48px)' }}
                         aria-hidden="true"
                       >
                         {index + 4}.
                       </span>
                       <span
                         className="font-medium text-foreground"
-                        style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}
+                        style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}
                       >
                         {team.name}
                       </span>
@@ -286,7 +311,7 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
                       value={team.score}
                       className="font-semibold"
                       style={{
-                        fontSize: 'clamp(1rem, 2vw, 1.5rem)',
+                        fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)',
                         color: teamColor.bg,
                       }}
                     />
@@ -300,10 +325,10 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
 
       {/* No teams */}
       {teams.length === 0 && (
-        <div className="text-center py-8" role="status">
+        <div className="text-center" role="status" style={{ padding: '4vh 0' }}>
           <p
             className="text-foreground-secondary"
-            style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}
+            style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}
           >
             No teams participated
           </p>
@@ -311,10 +336,10 @@ export function GameEndDisplay({ teams }: GameEndDisplayProps) {
       )}
 
       {/* Thank you — no emojis */}
-      <div className="text-center mt-4">
+      <div className="text-center flex-shrink-0">
         <p
           className="text-foreground-secondary"
-          style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}
+          style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}
         >
           Thanks for playing!
         </p>

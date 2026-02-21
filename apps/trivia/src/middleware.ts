@@ -85,6 +85,12 @@ export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get('jb_refresh_token')?.value;
 
   if (!accessToken) {
+    // E2E dev bypass: skip auth when E2E_TESTING=true and no cookie present
+    // This allows browser-based local dev without going through OAuth
+    if (process.env.E2E_TESTING === 'true') {
+      return NextResponse.next();
+    }
+
     // No token - redirect to login with return path stored
     const loginUrl = new URL('/', request.url);
     const response = NextResponse.redirect(loginUrl);

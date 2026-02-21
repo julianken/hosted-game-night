@@ -111,7 +111,17 @@ export async function getApiUser(request: {
   cookies: { get: (name: string) => { value: string } | undefined };
 }): Promise<ApiUser | null> {
   const token = request.cookies.get('jb_access_token')?.value;
-  if (!token) return null;
+  if (!token) {
+    // E2E dev bypass: return a test user when no cookie is present
+    // This allows browser-based local dev without going through OAuth
+    if (process.env.E2E_TESTING === 'true') {
+      return {
+        id: '00000000-0000-4000-a000-000000000e2e',
+        email: 'e2e-test@joolie-boolie.test',
+      };
+    }
+    return null;
+  }
 
   const chain = getVerificationChain();
 

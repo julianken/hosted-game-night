@@ -104,6 +104,7 @@ export class BroadcastSync<TPayload = unknown> {
     const previousState = this._connectionState;
     this._connectionState = state;
     this.log(`Connection state changed: ${previousState} -> ${state}`);
+    this.options.onConnectionChange?.(state);
   }
 
   /**
@@ -367,11 +368,7 @@ export class BroadcastSync<TPayload = unknown> {
    */
   send(type: string, payload: TPayload | null): void {
     if (!this.channel) {
-      this.handleError({
-        code: 'CHANNEL_UNAVAILABLE',
-        message: 'Cannot send message: channel not initialized',
-        context: { messageType: type },
-      });
+      this.log('Send skipped: channel not initialized', { messageType: type });
       return;
     }
 

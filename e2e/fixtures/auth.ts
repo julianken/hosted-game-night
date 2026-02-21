@@ -495,7 +495,7 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         } else {
           // Fallback: Set test cookies if server didn't set them properly
           // This matches the E2E test user data from the login API
-          const e2eTestUserId = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
+          const e2eTestUserId = '00000000-0000-4000-a000-000000000e2e';
           const e2eTestToken = 'e2e-fallback-access-token';
           console.log('[Auth Fixture] Setting fallback E2E auth cookies');
           await page.context().addCookies([

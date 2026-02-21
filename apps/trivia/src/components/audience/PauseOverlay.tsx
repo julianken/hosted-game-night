@@ -37,11 +37,21 @@ export function PauseOverlay({ emergencyBlank = false, timer }: PauseOverlayProp
       aria-live="polite"
       aria-label="Game paused"
     >
-      {/* Pause icon */}
-      <div className="mb-8">
-        <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full bg-warning/20 flex items-center justify-center">
+      {/* Pause icon — large enough for back-of-room visibility */}
+      <div style={{ marginBottom: 'clamp(24px, 3vh, 48px)' }}>
+        <div
+          className="rounded-full bg-warning/20 flex items-center justify-center"
+          style={{
+            width: 'clamp(120px, 16vh, 220px)',
+            height: 'clamp(120px, 16vh, 220px)',
+          }}
+        >
           <svg
-            className="w-16 h-16 lg:w-20 lg:h-20 text-warning"
+            className="text-warning"
+            style={{
+              width: 'clamp(56px, 8vh, 110px)',
+              height: 'clamp(56px, 8vh, 110px)',
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
             aria-hidden="true"
@@ -51,29 +61,64 @@ export function PauseOverlay({ emergencyBlank = false, timer }: PauseOverlayProp
         </div>
       </div>
 
-      {/* Main message */}
-      <h1 className="text-5xl lg:text-7xl font-bold text-foreground mb-4">
+      {/* Main message — auditorium-scale text */}
+      <h1
+        className="font-bold text-foreground"
+        style={{
+          fontSize: 'clamp(3.5rem, 8vw, 7rem)',
+          fontFamily: 'var(--font-display)',
+          marginBottom: 'clamp(8px, 1vh, 20px)',
+        }}
+      >
         Game Paused
       </h1>
 
-      <p className="text-2xl lg:text-3xl text-muted-foreground mb-8">
+      <p
+        className="text-muted-foreground"
+        style={{
+          fontSize: 'clamp(1.75rem, 3.5vw, 3.5rem)',
+          marginBottom: 'clamp(20px, 3vh, 48px)',
+        }}
+      >
         Waiting for the host to resume...
       </p>
 
       {/* Timer display (if timer was active) */}
       {timer && timer.remaining < timer.duration && (
-        <div className="bg-muted/20 rounded-2xl px-8 py-4 border border-border">
-          <p className="text-xl text-muted-foreground mb-2">Timer frozen at</p>
-          <p className="text-5xl lg:text-6xl font-mono font-bold text-warning">
+        <div
+          className="bg-muted/20 border border-border"
+          style={{
+            borderRadius: 'clamp(16px, 1.5vw, 28px)',
+            padding: 'clamp(16px, 2.5vh, 40px) clamp(28px, 4vw, 64px)',
+          }}
+        >
+          <p
+            className="text-muted-foreground"
+            style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)', marginBottom: 'clamp(4px, 0.5vh, 12px)' }}
+          >
+            Timer frozen at
+          </p>
+          <p
+            className="font-mono font-bold text-warning"
+            style={{ fontSize: 'clamp(3.5rem, 7vw, 6rem)' }}
+          >
             {formatTime(timer.remaining)}
           </p>
         </div>
       )}
 
       {/* Pulsing indicator */}
-      <div className="mt-12 flex items-center gap-3">
-        <div className="w-4 h-4 rounded-full bg-warning animate-pulse motion-reduce:animate-none" />
-        <span className="text-xl text-muted-foreground">Paused</span>
+      <div className="flex items-center" style={{ marginTop: 'clamp(24px, 4vh, 56px)', gap: 'clamp(8px, 1vw, 16px)' }}>
+        <div
+          className="rounded-full bg-warning animate-pulse motion-reduce:animate-none"
+          style={{ width: 'clamp(12px, 1.5vh, 20px)', height: 'clamp(12px, 1.5vh, 20px)' }}
+        />
+        <span
+          className="text-muted-foreground"
+          style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2.25rem)' }}
+        >
+          Paused
+        </span>
       </div>
     </div>
   );

@@ -27,13 +27,13 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
 
   return (
     <div
-      className={`flex flex-col items-center justify-center h-full min-h-[60vh] gap-8 text-center relative overflow-hidden ${
+      className={`flex flex-col items-center justify-center h-full text-center relative overflow-hidden ${
         shouldReduceMotion ? '' : 'trivia-ambient-bg'
       }`}
       role="status"
       aria-live="polite"
       aria-label={message}
-      style={shouldReduceMotion ? { background: '#0a0b14' } : undefined}
+      style={shouldReduceMotion ? { background: '#0a0b14', gap: '4vh' } : { gap: '4vh' }}
     >
       {/* Large "Trivia" wordmark with breathing animation */}
       <div
@@ -45,7 +45,7 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
           className="font-bold text-foreground"
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(5rem, 15vw, 12rem)',
+            fontSize: 'clamp(6rem, 18vw, 16rem)',
             lineHeight: 1,
             letterSpacing: '-0.04em',
             background: 'linear-gradient(135deg, #4F7BF7 0%, #7E52E4 60%, #A78BFA 100%)',
@@ -60,10 +60,10 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
 
       {/* Room code — displayed prominently (Issue 2.5) */}
       {roomCode && (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center" style={{ gap: 'clamp(6px, 1vh, 16px)' }}>
           <span
             className="text-foreground-secondary font-medium uppercase tracking-widest"
-            style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)', letterSpacing: '0.15em' }}
+            style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)', letterSpacing: '0.15em' }}
           >
             Room Code
           </span>
@@ -71,8 +71,8 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
             className="font-bold text-foreground font-mono"
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(3rem, 8vw, 6rem)',
-              letterSpacing: '0.05em',
+              fontSize: 'clamp(4rem, 10vw, 8rem)',
+              letterSpacing: '0.08em',
               background: 'linear-gradient(135deg, #4F7BF7 0%, #7E52E4 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -85,7 +85,7 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
           {/* Join URL (Issue 2.5) */}
           <p
             className="text-foreground-secondary font-medium"
-            style={{ fontSize: 'clamp(1rem, 2vw, 1.5rem)' }}
+            style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}
           >
             trivia.joolie-boolie.com/join
           </p>
@@ -93,27 +93,36 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
       )}
 
       {/* Status message + spinner / dot */}
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center" style={{ gap: 'clamp(12px, 2vh, 24px)' }}>
         {shouldReduceMotion ? (
           <div
-            className="w-4 h-4 rounded-full bg-primary"
+            className="rounded-full bg-primary"
+            style={{ width: 'clamp(8px, 1vh, 16px)', height: 'clamp(8px, 1vh, 16px)' }}
             aria-hidden="true"
           />
         ) : (
           <div
-            className="w-16 h-16 rounded-full border-4 border-border border-t-primary animate-spin motion-reduce:animate-none"
+            className="rounded-full animate-spin motion-reduce:animate-none"
+            style={{
+              width: 'clamp(48px, 6vh, 80px)',
+              height: 'clamp(48px, 6vh, 80px)',
+              borderWidth: 'clamp(4px, 0.5vh, 8px)',
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              borderTopColor: 'var(--primary)',
+            }}
             aria-hidden="true"
           />
         )}
         <p
           className="text-foreground-secondary font-medium"
-          style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}
+          style={{ fontSize: 'clamp(1.75rem, 3.5vw, 3rem)' }}
         >
           {message}
         </p>
         <p
           className="text-foreground-secondary"
-          style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}
+          style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)' }}
         >
           The game will appear here when the presenter is ready.
         </p>

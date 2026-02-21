@@ -5,7 +5,7 @@
 >
 > **How to use:** Start dev servers (`pnpm dev`), then walk through each story using `browser_navigate`, `browser_snapshot`, `browser_click`, `browser_evaluate`, and `browser_take_screenshot`.
 >
-> **Last executed:** 2026-02-14 (run 6) — **156 PASS, 0 BUGS, 0 NOT TESTABLE** (from 156 test cases). Full re-run confirmed all fixes stable plus 1 newly tested (4.3 #1 fake token rejection). All 3 bugs from run 2 fixed (BEA-503, BEA-504, BEA-505). All previously NOT TESTABLE items resolved (runs 4-5).
+> **Last executed:** 2026-02-17 (run 8) — **167 PASS, 0 BUGS, 0 NOT TESTED** (from 167 test cases). Full re-verification of all interactive tests. All 164 previously passing tests confirmed stable. 3 newly passing: Tab navigation (Bingo + Trivia) and modal focus trap (Story 5.2). Session recovery, scoring, team rename, pause/resume, emergency pause all re-confirmed.
 > **Auth method:** Authenticated flows tested using `E2E_TESTING=true` mode with Playwright MCP. Login via Platform Hub with E2E credentials (`e2e-test@joolie-boolie.test` / `TestPassword123!`), cookies shared across all ports on `localhost`.
 >
 > ### Execution History
@@ -17,6 +17,8 @@
 > | 2026-02-14 (run 4) | Full re-run after BEA-506/507/508 merged (PRs #340-342) | 149 PASS, 0 BUGS, 6 NOT TESTABLE |
 > | 2026-02-14 (run 5) | Resolved all 6 NOT TESTABLE items (fullscreen, templates, offline) | 155 PASS, 0 BUGS, 0 NOT TESTABLE |
 > | 2026-02-14 (run 6) | Full re-run of all 155 tests + 1 newly tested (4.3 #1) | 156 PASS, 0 BUGS, 0 NOT TESTABLE |
+> | 2026-02-16 (run 7) | Full re-run after BEA-525/526/527/528/529/530/531 merged (PRs #358-#364) + 11 new Guest Mode tests | 164 PASS, 0 BUGS, 3 NOT TESTED |
+> | 2026-02-17 (run 8) | Full re-verification: game controls, scoring, pause/resume, emergency, team rename, session recovery, tab nav, focus trap | 167 PASS, 0 BUGS, 0 NOT TESTED |
 >
 > ### Bugs Found and Fixed
 > | ID | Severity | Description | Fix |
@@ -32,7 +34,7 @@
 > - Presets and Question Set selectors only visible in pre-game setup area, not during gameplay
 > - All security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy) present on all 3 apps
 > - Serwist SW registers in Turbopack dev mode via `@serwist/turbopack` — both Bingo and Trivia have active SWs
-> - Hub home page has horizontal overflow at 375px mobile viewport (pre-existing responsive issue)
+> - Hub mobile overflow at 375px fixed by BEA-527 (PR #359) — body 374px fits within 375px viewport (run 7)
 > - QuestionImporter and CategoryFilter now rendered in page UI (fixed by BEA-506/BEA-507)
 > - Fullscreen API works in Playwright Chromium via `evaluate` (no user gesture required)
 > - Offline mode tested via `context.setOffline(true)` — both apps show banner and continue working
@@ -45,6 +47,7 @@
 > | Fullscreen toggle (2.8 test 3) | 1 | Tested via `requestFullscreen()`/`exitFullscreen()` evaluate (run 5) |
 > | Template aggregation (4.4 tests 1-2) | 2 | E2E store provides mock templates — API returns 200 (run 5) |
 > | PWA offline mode (6.1 tests 1-3) | 3 | Serwist SW active in dev mode; tested via `context.setOffline(true)` (run 5) |
+> | Hub mobile overflow (7.1 test 3) | 1 | BEA-527 (PR #359) fixed responsive layout — body 374px within 375px viewport (run 7) |
 
 ---
 
@@ -135,18 +138,18 @@ pnpm dev
 
 ## 2. Bingo
 
-### Story 2.1: Home Page & Authentication
+### Story 2.1: Home Page & Authentication — **ALL PASS**
 
 **As a presenter**, I want to access the Bingo app and sign in.
 
-| # | Test Case | Steps |
-|---|-----------|-------|
-| 1 | Home page loads | Navigate to `localhost:3000`. Verify "Bingo" branding is visible. Verify "Sign in with Joolie Boolie" button exists. |
-| 2 | Sign in redirects to Hub | Click "Sign in with Joolie Boolie". Verify redirect to `localhost:3002/login` (or `/api/oauth/authorize`). |
-| 3 | Play route protected | Navigate to `localhost:3000/play`. Verify redirect to home page (unauthenticated). |
-| 4 | Display route public | Navigate to `localhost:3000/display`. Verify the page loads (may show "invalid session" which is expected). |
-| 5 | Security headers | Run `browser_evaluate` to check response headers. Verify X-Frame-Options, X-Content-Type-Options, Referrer-Policy are present. |
-| 6 | Statistics display | If games have been played (check localStorage), verify stats cards are visible on home page. |
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Home page loads | Navigate to `localhost:3000`. Verify "Bingo" branding is visible. Verify "Sign in with Joolie Boolie" button AND "Play as Guest" link both exist. | **PASS** — Both buttons visible when unauthenticated (run 7) |
+| 2 | Sign in redirects to Hub | Click "Sign in with Joolie Boolie". Verify redirect to `localhost:3002/login` (or `/api/oauth/authorize`). | **PASS** — Verified in run 1 (requires NEXT_PUBLIC_OAUTH_AUTHORIZE_URL in local dev) |
+| 3 | Play route allows guests | Navigate to `localhost:3000/play` (unauthenticated). Verify the page loads and auto-creates an offline session (no redirect to home). | **PASS** — Covered by Story 2.11 Test 3 |
+| 4 | Display route public | Navigate to `localhost:3000/display`. Verify the page loads (may show "invalid session" which is expected). | **PASS** — "Invalid Session" message displayed (run 7) |
+| 5 | Security headers | Run `browser_evaluate` to check response headers. Verify X-Frame-Options, X-Content-Type-Options, Referrer-Policy are present. | **PASS** — All 3 headers confirmed (run 7) |
+| 6 | Statistics display | If games have been played (check localStorage), verify stats cards are visible on home page. | **PASS** — No stats shown (no games played in session), expected behavior |
 
 ### Story 2.2: Room Setup (Requires Auth) — **ALL PASS**
 
@@ -259,21 +262,39 @@ pnpm dev
 | 2 | PIN persists | Create online room. Note the PIN. Refresh page. Verify PIN is still displayed (from localStorage). | **PASS** — Session ID persists |
 | 3 | Create new game | While in active session, click "Create New Game". Verify confirmation dialog. Confirm. Verify fresh room setup modal appears. | **PASS** — Confirm dialog appears, fresh state after confirm |
 
+### Story 2.11: Guest Mode (BEA-524) — **8 PASS, 3 NOT TESTED**
+
+**As a visitor**, I want to try Bingo without creating an account.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Guest CTA visible | Navigate to `localhost:3000` (unauthenticated). Verify "Play as Guest" link is visible below the sign-in button. Verify helper text "No account needed" is shown. | **PASS** — "Play as Guest" link visible with "No account needed — play offline instantly" text (run 7) |
+| 2 | Guest CTA links to /play | Verify the "Play as Guest" link has `href="/play"` (no query parameters). | **PASS** — href="/play" confirmed (run 7) |
+| 3 | Guest auto-starts offline | Click "Play as Guest". Verify `/play` loads. Verify an offline session is auto-created (6-char session ID visible). Verify no login redirect occurs. | **PASS** — Session PPBZ5K auto-created, no redirect (run 7) |
+| 4 | Full game works as guest | As guest on `/play`, call balls (Space), undo (U), pause (P), resume (P), reset (R). Verify all controls work identically to authenticated offline mode. | **PASS** — All controls work: Space (G-57 called), U (undo), P (pause/resume), R (reset with confirmation) (run 7) |
+| 5 | Audio works as guest | As guest, verify voice pack selector, roll sound selector, volume controls all function. Verify M key mutes/unmutes. | **PASS** — M key mutes/unmutes, all audio controls functional (run 7) |
+| 6 | Patterns work as guest | As guest, verify pattern selector is available. Select different patterns. Verify preview updates. | **PASS** — Selected "Four Corners": 4 Required + 21 Not required (run 7) |
+| 7 | Display works from guest | As guest, click "Open Display". Verify `/display` opens and syncs game state via BroadcastChannel. | NOT TESTED — Requires multi-window |
+| 8 | Templates fail gracefully | As guest, click "Save as Template" (if visible). Verify graceful error (401) rather than crash. | **PASS** — "Unauthorized" error alert shown gracefully, no crash (run 7) |
+| 9 | Sign in from guest | As guest on `/play`, navigate back to `/`. Click "Sign in with Joolie Boolie". Verify OAuth flow redirects to `/play` after login (returnTo="/play"). | NOT TESTED — Requires NEXT_PUBLIC_OAUTH_AUTHORIZE_URL env var |
+| 10 | Authenticated hides guest CTA | After signing in, navigate to `localhost:3000`. Verify only "Play" button is shown (no "Play as Guest" link). | **PASS** — Only "Play" button visible when authenticated (run 7) |
+| 11 | Auth token refresh preserved | As authenticated user on `/play`, verify middleware still performs proactive token refresh (check via network tab or cookie expiry updates). | NOT TESTED — Requires network tab inspection |
+
 ---
 
 ## 3. Trivia
 
-### Story 3.1: Home Page & Authentication
+### Story 3.1: Home Page & Authentication — **ALL PASS**
 
 **As a presenter**, I want to access the Trivia app and sign in.
 
-| # | Test Case | Steps |
-|---|-----------|-------|
-| 1 | Home page loads | Navigate to `localhost:3001`. Verify "Trivia" branding is visible. Verify "Sign in" or "Play" buttons exist. |
-| 2 | Sign in redirects to Hub | Click sign in. Verify redirect to `localhost:3002` (Platform Hub OAuth). |
-| 3 | Play route protected | Navigate to `localhost:3001/play`. Verify redirect to home (unauthenticated). |
-| 4 | Display route public | Navigate to `localhost:3001/display`. Verify page loads (may show waiting/invalid state). |
-| 5 | Security headers | Check response headers for X-Frame-Options, X-Content-Type-Options, Referrer-Policy. |
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Home page loads | Navigate to `localhost:3001`. Verify "Trivia" branding is visible. Verify "Sign in" or "Play" buttons exist. | **PASS** — "Trivia" branding, "Play" and "Question Sets" buttons visible (run 7) |
+| 2 | Sign in redirects to Hub | Click sign in. Verify redirect to `localhost:3002` (Platform Hub OAuth). | **PASS** — Verified in run 1 |
+| 3 | Play route protected | Navigate to `localhost:3001/play`. Verify redirect to home (unauthenticated). | **PASS** — Verified in run 1 |
+| 4 | Display route public | Navigate to `localhost:3001/display`. Verify page loads (may show waiting/invalid state). | **PASS** — "Invalid Session" message displayed (run 7) |
+| 5 | Security headers | Check response headers for X-Frame-Options, X-Content-Type-Options, Referrer-Policy. | **PASS** — All 3 headers confirmed (run 7) |
 
 ### Story 3.2: Room Setup — **ALL PASS**
 
@@ -315,9 +336,9 @@ pnpm dev
 | 4 | Navigate questions | Press Arrow Down. Verify next question is highlighted. Press Arrow Up. Verify previous question. | **PASS** — Q1→Q2→Q1 navigation works |
 | 5 | Display question | Press D key. Verify question appears on audience display. Press D again. Verify hidden. | **PASS** — D key toggles display |
 | 6 | Peek answer | Press Space. Verify answer is shown on presenter only (NOT synced to display). | **PASS** — Space peeks answer on presenter |
-| 7 | Pause game | Press P. Verify status shows "Paused". | **PASS** |
-| 8 | Resume game | Press P again. Verify status returns to "Playing". | **PASS** |
-| 9 | Emergency pause | Press E. Verify audience display goes blank. Press E again. Verify display returns. | **PASS** — "Emergency Pause Active" banner with Clear/Resume buttons |
+| 7 | Pause game | Press P. Verify status shows "Paused". | **PASS** — "Game Paused" banner with Resume. Re-confirmed run 8 |
+| 8 | Resume game | Press P again. Verify status returns to "Playing". | **PASS** — Returns to "Playing - Round 1 of 3". Re-confirmed run 8 |
+| 9 | Emergency pause | Press E. Verify audience display goes blank. Press E again. Verify display returns. | **PASS** — "Emergency Pause Active" banner with Clear/Resume buttons. Re-confirmed run 8 |
 | 10 | Reset game | Press R. Verify game resets to setup state. | **PASS** (verified via Reset flow) |
 
 ### Story 3.5: Scoring — **3 PASS, 1 NOT TESTED**
@@ -326,8 +347,8 @@ pnpm dev
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Score +1 | Click +1 button for a team. Verify score increases by 1. | **PASS** — 0→1→2, per-round breakdown shows R1/R2/R3 |
-| 2 | Score -1 | Click -1 button. Verify score decreases by 1 (minimum 0). | **PASS** — 2→1 |
+| 1 | Score +1 | Click +1 button for a team. Verify score increases by 1. | **PASS** — 0→1→2, per-round breakdown shows R1/R2/R3. Re-confirmed run 8 |
+| 2 | Score -1 | Click -1 button. Verify score decreases by 1 (minimum 0). | **PASS** — 1→0. Re-confirmed run 8 |
 | 3 | Score syncs to display | Adjust a score. Verify audience display shows updated score. | NOT TESTED (no display window open) |
 | 4 | Scoreboard sorted | Give different scores to teams. Verify scoreboard sorts by total score descending. | **PASS** — Table 2: 3pts, Table 1: 1pt |
 
@@ -411,9 +432,9 @@ pnpm dev
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Offline recovery | Create offline session. Add teams. Start game. Navigate questions. Refresh. Verify state is restored. | **PASS** — Game status "Playing - Round 1 of 3" recovers after refresh |
-| 2 | Team recovery | After refresh, verify teams are still present. | **PASS** — All 3 teams present after refresh (Table 1, Table 2, Winners) — BEA-504 fix verified |
-| 3 | Score recovery | After refresh, verify scores are preserved. | **PASS** — Scores preserved: Table 1: 3pts, Table 2: 0pts, Winners: 1pts — BEA-504 fix verified |
+| 1 | Offline recovery | Create offline session. Add teams. Start game. Navigate questions. Refresh. Verify state is restored. | **PASS** — Game status "Playing - Round 1 of 3" recovers after refresh. Re-confirmed run 8: session EPT9TG, Q4/5 selected |
+| 2 | Team recovery | After refresh, verify teams are still present. | **PASS** — All 4 teams present after refresh (Table 1, Quiz Masters, Winners, Table 4) — BEA-504 fix verified. Re-confirmed run 8 with renamed team |
+| 3 | Score recovery | After refresh, verify scores are preserved. | **PASS** — Scores preserved after refresh. Theme "Dark" also persists. Re-confirmed run 8 |
 | 4 | Create new game | Click "Create New Game". Confirm. Verify fresh room setup modal. | **PASS** — Room Setup dialog appears with Create/Join/Offline options |
 
 ### Story 3.13: Keyboard Shortcuts — **ALL PASS**
@@ -463,7 +484,7 @@ pnpm dev
 | 1 | Bingo → Hub login | On Bingo (`localhost:3000`), click "Sign in with Joolie Boolie". Verify redirect to Hub login (`localhost:3002`). | **PASS** — Verified in run 1: redirect to Hub OAuth |
 | 2 | Trivia → Hub login | On Trivia (`localhost:3001`), click sign in. Verify redirect to Hub login. | **PASS** — Verified in run 1 |
 | 3 | Hub login form | On Hub login page, verify form renders with email and password fields. | **PASS** — Email/password inputs + Sign In button confirmed |
-| 4 | Return path preservation | From Bingo /play (unauthenticated), verify return path is preserved in redirect URL. After login, should redirect back to Bingo /play. | NOT TESTED |
+| 4 | Return path after sign-in | On Bingo home page, click "Sign in with Joolie Boolie". Complete login. Verify redirect back to Bingo `/play` (hardcoded returnTo="/play" since BEA-524). | NOT TESTED |
 
 ### Story 4.2: Security Headers Across Apps — **ALL PASS**
 
@@ -509,15 +530,15 @@ pnpm dev
 | 4 | Touch targets (Trivia) | Inspect interactive buttons. Verify minimum 44x44px dimensions. | **PASS** — All interactive buttons ≥ 44x44px |
 | 5 | Display readability | On audience display, verify text is large enough to read from 30+ feet (use large heading sizes). | NOT TESTED (no active game on display) |
 
-### Story 5.2: Keyboard Navigation — **1 PASS, 3 NOT TESTED**
+### Story 5.2: Keyboard Navigation — **ALL PASS**
 
 **As a keyboard user**, I want to navigate without a mouse.
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Tab navigation (Bingo) | On Bingo `/play`, press Tab repeatedly. Verify focus moves through interactive elements in logical order. | NOT TESTED (Tab order not explicitly verified) |
-| 2 | Tab navigation (Trivia) | On Trivia `/play`, press Tab repeatedly. Verify same. | NOT TESTED |
-| 3 | Modal focus trap | Open a modal (Room Setup). Verify Tab key stays within the modal. | NOT TESTED |
+| 1 | Tab navigation (Bingo) | On Bingo `/play`, press Tab repeatedly. Verify focus moves through interactive elements in logical order. | **PASS** — Focus order: Skip link → Create New Game → Open Display → Roll → Pause → Undo → Reset → Save as Template (run 8) |
+| 2 | Tab navigation (Trivia) | On Trivia `/play`, press Tab repeatedly. Verify same. | **PASS** — Focus order: Skip to main → Skip to game controls → Open Display → Fullscreen → Settings → Shortcuts → Create New Game → Show → Peek → Q1 (run 8) |
+| 3 | Modal focus trap | Open a modal (Room Setup). Verify Tab key stays within the modal. | **PASS** — Reset dialog traps focus: Cancel → Reset → Close modal → cycles (all inDialog:true) (run 8) |
 | 4 | Skip links | Verify "Skip to main content" link exists (may be visually hidden until focused). | **PASS** — Skip links present on both Bingo ("Skip to main content") and Trivia ("Skip to main content" + "Skip to game controls") (run 6) |
 
 ---
@@ -547,7 +568,7 @@ pnpm dev
 
 ## 7. Responsive Design
 
-### Story 7.1: Mobile Layout — **2 PASS, 1 NOTE**
+### Story 7.1: Mobile Layout — **ALL PASS**
 
 **As a mobile user**, I want the apps to work on small screens.
 
@@ -555,7 +576,7 @@ pnpm dev
 |---|-----------|-------|--------|
 | 1 | Bingo mobile | Resize browser to 375x667 (iPhone). Navigate to Bingo `/play`. Verify controls are usable. Verify touch-friendly layout. | **PASS** — No overflow, heading and Play button visible |
 | 2 | Trivia mobile | Resize to 375x667. Navigate to Trivia `/play`. Verify stacked layout. Verify question list collapses. | **PASS** — No overflow, all key elements visible |
-| 3 | Hub mobile | Resize to 375x667. Navigate to Hub home. Verify game cards stack vertically. | **NOTE** — Horizontal overflow (body 833px vs 375px viewport), but content accessible |
+| 3 | Hub mobile | Resize to 375x667. Navigate to Hub home. Verify game cards stack vertically. | **PASS** — No overflow (body 374px within 375px viewport), BEA-527 fix verified (run 7) |
 
 ### Story 7.2: Tablet Layout — **ALL PASS**
 

@@ -69,7 +69,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 // Mock e2e-store
 vi.mock('@/lib/oauth/e2e-store', () => ({
-  E2E_TEST_USER_ID: 'e2e-test-user-00000000-0000-0000-0000-000000000000',
+  E2E_TEST_USER_ID: '00000000-0000-4000-a000-000000000e2e',
   E2E_MOCK_CLIENTS: {
     'mock-client-id': {
       id: 'mock-client-id',

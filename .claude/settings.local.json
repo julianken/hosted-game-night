@@ -8,6 +8,7 @@
       "Grep",
       "Glob",
       "Skill(subagent-workflow)",
+      "Skill(decision-funnel)",
       "Skill(systematic-debugging)",
       "Skill(vercel:deploy)",
       "Skill(vercel:setup)",

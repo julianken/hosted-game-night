@@ -192,6 +192,67 @@ describe('SyncHeartbeat', () => {
     });
   });
 
+  describe('channel not connected', () => {
+    it('should not throw or send when broadcastSync is not initialized', () => {
+      const uninitializedSync = new BroadcastSync<{ v: number }>('not-init-channel');
+      // Deliberately NOT calling initialize()
+      const receiver = new BroadcastSync<{ v: number }>('not-init-channel');
+      receiver.initialize();
+      const handler = vi.fn();
+      receiver.subscribe(handler);
+
+      const heartbeat = new SyncHeartbeat(
+        uninitializedSync,
+        () => ({ v: 1 }),
+        'presenter',
+        'not-init-channel',
+        { intervalMs: 1000 },
+      );
+
+      expect(() => heartbeat.start()).not.toThrow();
+      expect(handler).not.toHaveBeenCalled();
+
+      // Interval ticks should also be silent no-ops
+      vi.advanceTimersByTime(3000);
+      expect(handler).not.toHaveBeenCalled();
+
+      heartbeat.stop();
+      receiver.close();
+    });
+
+    it('should resume sending once channel becomes connected', () => {
+      const sync = new BroadcastSync<{ v: number }>('late-init-channel');
+      const receiver = new BroadcastSync<{ v: number }>('late-init-channel');
+      receiver.initialize();
+      const handler = vi.fn();
+      receiver.subscribe(handler);
+
+      const heartbeat = new SyncHeartbeat(
+        sync,
+        () => ({ v: 1 }),
+        'presenter',
+        'late-init-channel',
+        { intervalMs: 1000 },
+      );
+
+      heartbeat.start();
+      // No sends yet — channel not connected
+      expect(handler).not.toHaveBeenCalled();
+
+      // Now initialize the channel
+      sync.initialize();
+
+      // Next interval tick should send
+      vi.advanceTimersByTime(1000);
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0].type).toBe('HEARTBEAT');
+
+      heartbeat.stop();
+      sync.close();
+      receiver.close();
+    });
+  });
+
   describe('heartbeat interval', () => {
     it('should send heartbeats at the configured interval', () => {
       const { presenter, audience } = createSyncPair<{ v: number }>('heartbeat-interval');

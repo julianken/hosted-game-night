@@ -116,7 +116,7 @@ export async function signTokenPair(params: SignTokenPairParams): Promise<TokenP
 // ---------------------------------------------------------------------------
 
 /** E2E test user constants — must match the values used in middleware. */
-export const E2E_TEST_USER_ID = 'e2e-test-user-00000000-0000-0000-0000-000000000000';
+export const E2E_TEST_USER_ID = '00000000-0000-4000-a000-000000000e2e';
 export const E2E_TEST_EMAIL = 'e2e-test@joolie-boolie.test';
 
 /**
