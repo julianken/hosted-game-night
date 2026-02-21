@@ -33,7 +33,7 @@ import { useQuickScore } from './use-quick-score';
  * - M = Mute/unmute TTS
  *
  * Scene-aware shortcuts:
- * - T key (KeyT, no modifier): Start timer -- transitions to question_active.
+ * - T key (KeyT, no modifier): Start timer (stays in question_display).
  * - S key: Context-dependent scene transitions.
  * - Enter: Skip timed scenes.
  * - Right Arrow: Advance from answer_reveal/score_flash.
@@ -187,7 +187,7 @@ export function useGameKeyboard() {
         store.setAudienceScene('question_anticipation');
         break;
       case 'question_anticipation':
-        store.setAudienceScene('question_reading');
+        store.setAudienceScene('question_display');
         break;
       case 'answer_reveal':
         store.setAudienceScene('score_flash');
@@ -391,19 +391,22 @@ export function useGameKeyboard() {
           toggleTTS();
           break;
 
-        // T key -- start timer and transition to question_active scene
+        // T key -- start timer (stays in question_display scene)
         case 'KeyT':
           if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
             // Check if we're in a question scene where starting the timer makes sense
             if (
-              currentScene === 'question_reading' ||
+              currentScene === 'question_display' ||
               currentScene === 'question_anticipation'
             ) {
               // Only start timer if not already running
               if (!store.timer.isRunning) {
                 store.startTimer();
               }
-              store.setAudienceScene('question_active');
+              // Ensure we're in question_display (anticipation -> display)
+              if (currentScene === 'question_anticipation') {
+                store.setAudienceScene('question_display');
+              }
             } else {
               // Fallback: toggle scoreboard (legacy T behavior for non-question scenes)
               toggleScoreboard();
@@ -417,14 +420,15 @@ export function useGameKeyboard() {
         case 'KeyS':
           if (!event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
             switch (currentScene) {
-              case 'question_reading':
-                // Skip timer -- transition directly to answer reveal
-                store.setAudienceScene('answer_reveal');
-                break;
-              case 'question_active':
-                // Close question -- transition to question_closed
-                store.stopTimer();
-                store.setAudienceScene('question_closed');
+              case 'question_display':
+                if (store.timer.isRunning) {
+                  // Timer is running -- close question (stop timer, go to question_closed)
+                  store.stopTimer();
+                  store.setAudienceScene('question_closed');
+                } else {
+                  // Timer not started -- skip directly to answer reveal
+                  store.setAudienceScene('answer_reveal');
+                }
                 break;
               case 'question_closed':
                 // Enter scoring -- go to answer_reveal
@@ -446,7 +450,7 @@ export function useGameKeyboard() {
               store.setAudienceScene('question_anticipation');
               break;
             case 'question_anticipation':
-              store.setAudienceScene('question_reading');
+              store.setAudienceScene('question_display');
               break;
             case 'answer_reveal':
               store.setAudienceScene('score_flash');

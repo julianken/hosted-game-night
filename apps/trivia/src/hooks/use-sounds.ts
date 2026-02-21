@@ -207,6 +207,8 @@ export interface UseGameEventSoundsOptions {
   audienceScene?: AudienceScene;
   /** Current reveal phase (T3.1) */
   revealPhase?: RevealPhase;
+  /** Whether the question timer is currently running (BEA-583) */
+  timerIsRunning?: boolean;
 }
 
 /**
@@ -215,7 +217,7 @@ export interface UseGameEventSoundsOptions {
  * T3.1: Extended with 9 scene-aware trigger points.
  */
 export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
-  const { status, displayQuestionIndex, currentRound, audienceScene, revealPhase } = options;
+  const { status, displayQuestionIndex, currentRound, audienceScene, revealPhase, timerIsRunning } = options;
   const sounds = useSounds();
 
   // Track previous values
@@ -224,6 +226,7 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
   const prevRoundRef = useRef<number>(currentRound);
   const prevSceneRef = useRef<AudienceScene | undefined>(audienceScene);
   const prevRevealPhaseRef = useRef<RevealPhase | undefined>(revealPhase);
+  const prevTimerIsRunningRef = useRef<boolean | undefined>(timerIsRunning);
 
   useEffect(() => {
     const prevStatus = prevStatusRef.current;
@@ -278,10 +281,6 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
         // Category badge appears
         sounds.playQuestionReveal();
         break;
-      case 'question_active':
-        // Timer begins
-        sounds.playFireAndForget('timer-tick');
-        break;
       case 'question_closed':
         // Time runs out
         sounds.playTimerExpired();
@@ -298,6 +297,17 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
         break;
     }
   }, [audienceScene, sounds]);
+
+  // BEA-583: Timer start sound (replaces question_active scene trigger)
+  useEffect(() => {
+    const prevRunning = prevTimerIsRunningRef.current;
+    prevTimerIsRunningRef.current = timerIsRunning;
+
+    // Play timer-tick sound when timer transitions from not-running to running
+    if (timerIsRunning && !prevRunning) {
+      sounds.playFireAndForget('timer-tick');
+    }
+  }, [timerIsRunning, sounds]);
 
   // T3.1: RevealPhase illuminate -> play correct-answer sound
   useEffect(() => {

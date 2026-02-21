@@ -6,8 +6,7 @@ import { sceneWrapper, sceneWrapperReduced } from '@/lib/motion/presets';
 
 // Scene components
 import { WaitingScene } from './WaitingScene';
-import { QuestionReadingScene } from './QuestionReadingScene';
-import { QuestionActiveScene } from './QuestionActiveScene';
+import { QuestionDisplayScene } from './QuestionDisplayScene';
 import { AnswerRevealScene } from './AnswerRevealScene';
 import { PausedScene } from './PausedScene';
 import { EmergencyBlankScene } from './EmergencyBlankScene';
@@ -48,6 +47,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
   const audienceScene = useGameStore((state) => state.audienceScene);
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
   const currentRound = useGameStore((state) => state.currentRound);
+  const timerIsRunning = useGameStore((state) => state.timer.isRunning);
 
   // Emergency blank: render immediately outside AnimatePresence (no exit transition)
   if (audienceScene === 'emergency_blank') {
@@ -66,8 +66,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
   // Derive stable scene key for AnimatePresence — ensures remount on question change
   function getSceneKey(): string {
     switch (audienceScene) {
-      case 'question_reading':
-      case 'question_active':
+      case 'question_display':
       case 'answer_reveal':
       case 'question_closed':
       case 'score_flash':
@@ -92,11 +91,8 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'waiting':
         return <WaitingScene />;
 
-      case 'question_reading':
-        return <QuestionReadingScene />;
-
-      case 'question_active':
-        return <QuestionActiveScene />;
+      case 'question_display':
+        return <QuestionDisplayScene answersEnabled={timerIsRunning} />;
 
       case 'answer_reveal':
         return <AnswerRevealScene />;

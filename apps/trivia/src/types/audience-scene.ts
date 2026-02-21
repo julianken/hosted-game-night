@@ -15,12 +15,12 @@
 // =============================================================================
 
 /**
- * All 14 audience scene values.
+ * All 13 audience scene values.
  *
  * Scene validity by GameStatus:
  *   setup          -> waiting
  *   playing        -> game_intro, round_intro, question_anticipation,
- *                    question_reading, question_active, question_closed,
+ *                    question_display, question_closed,
  *                    answer_reveal, score_flash,
  *                    waiting, paused, emergency_blank
  *   between_rounds -> round_summary, paused, emergency_blank
@@ -36,10 +36,8 @@ export type AudienceScene =
   | 'round_intro'
   /** "QUESTION N" + category badge. 1.5s auto-advance. Skippable with D/Enter. */
   | 'question_anticipation'
-  /** Question text + answer options. Timer NOT started. Indefinite. */
-  | 'question_reading'
-  /** Question text + answer options. Circular timer running in bottom-right. */
-  | 'question_active'
+  /** Question text + answer options. Timer state controlled by answersEnabled prop. */
+  | 'question_display'
   /** "TIME'S UP!" badge replaces timer. Question/options remain visible. Indefinite. */
   | 'question_closed'
   /** Per-question answer reveal with 5-beat choreography. 4s auto-advance to score_flash. */
@@ -186,7 +184,7 @@ export const VALID_SCENES_BY_STATUS: Record<string, ReadonlySet<AudienceScene>> 
   setup: new Set<AudienceScene>(['waiting']),
   playing: new Set<AudienceScene>([
     'game_intro', 'round_intro', 'question_anticipation',
-    'question_reading', 'question_active', 'question_closed',
+    'question_display', 'question_closed',
     'answer_reveal', 'score_flash',
     'waiting', 'paused', 'emergency_blank',
   ]),

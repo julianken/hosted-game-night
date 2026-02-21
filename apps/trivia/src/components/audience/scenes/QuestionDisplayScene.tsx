@@ -5,28 +5,38 @@ import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { AudienceQuestion } from '@/components/audience/AudienceQuestion';
 import { WaitingDisplay } from '@/components/audience/WaitingDisplay';
 
+export interface QuestionDisplaySceneProps {
+  /**
+   * When true, the timer is running and answers are enabled (was question_active).
+   * When false, the question is being read aloud before the clock starts (was question_reading).
+   */
+  answersEnabled: boolean;
+}
+
 /**
- * QuestionActiveScene (T1.9)
+ * QuestionDisplayScene (BEA-583)
  *
- * Shows question text + answer options while the timer is running.
- * Timer display is handled separately by the scene layer, not by AudienceQuestion.
+ * Merged replacement for QuestionReadingScene and QuestionActiveScene.
+ * Shows question text + answer options. The `answersEnabled` prop controls
+ * whether the timer is running — the actual timer display is handled by the
+ * scene layer (AudienceTimerDisplay), not by this component.
  *
  * Reads question data from the game store.
  */
-export function QuestionActiveScene() {
+export function QuestionDisplayScene({ answersEnabled: _answersEnabled }: QuestionDisplaySceneProps) {
   const displayQuestionIndex = useGameStore((state) => state.displayQuestionIndex);
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
+  const questions = useGameStore((state) => state.questions);
   const settings = useGameStore((state) => state.settings);
 
   const { displayQuestion } = useGameSelectors();
 
-  const questions = useGameStore((state) => state.questions);
-  const questionsInRound = useMemo(
-    () => questions.filter((q) => q.roundIndex === currentRound),
-    [questions, currentRound],
-  );
-  const questionsPerRound = questionsInRound.length || settings.questionsPerRound;
+  // Memoize to avoid creating a new array reference on every render
+  const questionsPerRound = useMemo(() => {
+    const count = questions.filter((q) => q.roundIndex === currentRound).length;
+    return count || settings.questionsPerRound;
+  }, [questions, currentRound, settings.questionsPerRound]);
 
   const questionInRound = displayQuestionIndex !== null
     ? (displayQuestionIndex % Math.max(questionsPerRound, 1)) + 1

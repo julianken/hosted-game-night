@@ -177,17 +177,13 @@ export function getNextScene(
 
     // -- Question lifecycle -------------------------------------------------
     case 'question_anticipation':
-      if (trigger === 'auto' || trigger === 'skip') return 'question_reading';
+      if (trigger === 'auto' || trigger === 'skip') return 'question_display';
       return null;
 
-    case 'question_reading':
-      if (trigger === 'timer_start') return 'question_active';
-      if (trigger === 'close') return 'answer_reveal';
+    case 'question_display':
+      if (trigger === 'close') return 'question_closed';
       if (trigger === 'reveal') return 'answer_reveal';
-      return null;
-
-    case 'question_active':
-      if (trigger === 'auto' || trigger === 'close') return 'question_closed';
+      if (trigger === 'auto') return 'question_closed'; // timer expired
       return null;
 
     case 'question_closed':

@@ -233,6 +233,9 @@ export default function PlayPage() {
   /** Read revealPhase for sound triggers (T3.1) */
   const revealPhase = useGameStore((state) => state.revealPhase);
 
+  /** Read timer state for sound triggers (BEA-583) */
+  const timerIsRunning = useGameStore((state) => state.timer.isRunning);
+
   /** T3.1: Wire scene-aware game event sounds */
   useGameEventSounds({
     status: game.status,
@@ -240,6 +243,7 @@ export default function PlayPage() {
     currentRound: game.currentRound,
     audienceScene,
     revealPhase,
+    timerIsRunning,
   });
 
   /** Quick score hook (T3.6) — wired to selected question index */

@@ -1,6 +1,5 @@
 export { WaitingScene, type WaitingSceneProps } from './WaitingScene';
-export { QuestionReadingScene } from './QuestionReadingScene';
-export { QuestionActiveScene } from './QuestionActiveScene';
+export { QuestionDisplayScene, type QuestionDisplaySceneProps } from './QuestionDisplayScene';
 export { AnswerRevealScene } from './AnswerRevealScene';
 export { PausedScene } from './PausedScene';
 export { EmergencyBlankScene } from './EmergencyBlankScene';
