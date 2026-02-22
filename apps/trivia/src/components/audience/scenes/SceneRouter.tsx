@@ -20,6 +20,10 @@ import { RoundSummaryScene } from './RoundSummaryScene';
 import { GameIntroScene } from './GameIntroScene';
 import { FinalBuildupScene } from './FinalBuildupScene';
 import { FinalPodiumScene } from './FinalPodiumScene';
+// Recap scenes (WU-06)
+import { RecapTitleScene } from './RecapTitleScene';
+import { RecapQAScene } from './RecapQAScene';
+import { RecapScoresScene } from './RecapScoresScene';
 
 export interface SceneRouterProps {
   isConnected: boolean;
@@ -125,15 +129,15 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
       case 'question_closed':
         return <QuestionClosedScene />;
 
-      // -- Recap scenes (placeholder — components created in WU-06) ----------
+      // -- Recap scenes (WU-06) -----------------------------------------------
       case 'recap_title':
-        return <WaitingScene />;
+        return <RecapTitleScene />;
 
       case 'recap_qa':
-        return <WaitingScene />;
+        return <RecapQAScene />;
 
       case 'recap_scores':
-        return <WaitingScene />;
+        return <RecapScoresScene />;
 
       default: {
         // Exhaustiveness guard — TypeScript ensures all AudienceScene values handled.
