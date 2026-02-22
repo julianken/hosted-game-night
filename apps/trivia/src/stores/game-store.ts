@@ -376,7 +376,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     }
 
     // 2. ADVANCE + showing question face: flip to answer face.
-    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer === false) {
+    // null or false = question face; flip to answer face
+    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer !== true) {
       set({ recapShowingAnswer: true, sceneTimestamp: Date.now() });
       return;
     }
