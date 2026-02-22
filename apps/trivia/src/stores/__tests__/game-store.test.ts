@@ -280,6 +280,247 @@ describe('useGameStore', () => {
   });
 });
 
+describe('advanceScene() recap paths', () => {
+  beforeEach(() => {
+    resetGameStore();
+  });
+
+  /**
+   * Helper: set up a between_rounds state with N questions in round 0.
+   * Returns the global indices of those questions.
+   */
+  function setupBetweenRoundsWithQuestions(questionCount: number): number[] {
+    // Add a team and start the game so we have a valid playing state
+    useGameStore.getState().addTeam('Team A');
+    useGameStore.getState().startGame();
+    // Force into between_rounds with recap_qa scene for testing
+    useGameStore.setState({
+      status: 'between_rounds',
+      audienceScene: 'recap_qa',
+      recapShowingAnswer: false,
+    });
+    // Find questions for round 0
+    const state = useGameStore.getState();
+    const roundQuestions = state.questions.filter(q => q.roundIndex === 0);
+    const indices: number[] = [];
+    for (let i = 0; i < Math.min(questionCount, roundQuestions.length); i++) {
+      indices.push(state.questions.indexOf(roundQuestions[i]));
+    }
+    // Set displayQuestionIndex to first question
+    if (indices.length > 0) {
+      useGameStore.setState({
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+      });
+    }
+    return indices;
+  }
+
+  describe('BACK trigger in recap_qa', () => {
+    it('should decrement displayQuestionIndex and reset recapShowingAnswer to false when not at first question', () => {
+      const indices = setupBetweenRoundsWithQuestions(3);
+      // Advance to second question
+      useGameStore.setState({
+        displayQuestionIndex: indices[1],
+        selectedQuestionIndex: indices[1],
+        recapShowingAnswer: true,
+      });
+
+      useGameStore.getState().advanceScene('back');
+
+      const state = useGameStore.getState();
+      expect(state.displayQuestionIndex).toBe(indices[0]);
+      expect(state.recapShowingAnswer).toBe(false);
+      expect(state.audienceScene).toBe('recap_qa'); // Scene unchanged
+    });
+
+    it('should be a no-op at the first question', () => {
+      const indices = setupBetweenRoundsWithQuestions(3);
+      useGameStore.setState({
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+        recapShowingAnswer: false,
+      });
+
+      useGameStore.getState().advanceScene('back');
+
+      const state = useGameStore.getState();
+      expect(state.displayQuestionIndex).toBe(indices[0]);
+      expect(state.recapShowingAnswer).toBe(false);
+      expect(state.audienceScene).toBe('recap_qa');
+    });
+  });
+
+  describe('ADVANCE trigger in recap_qa — question face', () => {
+    it('should flip recapShowingAnswer to true when showing question face', () => {
+      setupBetweenRoundsWithQuestions(3);
+      useGameStore.setState({ recapShowingAnswer: false });
+
+      useGameStore.getState().advanceScene('advance');
+
+      const state = useGameStore.getState();
+      expect(state.recapShowingAnswer).toBe(true);
+      expect(state.audienceScene).toBe('recap_qa'); // Scene unchanged
+    });
+  });
+
+  describe('ADVANCE trigger in recap_qa — answer face, not last question', () => {
+    it('should advance displayQuestionIndex and reset recapShowingAnswer to false', () => {
+      const indices = setupBetweenRoundsWithQuestions(3);
+      useGameStore.setState({
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+        recapShowingAnswer: true,
+      });
+
+      useGameStore.getState().advanceScene('advance');
+
+      const state = useGameStore.getState();
+      expect(state.displayQuestionIndex).toBe(indices[1]);
+      expect(state.recapShowingAnswer).toBe(false);
+      expect(state.audienceScene).toBe('recap_qa'); // Still in recap_qa
+    });
+  });
+
+  describe('ADVANCE trigger in recap_qa — answer face, last question', () => {
+    it('should transition to recap_scores', () => {
+      const state0 = useGameStore.getState();
+      // Find all round 0 questions to identify the last one
+      const roundQuestions = state0.questions.filter(q => q.roundIndex === 0);
+      const lastIndex = state0.questions.indexOf(roundQuestions[roundQuestions.length - 1]);
+
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'recap_qa',
+        recapShowingAnswer: true,
+        displayQuestionIndex: lastIndex,
+        selectedQuestionIndex: lastIndex,
+      });
+
+      useGameStore.getState().advanceScene('advance');
+
+      const state = useGameStore.getState();
+      expect(state.audienceScene).toBe('recap_scores');
+      expect(state.recapShowingAnswer).toBeNull();
+    });
+  });
+
+  describe('recap scene side-effect seeds', () => {
+    it('should seed recap_title: set displayQuestionIndex to first round Q and recapShowingAnswer to null', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'round_summary',
+        recapShowingAnswer: null,
+      });
+
+      useGameStore.getState().advanceScene('advance'); // round_summary -> recap_title
+
+      const state = useGameStore.getState();
+      expect(state.audienceScene).toBe('recap_title');
+      expect(state.recapShowingAnswer).toBeNull();
+      // displayQuestionIndex should be the first question of round 0
+      const roundQuestions = state.questions.filter(q => q.roundIndex === 0);
+      const expectedIndex = state.questions.indexOf(roundQuestions[0]);
+      expect(state.displayQuestionIndex).toBe(expectedIndex);
+    });
+
+    it('should seed recap_qa: set recapShowingAnswer to false on entry', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'recap_title',
+        recapShowingAnswer: null,
+      });
+
+      useGameStore.getState().advanceScene('advance'); // recap_title -> recap_qa
+
+      const state = useGameStore.getState();
+      expect(state.audienceScene).toBe('recap_qa');
+      expect(state.recapShowingAnswer).toBe(false);
+    });
+
+    it('should seed recap_scores: set recapShowingAnswer to null on exit from last answer', () => {
+      const state0 = useGameStore.getState();
+      const roundQuestions = state0.questions.filter(q => q.roundIndex === 0);
+      const lastIndex = state0.questions.indexOf(roundQuestions[roundQuestions.length - 1]);
+
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'recap_qa',
+        recapShowingAnswer: true,
+        displayQuestionIndex: lastIndex,
+        selectedQuestionIndex: lastIndex,
+      });
+
+      useGameStore.getState().advanceScene('advance'); // last answer -> recap_scores
+
+      const state = useGameStore.getState();
+      expect(state.audienceScene).toBe('recap_scores');
+      expect(state.recapShowingAnswer).toBeNull();
+    });
+  });
+
+  describe('N key (next_round) from recap scenes', () => {
+    function setupRecapScene(scene: 'recap_title' | 'recap_qa' | 'recap_scores') {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: scene,
+        currentRound: 0,
+        totalRounds: 3,
+      });
+    }
+
+    it('should advance to round_intro from recap_title on next_round', () => {
+      setupRecapScene('recap_title');
+      useGameStore.getState().advanceScene('next_round');
+      expect(useGameStore.getState().audienceScene).toBe('round_intro');
+    });
+
+    it('should advance to round_intro from recap_qa on next_round', () => {
+      setupRecapScene('recap_qa');
+      useGameStore.getState().advanceScene('next_round');
+      expect(useGameStore.getState().audienceScene).toBe('round_intro');
+    });
+
+    it('should advance to round_intro from recap_scores on next_round', () => {
+      setupRecapScene('recap_scores');
+      useGameStore.getState().advanceScene('next_round');
+      expect(useGameStore.getState().audienceScene).toBe('round_intro');
+    });
+
+    it('should advance to final_buildup from recap_scores on next_round when last round', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'recap_scores',
+        currentRound: 2,  // 0-based, so this is round 3 of 3
+        totalRounds: 3,
+      });
+      useGameStore.getState().advanceScene('next_round');
+      expect(useGameStore.getState().audienceScene).toBe('final_buildup');
+    });
+  });
+
+  describe('loadTeamsFromSetup includes recapShowingAnswer', () => {
+    it('should set recapShowingAnswer to null when loading teams during setup', () => {
+      // Force recapShowingAnswer to a non-null value to verify it gets reset
+      useGameStore.setState({ recapShowingAnswer: false });
+      useGameStore.getState().loadTeamsFromSetup(['Alpha', 'Bravo']);
+      expect(useGameStore.getState().recapShowingAnswer).toBeNull();
+    });
+  });
+});
+
 describe('useGameSelectors', () => {
   beforeEach(() => {
     resetGameStore();

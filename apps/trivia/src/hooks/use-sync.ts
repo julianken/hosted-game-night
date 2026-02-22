@@ -34,6 +34,54 @@ function createTriviaBroadcastSync(sessionId: string): TriviaBroadcastSync {
   return new TriviaBroadcastSync(channelName, { debug: isDebug });
 }
 
+/**
+ * Pure function: maps GameStore state to TriviaGameState for broadcasting.
+ *
+ * The explicit `: TriviaGameState` return type ensures TypeScript raises a
+ * compile error if any field is added to TriviaGameState but not mapped here.
+ * This is the single source of truth for sync serialization.
+ */
+function storeToGameState(state: import('@/stores/game-store').GameStore): TriviaGameState {
+  return {
+    // -- Session --
+    sessionId: state.sessionId,
+    status: state.status,
+    statusBeforePause: state.statusBeforePause,
+
+    // -- Questions --
+    questions: state.questions,
+    selectedQuestionIndex: state.selectedQuestionIndex,
+    displayQuestionIndex: state.displayQuestionIndex,
+
+    // -- Rounds --
+    currentRound: state.currentRound,
+    totalRounds: state.totalRounds,
+
+    // -- Teams --
+    teams: state.teams,
+    teamAnswers: state.teamAnswers,
+
+    // -- Timer & Settings --
+    timer: state.timer,
+    settings: state.settings,
+
+    // -- Display --
+    showScoreboard: state.showScoreboard,
+    emergencyBlank: state.emergencyBlank,
+
+    // -- Audio --
+    ttsEnabled: state.ttsEnabled,
+
+    // -- Scene fields --
+    audienceScene: state.audienceScene,
+    sceneBeforePause: state.sceneBeforePause,
+    sceneTimestamp: state.sceneTimestamp,
+    scoreDeltas: state.scoreDeltas,
+    revealPhase: state.revealPhase,
+    recapShowingAnswer: state.recapShowingAnswer,
+  };
+}
+
 type MessageHandler = (message: TriviaSyncMessage) => void;
 
 /**
@@ -88,32 +136,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
   // Get current game state for broadcasting
   const getCurrentState = useCallback((): TriviaGameState => {
-    const state = useGameStore.getState();
-    return {
-      // -- Existing (unchanged) ---------------------------------------------
-      sessionId: state.sessionId,
-      status: state.status,
-      statusBeforePause: state.statusBeforePause,
-      questions: state.questions,
-      selectedQuestionIndex: state.selectedQuestionIndex,
-      displayQuestionIndex: state.displayQuestionIndex,
-      currentRound: state.currentRound,
-      totalRounds: state.totalRounds,
-      teams: state.teams,
-      teamAnswers: state.teamAnswers,
-      timer: state.timer,
-      settings: state.settings,
-      showScoreboard: state.showScoreboard,
-      emergencyBlank: state.emergencyBlank,
-      ttsEnabled: state.ttsEnabled,
-
-      // -- Scene fields -----------------------------------------------------
-      audienceScene: state.audienceScene,
-      sceneBeforePause: state.sceneBeforePause,
-      sceneTimestamp: state.sceneTimestamp,
-      scoreDeltas: state.scoreDeltas,
-      revealPhase: state.revealPhase,
-    };
+    return storeToGameState(useGameStore.getState());
   }, []);
 
   // Broadcast state update (presenter only)
@@ -269,31 +292,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       }
       // Broadcast on any state change
       if (state !== prevState) {
-        sync.broadcastState({
-          // -- Existing (unchanged) -----------------------------------------
-          sessionId: state.sessionId,
-          status: state.status,
-          statusBeforePause: state.statusBeforePause,
-          questions: state.questions,
-          selectedQuestionIndex: state.selectedQuestionIndex,
-          displayQuestionIndex: state.displayQuestionIndex,
-          currentRound: state.currentRound,
-          totalRounds: state.totalRounds,
-          teams: state.teams,
-          teamAnswers: state.teamAnswers,
-          timer: state.timer,
-          settings: state.settings,
-          showScoreboard: state.showScoreboard,
-          emergencyBlank: state.emergencyBlank,
-          ttsEnabled: state.ttsEnabled,
-
-          // -- Scene fields -------------------------------------------------
-          audienceScene: state.audienceScene,
-          sceneBeforePause: state.sceneBeforePause,
-          sceneTimestamp: state.sceneTimestamp,
-          scoreDeltas: state.scoreDeltas,
-          revealPhase: state.revealPhase,
-        });
+        sync.broadcastState(storeToGameState(state));
       }
     });
 

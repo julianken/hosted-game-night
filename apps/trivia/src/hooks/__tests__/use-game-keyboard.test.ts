@@ -282,6 +282,58 @@ describe('useGameKeyboard', () => {
     });
   });
 
+  describe('ArrowLeft - recap backward navigation', () => {
+    it('should call advanceScene(BACK) when in recap_qa during between_rounds', () => {
+      const { result } = renderHook(() => useGameKeyboard());
+
+      // Set up game in between_rounds with recap_qa scene
+      act(() => {
+        result.current.addTeam('Team A');
+      });
+      act(() => {
+        result.current.startGame();
+      });
+      act(() => {
+        result.current.completeRound();
+        useGameStore.getState().setAudienceScene('recap_qa');
+      });
+
+      expect(useGameStore.getState().status).toBe('between_rounds');
+      expect(useGameStore.getState().audienceScene).toBe('recap_qa');
+
+      const advanceSceneSpy = vi.spyOn(useGameStore.getState(), 'advanceScene');
+
+      act(() => {
+        dispatchKeyDown('ArrowLeft');
+      });
+
+      expect(advanceSceneSpy).toHaveBeenCalledWith('back');
+    });
+
+    it('should not call advanceScene when ArrowLeft is pressed outside recap_qa', () => {
+      const { result } = renderHook(() => useGameKeyboard());
+
+      // Set up game in playing state with answer_reveal scene (not recap_qa)
+      act(() => {
+        result.current.addTeam('Team A');
+      });
+      act(() => {
+        result.current.startGame();
+      });
+
+      expect(useGameStore.getState().status).toBe('playing');
+      expect(useGameStore.getState().audienceScene).toBe('game_intro');
+
+      const advanceSceneSpy = vi.spyOn(useGameStore.getState(), 'advanceScene');
+
+      act(() => {
+        dispatchKeyDown('ArrowLeft');
+      });
+
+      expect(advanceSceneSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('N key - next round', () => {
     it('should advance to next round when in between_rounds state', () => {
       const { result } = renderHook(() => useGameKeyboard());

@@ -72,11 +72,15 @@ const LOCKED_KEY_CODES: ReadonlySet<string> = new Set([
 
 /**
  * Scenes where 1-9/0 quick-score keys and Shift+digit/-score keys are active.
+ * Includes recap scenes so the host can adjust scores while reviewing answers.
  */
 const SCORING_PHASE_SCENES: ReadonlySet<AudienceScene> = new Set([
   'question_closed',
   'answer_reveal',
   'round_summary',
+  'recap_title',
+  'recap_qa',
+  'recap_scores',
 ]);
 
 /**
@@ -123,6 +127,10 @@ export function useGameKeyboard() {
       const scene = state.audienceScene;
       const prevScene = prevState.audienceScene;
       if (scene !== prevScene && REVEAL_LOCK_SCENES.has(scene)) {
+        // POST_REVEAL_LOCK: do not lock during between_rounds (recap navigation).
+        // Without this guard, entering recap_qa from recap_title would be blocked
+        // for 1.1 seconds because answer_reveal is a REVEAL_LOCK_SCENE.
+        if (state.status === 'between_rounds') return;
         isLockedRef.current = true;
         pendingKeyRef.current = null;
         if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
@@ -210,6 +218,14 @@ export function useGameKeyboard() {
           }
           break;
 
+        // Left Arrow -- recap backward navigation (recap_qa only)
+        case 'ArrowLeft':
+          if (currentScene === 'recap_qa' && store.status === 'between_rounds') {
+            event.preventDefault();
+            store.advanceScene(SCENE_TRIGGERS.BACK);
+          }
+          break;
+
         // Right Arrow -- advance trigger (round_summary -> answer review -> next)
         case 'ArrowRight':
           event.preventDefault();
@@ -278,7 +294,16 @@ export function useGameKeyboard() {
 
         // Next round (advanceScene handles both scene change and nextRound side effect)
         case 'KeyN':
-          if (game.status === 'between_rounds' && (currentScene === 'round_summary' || currentScene === 'answer_reveal')) {
+          if (
+            game.status === 'between_rounds' &&
+            (
+              currentScene === 'round_summary' ||
+              currentScene === 'answer_reveal' ||
+              currentScene === 'recap_title' ||
+              currentScene === 'recap_qa' ||
+              currentScene === 'recap_scores'
+            )
+          ) {
             store.advanceScene(SCENE_TRIGGERS.NEXT_ROUND);
           }
           break;
