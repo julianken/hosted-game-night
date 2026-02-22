@@ -14,3 +14,7 @@ export { FinalBuildupScene } from './FinalBuildupScene';
 export { FinalPodiumScene } from './FinalPodiumScene';
 // Question anticipation
 export { QuestionAnticipationScene } from './QuestionAnticipationScene';
+// Recap scenes (WU-06)
+export { RecapTitleScene } from './RecapTitleScene';
+export { RecapQAScene } from './RecapQAScene';
+export { RecapScoresScene } from './RecapScoresScene';

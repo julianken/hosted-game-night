@@ -63,22 +63,27 @@ const rankLabels: Record<number, string> = {
 };
 
 /**
- * RoundSummaryScene (T2.7)
+ * RecapScoresScene (WU-06)
  *
- * Full scoreboard with score deltas and rank changes. Replaces the fallback
- * AudienceScoreboard in SceneRouter for the round_summary scene.
+ * Animated scoreboard for the recap flow, shown after the Q/A review.
+ * This is the terminal recap scene before advancing to the next round.
+ *
+ * Mirrors RoundSummaryScene scoreboard structure (pattern duplicated intentionally
+ * to keep each scene self-contained, not extracted into a shared component).
  *
  * Shows:
- * - Round X Complete / Final Standings header
+ * - "Round N Scores" header
  * - All teams sorted by score (descending)
- * - Score delta badges ("+2 this round") from scoreDeltas store
- * - Rank change indicators (up arrow, down arrow, dash)
+ * - Score delta badges ("+N this round") from scoreDeltas store
+ * - Rank change indicators
  * - Team accent colors via getTeamColor()
+ *
+ * Footer: "Press Enter or N for next round"
  *
  * Motion: staggered row entry from left.
  * Reduced motion: rows appear instantly.
  */
-export function RoundSummaryScene() {
+export function RecapScoresScene() {
   const shouldReduceMotion = useReducedMotion();
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
@@ -86,6 +91,7 @@ export function RoundSummaryScene() {
 
   const { teamsSortedByScore } = useGameSelectors();
 
+  const roundNumber = currentRound + 1;
   const isLastRound = currentRound >= totalRounds - 1;
   const maxScore =
     teamsSortedByScore.length > 0
@@ -101,7 +107,7 @@ export function RoundSummaryScene() {
     <section
       className="flex flex-col items-center h-full min-h-[60vh] gap-6 w-full"
       role="region"
-      aria-label={isLastRound ? 'Final standings' : `Round ${currentRound + 1} complete`}
+      aria-label={isLastRound ? 'Final standings after recap' : `Round ${roundNumber} scores`}
     >
       {/* Header */}
       <div className="text-center" aria-live="polite">
@@ -113,7 +119,7 @@ export function RoundSummaryScene() {
             letterSpacing: '-0.02em',
           }}
         >
-          {isLastRound ? 'Final Standings' : `Round ${currentRound + 1} Complete!`}
+          {isLastRound ? 'Final Standings' : `Round ${roundNumber} Scores`}
         </h2>
         <p
           className="mt-2 text-foreground-secondary"
@@ -292,7 +298,7 @@ export function RoundSummaryScene() {
           className="text-foreground-secondary"
           style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)' }}
         >
-          Scoring in progress... &rarr; Review answers &middot; N Skip to next round
+          Press Enter or N for next round
         </p>
       </div>
     </section>
