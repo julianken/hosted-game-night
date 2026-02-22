@@ -316,6 +316,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         sceneTimestamp: state.sceneTimestamp,
         scoreDeltas: [],             // Fresh empty array -- no deltas during setup
         revealPhase: state.revealPhase,
+        recapShowingAnswer: null,    // Not in recap during setup
       };
 
       for (const name of names) {
@@ -353,6 +354,50 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       isLastQuestion: lastQuestion,
       isLastRound: lastRound,
     };
+
+    // -- Recap Q/A cycling: handle recap_qa navigation before the state machine --
+    // recap_qa has three internal advance paths that the state machine cannot
+    // express (it only knows the terminal case: last answer -> recap_scores).
+
+    // 1. BACK: decrement displayQuestionIndex if not at first question of round.
+    if (state.audienceScene === 'recap_qa' && trigger === 'back') {
+      if (currentRoundQIndex > 0) {
+        const prevQIndex = currentRoundQIndex - 1;
+        const globalIndex = state.questions.indexOf(roundQuestions[prevQIndex]);
+        set({
+          displayQuestionIndex: globalIndex,
+          selectedQuestionIndex: globalIndex,
+          recapShowingAnswer: false,
+          sceneTimestamp: Date.now(),
+        });
+      }
+      // No-op at first question
+      return;
+    }
+
+    // 2. ADVANCE + showing question face: flip to answer face.
+    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer === false) {
+      set({ recapShowingAnswer: true, sceneTimestamp: Date.now() });
+      return;
+    }
+
+    // 3. ADVANCE + showing answer face + not last question: advance to next Q.
+    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer === true && !lastQuestion) {
+      const nextQIndex = currentRoundQIndex + 1;
+      if (nextQIndex < roundQuestions.length) {
+        const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
+        set({
+          displayQuestionIndex: globalIndex,
+          selectedQuestionIndex: globalIndex,
+          recapShowingAnswer: false,
+          sceneTimestamp: Date.now(),
+        });
+        return;
+      }
+    }
+
+    // 4. ADVANCE + showing answer face + last question: fall through to getNextScene()
+    //    which returns recap_scores. No early return here.
 
     // -- Round-end answer review: cycle through questions within answer_reveal --
     // When in answer_reveal during between_rounds, Right Arrow advances to the
@@ -408,6 +453,41 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           displayQuestionIndex: globalIndex,
           selectedQuestionIndex: globalIndex,
           revealPhase: null,
+        });
+        return;
+      }
+
+      // Side effect: seed recap_title — point displayQuestionIndex at first round Q.
+      // recapShowingAnswer starts as null (not yet in recap_qa).
+      if (nextScene === 'recap_title') {
+        const firstQ = roundQuestions[0];
+        const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
+        set({
+          audienceScene: nextScene,
+          sceneTimestamp: Date.now(),
+          displayQuestionIndex: globalIndex,
+          selectedQuestionIndex: globalIndex,
+          recapShowingAnswer: null,
+        });
+        return;
+      }
+
+      // Side effect: seed recap_qa — start on question face.
+      if (nextScene === 'recap_qa') {
+        set({
+          audienceScene: nextScene,
+          sceneTimestamp: Date.now(),
+          recapShowingAnswer: false,
+        });
+        return;
+      }
+
+      // Side effect: seed recap_scores — clear recapShowingAnswer sub-state.
+      if (nextScene === 'recap_scores') {
+        set({
+          audienceScene: nextScene,
+          sceneTimestamp: Date.now(),
+          recapShowingAnswer: null,
         });
         return;
       }
@@ -528,6 +608,7 @@ export function useGameSelectors() {
     sceneTimestamp: 0,               // Not used for selector computation
     scoreDeltas: [],                 // Not used for selector computation
     revealPhase,
+    recapShowingAnswer: null,        // Not used for selector computation
   };
 
   return {

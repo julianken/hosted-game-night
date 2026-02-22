@@ -50,6 +50,7 @@ export function createInitialState(): TriviaGameState {
     sceneTimestamp: 0, // 0 = never set (waiting is the initial state, not timed)
     revealPhase: null,
     scoreDeltas: [],
+    recapShowingAnswer: null,
   });
 }
 
