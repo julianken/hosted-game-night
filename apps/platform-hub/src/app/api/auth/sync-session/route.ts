@@ -22,9 +22,14 @@ import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'auth-sync-session' });
 
+// Production guard: E2E mode must never run on actual production (Vercel)
+if (process.env.E2E_TESTING === 'true' && process.env.VERCEL === '1') {
+  throw new Error('E2E mode cannot run in production');
+}
+
 // E2E Testing: Same secret used by Platform Hub login API
 const E2E_JWT_SECRET = new TextEncoder().encode(
-  'e2e-test-secret-key-that-is-at-least-32-characters-long'
+  process.env.E2E_JWT_SECRET || 'e2e-test-secret-key-that-is-at-least-32-characters-long'
 );
 
 // Lazy-initialized JWKS for Supabase token verification
