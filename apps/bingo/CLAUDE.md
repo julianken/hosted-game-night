@@ -42,8 +42,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Audio System
 - Voice packs: Standard, Standard (Hall), British Slang, British Slang (Hall)
 - Hall reverb variants for ambient sound
-- Roll sounds: Metal Cage, Tumbler, Lottery Ball
-- Roll duration options: 1s, 2s, 3s (varies by sound type)
+- Roll sounds: Metal Cage, Plastic Cage, Plastic Swirl, Lottery Balls
+- Roll durations: 2s, 4s, 6s, 8s (Plastic Cage supports 2s and 4s only)
 - Reveal chimes: Optional chime when ball is revealed
 - Separate volume controls: Voice, Roll Sound, Chime
 - Web Speech API fallback for TTS
