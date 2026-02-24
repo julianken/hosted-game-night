@@ -143,6 +143,12 @@ Update Linear: `state: "In Progress"` for each issue. Post comment: `"Starting w
 8. Self-review, push, create draft PR using .github/PULL_REQUEST_TEMPLATE.md
 9. Update Linear with pre-PR verification evidence (actual test output)
 10. Mark task as completed
+11. Documentation check: If your changes touch any of these high-signal files, update the corresponding doc section per the app's Update Triggers table:
+    - Keyboard shortcut handlers → CLAUDE.md Keyboard Shortcuts
+    - API route directories → CLAUDE.md API Routes
+    - New packages in packages/ → root CLAUDE.md package table
+    - Scene/state type definitions → CLAUDE.md Architecture Notes
+    If no doc-impacting changes, note "No doc updates needed" in your commit.
 ```
 
 **BLOCKING:** Do NOT create PR if ANY check fails. Fix first, re-run, then proceed.
@@ -161,6 +167,7 @@ Only after ALL implementers complete. One reviewer per issue/PR.
 3. Verify EACH acceptance criterion is met
 4. Check tests cover acceptance criteria
 5. Verify E2E tests pass
+6. Documentation verification: Confirm that the implementer updated docs if changes touched files listed in the app's Update Triggers table, or explicitly noted "No doc updates needed."
 
 If APPROVED: "SPEC COMPLIANT - {ISSUE_ID} acceptance criteria met"
 If ISSUES: "SPEC GAPS FOUND" + specific gaps → implementer fixes in SAME worktree → re-review

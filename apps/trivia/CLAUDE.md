@@ -244,3 +244,16 @@ pnpm test:coverage    # With coverage
 ## Future Work (TODO)
 
 - [ ] Analytics/history tracking
+
+## Update Triggers
+
+When modifying any of the files below, update the corresponding section in this CLAUDE.md.
+
+| Source File | Doc Section to Update | What to Check |
+|-------------|----------------------|---------------|
+| `src/hooks/use-game-keyboard.ts` | Keyboard Shortcuts | New/changed/removed key handlers |
+| `src/app/api/**` | API Routes (under Routes) | New/renamed/removed route directories |
+| `src/types/audience-scene.ts` | Scene Engine section (under Architecture Notes) | Added/removed/renamed scene values |
+| `src/stores/settings-store.ts` | Game Mechanics | Changed defaults, ranges, or options |
+| `src/lib/game/**` engine modules | Architecture Notes | New modules, changed barrel exports |
+| `package.json` | Tech Stack | Major version bumps, new dependencies |

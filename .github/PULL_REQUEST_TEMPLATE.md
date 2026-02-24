@@ -45,6 +45,7 @@ flowchart TD
 - [ ] `pnpm build`
 - [ ] `pnpm test:e2e` followed by `pnpm test:e2e:summary` (0 failures required)
 - [ ] Other:
+- [ ] Documentation updated (or confirmed no doc-impacting changes per Update Triggers)
 
 ### E2E Test Results (if UI/flow changes)
 <!-- Paste output of `pnpm test:e2e:summary` here. MUST show "0 failed" -->
