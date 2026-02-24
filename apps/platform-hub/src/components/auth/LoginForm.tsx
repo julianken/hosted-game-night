@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { Button } from '@joolie-boolie/ui';
-import { useAuth } from '@joolie-boolie/auth';
+import { useAuth, sanitizeRedirect } from '@joolie-boolie/auth';
 
 export interface LoginFormProps {
   /** Optional redirect URL after successful login */
@@ -18,42 +18,11 @@ interface FormErrors {
 }
 
 /**
- * Validates that a redirect path is safe (prevents open redirect vulnerabilities)
- */
-function isValidRedirect(path: string): boolean {
-  // Must start with / (internal path)
-  if (!path.startsWith('/')) return false;
-
-  // Must not be a protocol-relative URL (//evil.com)
-  if (path.startsWith('//')) return false;
-
-  return true;
-}
-
-/**
- * Builds a redirect URL with optional authorization_id query parameter
+ * Builds a redirect URL with optional authorization_id query parameter.
+ * Uses sanitizeRedirect from @joolie-boolie/auth to prevent open redirect attacks.
  */
 function buildRedirectUrl(redirectTo: string | undefined, authorizationId: string | undefined): string {
-  let redirect = redirectTo || '/dashboard';
-
-  // Decode redirect if it's URL-encoded (OAuth flow encodes it)
-  // This handles the double-encoding from /api/oauth/authorize
-  try {
-    while (redirect.includes('%')) {
-      const decoded = decodeURIComponent(redirect);
-      if (decoded === redirect) break; // No more decoding needed
-      redirect = decoded;
-    }
-  } catch {
-    // If decoding fails, use original value
-    console.warn('Failed to decode redirect URL, using as-is');
-  }
-
-  // Validate redirect path (security: prevent open redirects)
-  if (!isValidRedirect(redirect)) {
-    console.warn('Invalid redirect path detected, using default dashboard');
-    return '/dashboard';
-  }
+  const redirect = sanitizeRedirect(redirectTo, '/dashboard');
 
   // Build redirect URL with authorization_id if present
   if (authorizationId) {
@@ -369,5 +338,5 @@ export function LoginForm({ redirectTo, authorizationId }: LoginFormProps) {
 
 LoginForm.displayName = 'LoginForm';
 
-// Export utility functions for testing
-export { isValidRedirect, buildRedirectUrl };
+// Export utility function for testing
+export { buildRedirectUrl };

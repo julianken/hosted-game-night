@@ -63,3 +63,6 @@ export { generatePKCE } from './pkce';
 // OAuth 2.1 client
 export { startOAuthFlow } from './oauth-client';
 
+// Redirect validation utilities
+export { isValidRedirect, sanitizeRedirect } from './redirect-validation';
+

@@ -1,32 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { isValidRedirect, buildRedirectUrl } from '../LoginForm';
+import { buildRedirectUrl } from '../LoginForm';
+
+// isValidRedirect tests moved to @joolie-boolie/auth (redirect-validation.test.ts)
 
 describe('LoginForm Redirect Logic', () => {
-  describe('isValidRedirect', () => {
-    it('should accept valid internal paths', () => {
-      expect(isValidRedirect('/dashboard')).toBe(true);
-      expect(isValidRedirect('/oauth/consent')).toBe(true);
-      expect(isValidRedirect('/settings/profile')).toBe(true);
-    });
-
-    it('should reject absolute URLs', () => {
-      expect(isValidRedirect('http://evil.com')).toBe(false);
-      expect(isValidRedirect('https://evil.com')).toBe(false);
-      expect(isValidRedirect('ftp://evil.com')).toBe(false);
-    });
-
-    it('should reject protocol-relative URLs', () => {
-      expect(isValidRedirect('//evil.com')).toBe(false);
-      expect(isValidRedirect('//evil.com/path')).toBe(false);
-    });
-
-    it('should reject paths not starting with /', () => {
-      expect(isValidRedirect('evil.com')).toBe(false);
-      expect(isValidRedirect('javascript:alert(1)')).toBe(false);
-      expect(isValidRedirect('data:text/html,<script>alert(1)</script>')).toBe(false);
-    });
-  });
-
   describe('buildRedirectUrl', () => {
     it('should build URL with authorization_id for OAuth flow', () => {
       const result = buildRedirectUrl('/oauth/consent', 'abc123');
@@ -54,9 +31,17 @@ describe('LoginForm Redirect Logic', () => {
     });
 
     it('should reject invalid redirect paths and fall back to /dashboard', () => {
-      expect(buildRedirectUrl('http://evil.com', 'abc123')).toBe('/dashboard');
-      expect(buildRedirectUrl('//evil.com', 'abc123')).toBe('/dashboard');
-      expect(buildRedirectUrl('javascript:alert(1)', 'abc123')).toBe('/dashboard');
+      // Invalid redirects fall back to /dashboard but preserve authorization_id
+      // so the OAuth flow can continue from a safe path
+      expect(buildRedirectUrl('http://evil.com', 'abc123')).toBe('/dashboard?authorization_id=abc123');
+      expect(buildRedirectUrl('//evil.com', 'abc123')).toBe('/dashboard?authorization_id=abc123');
+      expect(buildRedirectUrl('javascript:alert(1)', 'abc123')).toBe('/dashboard?authorization_id=abc123');
+    });
+
+    it('should reject invalid redirect paths without authorization_id', () => {
+      expect(buildRedirectUrl('http://evil.com', undefined)).toBe('/dashboard');
+      expect(buildRedirectUrl('//evil.com', undefined)).toBe('/dashboard');
+      expect(buildRedirectUrl('javascript:alert(1)', undefined)).toBe('/dashboard');
     });
 
     it('should handle both redirect and authorization_id being undefined', () => {

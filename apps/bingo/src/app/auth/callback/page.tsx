@@ -14,6 +14,7 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { sanitizeRedirect } from '@joolie-boolie/auth';
 
 function CallbackHandler() {
   const router = useRouter();
@@ -27,7 +28,7 @@ function CallbackHandler() {
       // just navigate to the final destination.
       const authSuccess = searchParams.get('auth_success');
       if (authSuccess === '1') {
-        const finalDest = searchParams.get('returnTo') || '/';
+        const finalDest = sanitizeRedirect(searchParams.get('returnTo'));
         window.location.href = finalDest;
         return;
       }
