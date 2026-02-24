@@ -355,8 +355,6 @@ describe('audio-store', () => {
     it('has all expected sound effect paths', () => {
       expect(SOUND_EFFECT_PATHS['timer-tick']).toBe('/audio/sfx/timer-tick.mp3');
       expect(SOUND_EFFECT_PATHS['timer-expired']).toBe('/audio/sfx/timer-expired.mp3');
-      expect(SOUND_EFFECT_PATHS['correct-answer']).toBe('/audio/sfx/correct-answer.mp3');
-      expect(SOUND_EFFECT_PATHS['wrong-answer']).toBe('/audio/sfx/wrong-answer.mp3');
       expect(SOUND_EFFECT_PATHS['question-reveal']).toBe('/audio/sfx/question-reveal.mp3');
       expect(SOUND_EFFECT_PATHS['round-complete']).toBe('/audio/sfx/round-complete.mp3');
       expect(SOUND_EFFECT_PATHS['game-win']).toBe('/audio/sfx/game-win.mp3');

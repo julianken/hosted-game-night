@@ -18,8 +18,6 @@ import {
 export type SoundEffectType =
   | 'timer-tick' // Timer tick (last 5 seconds)
   | 'timer-expired' // Timer reached zero (buzzer)
-  | 'correct-answer' // Correct answer chime
-  | 'wrong-answer' // Wrong answer buzz
   | 'question-reveal' // New question reveal
   | 'round-complete' // Round finished fanfare
   | 'game-win'; // Game win celebration
@@ -91,8 +89,6 @@ export const AUDIO_DEFAULTS: AudioState = {
 export const SOUND_EFFECT_PATHS = {
   'timer-tick': '/audio/sfx/timer-tick.mp3',
   'timer-expired': '/audio/sfx/timer-expired.mp3',
-  'correct-answer': '/audio/sfx/correct-answer.mp3',
-  'wrong-answer': '/audio/sfx/wrong-answer.mp3',
   'question-reveal': '/audio/sfx/question-reveal.mp3',
   'round-complete': '/audio/sfx/round-complete.mp3',
   'game-win': '/audio/sfx/game-win.mp3',

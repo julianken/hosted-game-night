@@ -12,8 +12,6 @@
 export type SoundEffectType =
   | 'timer-tick' // Timer tick (last 5 seconds)
   | 'timer-expired' // Timer reached zero (buzzer)
-  | 'correct-answer' // Correct answer chime
-  | 'wrong-answer' // Wrong answer buzz
   | 'question-reveal' // New question reveal
   | 'round-complete' // Round finished fanfare
   | 'game-win'; // Game win celebration
@@ -39,8 +37,6 @@ interface PooledAudio {
 export const SOUND_EFFECT_PATHS = {
   'timer-tick': '/audio/sfx/timer-tick.mp3',
   'timer-expired': '/audio/sfx/timer-expired.mp3',
-  'correct-answer': '/audio/sfx/correct-answer.mp3',
-  'wrong-answer': '/audio/sfx/wrong-answer.mp3',
   'question-reveal': '/audio/sfx/question-reveal.mp3',
   'round-complete': '/audio/sfx/round-complete.mp3',
   'game-win': '/audio/sfx/game-win.mp3',
@@ -412,8 +408,6 @@ interface TonePreset {
 const TONE_PRESETS = {
   'timer-tick': { frequency: 800, duration: 0.05, type: 'sine' },
   'timer-expired': { frequency: 200, duration: 0.5, type: 'sawtooth', decay: true },
-  'correct-answer': { frequency: 880, duration: 0.2, type: 'sine' },
-  'wrong-answer': { frequency: 220, duration: 0.3, type: 'square', decay: true },
   'question-reveal': { frequency: 660, duration: 0.15, type: 'sine' },
   'round-complete': { frequency: 523, duration: 0.4, type: 'sine' },
   'game-win': { frequency: 784, duration: 0.6, type: 'sine' },

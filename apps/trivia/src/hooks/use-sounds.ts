@@ -57,8 +57,6 @@ export interface UseSoundsReturn {
   // Convenience methods
   playTimerTick: () => void;
   playTimerExpired: () => Promise<void>;
-  playCorrectAnswer: () => Promise<void>;
-  playWrongAnswer: () => Promise<void>;
   playQuestionReveal: () => Promise<void>;
   playRoundComplete: () => Promise<void>;
   playGameWin: () => Promise<void>;
@@ -108,14 +106,6 @@ export function useSounds(): UseSoundsReturn {
     await play('timer-expired');
   }, [play]);
 
-  const playCorrectAnswer = useCallback(async () => {
-    await play('correct-answer');
-  }, [play]);
-
-  const playWrongAnswer = useCallback(async () => {
-    await play('wrong-answer');
-  }, [play]);
-
   const playQuestionReveal = useCallback(async () => {
     await play('question-reveal');
   }, [play]);
@@ -141,8 +131,6 @@ export function useSounds(): UseSoundsReturn {
     // Convenience methods
     playTimerTick,
     playTimerExpired,
-    playCorrectAnswer,
-    playWrongAnswer,
     playQuestionReveal,
     playRoundComplete,
     playGameWin,
@@ -291,7 +279,7 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
         break;
       case 'final_podium':
         // Winner revealed — delayed by 4.8s to match podium timing
-        setTimeout(() => sounds.playCorrectAnswer(), 4800);
+        setTimeout(() => sounds.playGameWin(), 4800);
         break;
       default:
         break;
@@ -309,20 +297,19 @@ export function useGameEventSounds(options: UseGameEventSoundsOptions): void {
     }
   }, [timerIsRunning, sounds]);
 
-  // T3.1: RevealPhase illuminate -> play correct-answer sound
+  // T3.1: RevealPhase illuminate -> play question-reveal sound for answer reveal
   useEffect(() => {
     const prevPhase = prevRevealPhaseRef.current;
     prevRevealPhaseRef.current = revealPhase;
 
     if (revealPhase === 'illuminate' && prevPhase !== 'illuminate') {
-      sounds.playCorrectAnswer();
+      sounds.playQuestionReveal();
     }
   }, [revealPhase, sounds]);
 }
 
 // =============================================================================
 // NOTE: useAnswerSounds and useSoundSettings removed — they were passthrough
-// wrappers with no callers. Use useSounds() directly for answer sounds
-// (playCorrectAnswer, playWrongAnswer) and useAudioSettings() from
-// @/stores/audio-store for audio settings UI.
+// wrappers with no callers. Use useSounds() directly and useAudioSettings()
+// from @/stores/audio-store for audio settings UI.
 // =============================================================================

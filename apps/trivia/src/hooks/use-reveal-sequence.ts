@@ -150,7 +150,7 @@ export function useRevealSequence(
     schedule(REVEAL_TIMING.ILLUMINATE_START_MS, () => {
       setPhase('illuminate');
       // Sound would fire at illuminate beat -- the caller or sound system
-      // hooks into onPhaseChange to trigger the correct-answer chime.
+      // hooks into onPhaseChange to trigger the question-reveal chime.
     });
 
     // POST_REVEAL_LOCK expires: presenter may advance
