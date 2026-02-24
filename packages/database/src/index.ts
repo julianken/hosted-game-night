@@ -193,6 +193,9 @@ export {
   exists,
   upsert,
 
+  // Utilities
+  fromTable,
+
   // Types
   type QueryOptions,
   type ListOptions,

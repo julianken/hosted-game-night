@@ -13,6 +13,7 @@ import {
   create,
   update,
   remove,
+  fromTable,
   type ListOptions,
 } from '../queries';
 import { filters } from '../filters';
@@ -192,9 +193,7 @@ async function unsetDefaultTriviaPreset(
   client: TypedSupabaseClient,
   userId: string
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (client as any)
-    .from('trivia_presets')
+  await fromTable(client, 'trivia_presets')
     .update({ is_default: false })
     .eq('user_id', userId)
     .eq('is_default', true);

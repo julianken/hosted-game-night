@@ -13,6 +13,7 @@ import {
   create,
   update,
   remove,
+  fromTable,
   type ListOptions,
 } from '../queries';
 import { filters } from '../filters';
@@ -169,9 +170,7 @@ async function unsetDefaultBingoPreset(
   client: TypedSupabaseClient,
   userId: string
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (client as any)
-    .from('bingo_presets')
+  await fromTable(client, 'bingo_presets')
     .update({ is_default: false })
     .eq('user_id', userId)
     .eq('is_default', true);
