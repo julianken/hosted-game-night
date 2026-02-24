@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generatePKCE } from '../pkce';
+import { generatePKCE } from '@joolie-boolie/auth';
 
 describe('generatePKCE', () => {
   it('should generate code_verifier with valid length', async () => {
