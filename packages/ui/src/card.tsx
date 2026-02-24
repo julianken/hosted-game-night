@@ -98,7 +98,7 @@ CardHeader.displayName = 'CardHeader';
 
 // ---- CardBody ----
 
-export interface CardBodyProps extends HTMLAttributes<HTMLDivElement> {}
+export type CardBodyProps = HTMLAttributes<HTMLDivElement>;
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
   ({ className = '', children, ...props }, ref) => {

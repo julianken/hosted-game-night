@@ -17,17 +17,17 @@ import { PatternSelector, PatternPreview } from '@/components/presenter/PatternS
 
 
 // Types
-import { BingoBall, BingoPattern } from '@/types';
+import { BallNumber, BingoBall, BingoPattern } from '@/types';
 import { allPatterns } from '@/lib/game/patterns';
 
 // Test data
-const mockBall: BingoBall = { column: 'B', number: 5, label: 'B-5' };
+const mockBall: BingoBall = { column: 'B', number: 5 as BallNumber, label: 'B-5' };
 const mockCalledBalls: BingoBall[] = [
-  { column: 'B', number: 5, label: 'B-5' },
-  { column: 'I', number: 20, label: 'I-20' },
-  { column: 'N', number: 35, label: 'N-35' },
-  { column: 'G', number: 50, label: 'G-50' },
-  { column: 'O', number: 65, label: 'O-65' },
+  { column: 'B', number: 5 as BallNumber, label: 'B-5' },
+  { column: 'I', number: 20 as BallNumber, label: 'I-20' },
+  { column: 'N', number: 35 as BallNumber, label: 'N-35' },
+  { column: 'G', number: 50 as BallNumber, label: 'G-50' },
+  { column: 'O', number: 65 as BallNumber, label: 'O-65' },
 ];
 const mockPattern: BingoPattern = allPatterns[0]; // Single line pattern
 

@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LargeCurrentBall } from '../LargeCurrentBall';
-import type { BingoBall } from '@/types';
+import type { BallNumber, BingoBall } from '@/types';
 
 describe('LargeCurrentBall', () => {
   const createBall = (column: 'B' | 'I' | 'N' | 'G' | 'O', number: number): BingoBall => ({
     column,
-    number,
+    number: number as BallNumber,
     label: `${column}-${number}`,
   });
 

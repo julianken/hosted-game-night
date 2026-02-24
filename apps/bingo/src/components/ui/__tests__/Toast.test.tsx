@@ -264,7 +264,7 @@ describe('Toast variants', () => {
     vi.useRealTimers();
   });
 
-  it('success toast has success background', () => {
+  it('success toast has success border', () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -273,10 +273,10 @@ describe('Toast variants', () => {
 
     fireEvent.click(screen.getByText('Show Success'));
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-success');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-success');
   });
 
-  it('error toast has error background', () => {
+  it('error toast has error border', () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -285,10 +285,10 @@ describe('Toast variants', () => {
 
     fireEvent.click(screen.getByText('Show Error'));
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-error');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-error');
   });
 
-  it('info toast has primary background', () => {
+  it('info toast has info border', () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -297,10 +297,10 @@ describe('Toast variants', () => {
 
     fireEvent.click(screen.getByText('Show Info'));
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-primary');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-info');
   });
 
-  it('warning toast has warning background', () => {
+  it('warning toast has warning border', () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -309,7 +309,7 @@ describe('Toast variants', () => {
 
     fireEvent.click(screen.getByText('Show Warning'));
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-warning');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-warning');
   });
 });
 
@@ -327,7 +327,7 @@ describe('StandaloneToast', () => {
   it('applies variant styles', () => {
     render(<StandaloneToast message="Error!" variant="error" />);
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-error');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-error');
   });
 
   it('shows dismiss button when onDismiss is provided', () => {
@@ -356,6 +356,6 @@ describe('StandaloneToast', () => {
   it('defaults to info variant', () => {
     render(<StandaloneToast message="Test" />);
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveClass('bg-primary');
+    expect(toast).toHaveClass('bg-surface-elevated', 'border-l-info');
   });
 });

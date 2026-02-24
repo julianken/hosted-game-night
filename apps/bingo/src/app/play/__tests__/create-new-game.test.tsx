@@ -57,6 +57,8 @@ vi.mock('@/hooks/use-game', () => ({
     canPause: false,
     canResume: false,
     canUndo: false,
+    isProcessing: false,
+    showResetConfirm: false,
     autoCallEnabled: false,
     autoCallSpeed: 10,
     audioEnabled: true,
@@ -70,6 +72,9 @@ vi.mock('@/hooks/use-game', () => ({
     toggleAutoCall: vi.fn(),
     setAutoCallSpeed: vi.fn(),
     toggleAudio: vi.fn(),
+    requestReset: vi.fn(),
+    confirmReset: vi.fn(),
+    cancelReset: vi.fn(),
   }),
 }));
 
@@ -200,16 +205,16 @@ describe('PlayPage - Create New Game Button', () => {
 
   it('renders Create New Game button', () => {
     renderWithProviders(<PlayPage />);
-    const button = screen.getByRole('button', { name: /create new game/i });
+    const button = screen.getByRole('button', { name: /new game/i });
     expect(button).toBeInTheDocument();
   });
 
   it('button has proper accessibility and styling', () => {
     renderWithProviders(<PlayPage />);
-    const button = screen.getByRole('button', { name: /create new game/i });
+    const button = screen.getByRole('button', { name: /new game/i });
 
     // Check button is properly labeled
-    expect(button).toHaveAccessibleName('Create New Game');
+    expect(button).toHaveAccessibleName('New Game');
 
     // Check button has secondary variant style
     expect(button.className).toContain('bg-secondary');
@@ -221,7 +226,7 @@ describe('PlayPage - Create New Game Button', () => {
   it('clicking button clears session token', async () => {
     renderWithProviders(<PlayPage />);
 
-    const createButton = screen.getByRole('button', { name: /create new game/i });
+    const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
     await waitFor(() => {
@@ -232,7 +237,7 @@ describe('PlayPage - Create New Game Button', () => {
   it('clicking button resets game state', async () => {
     renderWithProviders(<PlayPage />);
 
-    const createButton = screen.getByRole('button', { name: /create new game/i });
+    const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
     await waitFor(() => {
@@ -243,7 +248,7 @@ describe('PlayPage - Create New Game Button', () => {
   it('clicking button calls resetSession with showModal', async () => {
     renderWithProviders(<PlayPage />);
 
-    const createButton = screen.getByRole('button', { name: /create new game/i });
+    const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
     await waitFor(() => {
@@ -254,7 +259,7 @@ describe('PlayPage - Create New Game Button', () => {
   it('does not show confirmation in idle state', () => {
     renderWithProviders(<PlayPage />);
 
-    const createButton = screen.getByRole('button', { name: /create new game/i });
+    const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
     // Should not show confirmation dialog
@@ -296,7 +301,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
 
   it('button is still visible during active game', () => {
     renderWithProviders(<PlayPage />);
-    const button = screen.getByRole('button', { name: /create new game/i });
+    const button = screen.getByRole('button', { name: /new game/i });
     expect(button).toBeInTheDocument();
   });
 
@@ -304,7 +309,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
     mockConfirm.mockReturnValue(false); // User clicks "Cancel"
 
     renderWithProviders(<PlayPage />);
-    const createButton = screen.getByRole('button', { name: /create new game/i });
+    const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
     // Should show confirmation

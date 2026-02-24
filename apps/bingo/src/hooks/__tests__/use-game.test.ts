@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useGame, useGameKeyboard } from '../use-game';
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
-import { BingoPattern } from '@/types';
+import { BallNumber, BingoPattern } from '@/types';
 
 // Mock Audio globally for all tests
 class MockAudio {
@@ -41,7 +41,7 @@ describe('use-game', () => {
       previousBall: null,
       remainingBalls: Array.from({ length: 75 }, (_, i) => ({
         column: ['B', 'I', 'N', 'G', 'O'][Math.floor(i / 15)] as 'B' | 'I' | 'N' | 'G' | 'O',
-        number: i + 1,
+        number: (i + 1) as BallNumber,
         label: `${['B', 'I', 'N', 'G', 'O'][Math.floor(i / 15)]}-${i + 1}`,
       })),
       pattern: null,
@@ -407,9 +407,9 @@ describe('use-game', () => {
 
         // Create a state with only 3 balls remaining
         const threeBalls = [
-          { column: 'B' as const, number: 1, label: 'B-1' },
-          { column: 'I' as const, number: 16, label: 'I-16' },
-          { column: 'N' as const, number: 31, label: 'N-31' },
+          { column: 'B' as const, number: 1 as BallNumber, label: 'B-1' },
+          { column: 'I' as const, number: 16 as BallNumber, label: 'I-16' },
+          { column: 'N' as const, number: 31 as BallNumber, label: 'N-31' },
         ];
 
         useGameStore.setState({

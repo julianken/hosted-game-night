@@ -1,10 +1,39 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { create } from 'zustand';
+
+// Mock @/stores/theme-store to avoid importing @joolie-boolie/theme
+// which pulls in next/font/google (unavailable in test environment)
+vi.mock('@/stores/theme-store', () => {
+  type ThemeMode = 'light' | 'dark' | 'system';
+  interface ThemeStore {
+    presenterTheme: ThemeMode;
+    displayTheme: ThemeMode;
+    setPresenterTheme: (theme: ThemeMode) => void;
+    setDisplayTheme: (theme: ThemeMode) => void;
+  }
+  const useThemeStore = create<ThemeStore>()((set) => ({
+    presenterTheme: 'system',
+    displayTheme: 'system',
+    setPresenterTheme: (theme: ThemeMode) => set({ presenterTheme: theme }),
+    setDisplayTheme: (theme: ThemeMode) => set({ displayTheme: theme }),
+  }));
+  return {
+    useThemeStore,
+    DEFAULT_THEME: 'system',
+    THEME_OPTIONS: [
+      { value: 'light', label: 'Light' },
+      { value: 'dark', label: 'Dark' },
+      { value: 'system', label: 'System Default' },
+    ],
+  };
+});
+
 import { useSync } from '../use-sync';
 import { useSyncStore } from '@joolie-boolie/sync';
 import { useGameStore } from '@/stores/game-store';
 import { createMessageRouter } from '../use-sync';
-import { BingoSyncMessage, BingoPattern, BingoBall, GameState } from '@/types';
+import { BallNumber, BingoSyncMessage, BingoPattern, BingoBall, GameState } from '@/types';
 
 // Test session ID for all tests
 const TEST_SESSION_ID = '550e8400-e29b-41d4-a716-446655440000';
@@ -152,7 +181,7 @@ describe('use-sync', () => {
 
     const mockBall: BingoBall = {
       column: 'B',
-      number: 5,
+      number: 5 as BallNumber,
       label: 'B-5',
     };
 
@@ -435,7 +464,7 @@ describe('use-sync', () => {
       const onBallCalled = vi.fn();
       const router = createMessageRouter({ onBallCalled });
 
-      const mockBall: BingoBall = { column: 'B', number: 5, label: 'B-5' };
+      const mockBall: BingoBall = { column: 'B', number: 5 as BallNumber, label: 'B-5' };
 
       router({
         type: 'BALL_CALLED',

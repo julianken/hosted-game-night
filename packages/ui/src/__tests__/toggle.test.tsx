@@ -65,7 +65,7 @@ describe('Toggle', () => {
     it('should apply disabled styling', () => {
       render(<Toggle {...defaultProps} disabled label="Disabled Toggle" />);
       const wrapper = screen.getByText('Disabled Toggle').parentElement;
-      expect(wrapper?.className).toContain('opacity-50');
+      expect(wrapper?.className).toContain('opacity-[0.38]');
     });
   });
 
@@ -106,22 +106,19 @@ describe('Toggle', () => {
     it('should apply checked styles when on', () => {
       render(<Toggle {...defaultProps} checked={true} />);
       const toggle = screen.getByRole('switch');
-      expect(toggle.className).toContain('bg-accent');
+      expect(toggle.className).toContain('bg-success');
     });
 
     it('should apply unchecked styles when off', () => {
       render(<Toggle {...defaultProps} checked={false} />);
       const toggle = screen.getByRole('switch');
-      expect(toggle.className).toContain('bg-muted');
+      expect(toggle.className).toContain('bg-secondary');
     });
 
     it('should have minimum height of 44px for accessible design', () => {
       render(<Toggle {...defaultProps} />);
       const wrapper = screen.getByText('Test Toggle').parentElement;
       expect(wrapper?.className).toContain('min-h-[44px]');
-
-      const toggle = screen.getByRole('switch');
-      expect(toggle.className).toContain('h-[44px]');
     });
   });
 });

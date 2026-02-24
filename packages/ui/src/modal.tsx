@@ -64,7 +64,6 @@ export function Modal({
         return () => clearTimeout(t);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Get all focusable elements within the modal

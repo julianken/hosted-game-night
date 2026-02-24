@@ -19,7 +19,6 @@ import PlayPage from '../page';
 import { ToastProvider } from "@joolie-boolie/ui";
 import {
   getStoredOfflineSessionId,
-  clearStoredOfflineSessionId,
   storeOfflineSessionId,
 } from '@/lib/session/secure-generation';
 
@@ -49,6 +48,8 @@ vi.mock('@/hooks/use-game', () => ({
     canPause: false,
     canResume: false,
     canUndo: false,
+    isProcessing: false,
+    showResetConfirm: false,
     startGame: vi.fn(),
     callBall: vi.fn(),
     pauseGame: vi.fn(),
@@ -59,6 +60,9 @@ vi.mock('@/hooks/use-game', () => ({
     toggleAutoCall: vi.fn(),
     setAutoCallSpeed: vi.fn(),
     toggleAudio: vi.fn(),
+    requestReset: vi.fn(),
+    confirmReset: vi.fn(),
+    cancelReset: vi.fn(),
   }),
 }));
 
@@ -204,15 +208,6 @@ function renderWithProviders(ui: React.ReactElement) {
   return render(<ToastProvider>{ui}</ToastProvider>);
 }
 
-// Get reference to mocked functions after vi.mock() hoisting
-async function getMockGameStore() {
-  const { useGameStore } = await import('@/stores/game-store');
-  return {
-    setState: useGameStore.setState as ReturnType<typeof vi.fn>,
-    getState: useGameStore.getState as ReturnType<typeof vi.fn>,
-  };
-}
-
 describe('PlayPage - Auto-Create Game (BEA-417)', () => {
   beforeEach(() => {
     // Clear localStorage before each test
@@ -308,7 +303,7 @@ describe('PlayPage - Auto-Create Game (BEA-417)', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
 
       // Click "Create New Game" button
-      const createNewButton = await screen.findByRole('button', { name: /create new game/i });
+      const createNewButton = await screen.findByRole('button', { name: /new game/i });
       await userEvent.click(createNewButton);
 
       // Verify resetSession was called with showModal: true
@@ -368,7 +363,7 @@ describe('PlayPage - Auto-Create Game (BEA-417)', () => {
       }, { timeout: 3000 });
 
       // Click "Create New Game" button (this calls resetSession which calls clearToken + resetGame)
-      const createNewButton = await screen.findByRole('button', { name: /create new game/i });
+      const createNewButton = await screen.findByRole('button', { name: /new game/i });
       await userEvent.click(createNewButton);
 
       // Verify session was cleared (resetSession mock calls clearToken)

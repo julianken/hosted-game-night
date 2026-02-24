@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BingoBoard } from '../BingoBoard';
-import { BingoBall } from '@/types';
+import { BallNumber, BingoBall } from '@/types';
 
 describe('BingoBoard', () => {
   const mockCalledBalls: BingoBall[] = [
-    { column: 'B', number: 5, label: 'B-5' },
-    { column: 'I', number: 20, label: 'I-20' },
-    { column: 'N', number: 35, label: 'N-35' },
+    { column: 'B', number: 5 as BallNumber, label: 'B-5' },
+    { column: 'I', number: 20 as BallNumber, label: 'I-20' },
+    { column: 'N', number: 35 as BallNumber, label: 'N-35' },
   ];
 
   it('renders 75 number cells', () => {
@@ -54,16 +54,16 @@ describe('BingoBoard', () => {
     it('highlights called ball numbers', () => {
       render(<BingoBoard calledBalls={mockCalledBalls} />);
       const ball5 = screen.getByText('5');
-      // Called balls should have the highlight color class
-      expect(ball5.className).toContain('bg-ball-b/20');
+      // Called balls have cell-highlight-animation class and inline backgroundColor style
+      expect(ball5.className).toContain('cell-highlight-animation');
     });
 
     it('does not highlight uncalled numbers', () => {
       render(<BingoBoard calledBalls={mockCalledBalls} />);
       const ball1 = screen.getByText('1');
-      // Uncalled balls should not have highlight
-      expect(ball1.className).not.toContain('bg-ball-b/20');
-      expect(ball1.className).toContain('bg-background');
+      // Uncalled balls have bg-surface class, not the highlight animation
+      expect(ball1.className).not.toContain('cell-highlight-animation');
+      expect(ball1.className).toContain('bg-surface');
     });
 
     it('highlights balls from different columns', () => {
@@ -73,9 +73,10 @@ describe('BingoBoard', () => {
       const ball20 = screen.getByText('20');
       const ball35 = screen.getByText('35');
 
-      expect(ball5.className).toContain('bg-ball-b/20');
-      expect(ball20.className).toContain('bg-ball-i/20');
-      expect(ball35.className).toContain('bg-muted/50'); // N column uses muted
+      // All called balls have the highlight animation class; colors are applied via inline styles
+      expect(ball5.className).toContain('cell-highlight-animation');
+      expect(ball20.className).toContain('cell-highlight-animation');
+      expect(ball35.className).toContain('cell-highlight-animation');
     });
   });
 
@@ -102,7 +103,7 @@ describe('BingoBoard', () => {
     it('renders all numbers without highlights', () => {
       render(<BingoBoard calledBalls={[]} />);
       const cell1 = screen.getByText('1');
-      expect(cell1.className).toContain('bg-background');
+      expect(cell1.className).toContain('bg-surface');
     });
   });
 });

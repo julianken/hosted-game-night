@@ -637,16 +637,15 @@ describe('RoomSetupModal', () => {
       rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={false} /></ToastProvider>);
       rerender(<ToastProvider><RoomSetupModal {...defaultProps} isOpen={true} /></ToastProvider>);
 
-      // Wait for reopen - TemplateSelector will call fetch again
+      // Allow any async effects to settle
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledTimes(initialCallCount + 1);
+        expect(screen.getByText('Room Setup')).toBeInTheDocument();
       });
 
-      // Should have auto-loaded default template only once (not on reopen)
-      // Initial: TemplateSelector (1) + Auto-load (1) = 2 calls
-      // Reopen: TemplateSelector (1) = 1 call
-      // Total: 3 calls
-      expect(global.fetch).toHaveBeenCalledTimes(initialCallCount + 1);
+      // Should NOT have auto-loaded default template again on reopen
+      // (hasLoadedDefaultTemplate is already true, Modal preserves children)
+      // The fetch count should remain the same as before close/reopen
+      expect(global.fetch).toHaveBeenCalledTimes(initialCallCount);
     });
 
     it('handles template fetch error gracefully', async () => {

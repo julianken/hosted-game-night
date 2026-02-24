@@ -10,7 +10,7 @@ import type { VoicePackId } from '@/types';
 
 export type { RoomSetupModalProps as SharedRoomSetupModalProps };
 
-export interface RoomSetupModalProps extends Omit<SharedRoomSetupModalProps, 'gameLabel' | 'children' | 'templateSelectorPosition'> {}
+export type RoomSetupModalProps = Omit<SharedRoomSetupModalProps, 'gameLabel' | 'children' | 'templateSelectorPosition'>;
 
 export function RoomSetupModal(props: RoomSetupModalProps) {
   const { isOpen, isLoading = false } = props;

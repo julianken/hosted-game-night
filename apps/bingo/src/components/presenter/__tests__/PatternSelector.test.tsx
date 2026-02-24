@@ -88,8 +88,9 @@ describe('PatternPreview', () => {
   };
 
   it('shows empty state when no pattern', () => {
-    render(<PatternPreview pattern={null} />);
-    expect(screen.getByText('No pattern selected')).toBeInTheDocument();
+    const { container } = render(<PatternPreview pattern={null} />);
+    // PatternPreview returns null when no pattern is provided
+    expect(container.innerHTML).toBe('');
   });
 
   it('shows Pattern Preview heading', () => {

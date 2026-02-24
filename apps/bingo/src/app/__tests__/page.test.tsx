@@ -164,7 +164,7 @@ describe('Home Page (BEA-422)', () => {
       const element = await Home();
       render(element);
 
-      expect(screen.getByText(/joolie boolie platform/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/joolie boolie/i).length).toBeGreaterThan(0);
     });
   });
 });

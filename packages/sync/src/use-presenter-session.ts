@@ -286,7 +286,7 @@ export function usePresenterSession(
   // ---------------------------------------------------------------------------
 
   const [roomCode, setRoomCode] = useState<RoomCode | null>(null);
-  const [sessionToken, setSessionTokenState] = useState<string | null>(null);
+  const [_sessionToken, setSessionTokenState] = useState<string | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [offlineSessionId, setOfflineSessionId] = useState<SessionId | null>(null);
   const [pin, setPin] = useState<string | null>(null);
@@ -368,7 +368,7 @@ export function usePresenterSession(
     } catch {
       setOfflineSessionId(makeSessionId(generateShortSessionId()));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   // Load stored PIN on mount
@@ -377,7 +377,7 @@ export function usePresenterSession(
     if (stored) {
       setPin(stored);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -457,7 +457,7 @@ export function usePresenterSession(
     };
 
     recoverOfflineSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   // ---------------------------------------------------------------------------

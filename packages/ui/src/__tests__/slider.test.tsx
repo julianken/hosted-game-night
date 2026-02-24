@@ -114,13 +114,13 @@ describe('Slider', () => {
     it('should apply disabled styling to label', () => {
       render(<Slider {...defaultProps} disabled label="Disabled Slider" />);
       const label = screen.getByText('Disabled Slider');
-      expect(label.className).toContain('opacity-50');
+      expect(label.className).toContain('opacity-[0.38]');
     });
 
     it('should apply disabled styling to value display', () => {
       render(<Slider {...defaultProps} disabled value={42} />);
       const valueDisplay = screen.getByText('42');
-      expect(valueDisplay.className).toContain('opacity-50');
+      expect(valueDisplay.className).toContain('opacity-[0.38]');
     });
   });
 
@@ -146,19 +146,18 @@ describe('Slider', () => {
       expect(thumb).toBeInTheDocument();
     });
 
-    it('should have label with large readable text', () => {
+    it('should have label with readable text', () => {
       render(<Slider {...defaultProps} label="Volume" />);
       const label = screen.getByText('Volume');
-      // Label should have text-lg class for accessible readability
-      expect(label.className).toContain('text-lg');
+      expect(label.className).toContain('text-base');
     });
   });
 
   describe('visual styling', () => {
     it('should render a track element', () => {
       const { container } = render(<Slider {...defaultProps} value={50} min={0} max={100} />);
-      // The track is rendered as a div with relative positioning
-      const track = container.querySelector('.relative.h-3');
+      // The track is rendered via SliderTrack with relative + w-full classes
+      const track = container.querySelector('.relative.w-full');
       expect(track).toBeInTheDocument();
     });
 

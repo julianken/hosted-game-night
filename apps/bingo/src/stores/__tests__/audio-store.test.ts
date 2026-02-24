@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useAudioStore, DEFAULT_VOICE_VOLUME, DEFAULT_ROLL_SOUND_VOLUME, DEFAULT_CHIME_VOLUME, DEFAULT_VOICE_PACK, VOICE_PACK_OPTIONS, cleanupAllPools, getActiveAudioCount } from '../audio-store';
-import { BingoBall, VoicePackId } from '@/types';
+import { BallNumber, BingoBall, VoicePackId } from '@/types';
 
 describe('audio-store', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
@@ -193,7 +193,7 @@ describe('audio-store', () => {
   describe('playBallCall', () => {
     const mockBall: BingoBall = {
       column: 'B',
-      number: 5,
+      number: 5 as BallNumber,
       label: 'B5',
     };
 
@@ -542,7 +542,7 @@ describe('audio-store', () => {
       }
       vi.stubGlobal('Audio', MockAudio);
 
-      const mockBall: BingoBall = { column: 'B', number: 5, label: 'B5' };
+      const mockBall: BingoBall = { column: 'B', number: 5 as BallNumber, label: 'B5' };
       await useAudioStore.getState().playBallCall(mockBall);
 
       // After playback, src should be cleared to release media resource
@@ -615,7 +615,7 @@ describe('audio-store', () => {
       }
       vi.stubGlobal('Audio', MockAudio);
 
-      const mockBall: BingoBall = { column: 'B', number: 5, label: 'B5' };
+      const mockBall: BingoBall = { column: 'B', number: 5 as BallNumber, label: 'B5' };
       await useAudioStore.getState().playBallCall(mockBall);
 
       // After playback, event handlers should be cleared

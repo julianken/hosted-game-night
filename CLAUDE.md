@@ -12,11 +12,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **E2E Testing:** All code must pass E2E tests locally before committing (GitHub Actions are disabled). Run `pnpm test:e2e` and check `pnpm test:e2e:summary`. See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md).
 
+**Manual Testing:** Use Playwright MCP browser tools for visual, audio, cross-app, and interactive verification. The canonical guide is [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md) — it has 189 test cases organized by app and feature. Always launch Playwright MCP in dark mode (`page.emulateMedia({ colorScheme: 'dark' })`). Start servers with `pnpm dev:e2e` for E2E auth mode.
+
 **Development Model:** This project is developed exclusively with AI agents. Never include time estimates, effort estimates, team size assumptions, or timeline projections. Focus on dependencies, complexity, scope, and completion status.
 
 **PRs:** All pull requests MUST use the template at `.github/PULL_REQUEST_TEMPLATE.md` (includes Five-Level Explanation).
 
-**Pre-Commit Hooks:** Husky + lint-staged run `pnpm lint`, `pnpm typecheck`, and `pnpm test:run` on changed packages. Bypass with `--no-verify` when needed.
+**Pre-Commit Hooks:** Husky + lint-staged run `pnpm lint`, `pnpm typecheck`, and `pnpm test:run` on changed packages. **NEVER use `--no-verify`** — if hooks fail, fix the underlying issue before committing.
 
 ---
 
@@ -129,6 +131,7 @@ COOKIE_DOMAIN=.joolie-boolie.com                   # Cross-app SSO cookies
 - [docs/APP_STRUCTURE.md](docs/APP_STRUCTURE.md) - Canonical `lib/` layout
 - [docs/MIDDLEWARE_PATTERNS.md](docs/MIDDLEWARE_PATTERNS.md) - Next.js middleware rules (lazy init, JWKS caching)
 - [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md) - E2E commands, checklist, port isolation, troubleshooting
+- [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md) - Playwright MCP manual test cases (189 cases, visual/audio/cross-app)
 - `apps/bingo/CLAUDE.md` - 75-ball bingo, 29 patterns, game mechanics, keyboard shortcuts
 - `apps/trivia/CLAUDE.md` - Team trivia, rounds, scoring, keyboard shortcuts
 - `apps/platform-hub/CLAUDE.md` - Auth, game selector, dashboard

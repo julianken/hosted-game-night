@@ -5,7 +5,7 @@ import {
   SerializationError,
   SerializedBingoState,
 } from '../serializer';
-import { GameState, BingoBall, BingoPattern } from '@/types';
+import { BallNumber, GameState, BingoBall, BingoPattern } from '@/types';
 import { DEFAULT_AUTO_CALL_SPEED } from '@/lib/game/engine';
 import { patternRegistry } from '@/lib/game/patterns';
 
@@ -13,19 +13,19 @@ describe('serializer', () => {
   // Test data fixtures
   const mockBall1: BingoBall = {
     column: 'B',
-    number: 5,
+    number: 5 as BallNumber,
     label: 'B-5',
   };
 
   const mockBall2: BingoBall = {
     column: 'I',
-    number: 20,
+    number: 20 as BallNumber,
     label: 'I-20',
   };
 
   const mockBall3: BingoBall = {
     column: 'N',
-    number: 35,
+    number: 35 as BallNumber,
     label: 'N-35',
   };
 

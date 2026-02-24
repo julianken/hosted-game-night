@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AudienceBingoBoard } from '../AudienceBingoBoard';
-import type { BingoBall } from '@/types';
+import type { BallNumber, BingoBall } from '@/types';
 
 describe('AudienceBingoBoard', () => {
   const createBall = (column: 'B' | 'I' | 'N' | 'G' | 'O', number: number): BingoBall => ({
     column,
-    number,
+    number: number as BallNumber,
     label: `${column}-${number}`,
   });
 
@@ -89,8 +89,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball5 = screen.getByText('5');
-      // Called balls have highlight styling with ring (the number is directly in the styled div)
-      expect(ball5.className).toContain('ring-2');
+      // Called balls have cell-flash-audience-animation class and inline boxShadow style
+      expect(ball5.className).toContain('cell-flash-audience-animation');
     });
 
     it('highlights multiple called balls', () => {
@@ -103,11 +103,11 @@ describe('AudienceBingoBoard', () => {
       ];
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
-      expect(screen.getByText('1').className).toContain('ring-2');
-      expect(screen.getByText('20').className).toContain('ring-2');
-      expect(screen.getByText('35').className).toContain('ring-2');
-      expect(screen.getByText('50').className).toContain('ring-2');
-      expect(screen.getByText('70').className).toContain('ring-2');
+      expect(screen.getByText('1').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('20').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('35').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('50').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('70').className).toContain('cell-flash-audience-animation');
     });
 
     it('does not highlight uncalled balls', () => {
@@ -115,9 +115,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball6 = screen.getByText('6');
-      // Uncalled balls have border styling instead of ring
-      expect(ball6.className).toContain('border');
-      expect(ball6.className).not.toContain('ring-2');
+      // Uncalled balls have opacity style but no animation class
+      expect(ball6.className).not.toContain('cell-flash-audience-animation');
     });
 
     it('applies column-specific highlight colors for B column', () => {
@@ -125,7 +124,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball3 = screen.getByText('3');
-      expect(ball3.className).toContain('bg-ball-b');
+      // Column colors are applied via inline style (backgroundColor), not CSS classes
+      expect(ball3.style.backgroundColor).toContain('59, 130, 246');
     });
 
     it('applies column-specific highlight colors for I column', () => {
@@ -133,7 +133,7 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball22 = screen.getByText('22');
-      expect(ball22.className).toContain('bg-ball-i');
+      expect(ball22.style.backgroundColor).toContain('239, 68, 68');
     });
 
     it('applies column-specific highlight colors for N column', () => {
@@ -141,7 +141,7 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball40 = screen.getByText('40');
-      expect(ball40.className).toContain('bg-muted');
+      expect(ball40.style.backgroundColor).toContain('232, 230, 235');
     });
 
     it('applies column-specific highlight colors for G column', () => {
@@ -149,7 +149,7 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball55 = screen.getByText('55');
-      expect(ball55.className).toContain('bg-ball-g');
+      expect(ball55.style.backgroundColor).toContain('34, 197, 94');
     });
 
     it('applies column-specific highlight colors for O column', () => {
@@ -157,7 +157,7 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball72 = screen.getByText('72');
-      expect(ball72.className).toContain('bg-ball-o');
+      expect(ball72.style.backgroundColor).toContain('245, 158, 11');
     });
   });
 
@@ -167,28 +167,28 @@ describe('AudienceBingoBoard', () => {
 
       // Initially ball 10 is not highlighted
       const ball10 = screen.getByText('10');
-      expect(ball10.className).not.toContain('ring-2');
+      expect(ball10.className).not.toContain('cell-flash-audience-animation');
 
       // After adding ball 10 to called balls
       rerender(<AudienceBingoBoard calledBalls={[createBall('B', 10)]} />);
 
       const updatedBall10 = screen.getByText('10');
-      expect(updatedBall10.className).toContain('ring-2');
+      expect(updatedBall10.className).toContain('cell-flash-audience-animation');
     });
 
     it('maintains highlighting for previously called balls', () => {
       const initialBalls = [createBall('B', 5)];
       const { rerender } = render(<AudienceBingoBoard calledBalls={initialBalls} />);
 
-      expect(screen.getByText('5').className).toContain('ring-2');
+      expect(screen.getByText('5').className).toContain('cell-flash-audience-animation');
 
       // Add another ball
       const updatedBalls = [...initialBalls, createBall('I', 25)];
       rerender(<AudienceBingoBoard calledBalls={updatedBalls} />);
 
       // Both balls should be highlighted
-      expect(screen.getByText('5').className).toContain('ring-2');
-      expect(screen.getByText('25').className).toContain('ring-2');
+      expect(screen.getByText('5').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('25').className).toContain('cell-flash-audience-animation');
     });
 
     it('handles rapid successive ball calls', () => {
@@ -202,7 +202,7 @@ describe('AudienceBingoBoard', () => {
 
       // All 5 balls should be highlighted
       for (let i = 1; i <= 5; i++) {
-        expect(screen.getByText(i.toString()).className).toContain('ring-2');
+        expect(screen.getByText(i.toString()).className).toContain('cell-flash-audience-animation');
       }
     });
   });
@@ -211,9 +211,9 @@ describe('AudienceBingoBoard', () => {
     it('handles empty called balls array', () => {
       render(<AudienceBingoBoard calledBalls={[]} />);
 
-      // No balls should have ring styling
+      // No balls should have animation class
       const ball1 = screen.getByText('1');
-      expect(ball1.className).not.toContain('ring-2');
+      expect(ball1.className).not.toContain('cell-flash-audience-animation');
     });
 
     it('handles all balls called', () => {
@@ -237,9 +237,9 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={allBalls} />);
 
       // Spot check that several balls are highlighted
-      expect(screen.getByText('1').className).toContain('ring-2');
-      expect(screen.getByText('38').className).toContain('ring-2');
-      expect(screen.getByText('75').className).toContain('ring-2');
+      expect(screen.getByText('1').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('38').className).toContain('cell-flash-audience-animation');
+      expect(screen.getByText('75').className).toContain('cell-flash-audience-animation');
     });
 
     it('handles balls at column boundaries', () => {
@@ -259,7 +259,7 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={boundaryBalls} />);
 
       for (const ball of boundaryBalls) {
-        expect(screen.getByText(ball.number.toString()).className).toContain('ring-2');
+        expect(screen.getByText(ball.number.toString()).className).toContain('cell-flash-audience-animation');
       }
     });
   });
@@ -268,16 +268,18 @@ describe('AudienceBingoBoard', () => {
     it('applies B column header color', () => {
       const { container } = render(<AudienceBingoBoard calledBalls={[]} />);
 
-      // Find the B header
-      const headers = container.querySelectorAll('[class*="rounded-t-lg"]');
-      const bHeader = Array.from(headers).find(h => h.textContent === 'B');
-      expect(bHeader?.className).toContain('bg-ball-b');
+      // Column headers use rounded-full (circular) with inline background styles
+      const headers = container.querySelectorAll('[class*="rounded-full"]');
+      const bHeader = Array.from(headers).find(h => h.textContent === 'B') as HTMLElement | undefined;
+      expect(bHeader).toBeTruthy();
+      // The background includes a radial-gradient and the base color
+      expect(bHeader?.style.background).toContain('59, 130, 246');
     });
 
     it('applies different colors for each column header', () => {
       const { container } = render(<AudienceBingoBoard calledBalls={[]} />);
 
-      const headers = container.querySelectorAll('[class*="rounded-t-lg"]');
+      const headers = container.querySelectorAll('[class*="rounded-full"]');
       expect(headers.length).toBe(5);
 
       const headerTexts = Array.from(headers).map(h => h.textContent);

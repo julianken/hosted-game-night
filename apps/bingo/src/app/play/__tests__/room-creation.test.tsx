@@ -106,6 +106,8 @@ vi.mock('@/hooks/use-game', () => ({
     canPause: false,
     canResume: false,
     canUndo: false,
+    isProcessing: false,
+    showResetConfirm: false,
     startGame: vi.fn(),
     callBall: vi.fn(),
     pauseGame: vi.fn(),
@@ -116,6 +118,9 @@ vi.mock('@/hooks/use-game', () => ({
     toggleAutoCall: vi.fn(),
     setAutoCallSpeed: vi.fn(),
     toggleAudio: vi.fn(),
+    requestReset: vi.fn(),
+    confirmReset: vi.fn(),
+    cancelReset: vi.fn(),
   }),
 }));
 
@@ -609,7 +614,7 @@ describe('Room Creation Flow', () => {
 
       renderPlayPage();
 
-      const createNewButton = screen.getByRole('button', { name: /create new game/i });
+      const createNewButton = screen.getByRole('button', { name: /new game/i });
       await user.click(createNewButton);
 
       expect(mockClearToken).toHaveBeenCalled();
@@ -627,7 +632,7 @@ describe('Room Creation Flow', () => {
 
       renderPlayPage();
 
-      const createNewButton = screen.getByRole('button', { name: /create new game/i });
+      const createNewButton = screen.getByRole('button', { name: /new game/i });
       await user.click(createNewButton);
 
       expect(mockClearToken).toHaveBeenCalled();
