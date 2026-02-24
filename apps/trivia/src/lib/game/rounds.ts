@@ -38,6 +38,12 @@ export function nextRound(state: TriviaGameState): TriviaGameState {
   // Find first question of the next round
   const nextRoundFirstQuestion = state.questions.findIndex(q => q.roundIndex === nextRoundIndex);
 
+  // Snapshot current scores at round start for delta computation at round completion
+  const roundStartScores: Record<string, number> = {};
+  for (const t of state.teams) {
+    roundStartScores[t.id] = t.score;
+  }
+
   return deepFreeze({
     ...state,
     status: 'playing',
@@ -45,6 +51,7 @@ export function nextRound(state: TriviaGameState): TriviaGameState {
     selectedQuestionIndex: nextRoundFirstQuestion >= 0 ? nextRoundFirstQuestion : 0,
     displayQuestionIndex: null,
     scoreDeltas: [],
+    questionStartScores: roundStartScores,
   });
 }
 

@@ -49,6 +49,8 @@ vi.mock('@/stores/game-store', () => ({
       scoreDeltas: [],
       // Recap sub-state (BEA-587)
       recapShowingAnswer: null,
+      // Round start score snapshot (BEA-601)
+      questionStartScores: {},
       startGame: vi.fn(),
       endGame: vi.fn(),
       resetGame: vi.fn(),
@@ -304,6 +306,8 @@ describe('TemplateSelector', () => {
         scoreDeltas: [],
         // Recap sub-state (BEA-587)
         recapShowingAnswer: null,
+        // Round start score snapshot (BEA-601)
+        questionStartScores: {},
         startGame: vi.fn(),
         endGame: vi.fn(),
         resetGame: vi.fn(),

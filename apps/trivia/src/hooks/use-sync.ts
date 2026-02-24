@@ -79,6 +79,8 @@ function storeToGameState(state: import('@/stores/game-store').GameStore): Trivi
     scoreDeltas: state.scoreDeltas,
     revealPhase: state.revealPhase,
     recapShowingAnswer: state.recapShowingAnswer,
+    // Round start score snapshot (BEA-601)
+    questionStartScores: state.questionStartScores,
   };
 }
 

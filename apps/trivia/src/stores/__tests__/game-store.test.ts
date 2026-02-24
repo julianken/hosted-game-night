@@ -521,6 +521,110 @@ describe('advanceScene() recap paths', () => {
   });
 });
 
+describe('advanceScene() scoreDeltas computation at round completion', () => {
+  beforeEach(() => {
+    resetGameStore();
+  });
+
+  /**
+   * Helper: start a game with the given team names, force into playing state
+   * with question_closed scene on the last question of round 0, then set
+   * questionStartScores to the given snapshot.
+   */
+  function setupForRoundComplete(
+    teamNames: string[],
+    teamScores: number[],
+    startScores: number[],
+  ) {
+    for (const name of teamNames) {
+      useGameStore.getState().addTeam(name);
+    }
+    useGameStore.getState().startGame();
+
+    // Apply scores to each team
+    const teams = useGameStore.getState().teams;
+    for (let i = 0; i < teams.length; i++) {
+      useGameStore.getState().setTeamScore(teams[i].id, teamScores[i] ?? 0);
+    }
+
+    // Build questionStartScores snapshot from current team ids
+    const currentTeams = useGameStore.getState().teams;
+    const snapshot: Record<string, number> = {};
+    for (let i = 0; i < currentTeams.length; i++) {
+      snapshot[currentTeams[i].id] = startScores[i] ?? 0;
+    }
+
+    // Find the last question of round 0 to satisfy isLastQuestion logic
+    const state = useGameStore.getState();
+    const roundQuestions = state.questions.filter((q) => q.roundIndex === 0);
+    const lastQ = roundQuestions[roundQuestions.length - 1];
+    const lastQIndex = state.questions.indexOf(lastQ);
+
+    useGameStore.setState({
+      audienceScene: 'question_closed',
+      status: 'playing',
+      displayQuestionIndex: lastQIndex,
+      selectedQuestionIndex: lastQIndex,
+      questionStartScores: snapshot,
+    });
+  }
+
+  it('should populate scoreDeltas with correct delta values when transitioning to round_summary', () => {
+    // Team A: start=0, end=3 → delta=3; Team B: start=0, end=1 → delta=1
+    setupForRoundComplete(['Team A', 'Team B'], [3, 1], [0, 0]);
+
+    useGameStore.getState().advanceScene('advance');
+
+    const state = useGameStore.getState();
+    expect(state.audienceScene).toBe('round_summary');
+    expect(state.scoreDeltas).toHaveLength(2);
+
+    const teamADelta = state.scoreDeltas.find((d) => d.teamName === 'Team A');
+    const teamBDelta = state.scoreDeltas.find((d) => d.teamName === 'Team B');
+
+    expect(teamADelta?.delta).toBe(3);
+    expect(teamADelta?.newScore).toBe(3);
+    expect(teamBDelta?.delta).toBe(1);
+    expect(teamBDelta?.newScore).toBe(1);
+  });
+
+  it('should assign correct previousRank and newRank based on score order', () => {
+    // At round start: Team A=10, Team B=5 (A leads)
+    // At round end:   Team A=10, Team B=15 (B now leads — rank swap)
+    setupForRoundComplete(['Team A', 'Team B'], [10, 15], [10, 5]);
+
+    useGameStore.getState().advanceScene('advance');
+
+    const state = useGameStore.getState();
+    expect(state.audienceScene).toBe('round_summary');
+
+    const teamADelta = state.scoreDeltas.find((d) => d.teamName === 'Team A');
+    const teamBDelta = state.scoreDeltas.find((d) => d.teamName === 'Team B');
+
+    // Before: A rank 1 (score 10 > 5), B rank 2
+    expect(teamADelta?.previousRank).toBe(1);
+    expect(teamBDelta?.previousRank).toBe(2);
+
+    // After: B rank 1 (score 15 > 10), A rank 2
+    expect(teamADelta?.newRank).toBe(2);
+    expect(teamBDelta?.newRank).toBe(1);
+  });
+
+  it('should compute zero deltas when no scores changed during the round', () => {
+    // Both teams start and end at same score (presenter did not award points)
+    setupForRoundComplete(['Team A', 'Team B'], [5, 5], [5, 5]);
+
+    useGameStore.getState().advanceScene('advance');
+
+    const state = useGameStore.getState();
+    expect(state.audienceScene).toBe('round_summary');
+
+    for (const d of state.scoreDeltas) {
+      expect(d.delta).toBe(0);
+    }
+  });
+});
+
 describe('useGameSelectors', () => {
   beforeEach(() => {
     resetGameStore();

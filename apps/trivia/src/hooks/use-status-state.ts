@@ -53,6 +53,8 @@ function useGameStateSnapshot(): TriviaGameState {
   const scoreDeltas = useGameStore((s) => s.scoreDeltas);
   // Recap sub-state (BEA-587)
   const recapShowingAnswer = useGameStore((s) => s.recapShowingAnswer);
+  // Round start score snapshot (BEA-601)
+  const questionStartScores = useGameStore((s) => s.questionStartScores);
 
   return useMemo<TriviaGameState>(() => ({
     sessionId,
@@ -78,6 +80,8 @@ function useGameStateSnapshot(): TriviaGameState {
     scoreDeltas,
     // Recap sub-state (BEA-587)
     recapShowingAnswer,
+    // Round start score snapshot (BEA-601)
+    questionStartScores,
   }), [
     sessionId,
     status,
@@ -102,6 +106,8 @@ function useGameStateSnapshot(): TriviaGameState {
     scoreDeltas,
     // Recap sub-state (BEA-587)
     recapShowingAnswer,
+    // Round start score snapshot (BEA-601)
+    questionStartScores,
   ]);
 }
 

@@ -258,6 +258,14 @@ export interface TriviaGameState {
   scoreDeltas: import('./audience-scene').ScoreDelta[];
 
   /**
+   * Snapshot of each team's cumulative score at the start of the current round.
+   * Keyed by teamId. Used to compute scoreDeltas when the round completes.
+   * Populated by startGame (round 0) and nextRound (subsequent rounds).
+   * Reset to {} on game reset.
+   */
+  questionStartScores: Record<string, number>;
+
+  /**
    * Sub-state for the recap_qa scene controlling question vs answer face.
    *
    * - `null`  -- not in recap (default, reset on exit)

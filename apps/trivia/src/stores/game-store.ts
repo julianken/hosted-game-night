@@ -320,6 +320,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         scoreDeltas: [],             // Fresh empty array -- no deltas during setup
         revealPhase: state.revealPhase,
         recapShowingAnswer: null,    // Not in recap during setup
+        questionStartScores: {},     // No round started yet during setup
       };
 
       for (const name of names) {
@@ -433,14 +434,47 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     if (nextScene && nextScene !== state.audienceScene) {
       // Side effect: completeRound when question_closed → round_summary (last Q).
       // Transitions status: playing → between_rounds.
+      // Also computes scoreDeltas by diffing current scores vs questionStartScores.
       if (state.audienceScene === 'question_closed' && nextScene === 'round_summary') {
         set((s) => {
           lifecycleLogger.emit('game.round_completed', { round: s.currentRound, totalRounds: s.totalRounds });
           const baseUpdate = completeRoundEngine(s);
+
+          // Compute rank helpers using scores before this round (previousRank)
+          // and after this round (newRank).
+          const prevScores = s.questionStartScores ?? {};
+
+          // Sort teams by their round-start score to assign previousRank
+          const sortedByPrev = [...s.teams].sort(
+            (a, b) => (prevScores[b.id] ?? 0) - (prevScores[a.id] ?? 0)
+          );
+          const previousRankMap: Record<string, number> = {};
+          sortedByPrev.forEach((t, i) => { previousRankMap[t.id] = i + 1; });
+
+          // Sort teams by new score (from baseUpdate) descending to assign newRank
+          const updatedTeams = baseUpdate.teams ?? s.teams;
+          const sortedByNew = [...updatedTeams].sort((a, b) => b.score - a.score);
+          const newRankMap: Record<string, number> = {};
+          sortedByNew.forEach((t, i) => { newRankMap[t.id] = i + 1; });
+
+          // Build ScoreDelta[] — one entry per team
+          const deltas: ScoreDelta[] = updatedTeams.map((t) => {
+            const prevScore = prevScores[t.id] ?? 0;
+            return {
+              teamId: t.id,
+              teamName: t.name,
+              delta: t.score - prevScore,
+              newScore: t.score,
+              newRank: newRankMap[t.id] ?? 1,
+              previousRank: previousRankMap[t.id] ?? 1,
+            };
+          });
+
           return {
             ...baseUpdate,
             audienceScene: nextScene,
             sceneTimestamp: Date.now(),
+            scoreDeltas: [...deltas],
           };
         });
         return;
@@ -613,6 +647,7 @@ export function useGameSelectors() {
     scoreDeltas: [],                 // Not used for selector computation
     revealPhase,
     recapShowingAnswer: null,        // Not used for selector computation
+    questionStartScores: {},         // Not used for selector computation
   };
 
   return {

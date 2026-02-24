@@ -51,6 +51,7 @@ export function createInitialState(): TriviaGameState {
     revealPhase: null,
     scoreDeltas: [],
     recapShowingAnswer: null,
+    questionStartScores: {},
   });
 }
 
@@ -64,6 +65,12 @@ export function startGame(state: TriviaGameState): TriviaGameState {
 
   // Find first question of round 0
   const firstQuestionIndex = state.questions.findIndex(q => q.roundIndex === 0);
+
+  // All teams start at 0; snapshot scores at round start for delta computation
+  const startingScores: Record<string, number> = {};
+  for (const t of state.teams) {
+    startingScores[t.id] = 0;
+  }
 
   return deepFreeze({
     ...state,
@@ -84,6 +91,7 @@ export function startGame(state: TriviaGameState): TriviaGameState {
       isRunning: state.settings.timerAutoStart,
     },
     emergencyBlank: false,
+    questionStartScores: startingScores,
   });
 }
 
