@@ -194,6 +194,7 @@ When modifying any of the files below, update the corresponding section in this 
 
 | Source File | Doc Section to Update | What to Check |
 |-------------|----------------------|---------------|
+| `src/hooks/use-game.ts` (keyboard section) | Keyboard Shortcuts | New/changed/removed key handlers |
 | `src/app/api/**` | API Routes (under Routes) | New/renamed/removed route directories |
 | `src/hooks/use-audio.ts` | Audio System (under Features) | Changed audio patterns, new sounds |
 | `src/lib/game/patterns/**` | Patterns (under Features) | New/modified bingo patterns |
