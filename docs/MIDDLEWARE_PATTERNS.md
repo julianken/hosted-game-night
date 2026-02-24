@@ -62,4 +62,4 @@ export async function middleware(request: NextRequest) {
 
 **Note:** Platform Hub uses a different middleware architecture — a multi-layer approach with separate files for CORS, rate limiting, body size validation, and session management, orchestrated by a root `middleware.ts`. See `apps/platform-hub/CLAUDE.md` for details.
 
-**Related:** See `docs/plans/2026-01-23-fix-e2e-auth.md` for full debugging analysis of the server hanging issue.
+**Related:** See `docs/archive/e2e-history/2026-01-23-fix-e2e-auth.md` for full debugging analysis of the server hanging issue.
