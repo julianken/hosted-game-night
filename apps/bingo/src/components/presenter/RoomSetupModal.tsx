@@ -20,7 +20,7 @@ export function RoomSetupModal(props: RoomSetupModalProps) {
   const setPattern = useGameStore((state) => state.setPattern);
   const setAutoCallEnabled = useGameStore((state) => state.toggleAutoCall);
   const setAutoCallSpeed = useGameStore((state) => state.setAutoCallSpeed);
-  const gameStore = useGameStore();
+  const autoCallEnabled = useGameStore((s) => s.autoCallEnabled);
   const setVoicePack = useAudioStore((state) => state.setVoicePack);
 
   // Auto-load default template when modal opens
@@ -46,8 +46,7 @@ export function RoomSetupModal(props: RoomSetupModalProps) {
             }
 
             // Load auto-call settings
-            const currentAutoCall = gameStore.autoCallEnabled;
-            if (defaultTemplate.auto_call_enabled !== currentAutoCall) {
+            if (defaultTemplate.auto_call_enabled !== autoCallEnabled) {
               setAutoCallEnabled();
             }
             setAutoCallSpeed(defaultTemplate.auto_call_interval);
@@ -67,7 +66,7 @@ export function RoomSetupModal(props: RoomSetupModalProps) {
 
       loadDefaultTemplate();
     }
-  }, [isOpen, hasLoadedDefaultTemplate, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, gameStore.autoCallEnabled]);
+  }, [isOpen, hasLoadedDefaultTemplate, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, autoCallEnabled]);
 
   return (
     <SharedRoomSetupModal

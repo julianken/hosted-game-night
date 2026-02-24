@@ -79,7 +79,9 @@ export default function PlayPage() {
   const { preloadProgress } = useAudioPreload();
   const { voicePack, setVoicePack, voiceVolume, setVoiceVolume } = useAudio();
 
-  // Auto-sync game state to database (only in online mode)
+  // Full store subscription intentional — useAutoSync needs complete state for serialization
+  // and change detection (the hook's useEffect dependency on `state` drives reactivity).
+  // Passing a selector here would break the sync trigger mechanism.
   const gameState = useGameStore();
   useAutoSync(
     gameState,

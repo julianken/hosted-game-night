@@ -20,7 +20,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
   const setPattern = useGameStore((state) => state.setPattern);
   const setAutoCallEnabled = useGameStore((state) => state.toggleAutoCall);
   const setAutoCallSpeed = useGameStore((state) => state.setAutoCallSpeed);
-  const gameStore = useGameStore();
+  const autoCallEnabled = useGameStore((s) => s.autoCallEnabled);
   const setVoicePack = useAudioStore((state) => state.setVoicePack);
 
   // Component state
@@ -78,8 +78,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
       setPattern(pattern);
 
       // 2. Load auto-call settings
-      const currentAutoCall = gameStore.autoCallEnabled;
-      if (template.auto_call_enabled !== currentAutoCall) {
+      if (template.auto_call_enabled !== autoCallEnabled) {
         setAutoCallEnabled();
       }
       setAutoCallSpeed(template.auto_call_interval / 1000); // Convert milliseconds to seconds
@@ -92,7 +91,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
       console.error('Error loading template:', err);
       errorToast('Failed to apply template settings');
     }
-  }, [templates, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, gameStore.autoCallEnabled, success, errorToast]);
+  }, [templates, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, autoCallEnabled, success, errorToast]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const templateId = e.target.value;
