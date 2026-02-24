@@ -16,6 +16,7 @@ import { QuickScoreGrid } from '@/components/presenter/QuickScoreGrid';
 import { NextActionHint } from '@/components/presenter/NextActionHint';
 import { useQuickScore } from '@/hooks/use-quick-score';
 import { useGameEventSounds } from '@/hooks/use-sounds';
+import { useRevealSequence } from '@/hooks/use-reveal-sequence';
 import { RoundSummary } from '@/components/presenter/RoundSummary';
 import { ThemeSelector } from '@joolie-boolie/ui';
 import { SettingsPanel } from '@/components/presenter/SettingsPanel';
@@ -249,6 +250,24 @@ export default function PlayPage() {
 
   /** Read revealPhase for sound triggers (T3.1) */
   const revealPhase = useGameStore((state) => state.revealPhase);
+
+  /** BEA-600: Mount reveal sequence hook — drives 3-beat choreography on answer_reveal scene */
+  const { triggerReveal, resetReveal } = useRevealSequence({
+    questionIndex: game.displayQuestionIndex,
+    revealedAnswer: game.displayQuestion?.answer ?? null,
+    onPhaseChange: (phase) => {
+      useGameStore.getState().setRevealPhase(phase);
+    },
+  });
+
+  /** BEA-600: Auto-trigger reveal when scene enters answer_reveal; reset on exit */
+  useEffect(() => {
+    if (audienceScene === 'answer_reveal') {
+      triggerReveal();
+    } else {
+      resetReveal();
+    }
+  }, [audienceScene, triggerReveal, resetReveal]);
 
   /** Read timer state for sound triggers (BEA-583) */
   const timerIsRunning = useGameStore((state) => state.timer.isRunning);
