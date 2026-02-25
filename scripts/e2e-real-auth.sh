@@ -8,7 +8,7 @@ set -euo pipefail
 # Unlike the standard E2E tests (E2E_TESTING=true), this tests actual auth paths:
 #
 #   1. Supabase login (signInWithPassword → RS256 JWT via JWKS)
-#   2. Platform Hub OAuth 2.1 (authorization code → HS256 JWT via SESSION_TOKEN_SECRET)
+#   2. Platform Hub OAuth 2.1 (authorization code → HS256 JWT via SUPABASE_JWT_SECRET)
 #   3. Cross-app SSO (cookie propagation + middleware verification)
 #
 # Prerequisites:

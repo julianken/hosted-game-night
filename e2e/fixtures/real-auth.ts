@@ -30,7 +30,7 @@ export interface RealAuthFixtures {
   /** Credentials for the real-auth test user (seeded in local Supabase) */
   realTestUser: RealAuthTestUser;
 
-  /** Page authenticated via Platform Hub login (has beak_* cookies for Hub) */
+  /** Page authenticated via Platform Hub login (has jb_* cookies for Hub) */
   authenticatedHubPage: Page;
 
   /** Page authenticated and navigated to Bingo /play */
