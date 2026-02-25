@@ -1,5 +1,8 @@
 /**
  * React hooks for database operations
+ *
+ * @deprecated Scheduled for removal. See R-9a.
+ * The `@joolie-boolie/database/hooks` subpath export is unused.
  */
 
 export {

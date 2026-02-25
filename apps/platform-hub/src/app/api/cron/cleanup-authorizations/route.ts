@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 const logger = createLogger({ service: 'cron-cleanup-authorizations' });
 
@@ -26,38 +27,13 @@ interface CleanupResponse {
   timestamp?: string;
 }
 
-/**
- * Verifies the CRON_SECRET from Vercel's Authorization header.
- * Vercel sends: Authorization: Bearer <CRON_SECRET>
- */
-function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-
-  // In development/testing, allow requests without auth if no CRON_SECRET is set
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    logger.warn('CRON_SECRET not configured - allowing request in non-production');
-    return process.env.NODE_ENV !== 'production';
-  }
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false;
-  }
-
-  const token = authHeader.slice(7); // Remove 'Bearer ' prefix
-  return token === cronSecret;
-}
-
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<CleanupResponse>> {
-  // Verify cron secret
-  if (!verifyCronSecret(request)) {
-    logger.error('Unauthorized request - invalid CRON_SECRET');
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
+  // Verify cron secret (fail-closed: rejects if CRON_SECRET is not set)
+  const authError = verifyCronAuth(request);
+  if (authError) {
+    return authError as NextResponse<CleanupResponse>;
   }
 
   try {

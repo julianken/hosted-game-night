@@ -1,5 +1,9 @@
 /**
  * Filter and search utilities for database queries
+ *
+ * @deprecated Scheduled for removal. See R-9a.
+ * The `@joolie-boolie/database/filters` subpath export is unused.
+ * Internal usage (e.g. by queries.ts) will be inlined before removal.
  */
 
 // =============================================================================
