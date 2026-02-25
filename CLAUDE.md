@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `packages/sync` | **Complete** | BroadcastChannel sync, Zustand store, React hook |
 | `packages/ui` | **Complete** | Shared UI components (Button, Modal, Input, Toast, Toggle, Skeleton, etc.) |
 | `packages/theme` | **Complete** | Design tokens (3 modes, typography, spacing, touch targets) |
-| `packages/game-engine` | **Shared Types** | Base GameStatus, transition functions, statistics. Actual engines live in each app. |
+| `packages/game-engine` | **Shared Types** | Base GameStatus type, statistics module (types, calculators, localStorage storage). `transition()` / `canTransition()` are deprecated -- each app has its own state machine. |
 | `packages/auth` | **Complete** | AuthProvider, hooks, ProtectedRoute. Integrated in platform-hub, bingo, trivia |
 | `packages/database` | **Complete** | Type-safe client, CRUD, pagination, hooks, PIN security, API factories |
 | `packages/testing` | **Complete** | BroadcastChannel and Audio mocks |

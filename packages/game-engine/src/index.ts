@@ -18,6 +18,8 @@ export type GameTransition =
 /**
  * Generic game state transition function.
  * Returns the new status based on current status and action.
+ *
+ * @deprecated Each game app implements its own state machine. Not used by any current app.
  */
 export function transition(current: GameStatus, action: GameTransition): GameStatus {
   switch (action) {
@@ -38,6 +40,8 @@ export function transition(current: GameStatus, action: GameTransition): GameSta
 
 /**
  * Check if a transition is valid from the current state.
+ *
+ * @deprecated Each game app implements its own state machine. Not used by any current app.
  */
 export function canTransition(current: GameStatus, action: GameTransition): boolean {
   switch (action) {
