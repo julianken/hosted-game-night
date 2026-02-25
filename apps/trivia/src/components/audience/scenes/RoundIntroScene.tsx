@@ -2,13 +2,16 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import { useGameStore } from '@/stores/game-store';
-import { heroSceneEnter, heroSceneEnterReduced } from '@/lib/motion/presets';
+import { heroSceneEnter, heroSceneEnterReduced, EASE } from '@/lib/motion/presets';
+import type { Team } from '@/types';
 
 /**
  * RoundIntroScene (T2.6)
  *
  * "ROUND N" display card shown at the start of each round.
  * Shows round number, category (from first question of the round), and question count.
+ * For rounds 2+ (currentRound > 0), also shows a compact previous-standings list
+ * that appears ~0.7s after the round number to give the hero text visual priority.
  *
  * Final round variant: amber border glow and amber accent text.
  * Motion: hero enter animation (scaleUp + fade, springDramatic).
@@ -22,6 +25,7 @@ export function RoundIntroScene() {
   const currentRound = useGameStore((state) => state.currentRound);
   const totalRounds = useGameStore((state) => state.totalRounds);
   const questions = useGameStore((state) => state.questions);
+  const teams = useGameStore((state) => state.teams);
 
   const isFinalRound = currentRound >= totalRounds - 1;
   const roundNumber = currentRound + 1;
@@ -31,6 +35,14 @@ export function RoundIntroScene() {
   const questionCount = roundQuestions.length;
   const firstQuestion = roundQuestions[0];
   const category = firstQuestion?.category ?? null;
+
+  // Standings: only shown for round 2+ (currentRound > 0, 0-indexed).
+  // Sorted descending by score; values reflect end-of-previous-round totals
+  // because nextRoundEngine has already run before this scene is displayed.
+  const showStandings = currentRound > 0 && teams.length > 0;
+  const sortedTeams: Team[] = showStandings
+    ? [...teams].sort((a, b) => b.score - a.score)
+    : [];
 
   const variants = shouldReduceMotion ? heroSceneEnterReduced : heroSceneEnter;
 
@@ -134,6 +146,84 @@ export function RoundIntroScene() {
           </motion.p>
         )}
       </motion.div>
+
+      {/* Previous standings — rounds 2+ only, delayed 0.7s for visual flow */}
+      {showStandings && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.35,
+            delay: shouldReduceMotion ? 0 : 0.7,
+            ease: EASE.entrance,
+          }}
+          aria-label="Standings after previous round"
+        >
+          <p
+            className="text-center font-semibold uppercase tracking-widest mb-3"
+            style={{
+              fontSize: 'clamp(0.75rem, 1.2vw, 1rem)',
+              letterSpacing: '0.18em',
+              color: 'var(--foreground-secondary)',
+            }}
+          >
+            Standings
+          </p>
+          <ol
+            className="flex flex-col gap-2 w-full"
+            style={{ minWidth: 'clamp(16rem, 30vw, 28rem)' }}
+          >
+            {sortedTeams.map((team, index) => {
+              const isLeader = index === 0;
+              return (
+                <li
+                  key={team.id}
+                  className="flex items-center justify-between gap-4 rounded-xl px-5 py-2"
+                  style={{
+                    background: isLeader
+                      ? 'rgba(126, 82, 228, 0.12)'
+                      : 'rgba(255, 255, 255, 0.04)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: isLeader
+                      ? 'rgba(126, 82, 228, 0.35)'
+                      : 'rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  <span
+                    className="font-semibold tabular-nums"
+                    style={{
+                      fontSize: 'clamp(0.875rem, 1.4vw, 1.125rem)',
+                      color: 'var(--foreground-secondary)',
+                      minWidth: '1.5rem',
+                    }}
+                  >
+                    {index + 1}.
+                  </span>
+                  <span
+                    className="flex-1 font-semibold truncate"
+                    style={{
+                      fontSize: 'clamp(1rem, 1.6vw, 1.25rem)',
+                      color: isLeader ? 'var(--foreground)' : 'var(--foreground-secondary)',
+                    }}
+                  >
+                    {team.name}
+                  </span>
+                  <span
+                    className="font-black tabular-nums"
+                    style={{
+                      fontSize: 'clamp(1rem, 1.6vw, 1.25rem)',
+                      color: isLeader ? 'var(--color-accent, #7E52E4)' : 'var(--foreground)',
+                    }}
+                  >
+                    {team.score}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </motion.div>
+      )}
     </section>
   );
 }
