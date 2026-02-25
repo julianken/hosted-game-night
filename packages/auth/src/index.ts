@@ -66,3 +66,12 @@ export { startOAuthFlow } from './oauth-client';
 // Redirect validation utilities
 export { isValidRedirect, sanitizeRedirect } from './redirect-validation';
 
+// Unified JWT verification chain
+export {
+  verifyToken,
+  createJwksGetter,
+  type VerifyTokenOutcome,
+  type VerifyTokenMethod,
+  type VerifyTokenConfig,
+} from './verify-token';
+

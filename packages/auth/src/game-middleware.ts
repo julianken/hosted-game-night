@@ -6,13 +6,21 @@
  * and route protection.
  *
  * Import via the `@joolie-boolie/auth/game-middleware` subpath export.
+ *
+ * NOTE: The verification logic is delegated to `verify-token.ts` (the
+ * canonical implementation). This module preserves the original API surface
+ * for backward compatibility.
  */
 
-import { jwtVerify, createRemoteJWKSet } from 'jose';
+import { createRemoteJWKSet } from 'jose';
 import { NextResponse } from 'next/server';
+import { verifyToken } from './verify-token';
+
+// Re-export createJwksGetter from verify-token.ts (the canonical location)
+export { createJwksGetter } from './verify-token';
 
 // ────────────────────────────────────────────────────────────────────────────
-// Secret helpers
+// Secret helpers (kept for backward compat — existing tests import these)
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -51,30 +59,7 @@ export function getSessionSecret(): Uint8Array | null {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// JWKS (lazy-initialized)
-// ────────────────────────────────────────────────────────────────────────────
-
-/**
- * Lazily initialises and returns the JWKS endpoint for Supabase JWT verification.
- * Lazy init avoids module-load-time network requests (see docs/MIDDLEWARE_PATTERNS.md).
- *
- * @param supabaseUrl - The NEXT_PUBLIC_SUPABASE_URL value.
- */
-export function createJwksGetter(supabaseUrl: string) {
-  let cache: ReturnType<typeof createRemoteJWKSet> | null = null;
-
-  return function getJWKS() {
-    if (!cache) {
-      cache = createRemoteJWKSet(
-        new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`)
-      );
-    }
-    return cache;
-  };
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Token verification
+// Token verification (delegates to verifyToken)
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -84,6 +69,9 @@ export function createJwksGetter(supabaseUrl: string) {
  * 2. SUPABASE_JWT_SECRET (preferred for Platform Hub OAuth tokens)
  * 3. SESSION_TOKEN_SECRET (backward compatibility)
  * 4. Supabase JWKS (fallback)
+ *
+ * Signature is kept stable (3 positional arguments) for backward compatibility
+ * with `middleware-factory.ts`.
  *
  * @param token - The raw JWT string to verify.
  * @param getJWKS - Function that returns the (lazily cached) RemoteJWKSet.
@@ -95,60 +83,18 @@ export async function verifyAccessToken(
   getJWKS: () => ReturnType<typeof createRemoteJWKSet>,
   supabaseUrl: string
 ): Promise<boolean> {
-  const isE2ETesting = process.env.E2E_TESTING === 'true';
+  const result = await verifyToken(token, {
+    e2eSecret:
+      process.env.E2E_TESTING === 'true'
+        ? process.env.E2E_JWT_SECRET
+        : undefined,
+    supabaseJwtSecret: process.env.SUPABASE_JWT_SECRET,
+    sessionTokenSecret: process.env.SESSION_TOKEN_SECRET,
+    getJWKS: getJWKS(),
+    supabaseUrl,
+  });
 
-  // E2E Testing Mode: Try E2E secret first
-  if (isE2ETesting) {
-    try {
-      await jwtVerify(token, getE2EJwtSecret(), {
-        issuer: 'e2e-test',
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // E2E token verification failed, fall through to other methods
-    }
-  }
-
-  // Platform Hub OAuth tokens: Verify with SUPABASE_JWT_SECRET (preferred)
-  const supabaseJwtSecret = getSupabaseJwtSecret();
-  if (supabaseJwtSecret) {
-    try {
-      await jwtVerify(token, supabaseJwtSecret, {
-        issuer: `${supabaseUrl}/auth/v1`,
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // SUPABASE_JWT_SECRET verification failed, fall through
-    }
-  }
-
-  // Backward compatibility: Verify with SESSION_TOKEN_SECRET
-  const sessionSecret = getSessionSecret();
-  if (sessionSecret) {
-    try {
-      await jwtVerify(token, sessionSecret, {
-        issuer: 'joolie-boolie-platform',
-        audience: 'authenticated',
-      });
-      return true;
-    } catch {
-      // SESSION_TOKEN_SECRET verification failed, fall through to Supabase JWKS
-    }
-  }
-
-  // Supabase tokens (fallback): Verify with JWKS
-  try {
-    await jwtVerify(token, getJWKS(), {
-      issuer: `${supabaseUrl}/auth/v1`,
-      audience: 'authenticated',
-    });
-    return true;
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    return false;
-  }
+  return result.ok;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -178,7 +124,10 @@ export function getCookieOptions(maxAge: number, cookieDomain?: string) {
  * @param response - The NextResponse to mutate.
  * @param cookieDomain - Optional domain used when the cookies were originally set.
  */
-export function clearAuthCookies(response: NextResponse, cookieDomain?: string) {
+export function clearAuthCookies(
+  response: NextResponse,
+  cookieDomain?: string
+) {
   const opts = getCookieOptions(0, cookieDomain);
   response.cookies.set('jb_access_token', '', opts);
   response.cookies.set('jb_refresh_token', '', opts);

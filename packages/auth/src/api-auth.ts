@@ -10,16 +10,17 @@
  * These utilities verify those JWTs and create RLS-compatible Supabase
  * clients that pass the JWT as an Authorization header.
  *
- * Verification chain (tried in order):
+ * Verification chain (tried in order, delegated to verifyToken):
  * 1. E2E test secret (when E2E_TESTING=true)
- * 2. SUPABASE_JWT_SECRET (production — matches PostgRES HS256 verification)
+ * 2. SUPABASE_JWT_SECRET (production -- matches PostgRES HS256 verification)
  * 3. SESSION_TOKEN_SECRET (backward compatibility during migration)
+ * 4. Supabase JWKS (ES256 fallback -- fixes the 401 bug for SSO tokens)
  *
  * @module api-auth
  */
 
-import { jwtVerify } from 'jose';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { verifyToken, createJwksGetter } from './verify-token';
 
 // Production guard: E2E mode must never run on actual production (Vercel)
 // Allows local production builds/servers for E2E testing (VERCEL=1 is auto-set by Vercel)
@@ -27,16 +28,24 @@ if (process.env.E2E_TESTING === 'true' && process.env.VERCEL === '1') {
   throw new Error('E2E mode cannot run in production');
 }
 
-// E2E Testing: Secret loaded from environment variable (never hardcoded)
-function getE2EJwtSecret(): Uint8Array {
-  const secret = process.env.E2E_JWT_SECRET;
-  if (!secret) {
-    throw new Error(
-      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
-      'Set it in your .env.local file.'
-    );
+// ────────────────────────────────────────────────────────────────────────────
+// JWKS getter for API routes (lazy-initialized, module-level singleton)
+// ────────────────────────────────────────────────────────────────────────────
+
+let _jwksGetter: ReturnType<typeof createJwksGetter> | null = null;
+
+/**
+ * Returns the lazily-initialized JWKS getter for API routes.
+ * Returns undefined if NEXT_PUBLIC_SUPABASE_URL is not set (test environments).
+ */
+function getJWKSForApiRoutes() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return undefined;
+
+  if (!_jwksGetter) {
+    _jwksGetter = createJwksGetter(supabaseUrl);
   }
-  return new TextEncoder().encode(secret);
+  return _jwksGetter();
 }
 
 /**
@@ -48,44 +57,11 @@ export interface ApiUser {
 }
 
 /**
- * Get the secret to use for JWT verification.
- * Returns an array of { secret, issuer } pairs to try in order.
- */
-function getVerificationChain(): Array<{ secret: Uint8Array; issuer: string }> {
-  const chain: Array<{ secret: Uint8Array; issuer: string }> = [];
-  const isE2ETesting = process.env.E2E_TESTING === 'true';
-
-  // 1. E2E test secret (only in E2E mode)
-  if (isE2ETesting) {
-    chain.push({ secret: getE2EJwtSecret(), issuer: 'e2e-test' });
-  }
-
-  // 2. SUPABASE_JWT_SECRET (production — PostgRES-compatible)
-  const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
-  if (supabaseJwtSecret) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    chain.push({
-      secret: new TextEncoder().encode(supabaseJwtSecret),
-      issuer: `${supabaseUrl}/auth/v1`,
-    });
-  }
-
-  // 3. SESSION_TOKEN_SECRET (backward compatibility)
-  const sessionTokenSecret = process.env.SESSION_TOKEN_SECRET;
-  if (sessionTokenSecret) {
-    chain.push({
-      secret: new TextEncoder().encode(sessionTokenSecret),
-      issuer: 'joolie-boolie-platform',
-    });
-  }
-
-  return chain;
-}
-
-/**
  * Authenticate an API request by verifying the `jb_access_token` JWT cookie.
  *
- * Tries the verification chain: E2E secret -> SUPABASE_JWT_SECRET -> SESSION_TOKEN_SECRET.
+ * Tries the 4-step verification chain via `verifyToken()`:
+ *   E2E secret -> SUPABASE_JWT_SECRET -> SESSION_TOKEN_SECRET -> JWKS
+ *
  * Returns the user identity (id + email) if the token is valid, or null if not.
  *
  * @param request - The incoming Next.js request
@@ -100,10 +76,8 @@ function getVerificationChain(): Array<{ secret: Uint8Array; issuer: string }> {
  *   if (!user) {
  *     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
  *   }
- *   const supabase = createAuthenticatedClient(
- *     request.cookies.get('jb_access_token')!.value
- *   );
- *   // Use supabase client with RLS enforced via auth.uid()...
+ *   const supabase = createAuthenticatedClient();
+ *   // Use supabase client with application-level data isolation...
  * }
  * ```
  */
@@ -123,29 +97,29 @@ export async function getApiUser(request: {
     return null;
   }
 
-  const chain = getVerificationChain();
+  const result = await verifyToken(token, {
+    e2eSecret:
+      process.env.E2E_TESTING === 'true'
+        ? process.env.E2E_JWT_SECRET
+        : undefined,
+    supabaseJwtSecret: process.env.SUPABASE_JWT_SECRET,
+    sessionTokenSecret: process.env.SESSION_TOKEN_SECRET,
+    getJWKS: getJWKSForApiRoutes(),
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
 
-  for (const { secret, issuer } of chain) {
-    try {
-      const { payload } = await jwtVerify(token, secret, {
-        issuer,
-        audience: 'authenticated',
-      });
-
-      const sub = payload.sub;
-      const email = (payload.email as string) || '';
-
-      if (!sub) continue;
-
-      return { id: sub, email };
-    } catch {
-      // This secret/issuer didn't work, try next in chain
-      continue;
-    }
+  if (!result.ok) {
+    return null;
   }
 
-  // All verification methods failed
-  return null;
+  const sub = result.payload.sub;
+  const email = (result.payload.email as string) || '';
+
+  if (!sub) {
+    return null;
+  }
+
+  return { id: sub, email };
 }
 
 /**
@@ -154,7 +128,7 @@ export async function getApiUser(request: {
  * Uses the service role key to bypass PostgRES JWT verification. This is
  * necessary because the Supabase project uses ECC (P-256) for JWT signing,
  * and we cannot mint ES256 tokens (we don't have the private key). Data
- * isolation is enforced at the application level — all query functions
+ * isolation is enforced at the application level -- all query functions
  * require user_id as a parameter.
  *
  * Note: RLS is not enforced with this client. If the project switches back

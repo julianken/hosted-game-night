@@ -277,10 +277,8 @@ describe('getApiUser', () => {
     });
   });
 
-  // TODO(R-4): This test group documents the current 3-step chain. After R-4,
-  // the chain becomes 4-step (adding JWKS). Update assertions accordingly.
-  describe('verification chain order', () => {
-    it('tries E2E first, then SUPABASE_JWT_SECRET, then SESSION_TOKEN_SECRET', async () => {
+  describe('verification chain order (4-step: E2E -> HS256-Supabase -> HS256-Session -> JWKS)', () => {
+    it('tries E2E first, then SUPABASE_JWT_SECRET, then SESSION_TOKEN_SECRET, then JWKS', async () => {
       // Set up all three secrets
       process.env.E2E_TESTING = 'true';
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
@@ -304,7 +302,6 @@ describe('getApiUser', () => {
       expect(user!.id).toBe('e2e-user');
     });
 
-    // TODO(R-4): After R-4, JWKS becomes step 4. This test asserts chain stops at step 3.
     it('falls through to SUPABASE_JWT_SECRET when E2E fails', async () => {
       process.env.E2E_TESTING = 'true';
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
@@ -328,7 +325,6 @@ describe('getApiUser', () => {
       expect(user!.id).toBe('prod-user');
     });
 
-    // TODO(R-4): After R-4, JWKS becomes step 4. This test asserts chain stops at step 3.
     it('falls through to SESSION_TOKEN_SECRET when others fail', async () => {
       process.env.E2E_TESTING = 'true';
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
