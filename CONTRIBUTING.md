@@ -1,6 +1,50 @@
 # Contributing to Joolie Boolie
 
-Thank you for your interest in contributing to the Joolie Boolie!
+Thank you for your interest in contributing to Joolie Boolie!
+
+## AI-Agent Development Model
+
+This project is developed exclusively with AI agents. The following conventions reflect that model:
+
+### Issue Tracking (Linear)
+
+All work is tracked in **Linear** using `BEA-###` issue format. GitHub Issues are not used.
+
+- Use `mcp__linear-server__*` tools to create, update, and query issues
+- Reference the Linear issue in branch names and commit messages (e.g., `BEA-123`)
+- Never create GitHub Issues — all tracking lives in Linear
+
+### Branch Naming
+
+Branches follow the `<type>/BEA-###-slug` pattern tied to Linear issues:
+
+- `feat/BEA-###-slug` - New features
+- `fix/BEA-###-slug` - Bug fixes
+- `refactor/BEA-###-slug` - Code refactoring
+- `docs/BEA-###-slug` - Documentation updates (when a Linear issue exists)
+- `chore/BEA-###-slug` - Build/tooling changes
+
+### Pull Request Template
+
+All PRs must use the template at `.github/PULL_REQUEST_TEMPLATE.md`. It requires a **Five-Level Explanation** that communicates the change at five levels of technical detail:
+
+1. **Level 1 - Non-technical:** Plain English for a non-technical audience
+2. **Level 2 - Product/UX:** Impact on user-facing behavior and experience
+3. **Level 3 - Engineering overview:** System-level architectural view
+4. **Level 4 - Code-level:** Specific modules, interfaces, and patterns changed
+5. **Level 5 - Deep technical:** Algorithms, data structures, performance, security details
+
+Every PR must complete all five levels. This ensures reviewers and future agents have full context at their preferred level of detail.
+
+### Pre-Commit Hooks
+
+Husky + lint-staged run `pnpm lint`, `pnpm typecheck`, and `pnpm test:run` on changed packages before each commit. **Never use `--no-verify`** — if hooks fail, fix the underlying issue first.
+
+### No Timeline Estimates
+
+Never include time estimates, effort estimates, team size assumptions, or timeline projections. Focus on dependencies, complexity, scope, and completion status.
+
+---
 
 ## Development Setup
 
@@ -185,24 +229,13 @@ afterEach(() => {
 
 ### PR Template
 
-```markdown
-## Summary
+All PRs must use the template at `.github/PULL_REQUEST_TEMPLATE.md`. It includes:
 
-Brief description of changes.
-
-## Changes
-
-- Change 1
-- Change 2
-
-## Testing
-
-How was this tested?
-
-## Screenshots (if applicable)
-
-Before/after screenshots for UI changes.
-```
+- **Human Summary** - 2-4 plain language bullets
+- **Five-Level Explanation** (required, see AI-Agent Development Model section above)
+- **Changes** - grouped by area
+- **Testing checklist** - `pnpm test:run`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test:e2e`
+- **Risk/Impact** and **Notes for Reviewers**
 
 ## Architecture Guidelines
 

@@ -145,17 +145,25 @@ pnpm test:coverage     # Run tests with coverage
 
 | Route | Methods | Description |
 |-------|---------|-------------|
+| `/api/health` | GET | Health check endpoint |
+| `/api/monitoring-tunnel` | POST | Sentry/OTel monitoring tunnel |
 | `/api/auth/logout` | POST | Logout and clear session |
 | `/api/auth/token` | POST | Token exchange/refresh |
+| `/api/auth/token-redirect` | GET | Token redirect handler (post-OAuth) |
 | `/api/templates` | GET, POST | Template CRUD |
 | `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
 | `/api/sessions` | POST | Create game session |
-| `/api/sessions/[roomCode]` | GET | Get session by room code |
+| `/api/sessions/room/[roomCode]` | GET | Get session by room code |
+| `/api/sessions/[roomCode]` | GET | Get session details |
+| `/api/sessions/[roomCode]/verify-pin` | POST | Verify PIN to join session |
+| `/api/sessions/[roomCode]/state` | PATCH | Update session state |
 | `/api/presets` | GET, POST | Preset CRUD |
 | `/api/presets/[id]` | GET, PUT, DELETE | Preset by ID |
 | `/api/question-sets` | GET, POST | Question set CRUD |
 | `/api/question-sets/[id]` | GET, PUT, DELETE | Question set by ID |
 | `/api/question-sets/import` | POST | Import questions (CSV/JSON) |
+| `/api/trivia-api/categories` | GET | List trivia question categories |
+| `/api/trivia-api/questions` | GET | Fetch trivia questions |
 
 ## Keyboard Shortcuts
 
