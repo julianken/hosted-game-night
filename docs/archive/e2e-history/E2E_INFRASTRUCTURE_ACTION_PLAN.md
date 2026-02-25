@@ -206,8 +206,8 @@ pnpm test:e2e -g "should persist offline session in localStorage"
 **Verification:**
 ```bash
 # Check if test user exists by attempting login
-curl -X POST 'https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/token?grant_type=password' \
-  -H 'apikey: sb_publishable_LvRIpm-i3o17HecBwfQckg_wTVe8WPM' \
+curl -X POST 'https://your-project-ref.supabase.co/auth/v1/token?grant_type=password' \
+  -H 'apikey: your-supabase-anon-key' \
   -H 'Content-Type: application/json' \
   -d '{"email":"e2e-test@joolie-boolie.test","password":"TestPassword123!"}'
 ```

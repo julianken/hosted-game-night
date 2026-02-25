@@ -105,28 +105,28 @@ https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json  # JWKS endpoint
 ### Verification Steps
 
 **1. Check Supabase Dashboard:**
-- Navigate to: https://supabase.com/dashboard/project/iivxpjhmnalsuvpdzgza
+- Navigate to: https://supabase.com/dashboard/project/{your-project-ref}
 - Go to: Authentication → OAuth Server (or OAuth tab)
 - Verify: "OAuth 2.1 Server" section exists with toggle option
 
 **2. Test Discovery Endpoint:**
 ```bash
-curl https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/openid-configuration
+curl https://your-project-ref.supabase.co/auth/v1/.well-known/openid-configuration
 ```
 
 **Expected Response:**
 ```json
 {
-  "issuer": "https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1",
-  "authorization_endpoint": "https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/oauth/authorize",
-  "token_endpoint": "https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/oauth/token",
+  "issuer": "https://your-project-ref.supabase.co/auth/v1",
+  "authorization_endpoint": "https://your-project-ref.supabase.co/auth/v1/oauth/authorize",
+  "token_endpoint": "https://your-project-ref.supabase.co/auth/v1/oauth/token",
   ...
 }
 ```
 
 **3. Verify PKCE Support:**
 ```bash
-curl -s https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/openid-configuration | \
+curl -s https://your-project-ref.supabase.co/auth/v1/.well-known/openid-configuration | \
   jq -r '.code_challenge_methods_supported[]'
 ```
 
@@ -153,7 +153,7 @@ curl -s https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/openid-conf
 
 **Option B:** Contact Supabase Support
 - Email: support@supabase.com
-- Subject: "Enable OAuth 2.1 Server for project iivxpjhmnalsuvpdzgza"
+- Subject: "Enable OAuth 2.1 Server for project {your-project-ref}"
 - Request beta feature access
 
 **Option C:** Use WorkOS Alternative
@@ -243,10 +243,10 @@ curl -s https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/openid-conf
 **Verification:**
 ```bash
 # Verify OIDC discovery
-curl https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/openid-configuration | jq
+curl https://your-project-ref.supabase.co/auth/v1/.well-known/openid-configuration | jq
 
 # Verify JWKS endpoint
-curl https://iivxpjhmnalsuvpdzgza.supabase.co/auth/v1/.well-known/jwks.json | jq
+curl https://your-project-ref.supabase.co/auth/v1/.well-known/jwks.json | jq
 
 # Verify environment variables
 grep OAUTH apps/bingo/.env.local

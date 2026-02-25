@@ -23,10 +23,10 @@ openssl rand -hex 32
 # - apps/trivia/.env.local
 # - apps/platform-hub/.env.local
 
-# Each file needs:
-NEXT_PUBLIC_SUPABASE_URL=https://iivxpjhmnalsuvpdzgza.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_LvRIpm-i3o17HecBwfQckg_wTVe8WPM
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_Lx7THLMj2aYmg2HjqncGIw_PDrV3BPT
+# Each file needs (copy values from your .env.local or run `supabase status` for local Supabase):
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 SESSION_TOKEN_SECRET=<64-character-hex-string-from-openssl>
 E2E_JWT_SECRET=e2e-test-secret-key-that-is-at-least-32-characters-long
 ```

@@ -13,7 +13,7 @@ Manual testing revealed **2 critical bugs** and **1 blocking infrastructure issu
 ## Testing Environment
 
 - **URL:** http://localhost:3000/play
-- **Database:** Supabase remote (https://iivxpjhmnalsuvpdzgza.supabase.co)
+- **Database:** Supabase remote (https://your-project-ref.supabase.co)
 - **Auth:** Temporarily bypassed for testing (middleware + API routes)
 - **Browser:** Playwright (automated via MCP)
 

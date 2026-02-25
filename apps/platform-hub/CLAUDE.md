@@ -178,10 +178,10 @@ Controls the base URL for OAuth `consent_page_url`. Used by OAuth client registr
 
 If password reset emails are not being delivered:
 
-1. Check Supabase SMTP status: https://supabase.com/dashboard/project/iivxpjhmnalsuvpdzgza/auth/smtp
+1. Check Supabase SMTP status: https://supabase.com/dashboard/project/{your-project-ref}/auth/smtp
 2. Verify Resend API key is active: https://resend.com/api-keys
 3. Check Resend delivery logs: https://resend.com/emails
-4. View Supabase auth logs: https://supabase.com/dashboard/project/iivxpjhmnalsuvpdzgza/logs/auth-logs
+4. View Supabase auth logs: https://supabase.com/dashboard/project/{your-project-ref}/logs/auth-logs
 5. Test SMTP connection in Supabase dashboard (auto-validates on save)
 
 ## Future Work (TODO)
