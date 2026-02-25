@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  listAllBingoTemplates,
+  listAllTriviaTemplates,
+  type BingoTemplate as DBBingoTemplate,
+  type TriviaTemplate as DBTriviaTemplate,
+} from '@joolie-boolie/database';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'api-templates' });
-
-const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
-const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
 
 /**
  * Template with discriminated union for game type
@@ -76,11 +80,49 @@ async function authenticateRequest(
 }
 
 /**
- * Aggregation API: Fetch templates from both Bingo and Trivia games
+ * Map database bingo template to API response format
+ */
+function mapBingoTemplate(template: DBBingoTemplate): BingoTemplate {
+  return {
+    game: 'bingo' as const,
+    id: template.id,
+    user_id: template.user_id,
+    name: template.name,
+    pattern_id: template.pattern_id,
+    voice_pack: template.voice_pack,
+    auto_call_enabled: template.auto_call_enabled,
+    auto_call_interval: template.auto_call_interval,
+    is_default: template.is_default,
+    created_at: template.created_at,
+    updated_at: template.updated_at,
+  };
+}
+
+/**
+ * Map database trivia template to API response format
+ */
+function mapTriviaTemplate(template: DBTriviaTemplate): TriviaTemplate {
+  return {
+    game: 'trivia' as const,
+    id: template.id,
+    user_id: template.user_id,
+    name: template.name,
+    questions: template.questions,
+    rounds_count: template.rounds_count,
+    questions_per_round: template.questions_per_round,
+    timer_duration: template.timer_duration,
+    is_default: template.is_default,
+    created_at: template.created_at,
+    updated_at: template.updated_at,
+  };
+}
+
+/**
+ * Aggregation API: Fetch templates from both Bingo and Trivia via direct DB queries
  *
  * GET /api/templates
- * - Fetches from Bingo API (NEXT_PUBLIC_BINGO_URL/api/templates)
- * - Fetches from Trivia API (NEXT_PUBLIC_TRIVIA_URL/api/templates)
+ * - Queries bingo_templates table directly
+ * - Queries trivia_templates table directly
  * - Combines results with discriminated union type
  * - Sorts by updated_at descending
  *
@@ -109,7 +151,7 @@ export async function GET(request: NextRequest) {
       ? parseInt(searchParams.get('limit')!, 10)
       : null;
 
-    // E2E mode: return mock templates instead of fetching from downstream APIs
+    // E2E mode: return mock templates instead of querying the database
     if (process.env.E2E_TESTING === 'true') {
       const { getE2ETemplates } = await import('@/lib/e2e-template-store');
       const templates = getE2ETemplates();
@@ -138,60 +180,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ templates: filteredTemplates });
     }
 
-    const [bingoResponse, triviaResponse] = await Promise.allSettled([
-      fetch(`${bingoUrl}/api/templates`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
-      fetch(`${triviaUrl}/api/templates`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
+    // Query both template tables directly using the service role client
+    // (bypasses RLS since the user is already authenticated by this route)
+    const serviceClient = createServiceRoleClient();
+
+    const [bingoResult, triviaResult] = await Promise.allSettled([
+      listAllBingoTemplates(serviceClient, user.id),
+      listAllTriviaTemplates(serviceClient, user.id),
     ]);
 
     const templates: Template[] = [];
     const errors: string[] = [];
 
     // Process Bingo templates
-    if (bingoResponse.status === 'fulfilled' && bingoResponse.value.ok) {
-      const bingoData = await bingoResponse.value.json();
-      const bingoTemplates: BingoTemplate[] = bingoData.templates.map(
-        (template: Omit<BingoTemplate, 'game'>) => ({
-          ...template,
-          game: 'bingo' as const,
-        })
-      );
-      templates.push(...bingoTemplates);
+    if (bingoResult.status === 'fulfilled') {
+      templates.push(...bingoResult.value.map(mapBingoTemplate));
     } else {
-      errors.push(
-        `Bingo API unavailable: ${
-          bingoResponse.status === 'rejected'
-            ? bingoResponse.reason
-            : bingoResponse.value.statusText
-        }`
-      );
+      const errorMsg = bingoResult.reason instanceof Error
+        ? bingoResult.reason.message
+        : String(bingoResult.reason);
+      logger.error('Failed to fetch bingo templates', { error: errorMsg });
+      errors.push(`Bingo templates unavailable: ${errorMsg}`);
     }
 
     // Process Trivia templates
-    if (triviaResponse.status === 'fulfilled' && triviaResponse.value.ok) {
-      const triviaData = await triviaResponse.value.json();
-      const triviaTemplates: TriviaTemplate[] = triviaData.templates.map(
-        (template: Omit<TriviaTemplate, 'game'>) => ({
-          ...template,
-          game: 'trivia' as const,
-        })
-      );
-      templates.push(...triviaTemplates);
+    if (triviaResult.status === 'fulfilled') {
+      templates.push(...triviaResult.value.map(mapTriviaTemplate));
     } else {
-      errors.push(
-        `Trivia API unavailable: ${
-          triviaResponse.status === 'rejected'
-            ? triviaResponse.reason
-            : triviaResponse.value.statusText
-        }`
-      );
+      const errorMsg = triviaResult.reason instanceof Error
+        ? triviaResult.reason.message
+        : String(triviaResult.reason);
+      logger.error('Failed to fetch trivia templates', { error: errorMsg });
+      errors.push(`Trivia templates unavailable: ${errorMsg}`);
     }
 
     // Sort by updated_at descending (most recent first)

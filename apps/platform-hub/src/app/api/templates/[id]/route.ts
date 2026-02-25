@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser } from '@joolie-boolie/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  deleteBingoTemplate,
+  deleteTriviaTemplate,
+  userOwnsBingoTemplate,
+  userOwnsTriviaTemplate,
+} from '@joolie-boolie/database';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'api-templates' });
-
-const bingoUrl = process.env.NEXT_PUBLIC_BINGO_URL || 'http://localhost:3000';
-const triviaUrl = process.env.NEXT_PUBLIC_TRIVIA_URL || 'http://localhost:3001';
 
 /**
  * Authenticate the request using multiple strategies:
@@ -43,10 +47,11 @@ async function authenticateRequest(
 }
 
 /**
- * Delete template by ID
+ * Delete template by ID using direct database query
  *
  * DELETE /api/templates/[id]?game=bingo|trivia
- * - Proxies delete to appropriate game API
+ * - Verifies user owns the template
+ * - Deletes directly from the appropriate table
  * - Returns success/error
  *
  * Authentication:
@@ -78,24 +83,41 @@ export async function DELETE(
       );
     }
 
-    // Determine API URL from environment variables
-    const baseUrl = game === 'bingo' ? bingoUrl : triviaUrl;
-    const apiUrl = `${baseUrl}/api/templates/${id}`;
+    // E2E mode: delete from in-memory store
+    if (process.env.E2E_TESTING === 'true') {
+      const { deleteE2ETemplate } = await import('@/lib/e2e-template-store');
+      const deleted = deleteE2ETemplate(id);
+      if (!deleted) {
+        return NextResponse.json(
+          { error: 'Template not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ success: true });
+    }
 
-    // Proxy delete request
-    const response = await fetch(apiUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Use service role client (user already authenticated above)
+    const serviceClient = createServiceRoleClient();
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json(
-        { error: errorData.error || `Failed to delete ${game} template` },
-        { status: response.status }
-      );
+    // Verify ownership before deleting
+    if (game === 'bingo') {
+      const owns = await userOwnsBingoTemplate(serviceClient, user.id, id);
+      if (!owns) {
+        return NextResponse.json(
+          { error: 'Template not found' },
+          { status: 404 }
+        );
+      }
+      await deleteBingoTemplate(serviceClient, id);
+    } else {
+      const owns = await userOwnsTriviaTemplate(serviceClient, user.id, id);
+      if (!owns) {
+        return NextResponse.json(
+          { error: 'Template not found' },
+          { status: 404 }
+        );
+      }
+      await deleteTriviaTemplate(serviceClient, id);
     }
 
     return NextResponse.json({ success: true });

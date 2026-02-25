@@ -1,5 +1,5 @@
 /**
- * Tests for template aggregation API
+ * Tests for template aggregation API (direct DB queries)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -21,11 +21,16 @@ vi.mock('@/lib/supabase/server', () => ({
       },
     })
   ),
+  createServiceRoleClient: vi.fn(() => 'mock-service-client'),
 }));
 
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Mock database functions
+const mockListAllBingoTemplates = vi.fn();
+const mockListAllTriviaTemplates = vi.fn();
+vi.mock('@joolie-boolie/database', () => ({
+  listAllBingoTemplates: (...args: unknown[]) => mockListAllBingoTemplates(...args),
+  listAllTriviaTemplates: (...args: unknown[]) => mockListAllTriviaTemplates(...args),
+}));
 
 // Helper to create mock NextRequest objects
 function createMockRequest(url: string = 'http://localhost:3002/api/templates'): NextRequest {
@@ -34,7 +39,8 @@ function createMockRequest(url: string = 'http://localhost:3002/api/templates'):
 
 describe('GET /api/templates', () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    mockListAllBingoTemplates.mockReset();
+    mockListAllTriviaTemplates.mockReset();
     mockGetUser.mockReset();
     // Default: Supabase session auth also fails (no user)
     mockGetUser.mockResolvedValue({
@@ -65,16 +71,9 @@ describe('GET /api/templates', () => {
       error: null,
     });
 
-    // Mock both game API calls to succeed
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: [] }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: [] }),
-      });
+    // Mock DB queries to return empty arrays
+    mockListAllBingoTemplates.mockResolvedValueOnce([]);
+    mockListAllTriviaTemplates.mockResolvedValueOnce([]);
 
     const response = await GET(createMockRequest());
     const data = await response.json();
@@ -83,8 +82,7 @@ describe('GET /api/templates', () => {
     expect(data.templates).toEqual([]);
   });
 
-  it('should fetch and combine templates from both games', async () => {
-    // Mock Bingo API response
+  it('should fetch and combine templates from both games via DB', async () => {
     const bingoTemplates = [
       {
         id: 'bingo-1',
@@ -100,7 +98,6 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    // Mock Trivia API response
     const triviaTemplates = [
       {
         id: 'trivia-1',
@@ -122,33 +119,15 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    // Mock both API calls to succeed
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: bingoTemplates }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: triviaTemplates }),
-      });
+    mockListAllBingoTemplates.mockResolvedValueOnce(bingoTemplates);
+    mockListAllTriviaTemplates.mockResolvedValueOnce(triviaTemplates);
 
     const response = await GET(createMockRequest());
     const data = await response.json();
 
-    expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:3000/api/templates',
-      expect.objectContaining({
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:3001/api/templates',
-      expect.objectContaining({
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
+    // Should have called DB functions with service client and user ID
+    expect(mockListAllBingoTemplates).toHaveBeenCalledWith('mock-service-client', 'user-1');
+    expect(mockListAllTriviaTemplates).toHaveBeenCalledWith('mock-service-client', 'user-1');
 
     expect(data.templates).toHaveLength(2);
 
@@ -161,7 +140,7 @@ describe('GET /api/templates', () => {
     expect(data.errors).toBeUndefined();
   });
 
-  it('should handle Bingo API failure gracefully', async () => {
+  it('should handle bingo DB query failure gracefully', async () => {
     const triviaTemplates = [
       {
         id: 'trivia-1',
@@ -177,26 +156,20 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    // Mock Bingo API to fail
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Service Unavailable',
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: triviaTemplates }),
-      });
+    // Bingo query fails
+    mockListAllBingoTemplates.mockRejectedValueOnce(new Error('Database connection error'));
+    mockListAllTriviaTemplates.mockResolvedValueOnce(triviaTemplates);
 
     const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(1);
     expect(data.templates[0].game).toBe('trivia');
-    expect(data.errors).toContain('Bingo API unavailable: Service Unavailable');
+    expect(data.errors).toHaveLength(1);
+    expect(data.errors[0]).toContain('Bingo templates unavailable');
   });
 
-  it('should handle Trivia API failure gracefully', async () => {
+  it('should handle trivia DB query failure gracefully', async () => {
     const bingoTemplates = [
       {
         id: 'bingo-1',
@@ -212,56 +185,30 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    // Mock Trivia API to fail
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: bingoTemplates }),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Service Unavailable',
-      });
+    mockListAllBingoTemplates.mockResolvedValueOnce(bingoTemplates);
+    // Trivia query fails
+    mockListAllTriviaTemplates.mockRejectedValueOnce(new Error('Database connection error'));
 
     const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(1);
     expect(data.templates[0].game).toBe('bingo');
-    expect(data.errors).toContain('Trivia API unavailable: Service Unavailable');
+    expect(data.errors).toHaveLength(1);
+    expect(data.errors[0]).toContain('Trivia templates unavailable');
   });
 
-  it('should handle both APIs failing', async () => {
-    // Mock both APIs to fail
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Service Unavailable',
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        statusText: 'Service Unavailable',
-      });
+  it('should handle both DB queries failing', async () => {
+    mockListAllBingoTemplates.mockRejectedValueOnce(new Error('DB error'));
+    mockListAllTriviaTemplates.mockRejectedValueOnce(new Error('DB error'));
 
     const response = await GET(createMockRequest());
     const data = await response.json();
 
     expect(data.templates).toHaveLength(0);
     expect(data.errors).toHaveLength(2);
-    expect(data.errors[0]).toContain('Bingo API unavailable');
-    expect(data.errors[1]).toContain('Trivia API unavailable');
-  });
-
-  it('should handle network errors', async () => {
-    // Mock network error
-    mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-    const response = await GET(createMockRequest());
-    const data = await response.json();
-
-    expect(response.status).toBe(500);
-    expect(data.error).toBe('Failed to fetch templates');
-    expect(data.templates).toEqual([]);
+    expect(data.errors[0]).toContain('Bingo templates unavailable');
+    expect(data.errors[1]).toContain('Trivia templates unavailable');
   });
 
   it('should sort templates by updated_at descending', async () => {
@@ -307,15 +254,8 @@ describe('GET /api/templates', () => {
       },
     ];
 
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: bingoTemplates }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ templates: triviaTemplates }),
-      });
+    mockListAllBingoTemplates.mockResolvedValueOnce(bingoTemplates);
+    mockListAllTriviaTemplates.mockResolvedValueOnce(triviaTemplates);
 
     const response = await GET(createMockRequest());
     const data = await response.json();
@@ -324,5 +264,80 @@ describe('GET /api/templates', () => {
     expect(data.templates[0].id).toBe('bingo-2'); // Newest
     expect(data.templates[1].id).toBe('trivia-1'); // Middle
     expect(data.templates[2].id).toBe('bingo-1'); // Oldest
+  });
+
+  it('should apply recent filter (3 per game)', async () => {
+    const bingoTemplates = Array.from({ length: 5 }, (_, i) => ({
+      id: `bingo-${i + 1}`,
+      user_id: 'user-1',
+      name: `Bingo ${i + 1}`,
+      pattern_id: 'standard',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: `2024-01-0${i + 1}T00:00:00Z`,
+    }));
+
+    const triviaTemplates = Array.from({ length: 4 }, (_, i) => ({
+      id: `trivia-${i + 1}`,
+      user_id: 'user-1',
+      name: `Trivia ${i + 1}`,
+      questions: [],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: `2024-02-0${i + 1}T00:00:00Z`,
+    }));
+
+    mockListAllBingoTemplates.mockResolvedValueOnce(bingoTemplates);
+    mockListAllTriviaTemplates.mockResolvedValueOnce(triviaTemplates);
+
+    const response = await GET(createMockRequest('http://localhost:3002/api/templates?recent=true'));
+    const data = await response.json();
+
+    // 3 bingo + 3 trivia = 6 max
+    expect(data.templates).toHaveLength(6);
+    // Should only have the 3 most recent of each game
+    const bingoIds = data.templates.filter((t: { game: string }) => t.game === 'bingo').map((t: { id: string }) => t.id);
+    const triviaIds = data.templates.filter((t: { game: string }) => t.game === 'trivia').map((t: { id: string }) => t.id);
+    expect(bingoIds).toHaveLength(3);
+    expect(triviaIds).toHaveLength(3);
+  });
+
+  it('should apply limit parameter', async () => {
+    const bingoTemplates = Array.from({ length: 5 }, (_, i) => ({
+      id: `bingo-${i + 1}`,
+      user_id: 'user-1',
+      name: `Bingo ${i + 1}`,
+      pattern_id: 'standard',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: `2024-01-0${i + 1}T00:00:00Z`,
+    }));
+
+    mockListAllBingoTemplates.mockResolvedValueOnce(bingoTemplates);
+    mockListAllTriviaTemplates.mockResolvedValueOnce([]);
+
+    const response = await GET(createMockRequest('http://localhost:3002/api/templates?limit=2'));
+    const data = await response.json();
+
+    expect(data.templates).toHaveLength(2);
+  });
+
+  it('should pass user ID to database queries', async () => {
+    mockListAllBingoTemplates.mockResolvedValueOnce([]);
+    mockListAllTriviaTemplates.mockResolvedValueOnce([]);
+
+    await GET(createMockRequest());
+
+    expect(mockListAllBingoTemplates).toHaveBeenCalledWith('mock-service-client', 'user-1');
+    expect(mockListAllTriviaTemplates).toHaveBeenCalledWith('mock-service-client', 'user-1');
   });
 });

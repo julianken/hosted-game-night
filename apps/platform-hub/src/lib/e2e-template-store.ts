@@ -76,6 +76,13 @@ export function addE2ETemplate(template: E2ETemplate): void {
   e2eTemplateStore.push(template);
 }
 
+export function deleteE2ETemplate(id: string): boolean {
+  const index = e2eTemplateStore.findIndex(t => t.id === id);
+  if (index === -1) return false;
+  e2eTemplateStore.splice(index, 1);
+  return true;
+}
+
 export function clearE2ETemplates(): void {
   e2eTemplateStore.length = 0;
 }
