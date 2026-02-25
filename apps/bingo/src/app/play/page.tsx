@@ -20,7 +20,8 @@ import { ThemeSelector } from '@joolie-boolie/ui';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
-import { OfflineBanner, InstallPrompt } from '@/components/pwa';
+import { OfflineBanner } from '@/components/pwa';
+import { InstallPrompt } from '@joolie-boolie/ui';
 import { serializeBingoState, deserializeBingoState } from '@/lib/session/serializer';
 import { useGameStore } from '@/stores/game-store';
 import { patternRegistry } from '@/lib/game/patterns';
@@ -483,7 +484,7 @@ export default function PlayPage() {
         isLoading={session.isLoading}
       />
 
-      <InstallPrompt />
+      <InstallPrompt appName="Bingo" />
     </>
   );
 }

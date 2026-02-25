@@ -16,11 +16,15 @@ vi.mock('@/components/stats', () => ({
   StatsDisplay: () => <div data-testid="stats-display">Stats</div>,
 }));
 
-vi.mock('@/components/auth/LoginButton', () => ({
-  LoginButton: () => (
-    <button data-testid="login-button">Sign in with Joolie Boolie</button>
-  ),
-}));
+vi.mock('@joolie-boolie/ui', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    LoginButton: () => (
+      <button data-testid="login-button">Sign in with Joolie Boolie</button>
+    ),
+  };
+});
 
 import Home from '../page';
 import { cookies } from 'next/headers';

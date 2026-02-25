@@ -19,6 +19,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -32,6 +33,7 @@
     "vitest": "^4.0.17"
   },
   "dependencies": {
+    "@joolie-boolie/auth": "workspace:*",
     "@joolie-boolie/error-tracking": "workspace:*",
     "@joolie-boolie/types": "workspace:*",
     "motion": "^12.34.2",

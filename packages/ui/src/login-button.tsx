@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { startOAuthFlow } from '@/lib/auth/oauth-client';
+import { startOAuthFlow } from '@joolie-boolie/auth';
 
-interface LoginButtonProps {
+export interface LoginButtonProps {
   /** Path to redirect to after authentication (e.g., '/play') */
   returnTo?: string;
 }

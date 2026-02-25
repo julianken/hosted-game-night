@@ -8,7 +8,7 @@ interface ErrorBoundaryProviderProps {
 }
 
 async function loadSentryBackend() {
-  const { SentryErrorBackend } = await import('@/lib/observability/sentry-backend');
+  const { SentryErrorBackend } = await import('@joolie-boolie/error-tracking/sentry');
   const { setErrorBackend } = await import('@joolie-boolie/error-tracking/client');
   setErrorBackend(new SentryErrorBackend());
 }

@@ -2,16 +2,20 @@
 
 import { useEffect } from 'react';
 
-export function FaroInit() {
+interface FaroInitProps {
+  appName: string;
+}
+
+export function FaroInit({ appName }: FaroInitProps) {
   useEffect(() => {
     import('@joolie-boolie/error-tracking/faro')
       .then(({ initFaro }) => {
-        initFaro({ appName: 'bingo' });
+        initFaro({ appName });
       })
       .catch(() => {
         // Non-critical
       });
-  }, []);
+  }, [appName]);
 
   return null;
 }

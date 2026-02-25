@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockSentry } from '@joolie-boolie/testing';
-import type { TrackedError, ErrorUser, Breadcrumb } from '@joolie-boolie/error-tracking/types';
+import type { TrackedError, ErrorUser, Breadcrumb } from '../types';
 
 // Mock @sentry/nextjs with our testing mock
 vi.mock('@sentry/nextjs', () => mockSentry);
 
 // Import after mocking
-import { SentryErrorBackend } from '../sentry-backend';
+import { SentryErrorBackend } from '../sentry';
 
-describe('SentryErrorBackend (bingo)', () => {
+describe('SentryErrorBackend', () => {
   let backend: SentryErrorBackend;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('SentryErrorBackend (bingo)', () => {
 
   describe('init', () => {
     it('should not throw when called', () => {
-      expect(() => backend.init({ appName: 'bingo' })).not.toThrow();
+      expect(() => backend.init({ appName: 'test-app' })).not.toThrow();
     });
   });
 
