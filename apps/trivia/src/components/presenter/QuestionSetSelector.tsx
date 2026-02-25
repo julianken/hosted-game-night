@@ -7,6 +7,9 @@ import type { TriviaQuestionSet } from '@joolie-boolie/database/types';
 import type { Question } from '@/types';
 import { triviaQuestionToQuestion } from '@/lib/questions/conversion';
 
+/** List item type (questions JSONB stripped from list response) */
+type QuestionSetListItem = Omit<TriviaQuestionSet, 'questions'>;
+
 export interface QuestionSetSelectorProps {
   disabled?: boolean;
   onQuestionSetLoad?: (questionSet: TriviaQuestionSet) => void;
@@ -29,7 +32,7 @@ export function QuestionSetSelector({
   const questionsPerRound = useGameStore((state) => state.settings.questionsPerRound);
 
   // Component state
-  const [questionSets, setQuestionSets] = useState<TriviaQuestionSet[]>([]);
+  const [questionSets, setQuestionSets] = useState<QuestionSetListItem[]>([]);
   const [selectedSetId, setSelectedSetId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function QuestionSetSelector({
         }
 
         const data = await response.json();
-        setQuestionSets(data.questionSets || []);
+        setQuestionSets(data.data || []);
       } catch (err) {
         console.error('Error fetching question sets:', err);
         setError('Failed to load question sets');
@@ -62,16 +65,18 @@ export function QuestionSetSelector({
     fetchQuestionSets();
   }, []);
 
-  // Load question set into store
+  // Load question set into store (fetches full data including questions from detail endpoint)
   const loadQuestionSet = useCallback(async (setId: string) => {
-    const questionSet = questionSets.find((s) => s.id === setId);
-
-    if (!questionSet) {
-      errorToast('Question set not found');
-      return;
-    }
-
     try {
+      const response = await fetch(`/api/question-sets/${setId}`);
+      if (!response.ok) {
+        errorToast('Failed to load question set');
+        return;
+      }
+
+      const data = await response.json();
+      const questionSet: TriviaQuestionSet = data.questionSet;
+
       const convertedQuestions: Question[] = [];
 
       questionSet.questions.forEach((dbQuestion, index) => {
@@ -87,7 +92,7 @@ export function QuestionSetSelector({
       console.error('Error loading question set:', err);
       errorToast('Failed to load question set');
     }
-  }, [questionSets, importQuestions, questionsPerRound, success, errorToast, onQuestionSetLoad]);
+  }, [importQuestions, questionsPerRound, success, errorToast, onQuestionSetLoad]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const setId = e.target.value;
@@ -129,8 +134,6 @@ export function QuestionSetSelector({
           <option key={qs.id} value={qs.id}>
             {qs.name}
             {qs.is_default ? ' (Default)' : ''}
-            {' '}
-            ({qs.questions.length} questions)
           </option>
         ))}
       </select>

@@ -88,7 +88,7 @@ describe('TemplateSelector', () => {
     vi.clearAllMocks();
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
-      json: async () => ({ templates: mockTemplates }),
+      json: async () => ({ data: mockTemplates }),
     } as Response);
   });
 
@@ -131,7 +131,7 @@ describe('TemplateSelector', () => {
   it('shows empty state when no templates exist', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ templates: [] }),
+      json: async () => ({ data: [] }),
     } as Response);
 
     renderWithProviders(<TemplateSelector />);
@@ -208,7 +208,7 @@ describe('TemplateSelector', () => {
 
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ templates: templatesWithBadPattern }),
+      json: async () => ({ data: templatesWithBadPattern }),
     } as Response);
 
     renderWithProviders(<TemplateSelector />);

@@ -67,7 +67,7 @@ describe('RoomSetupModal', () => {
     // Mock fetch for TemplateSelector
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ templates: [] }),
+      json: async () => ({ data: [] }),
     });
   });
 
@@ -575,7 +575,7 @@ describe('RoomSetupModal', () => {
     it('renders TemplateSelector component', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: async () => ({ templates: [] }),
+        json: async () => ({ data: [] }),
       });
 
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
@@ -598,7 +598,7 @@ describe('RoomSetupModal', () => {
 
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: async () => ({ templates: [mockTemplate] }),
+        json: async () => ({ data: [mockTemplate] }),
       });
 
       renderWithProviders(<RoomSetupModal {...defaultProps} />);
@@ -621,7 +621,7 @@ describe('RoomSetupModal', () => {
 
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: async () => ({ templates: [mockTemplate] }),
+        json: async () => ({ data: [mockTemplate] }),
       });
 
       const { rerender } = renderWithProviders(<RoomSetupModal {...defaultProps} />);
@@ -673,7 +673,7 @@ describe('RoomSetupModal', () => {
     it('disables TemplateSelector when isLoading is true', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: async () => ({ templates: [] }),
+        json: async () => ({ data: [] }),
       });
 
       renderWithProviders(<RoomSetupModal {...defaultProps} isLoading={true} />);

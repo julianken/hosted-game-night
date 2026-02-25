@@ -7,6 +7,9 @@ import type { TriviaTemplate, TriviaQuestion } from '@joolie-boolie/database/typ
 import type { Question, QuestionId } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+/** List item type (questions JSONB stripped from list response) */
+type TemplateListItem = Omit<TriviaTemplate, 'questions'>;
+
 export interface TemplateSelectorProps {
   disabled?: boolean;
   onTemplateLoad?: (template: TriviaTemplate) => void;
@@ -55,7 +58,7 @@ export function TemplateSelector({
   const gameStatus = useGameStore((state) => state.status);
 
   // Component state
-  const [templates, setTemplates] = useState<TriviaTemplate[]>([]);
+  const [templates, setTemplates] = useState<TemplateListItem[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export function TemplateSelector({
         }
 
         const data = await response.json();
-        setTemplates(data.templates || []);
+        setTemplates(data.data || []);
       } catch (err) {
         console.error('Error fetching templates:', err);
         setError('Failed to load templates');
@@ -90,16 +93,18 @@ export function TemplateSelector({
     fetchTemplates();
   }, [errorToast]);
 
-  // Load template into stores
+  // Load template into stores (fetches full data including questions from detail endpoint)
   const loadTemplate = useCallback(async (templateId: string) => {
-    const template = templates.find((t) => t.id === templateId);
-
-    if (!template) {
-      errorToast('Template not found');
-      return;
-    }
-
     try {
+      const response = await fetch(`/api/templates/${templateId}`);
+      if (!response.ok) {
+        errorToast('Failed to load template');
+        return;
+      }
+
+      const data = await response.json();
+      const template: TriviaTemplate = data.template;
+
       // Convert template questions to app Question format
       const convertedQuestions: Question[] = [];
       const questionsPerRound = template.questions_per_round;
@@ -127,7 +132,7 @@ export function TemplateSelector({
       console.error('Error loading template:', err);
       errorToast('Failed to apply template settings');
     }
-  }, [templates, importQuestions, updateSettings, success, errorToast, onTemplateLoad]);
+  }, [importQuestions, updateSettings, success, errorToast, onTemplateLoad]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const templateId = e.target.value;
@@ -169,8 +174,6 @@ export function TemplateSelector({
           <option key={template.id} value={template.id}>
             {template.name}
             {template.is_default ? ' (Default)' : ''}
-            {' '}
-            ({template.questions.length} questions)
           </option>
         ))}
       </select>

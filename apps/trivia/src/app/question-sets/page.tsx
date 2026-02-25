@@ -28,12 +28,12 @@ export default function QuestionSetsPage() {
   const fetchQuestionSets = useCallback(async () => {
     try {
       setError(null);
-      const response = await fetch('/api/question-sets');
+      const response = await fetch('/api/question-sets?fields=full&pageSize=100');
       if (!response.ok) {
         throw new Error('Failed to load question sets');
       }
       const data = await response.json();
-      setQuestionSets(data.questionSets ?? []);
+      setQuestionSets(data.data ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load question sets');
     } finally {

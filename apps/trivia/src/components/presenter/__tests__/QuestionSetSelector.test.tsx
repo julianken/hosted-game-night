@@ -51,7 +51,7 @@ describe('QuestionSetSelector', () => {
   it('renders and loads question sets', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: mockQuestionSets }),
+      json: async () => ({ data: mockQuestionSets.map(({ questions: _q, ...rest }) => rest) }),
     });
 
     renderWithToast(<QuestionSetSelector />);
@@ -62,15 +62,22 @@ describe('QuestionSetSelector', () => {
   });
 
   it('imports questions when set is selected', async () => {
+    // List endpoint (no questions in response)
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: mockQuestionSets }),
+      json: async () => ({ data: mockQuestionSets.map(({ questions: _q, ...rest }) => rest) }),
     });
 
     renderWithToast(<QuestionSetSelector />);
 
     await waitFor(() => {
       expect(screen.getByRole('combobox')).toHaveTextContent('History Set');
+    });
+
+    // Detail endpoint fetch for qs-1
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ questionSet: mockQuestionSets[0] }),
     });
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'qs-1' } });
@@ -89,7 +96,7 @@ describe('QuestionSetSelector', () => {
   it('shows empty state', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: [] }),
+      json: async () => ({ data: [] }),
     });
 
     renderWithToast(<QuestionSetSelector />);

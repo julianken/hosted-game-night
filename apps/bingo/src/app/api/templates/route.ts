@@ -6,20 +6,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
 import {
-  listAllBingoTemplates,
+  listBingoTemplates,
   createBingoTemplate,
   AUTO_CALL_INTERVAL_MIN,
   AUTO_CALL_INTERVAL_MAX,
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { BingoTemplateInsert } from '@joolie-boolie/database/types';
+import { parsePaginationParams } from '@joolie-boolie/database/pagination';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'api-bingo-templates' });
 
 /**
  * GET /api/templates
- * List all templates for the authenticated user
+ * List templates for the authenticated user with pagination and search.
+ *
+ * Query params:
+ *   - page (number, default 1)
+ *   - pageSize (number, default 20, max 100)
+ *   - search (string, searches name, pattern_id, voice_pack)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -31,10 +37,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient();
-    const templates = await listAllBingoTemplates(supabase, user.id);
+    const { searchParams } = new URL(request.url);
+    const paginationParams = parsePaginationParams(searchParams);
+    const search = searchParams.get('search') || undefined;
 
-    return NextResponse.json({ templates });
+    const supabase = createAuthenticatedClient();
+    const result = await listBingoTemplates(supabase, user.id, {
+      page: paginationParams.page,
+      pageSize: paginationParams.pageSize,
+      search,
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     logger.error('Error listing bingo templates', { error: error instanceof Error ? error.message : String(error) });
 

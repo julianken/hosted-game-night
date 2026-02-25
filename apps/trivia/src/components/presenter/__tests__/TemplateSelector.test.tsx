@@ -137,9 +137,10 @@ function renderWithProviders(ui: React.ReactElement) {
 describe('TemplateSelector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // List endpoint returns data without questions (stripped JSONB)
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
-      json: async () => ({ templates: mockTemplates }),
+      json: async () => ({ data: mockTemplates.map(({ questions: _q, ...rest }) => rest) }),
     } as Response);
   });
 
@@ -162,8 +163,8 @@ describe('TemplateSelector', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/General Knowledge.*\(Default\).*2 questions/)).toBeInTheDocument();
-      expect(screen.getByText(/Quick Quiz.*1 question/)).toBeInTheDocument();
+      expect(screen.getByText(/General Knowledge.*\(Default\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Quick Quiz/)).toBeInTheDocument();
     });
   });
 
@@ -182,7 +183,7 @@ describe('TemplateSelector', () => {
   it('shows empty state when no templates exist', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ templates: [] }),
+      json: async () => ({ data: [] }),
     } as Response);
 
     renderWithProviders(<TemplateSelector />);
@@ -200,6 +201,12 @@ describe('TemplateSelector', () => {
     await waitFor(() => {
       expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
     });
+
+    // Mock the detail endpoint fetch for template-1
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: mockTemplates[0] }),
+    } as Response);
 
     // Select template
     const select = screen.getByRole('combobox');
@@ -244,6 +251,12 @@ describe('TemplateSelector', () => {
     await waitFor(() => {
       expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
     });
+
+    // Mock the detail endpoint fetch
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: mockTemplates[0] }),
+    } as Response);
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
@@ -355,6 +368,12 @@ describe('TemplateSelector', () => {
       expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
     });
 
+    // Mock the detail endpoint fetch
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: mockTemplates[0] }),
+    } as Response);
+
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
 
@@ -389,9 +408,11 @@ describe('TemplateSelector', () => {
       updated_at: '2024-01-01T00:00:00Z',
     };
 
+    // List endpoint returns data without questions
+    const { questions: _q, ...listItem } = templateWithMultipleRounds;
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
-      json: async () => ({ templates: [templateWithMultipleRounds] }),
+      json: async () => ({ data: [listItem] }),
     } as Response);
 
     // Use fireEvent for testing
@@ -400,6 +421,12 @@ describe('TemplateSelector', () => {
     await waitFor(() => {
       expect(screen.getByText(/Multi Round/)).toBeInTheDocument();
     });
+
+    // Mock the detail endpoint fetch
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: templateWithMultipleRounds }),
+    } as Response);
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-3' } });

@@ -10,7 +10,7 @@ vi.mock('@joolie-boolie/auth', () => ({
 
 // Mock the database functions
 vi.mock('@joolie-boolie/database/tables', () => ({
-  listAllTriviaTemplates: vi.fn(),
+  listTriviaTemplates: vi.fn(),
   createTriviaTemplate: vi.fn(),
 }));
 
@@ -18,9 +18,17 @@ vi.mock('@joolie-boolie/database/errors', () => ({
   isDatabaseError: vi.fn(),
 }));
 
+vi.mock('@joolie-boolie/database/pagination', () => ({
+  parsePaginationParams: vi.fn().mockReturnValue({
+    page: undefined,
+    pageSize: undefined,
+    cursor: undefined,
+  }),
+}));
+
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
 import {
-  listAllTriviaTemplates,
+  listTriviaTemplates,
   createTriviaTemplate,
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
@@ -39,7 +47,7 @@ function createMockRequest(url: string, init?: { method?: string; body?: string 
 }
 
 describe('GET /api/templates', () => {
-  const mockListAll = listAllTriviaTemplates as ReturnType<typeof vi.fn>;
+  const mockList = listTriviaTemplates as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
   beforeEach(() => {
@@ -58,45 +66,50 @@ describe('GET /api/templates', () => {
     expect(data.error).toBe('Unauthorized');
   });
 
-  it('returns templates for authenticated user', async () => {
-    const mockTemplates: TriviaTemplate[] = [
-      {
-        id: 'template-1',
-        user_id: 'user-123',
-        name: 'My Template',
-        questions: [
-          {
-            question: 'What is 2+2?',
-            options: ['3', '4', '5'],
-            correctIndex: 1,
-          },
-        ],
-        rounds_count: 3,
-        questions_per_round: 10,
-        timer_duration: 30,
-        is_default: false,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+  it('returns paginated templates for authenticated user', async () => {
+    const mockPaginatedResult = {
+      data: [
+        {
+          id: 'template-1',
+          user_id: 'user-123',
+          name: 'My Template',
+          rounds_count: 3,
+          questions_per_round: 10,
+          timer_duration: 30,
+          is_default: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 1,
+        totalPages: 1,
+        hasMore: false,
       },
-    ];
+    };
 
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
-    mockListAll.mockResolvedValue(mockTemplates);
+    mockList.mockResolvedValue(mockPaginatedResult);
 
     const request = createMockRequest('http://localhost/api/templates');
     const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.templates).toEqual(mockTemplates);
-    expect(mockListAll).toHaveBeenCalledWith(mockSupabaseClient, 'user-123');
+    expect(data.data).toEqual(mockPaginatedResult.data);
+    expect(data.pagination).toEqual(mockPaginatedResult.pagination);
+    expect(mockList).toHaveBeenCalledWith(mockSupabaseClient, 'user-123', expect.objectContaining({
+      select: expect.any(String),
+    }));
   });
 
   it('handles database errors', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Database error', statusCode: 503 };
-    mockListAll.mockRejectedValue(dbError);
+    mockList.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates');

@@ -6,14 +6,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
 import {
-  listAllTriviaQuestionSets,
+  listTriviaQuestionSets,
   createTriviaQuestionSet,
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaQuestionSetInsert, TriviaQuestion } from '@joolie-boolie/database/types';
+import { parsePaginationParams } from '@joolie-boolie/database/pagination';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'api-trivia-question-sets' });
+
+/** All columns except the JSONB `questions` column for list responses */
+const QUESTION_SET_LIST_COLUMNS = 'id,user_id,name,description,is_default,created_at,updated_at';
 
 /**
  * Validates trivia questions structure
@@ -40,7 +44,14 @@ function validateQuestions(questions: TriviaQuestion[]): string | null {
 
 /**
  * GET /api/question-sets
- * List all question sets for the authenticated user
+ * List question sets for the authenticated user with pagination and search.
+ * Excludes the `questions` JSONB column from list responses to reduce payload.
+ *
+ * Query params:
+ *   - page (number, default 1)
+ *   - pageSize (number, default 20, max 100)
+ *   - search (string, searches name and description)
+ *   - fields ('full' to include questions JSONB; omit to strip questions for smaller payloads)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -52,10 +63,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient();
-    const questionSets = await listAllTriviaQuestionSets(supabase, user.id);
+    const { searchParams } = new URL(request.url);
+    const paginationParams = parsePaginationParams(searchParams);
+    const search = searchParams.get('search') || undefined;
+    const includeFull = searchParams.get('fields') === 'full';
 
-    return NextResponse.json({ questionSets });
+    const supabase = createAuthenticatedClient();
+    const result = await listTriviaQuestionSets(supabase, user.id, {
+      page: paginationParams.page,
+      pageSize: paginationParams.pageSize,
+      search,
+      select: includeFull ? '*' : QUESTION_SET_LIST_COLUMNS,
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     logger.error('Error listing trivia question sets', { error: error instanceof Error ? error.message : String(error) });
 

@@ -55,7 +55,7 @@ describe('PresetSelector', () => {
   it('renders loading state then presets', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ presets: mockPresets }),
+      json: async () => ({ data: mockPresets }),
     });
 
     renderWithToast(<PresetSelector />);
@@ -74,7 +74,7 @@ describe('PresetSelector', () => {
   it('loads settings when preset is selected', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ presets: mockPresets }),
+      json: async () => ({ data: mockPresets }),
     });
 
     renderWithToast(<PresetSelector />);
@@ -97,7 +97,7 @@ describe('PresetSelector', () => {
   it('shows empty state when no presets', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ presets: [] }),
+      json: async () => ({ data: [] }),
     });
 
     renderWithToast(<PresetSelector />);

@@ -64,7 +64,7 @@ describe('QuestionSetsPage', () => {
   it('renders the page title', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: [] }),
+      json: async () => ({ data: [] }),
     });
 
     render(<QuestionSetsPage />);
@@ -74,7 +74,7 @@ describe('QuestionSetsPage', () => {
   it('shows empty state when no sets exist', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: [] }),
+      json: async () => ({ data: [] }),
     });
 
     render(<QuestionSetsPage />);
@@ -87,7 +87,7 @@ describe('QuestionSetsPage', () => {
   it('renders question set cards when data exists', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ questionSets: mockQuestionSets }),
+      json: async () => ({ data: mockQuestionSets }),
     });
 
     render(<QuestionSetsPage />);

@@ -36,7 +36,8 @@ export function RoomSetupModal(props: RoomSetupModalProps) {
           }
 
           const data = await response.json();
-          const defaultTemplate = data.templates?.find((t: { is_default: boolean }) => t.is_default);
+          const templates = data.data || [];
+          const defaultTemplate = templates.find((t: { is_default: boolean }) => t.is_default);
 
           if (defaultTemplate) {
             // Load pattern

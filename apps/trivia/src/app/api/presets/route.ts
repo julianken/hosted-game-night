@@ -6,18 +6,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
 import {
-  listAllTriviaPresets,
+  listTriviaPresets,
   createTriviaPreset,
 } from '@joolie-boolie/database/tables';
 import { isDatabaseError } from '@joolie-boolie/database/errors';
 import type { TriviaPresetInsert } from '@joolie-boolie/database/types';
+import { parsePaginationParams } from '@joolie-boolie/database/pagination';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 
 const logger = createLogger({ service: 'api-trivia-presets' });
 
 /**
  * GET /api/presets
- * List all presets for the authenticated user
+ * List presets for the authenticated user with pagination and search.
+ *
+ * Query params:
+ *   - page (number, default 1)
+ *   - pageSize (number, default 20, max 100)
+ *   - search (string, searches name)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -29,10 +35,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createAuthenticatedClient();
-    const presets = await listAllTriviaPresets(supabase, user.id);
+    const { searchParams } = new URL(request.url);
+    const paginationParams = parsePaginationParams(searchParams);
+    const search = searchParams.get('search') || undefined;
 
-    return NextResponse.json({ presets });
+    const supabase = createAuthenticatedClient();
+    const result = await listTriviaPresets(supabase, user.id, {
+      page: paginationParams.page,
+      pageSize: paginationParams.pageSize,
+      search,
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     logger.error('Error listing trivia presets', { error: error instanceof Error ? error.message : String(error) });
 

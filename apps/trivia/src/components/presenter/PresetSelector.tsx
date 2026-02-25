@@ -48,7 +48,7 @@ export function PresetSelector({
         }
 
         const data = await response.json();
-        setPresets(data.presets || []);
+        setPresets(data.data || []);
       } catch (err) {
         console.error('Error fetching presets:', err);
         setError('Failed to load presets');
