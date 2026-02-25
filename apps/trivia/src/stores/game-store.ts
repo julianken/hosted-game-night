@@ -44,6 +44,8 @@ import {
   getOverallLeaders,
   getTeamsSortedByScore,
   getNextScene,
+  buildSceneUpdate,
+  computeScoreDeltas,
 } from '@/lib/game/engine';
 import type { SceneTransitionContext } from '@/lib/game/engine';
 
@@ -440,40 +442,13 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           lifecycleLogger.emit('game.round_completed', { round: s.currentRound, totalRounds: s.totalRounds });
           const baseUpdate = completeRoundEngine(s);
 
-          // Compute rank helpers using scores before this round (previousRank)
-          // and after this round (newRank).
           const prevScores = s.questionStartScores ?? {};
-
-          // Sort teams by their round-start score to assign previousRank
-          const sortedByPrev = [...s.teams].sort(
-            (a, b) => (prevScores[b.id] ?? 0) - (prevScores[a.id] ?? 0)
-          );
-          const previousRankMap: Record<string, number> = {};
-          sortedByPrev.forEach((t, i) => { previousRankMap[t.id] = i + 1; });
-
-          // Sort teams by new score (from baseUpdate) descending to assign newRank
           const updatedTeams = baseUpdate.teams ?? s.teams;
-          const sortedByNew = [...updatedTeams].sort((a, b) => b.score - a.score);
-          const newRankMap: Record<string, number> = {};
-          sortedByNew.forEach((t, i) => { newRankMap[t.id] = i + 1; });
-
-          // Build ScoreDelta[] — one entry per team
-          const deltas: ScoreDelta[] = updatedTeams.map((t) => {
-            const prevScore = prevScores[t.id] ?? 0;
-            return {
-              teamId: t.id,
-              teamName: t.name,
-              delta: t.score - prevScore,
-              newScore: t.score,
-              newRank: newRankMap[t.id] ?? 1,
-              previousRank: previousRankMap[t.id] ?? 1,
-            };
-          });
+          const deltas = computeScoreDeltas(updatedTeams, prevScores);
 
           return {
             ...baseUpdate,
-            audienceScene: nextScene,
-            sceneTimestamp: Date.now(),
+            ...buildSceneUpdate(nextScene),
             scoreDeltas: [...deltas],
           };
         });
@@ -486,8 +461,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         const firstQ = roundQuestions[0];
         const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
         set({
-          audienceScene: nextScene,
-          sceneTimestamp: Date.now(),
+          ...buildSceneUpdate(nextScene),
           displayQuestionIndex: globalIndex,
           selectedQuestionIndex: globalIndex,
           revealPhase: null,
@@ -501,8 +475,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         const firstQ = roundQuestions[0];
         const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
         set({
-          audienceScene: nextScene,
-          sceneTimestamp: Date.now(),
+          ...buildSceneUpdate(nextScene),
           displayQuestionIndex: globalIndex,
           selectedQuestionIndex: globalIndex,
           recapShowingAnswer: null,
@@ -513,8 +486,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       // Side effect: seed recap_qa — start on question face.
       if (nextScene === 'recap_qa') {
         set({
-          audienceScene: nextScene,
-          sceneTimestamp: Date.now(),
+          ...buildSceneUpdate(nextScene),
           recapShowingAnswer: false,
         });
         return;
@@ -523,8 +495,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       // Side effect: seed recap_scores — clear recapShowingAnswer sub-state.
       if (nextScene === 'recap_scores') {
         set({
-          audienceScene: nextScene,
-          sceneTimestamp: Date.now(),
+          ...buildSceneUpdate(nextScene),
           recapShowingAnswer: null,
         });
         return;
@@ -538,8 +509,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           const baseUpdate = endGameEngine(s);
           return {
             ...baseUpdate,
-            audienceScene: nextScene,
-            sceneTimestamp: Date.now(),
+            ...buildSceneUpdate(nextScene),
           };
         });
         return;
@@ -552,8 +522,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           lifecycleLogger.emit('game.round_started', { round: s.currentRound + 1, totalRounds: s.totalRounds });
           return {
             ...nextRoundEngine(s),
-            audienceScene: nextScene,
-            sceneTimestamp: Date.now(),
+            ...buildSceneUpdate(nextScene),
           };
         });
         return;
@@ -567,8 +536,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
           if (nextQIndex < roundQuestions.length) {
             const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
             set({
-              audienceScene: nextScene,
-              sceneTimestamp: Date.now(),
+              ...buildSceneUpdate(nextScene),
               selectedQuestionIndex: globalIndex,
               displayQuestionIndex: globalIndex,
             });
@@ -577,14 +545,13 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         }
         // Default: show the currently selected question
         set({
-          audienceScene: nextScene,
-          sceneTimestamp: Date.now(),
+          ...buildSceneUpdate(nextScene),
           displayQuestionIndex: state.selectedQuestionIndex,
         });
         return;
       }
 
-      set({ audienceScene: nextScene, sceneTimestamp: Date.now() });
+      set(buildSceneUpdate(nextScene));
     }
   },
 

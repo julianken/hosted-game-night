@@ -1,4 +1,4 @@
-import type { TriviaGameState, TeamAnswer, TeamId, QuestionId } from '@/types';
+import type { TriviaGameState, TeamAnswer, TeamId, QuestionId, Team, ScoreDelta } from '@/types';
 import { deepFreeze, padRoundScores } from './helpers';
 
 // =============================================================================
@@ -199,5 +199,41 @@ export function amendCorrectAnswers(
     questions: updatedQuestions,
     teamAnswers: updatedTeamAnswers,
     teams: updatedTeams,
+  });
+}
+
+// =============================================================================
+// SCORE DELTAS
+// =============================================================================
+
+/**
+ * Pure function to compute ScoreDelta[] for a completed round.
+ * Computes per-team rank changes and point deltas by diffing the teams'
+ * current scores against a snapshot taken at the start of the round.
+ */
+export function computeScoreDeltas(
+  teams: Team[],
+  previousScores: Record<string, number>
+): ScoreDelta[] {
+  const sortedByPrev = [...teams].sort(
+    (a, b) => (previousScores[b.id] ?? 0) - (previousScores[a.id] ?? 0)
+  );
+  const previousRankMap: Record<string, number> = {};
+  sortedByPrev.forEach((t, i) => { previousRankMap[t.id] = i + 1; });
+
+  const sortedByNew = [...teams].sort((a, b) => b.score - a.score);
+  const newRankMap: Record<string, number> = {};
+  sortedByNew.forEach((t, i) => { newRankMap[t.id] = i + 1; });
+
+  return teams.map((t) => {
+    const prevScore = previousScores[t.id] ?? 0;
+    return {
+      teamId: t.id,
+      teamName: t.name,
+      delta: t.score - prevScore,
+      newScore: t.score,
+      newRank: newRankMap[t.id] ?? 1,
+      previousRank: previousRankMap[t.id] ?? 1,
+    };
   });
 }
