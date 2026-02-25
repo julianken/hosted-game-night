@@ -9,6 +9,7 @@
     "./mocks": "./src/mocks/index.ts",
     "./mocks/sentry": "./src/mocks/sentry.ts",
     "./mocks/otel": "./src/mocks/otel.ts",
+    "./contracts": "./src/contracts/index.ts",
     "./helpers": "./src/helpers/index.ts",
     "./setup": "./src/setup.ts"
   },

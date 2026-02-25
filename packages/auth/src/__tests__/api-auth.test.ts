@@ -112,7 +112,7 @@ describe('getApiUser', () => {
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
     });
 
-    it('verifies tokens signed with E2E secret', async () => {
+    it('accepts E2E token when E2E_TESTING is enabled', async () => {
       const token = await createTestToken({
         sub: 'e2e-user-123',
         email: 'e2e@test.com',
@@ -129,7 +129,18 @@ describe('getApiUser', () => {
       expect(user!.email).toBe('e2e@test.com');
     });
 
-    it('rejects E2E tokens when E2E_TESTING is not true', async () => {
+    it('returns cookieless bypass user when no token and E2E mode is active', async () => {
+      // When E2E_TESTING=true and no cookie is present, getApiUser returns
+      // a hardcoded test user to support browser-based local dev without OAuth
+      const request = createMockRequest(); // no token
+      const user = await getApiUser(request);
+
+      expect(user).not.toBeNull();
+      expect(user!.id).toBe('00000000-0000-4000-a000-000000000e2e');
+      expect(user!.email).toBe('e2e-test@joolie-boolie.test');
+    });
+
+    it('rejects E2E token when E2E_TESTING is disabled', async () => {
       process.env.E2E_TESTING = 'false';
 
       const token = await createTestToken({
@@ -143,6 +154,46 @@ describe('getApiUser', () => {
       const request = createMockRequest(token);
       const user = await getApiUser(request);
       expect(user).toBeNull();
+    });
+
+    it('rejects E2E token when E2E_TESTING env var is unset', async () => {
+      delete process.env.E2E_TESTING;
+
+      const token = await createTestToken({
+        sub: 'e2e-user-123',
+        email: 'e2e@test.com',
+        iss: 'e2e-test',
+        aud: 'authenticated',
+        secret: E2E_SECRET,
+      });
+
+      const request = createMockRequest(token);
+      const user = await getApiUser(request);
+      expect(user).toBeNull();
+    });
+
+    it('falls through to HS256 when E2E token is invalid', async () => {
+      // Sign token with a DIFFERENT secret (bad signature for E2E step)
+      // but configure SUPABASE_JWT_SECRET so HS256 step can succeed
+      process.env.SUPABASE_JWT_SECRET = SUPABASE_JWT_SECRET;
+      process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE_URL;
+
+      const supabaseSecret = new TextEncoder().encode(SUPABASE_JWT_SECRET);
+      const token = await createTestToken({
+        sub: 'fallthrough-user',
+        email: 'fallthrough@example.com',
+        iss: `${SUPABASE_URL}/auth/v1`,
+        aud: 'authenticated',
+        secret: supabaseSecret,
+      });
+
+      const request = createMockRequest(token);
+      const user = await getApiUser(request);
+
+      // E2E verification fails (wrong secret), chain continues to HS256 which succeeds
+      expect(user).not.toBeNull();
+      expect(user!.id).toBe('fallthrough-user');
+      expect(user!.email).toBe('fallthrough@example.com');
     });
   });
 
@@ -226,6 +277,8 @@ describe('getApiUser', () => {
     });
   });
 
+  // TODO(R-4): This test group documents the current 3-step chain. After R-4,
+  // the chain becomes 4-step (adding JWKS). Update assertions accordingly.
   describe('verification chain order', () => {
     it('tries E2E first, then SUPABASE_JWT_SECRET, then SESSION_TOKEN_SECRET', async () => {
       // Set up all three secrets
@@ -251,6 +304,7 @@ describe('getApiUser', () => {
       expect(user!.id).toBe('e2e-user');
     });
 
+    // TODO(R-4): After R-4, JWKS becomes step 4. This test asserts chain stops at step 3.
     it('falls through to SUPABASE_JWT_SECRET when E2E fails', async () => {
       process.env.E2E_TESTING = 'true';
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
@@ -274,6 +328,7 @@ describe('getApiUser', () => {
       expect(user!.id).toBe('prod-user');
     });
 
+    // TODO(R-4): After R-4, JWKS becomes step 4. This test asserts chain stops at step 3.
     it('falls through to SESSION_TOKEN_SECRET when others fail', async () => {
       process.env.E2E_TESTING = 'true';
       process.env.E2E_JWT_SECRET = E2E_SECRET_STRING;
