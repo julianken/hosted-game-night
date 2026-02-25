@@ -110,6 +110,34 @@ describe('GET /api/templates/[id]', () => {
     expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
   });
 
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: BingoTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      pattern_id: 'horizontal',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1');
+    const response = await GET(request, {
+      params: Promise.resolve({ id: 'template-1' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+  });
+
   it('handles non-database errors with 500', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
@@ -129,6 +157,7 @@ describe('GET /api/templates/[id]', () => {
 });
 
 describe('PATCH /api/templates/[id]', () => {
+  const mockGet = getBingoTemplate as ReturnType<typeof vi.fn>;
   const mockUpdate = updateBingoTemplate as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
@@ -171,11 +200,44 @@ describe('PATCH /api/templates/[id]', () => {
     expect(data.error).toContain('auto_call_interval');
   });
 
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: BingoTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      pattern_id: 'horizontal',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: 'Hijacked Name' }),
+    });
+
+    const response = await PATCH(request, {
+      params: Promise.resolve({ id: 'template-1' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when template not found or access denied', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'bingo_templates with id \'template-1\' not found', statusCode: 404 };
-    mockUpdate.mockRejectedValue(notFoundError);
+    mockGet.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
@@ -193,21 +255,33 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('updates template successfully', async () => {
-    const mockTemplate: BingoTemplate = {
+    const existingTemplate: BingoTemplate = {
       id: 'template-1',
       user_id: 'user-123',
+      name: 'My Template',
+      pattern_id: 'horizontal',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    const updatedTemplate: BingoTemplate = {
+      ...existingTemplate,
       name: 'Updated Template',
       pattern_id: 'vertical',
       voice_pack: 'british',
       auto_call_enabled: true,
       auto_call_interval: 15000,
       is_default: true,
-      created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-02T00:00:00Z',
     };
 
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
-    mockUpdate.mockResolvedValue(mockTemplate);
+    mockGet.mockResolvedValue(existingTemplate);
+    mockUpdate.mockResolvedValue(updatedTemplate);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
@@ -227,7 +301,7 @@ describe('PATCH /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.template).toEqual(mockTemplate);
+    expect(data.template).toEqual(updatedTemplate);
     expect(mockUpdate).toHaveBeenCalledWith(
       mockSupabaseClient,
       'template-1',
@@ -243,21 +317,28 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('updates only provided fields', async () => {
-    const mockTemplate: BingoTemplate = {
+    const existingTemplate: BingoTemplate = {
       id: 'template-1',
       user_id: 'user-123',
-      name: 'Partial Update',
+      name: 'My Template',
       pattern_id: 'horizontal',
       voice_pack: 'classic',
       auto_call_enabled: false,
       auto_call_interval: 5000,
       is_default: false,
       created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    const updatedTemplate: BingoTemplate = {
+      ...existingTemplate,
+      name: 'Partial Update',
       updated_at: '2024-01-02T00:00:00Z',
     };
 
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
-    mockUpdate.mockResolvedValue(mockTemplate);
+    mockGet.mockResolvedValue(existingTemplate);
+    mockUpdate.mockResolvedValue(updatedTemplate);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
@@ -281,7 +362,7 @@ describe('PATCH /api/templates/[id]', () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const genericError = new Error('Unexpected runtime error');
-    mockUpdate.mockRejectedValue(genericError);
+    mockGet.mockRejectedValue(genericError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(false);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
@@ -300,6 +381,7 @@ describe('PATCH /api/templates/[id]', () => {
 });
 
 describe('DELETE /api/templates/[id]', () => {
+  const mockGet = getBingoTemplate as ReturnType<typeof vi.fn>;
   const mockDelete = deleteBingoTemplate as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
@@ -325,7 +407,21 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('deletes template successfully', async () => {
+    const existingTemplate: BingoTemplate = {
+      id: 'template-1',
+      user_id: 'user-123',
+      name: 'My Template',
+      pattern_id: 'horizontal',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
+    mockGet.mockResolvedValue(existingTemplate);
     mockDelete.mockResolvedValue(undefined);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
@@ -339,14 +435,47 @@ describe('DELETE /api/templates/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
     expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+  });
+
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: BingoTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      pattern_id: 'horizontal',
+      voice_pack: 'classic',
+      auto_call_enabled: false,
+      auto_call_interval: 5000,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
+      method: 'DELETE',
+    });
+
+    const response = await DELETE(request, {
+      params: Promise.resolve({ id: 'template-1' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('handles database errors', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Cannot delete default template', statusCode: 400 };
-    mockDelete.mockRejectedValue(dbError);
+    mockGet.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {

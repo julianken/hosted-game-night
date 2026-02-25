@@ -94,6 +94,33 @@ describe('GET /api/templates/[id]', () => {
     expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
   });
 
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: TriviaTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      questions: [],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1');
+    const params = Promise.resolve({ id: 'template-1' });
+    const response = await GET(request, { params });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+  });
+
   it('handles not found errors', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
@@ -112,6 +139,7 @@ describe('GET /api/templates/[id]', () => {
 });
 
 describe('PATCH /api/templates/[id]', () => {
+  const mockGet = getTriviaTemplate as ReturnType<typeof vi.fn>;
   const mockUpdate = updateTriviaTemplate as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
@@ -135,11 +163,42 @@ describe('PATCH /api/templates/[id]', () => {
     expect(data.error).toBe('Unauthorized');
   });
 
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: TriviaTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      questions: [],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
+      method: 'PATCH',
+      body: JSON.stringify({ name: 'Hijacked Name' }),
+    });
+    const params = Promise.resolve({ id: 'template-1' });
+    const response = await PATCH(request, { params });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('updates template successfully', async () => {
-    const mockTemplate: TriviaTemplate = {
+    const existingTemplate: TriviaTemplate = {
       id: 'template-1',
       user_id: 'user-123',
-      name: 'Updated Name',
+      name: 'My Template',
       questions: [
         {
           question: 'What is 2+2?',
@@ -147,16 +206,27 @@ describe('PATCH /api/templates/[id]', () => {
           correctIndex: 1,
         },
       ],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    const updatedTemplate: TriviaTemplate = {
+      ...existingTemplate,
+      name: 'Updated Name',
       rounds_count: 5,
       questions_per_round: 15,
       timer_duration: 45,
       is_default: true,
-      created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-02T00:00:00Z',
     };
 
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
-    mockUpdate.mockResolvedValue(mockTemplate);
+    mockGet.mockResolvedValue(existingTemplate);
+    mockUpdate.mockResolvedValue(updatedTemplate);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
@@ -173,7 +243,7 @@ describe('PATCH /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.template).toEqual(mockTemplate);
+    expect(data.template).toEqual(updatedTemplate);
     expect(mockUpdate).toHaveBeenCalledWith(
       mockSupabaseClient,
       'template-1',
@@ -272,21 +342,28 @@ describe('PATCH /api/templates/[id]', () => {
   });
 
   it('updates only provided fields', async () => {
-    const mockTemplate: TriviaTemplate = {
+    const existingTemplate: TriviaTemplate = {
       id: 'template-1',
       user_id: 'user-123',
-      name: 'Updated Name',
+      name: 'My Template',
       questions: [],
       rounds_count: 3,
       questions_per_round: 10,
       timer_duration: 30,
       is_default: false,
       created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    const updatedTemplate: TriviaTemplate = {
+      ...existingTemplate,
+      name: 'Updated Name',
       updated_at: '2024-01-02T00:00:00Z',
     };
 
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
-    mockUpdate.mockResolvedValue(mockTemplate);
+    mockGet.mockResolvedValue(existingTemplate);
+    mockUpdate.mockResolvedValue(updatedTemplate);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
       method: 'PATCH',
@@ -307,7 +384,7 @@ describe('PATCH /api/templates/[id]', () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'Template not found', statusCode: 404 };
-    mockUpdate.mockRejectedValue(notFoundError);
+    mockGet.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates/nonexistent', {
@@ -324,6 +401,7 @@ describe('PATCH /api/templates/[id]', () => {
 });
 
 describe('DELETE /api/templates/[id]', () => {
+  const mockGet = getTriviaTemplate as ReturnType<typeof vi.fn>;
   const mockDelete = deleteTriviaTemplate as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
@@ -347,7 +425,21 @@ describe('DELETE /api/templates/[id]', () => {
   });
 
   it('deletes template successfully', async () => {
+    const existingTemplate: TriviaTemplate = {
+      id: 'template-1',
+      user_id: 'user-123',
+      name: 'My Template',
+      questions: [],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
+    mockGet.mockResolvedValue(existingTemplate);
     mockDelete.mockResolvedValue(undefined);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {
@@ -359,14 +451,45 @@ describe('DELETE /api/templates/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
     expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+  });
+
+  it('returns 404 when user does not own the template', async () => {
+    const otherUsersTemplate: TriviaTemplate = {
+      id: 'template-1',
+      user_id: 'other-user-id',
+      name: 'Other User Template',
+      questions: [],
+      rounds_count: 3,
+      questions_per_round: 10,
+      timer_duration: 30,
+      is_default: false,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    };
+
+    mockGetApiUser.mockResolvedValue({ id: 'requesting-user-id', email: 'test@example.com' });
+    mockGet.mockResolvedValue(otherUsersTemplate);
+
+    const request = createMockRequest('http://localhost/api/templates/template-1', {
+      method: 'DELETE',
+    });
+    const params = Promise.resolve({ id: 'template-1' });
+    const response = await DELETE(request, { params });
+    const data = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Not found');
+    expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('handles not found errors', async () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const notFoundError = { message: 'Template not found', statusCode: 404 };
-    mockDelete.mockRejectedValue(notFoundError);
+    mockGet.mockRejectedValue(notFoundError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates/nonexistent', {
@@ -384,7 +507,7 @@ describe('DELETE /api/templates/[id]', () => {
     mockGetApiUser.mockResolvedValue({ id: 'user-123', email: 'test@example.com' });
 
     const dbError = { message: 'Database error', statusCode: 503 };
-    mockDelete.mockRejectedValue(dbError);
+    mockGet.mockRejectedValue(dbError);
     (isDatabaseError as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(true);
 
     const request = createMockRequest('http://localhost/api/templates/template-1', {

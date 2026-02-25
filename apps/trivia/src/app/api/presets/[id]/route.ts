@@ -41,7 +41,17 @@ export async function GET(
 
     const supabase = createAuthenticatedClient();
     const { id } = await params;
+
+    // getTriviaPreset throws NotFoundError if preset doesn't exist
     const preset = await getTriviaPreset(supabase, id);
+
+    // Verify the requesting user owns this preset
+    if (preset.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ preset });
   } catch (error) {
@@ -81,6 +91,15 @@ export async function PATCH(
     const supabase = createAuthenticatedClient();
     const { id } = await params;
     const body = await request.json();
+
+    // Verify the requesting user owns this preset before updating
+    const existing = await getTriviaPreset(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
 
     const updateData: TriviaPresetUpdate = {};
     if (body.name !== undefined) updateData.name = body.name;
@@ -128,6 +147,16 @@ export async function DELETE(
 
     const supabase = createAuthenticatedClient();
     const { id } = await params;
+
+    // Verify the requesting user owns this preset before deleting
+    const existing = await getTriviaPreset(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     await deleteTriviaPreset(supabase, id);
 
     return NextResponse.json({ success: true }, { status: 200 });

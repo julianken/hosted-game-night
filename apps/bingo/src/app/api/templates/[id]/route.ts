@@ -44,8 +44,16 @@ export async function GET(
     const supabase = createAuthenticatedClient();
     const { id } = await params;
 
-    // getBingoTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
+    // getBingoTemplate throws NotFoundError if template doesn't exist
     const template = await getBingoTemplate(supabase, id);
+
+    // Verify the requesting user owns this template
+    if (template.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ template });
   } catch (error) {
@@ -106,7 +114,15 @@ export async function PATCH(
     if (body.auto_call_interval !== undefined) updateData.auto_call_interval = body.auto_call_interval;
     if (body.is_default !== undefined) updateData.is_default = body.is_default;
 
-    // updateBingoTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
+    // Verify the requesting user owns this template before updating
+    const existing = await getBingoTemplate(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     const template = await updateBingoTemplate(supabase, id, updateData);
 
     return NextResponse.json({ template });
@@ -147,7 +163,15 @@ export async function DELETE(
     const supabase = createAuthenticatedClient();
     const { id } = await params;
 
-    // RLS will prevent deleting other users' templates
+    // Verify the requesting user owns this template before deleting
+    const existing = await getBingoTemplate(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     await deleteBingoTemplate(supabase, id);
 
     return NextResponse.json({ success: true }, { status: 200 });

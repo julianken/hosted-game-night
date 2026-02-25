@@ -64,7 +64,17 @@ export async function GET(
 
     const supabase = createAuthenticatedClient();
     const { id } = await params;
+
+    // getTriviaQuestionSet throws NotFoundError if question set doesn't exist
     const questionSet = await getTriviaQuestionSet(supabase, id);
+
+    // Verify the requesting user owns this question set
+    if (questionSet.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ questionSet });
   } catch (error) {
@@ -123,6 +133,15 @@ export async function PATCH(
       }
     }
 
+    // Verify the requesting user owns this question set before updating
+    const existing = await getTriviaQuestionSet(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     const updateData: TriviaQuestionSetUpdate = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.description !== undefined) updateData.description = body.description;
@@ -168,6 +187,16 @@ export async function DELETE(
 
     const supabase = createAuthenticatedClient();
     const { id } = await params;
+
+    // Verify the requesting user owns this question set before deleting
+    const existing = await getTriviaQuestionSet(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     await deleteTriviaQuestionSet(supabase, id);
 
     return NextResponse.json({ success: true }, { status: 200 });

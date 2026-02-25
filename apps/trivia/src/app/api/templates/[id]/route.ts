@@ -65,8 +65,16 @@ export async function GET(
     const supabase = createAuthenticatedClient();
     const { id } = await params;
 
-    // getTriviaTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
+    // getTriviaTemplate throws NotFoundError if template doesn't exist
     const template = await getTriviaTemplate(supabase, id);
+
+    // Verify the requesting user owns this template
+    if (template.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ template });
   } catch (error) {
@@ -134,7 +142,15 @@ export async function PATCH(
     if (body.timer_duration !== undefined) updateData.timer_duration = body.timer_duration;
     if (body.is_default !== undefined) updateData.is_default = body.is_default;
 
-    // updateTriviaTemplate throws NotFoundError if template doesn't exist or user lacks access (via RLS)
+    // Verify the requesting user owns this template before updating
+    const existing = await getTriviaTemplate(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     const template = await updateTriviaTemplate(supabase, id, updateData);
 
     return NextResponse.json({ template });
@@ -175,7 +191,15 @@ export async function DELETE(
     const supabase = createAuthenticatedClient();
     const { id } = await params;
 
-    // RLS will prevent deleting other users' templates
+    // Verify the requesting user owns this template before deleting
+    const existing = await getTriviaTemplate(supabase, id);
+    if (existing.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      );
+    }
+
     await deleteTriviaTemplate(supabase, id);
 
     return NextResponse.json({ success: true }, { status: 200 });
