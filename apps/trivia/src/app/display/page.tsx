@@ -227,7 +227,7 @@ function AudienceDisplay({
   return (
     <main className="h-screen bg-background flex flex-col overflow-hidden relative" role="main" aria-label="Trivia audience display">
       <div id="display-content" className="flex-1" role="region" aria-label="Game display area" aria-live="polite">
-        <SceneRouter isConnected={isConnected} isResolvingRoomCode={isResolvingRoomCode} />
+        <SceneRouter isConnected={isConnected} isResolvingRoomCode={isResolvingRoomCode} roomCode={roomCode ?? undefined} />
       </div>
       {timer.isRunning && (
         <div className="absolute bottom-8 right-8 z-50">
