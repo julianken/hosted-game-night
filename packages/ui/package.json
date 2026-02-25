@@ -23,6 +23,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.1.2",
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "@joolie-boolie/auth": "workspace:*",
+    "@joolie-boolie/error-tracking": "workspace:*",
     "@joolie-boolie/types": "workspace:*",
     "motion": "^12.34.2",
     "react-aria-components": "^1.14.0",

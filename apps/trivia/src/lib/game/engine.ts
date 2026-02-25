@@ -13,6 +13,7 @@
  *   - helpers.ts     — deepFreeze, padRoundScores
  *   - state-machine.ts — VALID_TRANSITIONS, transition, canTransition, getNextStatus, getValidActions
  *   - scene.ts       — deriveSceneFromStatus, getNextScene, isSceneValidForStatus, buildSceneUpdate, buildPauseSceneUpdate, buildResumeSceneUpdate
+ *   - scene-transitions.ts — orchestrateSceneTransition, deriveTransitionContext (extracted from advanceScene)
  */
 
 // Lifecycle
@@ -125,3 +126,13 @@ export {
   buildPauseSceneUpdate,
   buildResumeSceneUpdate,
 } from './scene';
+
+// Scene transition orchestrator (extracted from advanceScene)
+export type {
+  SceneTransitionResult,
+  DerivedTransitionContext,
+} from './scene-transitions';
+export {
+  deriveTransitionContext,
+  orchestrateSceneTransition,
+} from './scene-transitions';

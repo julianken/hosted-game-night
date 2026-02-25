@@ -97,6 +97,9 @@ export { RoomSetupModal, type RoomSetupModalProps } from './room-setup-modal';
 // ErrorBoundary
 export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary';
 
+// ErrorBoundaryProvider
+export { ErrorBoundaryProvider, type ErrorBoundaryProviderProps } from './error-boundary-provider';
+
 // KeyboardShortcutsModal
 export {
   KeyboardShortcutsModal,

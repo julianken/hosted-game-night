@@ -14,7 +14,8 @@
     "./middleware-factory": "./src/middleware-factory.ts",
     "./hooks": "./src/hooks/index.ts",
     "./components": "./src/components/index.ts",
-    "./verify-token": "./src/verify-token.ts"
+    "./verify-token": "./src/verify-token.ts",
+    "./env-validation": "./src/env-validation.ts"
   },
   "scripts": {
     "lint": "eslint src/",

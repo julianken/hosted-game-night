@@ -43,11 +43,8 @@ import {
   getRoundWinners,
   getOverallLeaders,
   getTeamsSortedByScore,
-  getNextScene,
-  buildSceneUpdate,
-  computeScoreDeltas,
+  orchestrateSceneTransition,
 } from '@/lib/game/engine';
-import type { SceneTransitionContext } from '@/lib/game/engine';
 
 const lifecycleLogger = createGameLifecycleLogger({ game: 'trivia' });
 
@@ -344,215 +341,24 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
   advanceScene: (trigger: string) => {
     const state = get();
+    const update = orchestrateSceneTransition(state, trigger);
 
-    // Compute transition context from current state.
-    const roundQuestions = state.questions.filter(
-      (q) => q.roundIndex === state.currentRound
-    );
-    const displayIdx = state.displayQuestionIndex;
-    const currentRoundQIndex = displayIdx !== null
-      ? roundQuestions.findIndex((q) => state.questions.indexOf(q) === displayIdx)
-      : -1;
-    const lastQuestion = currentRoundQIndex >= 0 && currentRoundQIndex >= roundQuestions.length - 1;
-    const lastRound = state.currentRound >= state.totalRounds - 1;
+    // No-op: orchestrator found no valid transition.
+    if (update === null || Object.keys(update).length === 0) return;
 
-    const context: SceneTransitionContext = {
-      isLastQuestion: lastQuestion,
-      isLastRound: lastRound,
-    };
-
-    // -- Recap Q/A cycling: handle recap_qa navigation before the state machine --
-    // recap_qa has three internal advance paths that the state machine cannot
-    // express (it only knows the terminal case: last answer -> recap_scores).
-
-    // 1. BACK: decrement displayQuestionIndex if not at first question of round.
-    if (state.audienceScene === 'recap_qa' && trigger === 'back') {
-      if (currentRoundQIndex > 0) {
-        const prevQIndex = currentRoundQIndex - 1;
-        const globalIndex = state.questions.indexOf(roundQuestions[prevQIndex]);
-        set({
-          displayQuestionIndex: globalIndex,
-          selectedQuestionIndex: globalIndex,
-          recapShowingAnswer: false,
-          sceneTimestamp: Date.now(),
-        });
-      }
-      // No-op at first question
-      return;
+    // Lifecycle logging — detect which transition occurred and emit the
+    // appropriate log event. These are store-level side effects that the
+    // pure orchestrator intentionally does not handle.
+    const nextScene = update.audienceScene;
+    if (nextScene === 'round_summary' && state.audienceScene === 'question_closed') {
+      lifecycleLogger.emit('game.round_completed', { round: state.currentRound, totalRounds: state.totalRounds });
+    } else if (nextScene === 'final_buildup' && state.audienceScene !== 'final_buildup') {
+      lifecycleLogger.emit('game.ended', { currentRound: state.currentRound, totalRounds: state.totalRounds, teamCount: state.teams.length });
+    } else if (nextScene === 'round_intro' && state.status === 'between_rounds') {
+      lifecycleLogger.emit('game.round_started', { round: state.currentRound + 1, totalRounds: state.totalRounds });
     }
 
-    // 2. ADVANCE + showing question face: flip to answer face.
-    // null or false = question face; flip to answer face
-    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer !== true) {
-      set({ recapShowingAnswer: true, sceneTimestamp: Date.now() });
-      return;
-    }
-
-    // 3. ADVANCE + showing answer face + not last question: advance to next Q.
-    if (state.audienceScene === 'recap_qa' && trigger === 'advance' && state.recapShowingAnswer === true && !lastQuestion) {
-      const nextQIndex = currentRoundQIndex + 1;
-      if (nextQIndex < roundQuestions.length) {
-        const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
-        set({
-          displayQuestionIndex: globalIndex,
-          selectedQuestionIndex: globalIndex,
-          recapShowingAnswer: false,
-          sceneTimestamp: Date.now(),
-        });
-        return;
-      }
-    }
-
-    // 4. ADVANCE + showing answer face + last question: fall through to getNextScene()
-    //    which returns recap_scores. No early return here.
-
-    // -- Round-end answer review: cycle through questions within answer_reveal --
-    // When in answer_reveal during between_rounds, Right Arrow advances to the
-    // next question's answer. getNextScene returns null for non-last questions,
-    // so we handle the cycling here before consulting the state machine.
-    if (
-      state.audienceScene === 'answer_reveal' &&
-      state.status === 'between_rounds' &&
-      (trigger === 'advance' || trigger === 'skip')
-    ) {
-      if (!lastQuestion) {
-        const nextQIndex = currentRoundQIndex + 1;
-        if (nextQIndex < roundQuestions.length) {
-          const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
-          set({
-            displayQuestionIndex: globalIndex,
-            selectedQuestionIndex: globalIndex,
-            sceneTimestamp: Date.now(),
-            revealPhase: null, // Reset for fresh reveal animation on next question
-          });
-          return;
-        }
-      }
-      // Last question: fall through to getNextScene for round_intro / final_buildup
-    }
-
-    const nextScene = getNextScene(state.audienceScene, trigger, context);
-
-    if (nextScene && nextScene !== state.audienceScene) {
-      // Side effect: completeRound when question_closed → round_summary (last Q).
-      // Transitions status: playing → between_rounds.
-      // Also computes scoreDeltas by diffing current scores vs questionStartScores.
-      if (state.audienceScene === 'question_closed' && nextScene === 'round_summary') {
-        set((s) => {
-          lifecycleLogger.emit('game.round_completed', { round: s.currentRound, totalRounds: s.totalRounds });
-          const baseUpdate = completeRoundEngine(s);
-
-          const prevScores = s.questionStartScores ?? {};
-          const updatedTeams = baseUpdate.teams ?? s.teams;
-          const deltas = computeScoreDeltas(updatedTeams, prevScores);
-
-          return {
-            ...baseUpdate,
-            ...buildSceneUpdate(nextScene),
-            scoreDeltas: [...deltas],
-          };
-        });
-        return;
-      }
-
-      // Side effect: start answer review when round_summary → answer_reveal.
-      // Sets displayQuestionIndex to the first question of the current round.
-      if (state.audienceScene === 'round_summary' && nextScene === 'answer_reveal') {
-        const firstQ = roundQuestions[0];
-        const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
-        set({
-          ...buildSceneUpdate(nextScene),
-          displayQuestionIndex: globalIndex,
-          selectedQuestionIndex: globalIndex,
-          revealPhase: null,
-        });
-        return;
-      }
-
-      // Side effect: seed recap_title — point displayQuestionIndex at first round Q.
-      // recapShowingAnswer starts as null (not yet in recap_qa).
-      if (nextScene === 'recap_title') {
-        const firstQ = roundQuestions[0];
-        const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
-        set({
-          ...buildSceneUpdate(nextScene),
-          displayQuestionIndex: globalIndex,
-          selectedQuestionIndex: globalIndex,
-          recapShowingAnswer: null,
-        });
-        return;
-      }
-
-      // Side effect: seed recap_qa — start on question face.
-      if (nextScene === 'recap_qa') {
-        set({
-          ...buildSceneUpdate(nextScene),
-          recapShowingAnswer: false,
-        });
-        return;
-      }
-
-      // Side effect: seed recap_scores — clear recapShowingAnswer sub-state.
-      if (nextScene === 'recap_scores') {
-        set({
-          ...buildSceneUpdate(nextScene),
-          recapShowingAnswer: null,
-        });
-        return;
-      }
-
-      // Side effect: endGame when transitioning to final_buildup.
-      // Handles status transition (between_rounds/playing → ended).
-      if (nextScene === 'final_buildup') {
-        set((s) => {
-          lifecycleLogger.emit('game.ended', { currentRound: s.currentRound, totalRounds: s.totalRounds, teamCount: s.teams.length });
-          const baseUpdate = endGameEngine(s);
-          return {
-            ...baseUpdate,
-            ...buildSceneUpdate(nextScene),
-          };
-        });
-        return;
-      }
-
-      // Side effect: nextRound when transitioning to round_intro.
-      // Handles status transition (between_rounds → playing with next round).
-      if (nextScene === 'round_intro' && state.status === 'between_rounds') {
-        set((s) => {
-          lifecycleLogger.emit('game.round_started', { round: s.currentRound + 1, totalRounds: s.totalRounds });
-          return {
-            ...nextRoundEngine(s),
-            ...buildSceneUpdate(nextScene),
-          };
-        });
-        return;
-      }
-
-      // Side effect: auto-show question when entering question_anticipation.
-      if (nextScene === 'question_anticipation') {
-        if (state.audienceScene === 'question_closed') {
-          // From question_closed: advance to the next question in the round
-          const nextQIndex = currentRoundQIndex + 1;
-          if (nextQIndex < roundQuestions.length) {
-            const globalIndex = state.questions.indexOf(roundQuestions[nextQIndex]);
-            set({
-              ...buildSceneUpdate(nextScene),
-              selectedQuestionIndex: globalIndex,
-              displayQuestionIndex: globalIndex,
-            });
-            return;
-          }
-        }
-        // Default: show the currently selected question
-        set({
-          ...buildSceneUpdate(nextScene),
-          displayQuestionIndex: state.selectedQuestionIndex,
-        });
-        return;
-      }
-
-      set(buildSceneUpdate(nextScene));
-    }
+    set(update);
   },
 
   setRevealPhase: (phase: RevealPhase) => {
