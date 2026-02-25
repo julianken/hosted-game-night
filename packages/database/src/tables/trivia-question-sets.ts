@@ -339,12 +339,24 @@ export async function reorderQuestionsInSet(
 }
 
 /**
- * Gets total question count for a user across all question sets
+ * Gets total question count for a user across all question sets.
+ *
+ * Uses a minimal select('questions') query instead of fetching all columns,
+ * significantly reducing data transfer compared to the previous listAll + reduce approach.
  */
 export async function getQuestionSetTotalCount(
   client: TypedSupabaseClient,
   userId: string
 ): Promise<number> {
-  const sets = await listAllTriviaQuestionSets(client, userId);
-  return sets.reduce((sum, s) => sum + s.questions.length, 0);
+  const { data, error } = await fromTable(client, 'trivia_question_sets')
+    .select('questions')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+
+  return (data ?? []).reduce(
+    (sum: number, row: { questions: TriviaQuestion[] }) =>
+      sum + (Array.isArray(row.questions) ? row.questions.length : 0),
+    0
+  );
 }

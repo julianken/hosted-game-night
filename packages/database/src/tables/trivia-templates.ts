@@ -375,12 +375,24 @@ export async function countTriviaTemplates(
 }
 
 /**
- * Gets total question count for a user across all templates
+ * Gets total question count for a user across all templates.
+ *
+ * Uses a minimal select('questions') query instead of fetching all columns,
+ * significantly reducing data transfer compared to the previous listAll + reduce approach.
  */
 export async function getTotalQuestionCount(
   client: TypedSupabaseClient,
   userId: string
 ): Promise<number> {
-  const templates = await listAllTriviaTemplates(client, userId);
-  return templates.reduce((sum, t) => sum + t.questions.length, 0);
+  const { data, error } = await fromTable(client, 'trivia_templates')
+    .select('questions')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+
+  return (data ?? []).reduce(
+    (sum: number, row: { questions: TriviaQuestion[] }) =>
+      sum + (Array.isArray(row.questions) ? row.questions.length : 0),
+    0
+  );
 }
