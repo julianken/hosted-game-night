@@ -9,7 +9,7 @@
  * and trivia-only validators (e.g., `warnIfMissingTriviaApiKey`).
  */
 
-export {
+import {
   validateRequired,
   validateUrl,
   validateSessionTokenSecret,
@@ -20,14 +20,17 @@ export {
   warnIfMissingCookieDomain,
 } from '@joolie-boolie/auth/env-validation';
 
-import {
+// Re-export shared validators for consumers of this module
+export {
+  validateRequired,
+  validateUrl,
   validateSessionTokenSecret,
   validateSupabaseConfig,
   validateJwtSecret,
   validateOAuthConfig,
   validateE2eConfig,
   warnIfMissingCookieDomain,
-} from '@joolie-boolie/auth/env-validation';
+};
 
 /**
  * Warn (but do not throw) if THE_TRIVIA_API_KEY is not set.

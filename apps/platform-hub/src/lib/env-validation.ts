@@ -8,7 +8,7 @@
  * This file keeps the app-specific `validateEnvironment()` orchestrator.
  */
 
-export {
+import {
   validateRequired,
   validateUrl,
   validateSessionTokenSecret,
@@ -18,13 +18,16 @@ export {
   warnIfMissingCookieDomain,
 } from '@joolie-boolie/auth/env-validation';
 
-import {
+// Re-export shared validators for consumers of this module
+export {
+  validateRequired,
+  validateUrl,
   validateSessionTokenSecret,
   validateSupabaseConfig,
   validateJwtSecret,
   validateE2eConfig,
   warnIfMissingCookieDomain,
-} from '@joolie-boolie/auth/env-validation';
+};
 
 /**
  * Validates all required environment variables at application startup
