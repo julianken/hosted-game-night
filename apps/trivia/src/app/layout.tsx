@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Geist_Mono } from 'next/font/google';
 import { fontDisplay, fontSans } from '@joolie-boolie/theme';
 import './globals.css';
-import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
+import { ServiceWorkerRegistration } from '@joolie-boolie/ui';
 import { ErrorBoundaryProvider } from '@/components/providers/ErrorBoundaryProvider';
 import { SentryClientInit } from '@/components/providers/SentryClientInit';
-import { FaroInit } from '@/components/providers/FaroInit';
+import { FaroInit } from '@joolie-boolie/error-tracking/components';
 import { ToastProvider } from "@joolie-boolie/ui";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -53,9 +53,9 @@ export default function RootLayout({
             {children}
           </ErrorBoundaryProvider>
         </ToastProvider>
-        <ServiceWorkerRegistration />
+        <ServiceWorkerRegistration appName="Trivia" />
         <SentryClientInit />
-        <FaroInit />
+        <FaroInit appName="trivia" />
         <Analytics />
         <SpeedInsights />
       </body>

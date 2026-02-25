@@ -29,7 +29,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
 
     // Wire Sentry backend
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-      import('@/lib/observability/sentry-backend')
+      import('@joolie-boolie/error-tracking/sentry')
         .then(({ SentryErrorBackend }) => {
           import('@joolie-boolie/error-tracking/client').then(({ setErrorBackend }) => {
             setErrorBackend(new SentryErrorBackend());

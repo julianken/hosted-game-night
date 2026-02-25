@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { StatsDisplay } from '@/components/stats';
-import { LoginButton } from '@/components/auth/LoginButton';
+import { LoginButton } from '@joolie-boolie/ui';
 
 export default async function Home() {
   // Server-side auth check via cross-app SSO cookie

@@ -107,6 +107,18 @@ export {
 // OfflineBanner
 export { OfflineBanner, type OfflineBannerProps } from './offline-banner';
 
+// LoginButton
+export { LoginButton, type LoginButtonProps } from './login-button';
+
+// ServiceWorkerRegistration
+export {
+  ServiceWorkerRegistration,
+  type ServiceWorkerRegistrationProps,
+} from './service-worker-registration';
+
+// InstallPrompt
+export { InstallPrompt, type InstallPromptProps } from './install-prompt';
+
 // Hooks
 export { useOnlineStatus, useConnectionInfo } from './hooks/use-online-status';
 export { useFullscreen } from './hooks/use-fullscreen';

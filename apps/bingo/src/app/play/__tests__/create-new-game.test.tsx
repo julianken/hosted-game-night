@@ -159,9 +159,16 @@ vi.mock('@/lib/sync/session', () => ({
 }));
 
 vi.mock('@/components/pwa', () => ({
-  InstallPrompt: () => null,
   OfflineBanner: () => null,
 }));
+
+vi.mock('@joolie-boolie/ui', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    InstallPrompt: () => null,
+  };
+});
 
 // Helper to render PlayPage with required providers
 function renderWithProviders(ui: React.ReactElement) {

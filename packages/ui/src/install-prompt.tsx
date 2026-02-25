@@ -13,21 +13,30 @@ declare global {
   }
 }
 
+export interface InstallPromptProps {
+  /** Display name of the app (e.g., "Bingo", "Trivia") */
+  appName: string;
+  /** Tailwind accent color prefix (e.g., "indigo", "violet"). Defaults to "indigo". */
+  accentColor?: string;
+}
+
 /**
  * Prompt users to install the PWA on their device.
  * Only shows when the browser triggers the beforeinstallprompt event.
  */
-export function InstallPrompt() {
+export function InstallPrompt({ appName, accentColor = 'indigo' }: InstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-      return;
-    }
+    // Defer installation check to next tick (SSR safety)
+    const checkInstallation = setTimeout(() => {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setIsInstalled(true);
+        return;
+      }
+    }, 0);
 
     const handleBeforeInstall = (e: BeforeInstallPromptEvent) => {
       // Prevent the mini-infobar from appearing
@@ -46,6 +55,7 @@ export function InstallPrompt() {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
+      clearTimeout(checkInstallation);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
@@ -82,9 +92,9 @@ export function InstallPrompt() {
   return (
     <div className="fixed bottom-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm z-50">
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center">
+        <div className={`flex-shrink-0 w-12 h-12 bg-${accentColor}-100 rounded-lg flex items-center justify-center`}>
           <svg
-            className="w-6 h-6 text-violet-600"
+            className={`w-6 h-6 text-${accentColor}-600`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -99,20 +109,20 @@ export function InstallPrompt() {
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">Install Trivia</h3>
+          <h3 className="font-semibold text-gray-900">Install {appName}</h3>
           <p className="text-base text-gray-600 mt-1">
             Add to your home screen for quick access and offline play.
           </p>
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleInstall}
-              className="px-4 py-2 bg-violet-600 text-white text-base font-medium rounded hover:bg-violet-700 transition-colors"
+              className={`min-h-[var(--size-touch)] px-4 py-3 bg-${accentColor}-600 text-white text-base font-medium rounded hover:bg-${accentColor}-700 transition-colors`}
             >
               Install
             </button>
             <button
               onClick={handleDismiss}
-              className="px-4 py-2 text-gray-600 text-base hover:text-gray-900 transition-colors"
+              className="min-h-[var(--size-touch)] px-4 py-3 text-gray-600 text-base hover:text-gray-900 transition-colors"
             >
               Not now
             </button>

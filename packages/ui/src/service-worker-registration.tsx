@@ -2,28 +2,33 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
+export interface ServiceWorkerRegistrationProps {
+  appName: string;
+}
+
 interface UpdatePromptProps {
+  appName: string;
   onUpdate: () => void;
   onDismiss: () => void;
 }
 
-function UpdatePrompt({ onUpdate, onDismiss }: UpdatePromptProps) {
+function UpdatePrompt({ appName, onUpdate, onDismiss }: UpdatePromptProps) {
   return (
-    <div className="fixed bottom-4 right-4 bg-violet-600 text-white p-4 rounded-lg shadow-lg max-w-sm z-50">
+    <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground p-4 rounded-lg shadow-lg max-w-sm z-50">
       <p className="font-medium mb-2">New version available</p>
-      <p className="text-base text-violet-100 mb-3">
-        A new version of Trivia is ready. Update now for the latest features.
+      <p className="text-base opacity-80 mb-3">
+        A new version of {appName} is ready. Update now for the latest features.
       </p>
       <div className="flex gap-2">
         <button
           onClick={onUpdate}
-          className="px-4 py-2 bg-white text-violet-600 rounded font-medium hover:bg-violet-50 transition-colors"
+          className="min-h-[var(--size-touch)] px-4 py-3 bg-background text-foreground rounded font-medium hover:bg-background/90 transition-colors"
         >
           Update
         </button>
         <button
           onClick={onDismiss}
-          className="px-4 py-2 text-violet-100 hover:text-white transition-colors"
+          className="min-h-[var(--size-touch)] px-4 py-3 opacity-80 hover:opacity-100 transition-colors"
         >
           Later
         </button>
@@ -32,7 +37,7 @@ function UpdatePrompt({ onUpdate, onDismiss }: UpdatePromptProps) {
   );
 }
 
-export function ServiceWorkerRegistration() {
+export function ServiceWorkerRegistration({ appName }: ServiceWorkerRegistrationProps) {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
@@ -99,5 +104,5 @@ export function ServiceWorkerRegistration() {
     return null;
   }
 
-  return <UpdatePrompt onUpdate={handleUpdate} onDismiss={handleDismiss} />;
+  return <UpdatePrompt appName={appName} onUpdate={handleUpdate} onDismiss={handleDismiss} />;
 }

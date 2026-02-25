@@ -12,7 +12,9 @@
     "./react": "./src/react.tsx",
     "./types": "./src/types.ts",
     "./server-logger": "./src/server-logger.ts",
-    "./faro": "./src/faro.ts"
+    "./faro": "./src/faro.ts",
+    "./sentry": "./src/sentry.ts",
+    "./components": "./src/components/FaroInit.tsx"
   },
   "scripts": {
     "lint": "eslint src/",
@@ -26,10 +28,14 @@
     "@grafana/faro-web-sdk": "^2.2.4"
   },
   "peerDependencies": {
+    "@sentry/nextjs": ">=8.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
+    "@sentry/nextjs": {
+      "optional": true
+    },
     "react": {
       "optional": true
     },
@@ -38,6 +44,8 @@
     }
   },
   "devDependencies": {
+    "@joolie-boolie/testing": "workspace:*",
+    "@sentry/nextjs": "^10.39.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@types/node": "^22",
