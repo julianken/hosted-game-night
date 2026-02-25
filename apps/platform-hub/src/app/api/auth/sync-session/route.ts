@@ -28,9 +28,16 @@ if (process.env.E2E_TESTING === 'true' && process.env.VERCEL === '1') {
 }
 
 // E2E Testing: Same secret used by Platform Hub login API
-const E2E_JWT_SECRET = new TextEncoder().encode(
-  process.env.E2E_JWT_SECRET || 'e2e-test-secret-key-that-is-at-least-32-characters-long'
-);
+function getE2EJwtSecret(): Uint8Array {
+  const secret = process.env.E2E_JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'E2E_JWT_SECRET environment variable is required when E2E_TESTING=true. ' +
+      'Set it in your .env.local file.'
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
 
 // Lazy-initialized JWKS for Supabase token verification
 let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -55,7 +62,7 @@ async function verifyJwt(token: string): Promise<JWTPayload | null> {
   // 1. E2E test secret
   if (isE2ETesting) {
     try {
-      const { payload } = await jwtVerify(token, E2E_JWT_SECRET, {
+      const { payload } = await jwtVerify(token, getE2EJwtSecret(), {
         issuer: 'e2e-test',
         audience: 'authenticated',
       });
