@@ -2,26 +2,52 @@ import { describe, it, expect, afterEach } from 'vitest';
 import {
   validateSessionTokenSecret,
   validateEnvironment,
+  validateSupabaseConfig,
+  validateJwtSecret,
+  validateE2eConfig,
 } from '../env-validation';
 
-describe('env-validation', () => {
-  // Store original env
-  const originalEnv = process.env.SESSION_TOKEN_SECRET;
+// Valid test values
+const VALID_HEX_SECRET =
+  'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+const VALID_SUPABASE_URL = 'https://myproject.supabase.co';
+const VALID_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key';
+const VALID_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-service-key';
+const VALID_JWT_SECRET = 'super-secret-jwt-value';
 
+/**
+ * Sets all required environment variables to valid values.
+ * Individual tests can then delete/modify the one they are testing.
+ */
+function setAllValidEnv(): void {
+  process.env.SESSION_TOKEN_SECRET = VALID_HEX_SECRET;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_JWT_SECRET = VALID_JWT_SECRET;
+}
+
+/**
+ * Cleans up all environment variables touched by tests.
+ */
+function clearAllEnv(): void {
+  delete process.env.SESSION_TOKEN_SECRET;
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_JWT_SECRET;
+  delete process.env.E2E_TESTING;
+  delete process.env.E2E_JWT_SECRET;
+}
+
+describe('env-validation', () => {
   afterEach(() => {
-    // Restore original env after each test
-    if (originalEnv !== undefined) {
-      process.env.SESSION_TOKEN_SECRET = originalEnv;
-    } else {
-      delete process.env.SESSION_TOKEN_SECRET;
-    }
+    clearAllEnv();
   });
 
   describe('validateSessionTokenSecret', () => {
     it('should pass with valid 64-character hex string', () => {
-      // Valid hex string (64 characters)
-      process.env.SESSION_TOKEN_SECRET =
-        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+      process.env.SESSION_TOKEN_SECRET = VALID_HEX_SECRET;
 
       expect(() => validateSessionTokenSecret()).not.toThrow();
     });
@@ -122,15 +148,170 @@ describe('env-validation', () => {
     });
   });
 
+  describe('validateSupabaseConfig', () => {
+    it('should pass with valid Supabase config', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).not.toThrow();
+    });
+
+    it('should throw if NEXT_PUBLIC_SUPABASE_URL is missing', () => {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL/
+      );
+    });
+
+    it('should throw if NEXT_PUBLIC_SUPABASE_URL is not a valid URL', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = 'not-a-url';
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /NEXT_PUBLIC_SUPABASE_URL must be a valid URL starting with http:\/\/ or https:\/\//
+      );
+    });
+
+    it('should accept http:// URLs for local development', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321';
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).not.toThrow();
+    });
+
+    it('should throw if NEXT_PUBLIC_SUPABASE_ANON_KEY is missing', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
+      );
+    });
+
+    it('should throw if NEXT_PUBLIC_SUPABASE_ANON_KEY is empty', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = '';
+      process.env.SUPABASE_SERVICE_ROLE_KEY = VALID_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
+      );
+    });
+
+    it('should throw if SUPABASE_SERVICE_ROLE_KEY is missing', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY/
+      );
+    });
+
+    it('should throw if SUPABASE_SERVICE_ROLE_KEY is whitespace-only', () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = VALID_SUPABASE_URL;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = VALID_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = '   ';
+
+      expect(() => validateSupabaseConfig()).toThrow(
+        /Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY/
+      );
+    });
+
+    it('should include .env.local hint in error messages', () => {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+      expect(() => validateSupabaseConfig()).toThrow(/\.env\.local/);
+    });
+  });
+
+  describe('validateJwtSecret', () => {
+    it('should pass with valid JWT secret', () => {
+      process.env.SUPABASE_JWT_SECRET = VALID_JWT_SECRET;
+
+      expect(() => validateJwtSecret()).not.toThrow();
+    });
+
+    it('should throw if SUPABASE_JWT_SECRET is missing', () => {
+      delete process.env.SUPABASE_JWT_SECRET;
+
+      expect(() => validateJwtSecret()).toThrow(
+        /Missing required environment variable: SUPABASE_JWT_SECRET/
+      );
+    });
+
+    it('should throw if SUPABASE_JWT_SECRET is empty', () => {
+      process.env.SUPABASE_JWT_SECRET = '';
+
+      expect(() => validateJwtSecret()).toThrow(
+        /Missing required environment variable: SUPABASE_JWT_SECRET/
+      );
+    });
+
+    it('should throw if SUPABASE_JWT_SECRET is whitespace-only', () => {
+      process.env.SUPABASE_JWT_SECRET = '   ';
+
+      expect(() => validateJwtSecret()).toThrow(
+        /Missing required environment variable: SUPABASE_JWT_SECRET/
+      );
+    });
+  });
+
+  describe('validateE2eConfig', () => {
+    it('should not throw when E2E_TESTING is not set', () => {
+      delete process.env.E2E_TESTING;
+
+      expect(() => validateE2eConfig()).not.toThrow();
+    });
+
+    it('should not throw when E2E_TESTING is false', () => {
+      process.env.E2E_TESTING = 'false';
+
+      expect(() => validateE2eConfig()).not.toThrow();
+    });
+
+    it('should not throw when E2E_TESTING is true and E2E_JWT_SECRET is set', () => {
+      process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = 'test-e2e-secret';
+
+      expect(() => validateE2eConfig()).not.toThrow();
+    });
+
+    it('should throw when E2E_TESTING is true and E2E_JWT_SECRET is missing', () => {
+      process.env.E2E_TESTING = 'true';
+      delete process.env.E2E_JWT_SECRET;
+
+      expect(() => validateE2eConfig()).toThrow(
+        /Missing required environment variable: E2E_JWT_SECRET/
+      );
+    });
+
+    it('should throw when E2E_TESTING is true and E2E_JWT_SECRET is empty', () => {
+      process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = '';
+
+      expect(() => validateE2eConfig()).toThrow(
+        /Missing required environment variable: E2E_JWT_SECRET/
+      );
+    });
+  });
+
   describe('validateEnvironment', () => {
     it('should pass when all required env vars are valid', () => {
-      process.env.SESSION_TOKEN_SECRET =
-        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
+      setAllValidEnv();
 
       expect(() => validateEnvironment()).not.toThrow();
     });
 
-    it('should throw when SESSION_TOKEN_SECRET is invalid', () => {
+    it('should throw when SESSION_TOKEN_SECRET is missing', () => {
+      setAllValidEnv();
       delete process.env.SESSION_TOKEN_SECRET;
 
       expect(() => validateEnvironment()).toThrow(
@@ -138,19 +319,82 @@ describe('env-validation', () => {
       );
     });
 
-    it('should call validateSessionTokenSecret', () => {
-      // Set valid secret
-      process.env.SESSION_TOKEN_SECRET =
-        'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
-
-      // Should not throw
-      expect(() => validateEnvironment()).not.toThrow();
-
-      // Set invalid secret
+    it('should throw when SESSION_TOKEN_SECRET is invalid', () => {
+      setAllValidEnv();
       process.env.SESSION_TOKEN_SECRET = 'invalid';
 
-      // Should throw
       expect(() => validateEnvironment()).toThrow();
+    });
+
+    it('should throw when NEXT_PUBLIC_SUPABASE_URL is missing', () => {
+      setAllValidEnv();
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+      expect(() => validateEnvironment()).toThrow(
+        /Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL/
+      );
+    });
+
+    it('should throw when NEXT_PUBLIC_SUPABASE_URL is not a URL', () => {
+      setAllValidEnv();
+      process.env.NEXT_PUBLIC_SUPABASE_URL = 'not-a-url';
+
+      expect(() => validateEnvironment()).toThrow(
+        /must be a valid URL/
+      );
+    });
+
+    it('should throw when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing', () => {
+      setAllValidEnv();
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      expect(() => validateEnvironment()).toThrow(
+        /Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
+      );
+    });
+
+    it('should throw when SUPABASE_SERVICE_ROLE_KEY is missing', () => {
+      setAllValidEnv();
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      expect(() => validateEnvironment()).toThrow(
+        /Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY/
+      );
+    });
+
+    it('should throw when SUPABASE_JWT_SECRET is missing', () => {
+      setAllValidEnv();
+      delete process.env.SUPABASE_JWT_SECRET;
+
+      expect(() => validateEnvironment()).toThrow(
+        /Missing required environment variable: SUPABASE_JWT_SECRET/
+      );
+    });
+
+    it('should throw when E2E_TESTING is true and E2E_JWT_SECRET is missing', () => {
+      setAllValidEnv();
+      process.env.E2E_TESTING = 'true';
+      delete process.env.E2E_JWT_SECRET;
+
+      expect(() => validateEnvironment()).toThrow(
+        /Missing required environment variable: E2E_JWT_SECRET/
+      );
+    });
+
+    it('should pass when E2E_TESTING is true and E2E_JWT_SECRET is set', () => {
+      setAllValidEnv();
+      process.env.E2E_TESTING = 'true';
+      process.env.E2E_JWT_SECRET = 'test-e2e-secret';
+
+      expect(() => validateEnvironment()).not.toThrow();
+    });
+
+    it('should pass when E2E_TESTING is not set (no E2E_JWT_SECRET required)', () => {
+      setAllValidEnv();
+      delete process.env.E2E_TESTING;
+      delete process.env.E2E_JWT_SECRET;
+
+      expect(() => validateEnvironment()).not.toThrow();
     });
   });
 
@@ -221,6 +465,52 @@ describe('env-validation', () => {
       expect(errorMessage).toContain('FATAL');
       expect(errorMessage).toContain('openssl rand -hex 32');
       expect(errorMessage).toContain('.env.local');
+    });
+  });
+
+  describe('error message quality', () => {
+    it('should include FATAL prefix in all error messages', () => {
+      setAllValidEnv();
+
+      // Test each variable individually
+      const vars = [
+        'NEXT_PUBLIC_SUPABASE_URL',
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'SUPABASE_SERVICE_ROLE_KEY',
+        'SUPABASE_JWT_SECRET',
+      ] as const;
+
+      for (const varName of vars) {
+        setAllValidEnv();
+        delete process.env[varName];
+
+        expect(() => validateEnvironment()).toThrow(/FATAL/);
+      }
+    });
+
+    it('should include .env.local in all error messages', () => {
+      const vars = [
+        'NEXT_PUBLIC_SUPABASE_URL',
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        'SUPABASE_SERVICE_ROLE_KEY',
+        'SUPABASE_JWT_SECRET',
+      ] as const;
+
+      for (const varName of vars) {
+        setAllValidEnv();
+        delete process.env[varName];
+
+        expect(() => validateEnvironment()).toThrow(/\.env\.local/);
+      }
+    });
+
+    it('should show current value in URL validation errors', () => {
+      setAllValidEnv();
+      process.env.NEXT_PUBLIC_SUPABASE_URL = 'ftp://invalid.example.com';
+
+      expect(() => validateEnvironment()).toThrow(
+        /Current value: "ftp:\/\/invalid.example.com"/
+      );
     });
   });
 });
