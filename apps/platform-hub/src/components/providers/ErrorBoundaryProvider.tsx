@@ -24,7 +24,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
       appName="JoolieBoolie"
       componentName="PlatformHub"
       errorMessageBody="loading this page"
-      appMetadata="platform-hub"
+      appMetadata={{ app: 'platform-hub' }}
       loadSentryBackend={loadSentryBackend}
     >
       {children}

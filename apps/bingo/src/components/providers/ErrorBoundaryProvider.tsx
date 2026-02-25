@@ -24,7 +24,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
       appName="BeakBingo"
       componentName="BingoApp"
       errorMessageBody="the bingo game"
-      appMetadata="bingo"
+      appMetadata={{ app: 'bingo' }}
       loadSentryBackend={loadSentryBackend}
     >
       {children}

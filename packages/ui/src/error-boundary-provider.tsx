@@ -11,8 +11,8 @@ export interface ErrorBoundaryProviderProps {
   componentName: string;
   /** Error message body shown to users (e.g. 'the bingo game', 'Trivia') */
   errorMessageBody: string;
-  /** Metadata app identifier for error tracking (e.g. 'bingo', 'trivia') */
-  appMetadata: string;
+  /** Metadata key-value pairs for error tracking (e.g. { app: 'bingo' }) */
+  appMetadata: Record<string, string>;
   /**
    * Optional async loader for the Sentry error backend.
    * Each app provides its own loader since the sentry-backend module
@@ -29,6 +29,10 @@ export interface ErrorBoundaryProviderProps {
    */
   loadSentryBackend?: () => Promise<void>;
 }
+
+// Note: React error boundaries require class components for componentDidCatch/getDerivedStateFromError.
+// The actual error catching is handled by the ErrorBoundary class component from @joolie-boolie/error-tracking.
+// This wrapper is a functional component that provides app-specific configuration to the shared boundary.
 
 /**
  * Shared error boundary provider that wraps children in an ErrorBoundary
@@ -76,7 +80,7 @@ export function ErrorBoundaryProvider({
         // Log error with app context
         logError(error, {
           metadata: {
-            app: appMetadata,
+            ...appMetadata,
             url: typeof window !== 'undefined' ? window.location.href : undefined,
           },
         });

@@ -24,7 +24,7 @@ export function ErrorBoundaryProvider({ children }: ErrorBoundaryProviderProps) 
       appName="TriviaNight"
       componentName="TriviaApp"
       errorMessageBody="Trivia"
-      appMetadata="trivia"
+      appMetadata={{ app: 'trivia' }}
       loadSentryBackend={loadSentryBackend}
     >
       {children}
