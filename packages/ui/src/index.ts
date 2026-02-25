@@ -109,3 +109,4 @@ export { OfflineBanner, type OfflineBannerProps } from './offline-banner';
 
 // Hooks
 export { useOnlineStatus, useConnectionInfo } from './hooks/use-online-status';
+export { useApplyTheme, useDisplayTheme, useResolvedTheme } from './hooks/use-theme';
