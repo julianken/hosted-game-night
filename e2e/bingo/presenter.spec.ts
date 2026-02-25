@@ -62,17 +62,15 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('can select a pattern @high', async ({ authenticatedBingoPage: page }) => {
-    // Click to open pattern selector if needed - use specific button with "Pattern" text
+    // Click to open pattern selector - use specific button with "Pattern" text
     const patternButton = page.getByRole('button', { name: /pattern/i });
+    await expect(patternButton).toBeVisible();
+    await patternButton.click();
 
-    if (await patternButton.isVisible()) {
-      await patternButton.click();
-      // Select a pattern from dropdown/list - use specific "Single Line" option
-      const linePattern = page.getByRole('option', { name: /single line|horizontal/i });
-      if (await linePattern.isVisible()) {
-        await linePattern.click();
-      }
-    }
+    // Select a pattern from dropdown/list - use specific "Single Line" option
+    const linePattern = page.getByRole('option', { name: /single line|horizontal/i });
+    await expect(linePattern).toBeVisible();
+    await linePattern.click();
 
     // Pattern should be selected/shown somewhere - use specific label
     await expect(page.getByText('Winning Pattern')).toBeVisible();
@@ -216,24 +214,24 @@ test.describe('Bingo Presenter View', () => {
       expect(processing).toBe('false');
     }).toPass({ timeout: 10000 });
 
-    // Find undo button
+    // Find undo button - should be visible and enabled after calling balls
     const undoButton = page.getByRole('button', { name: /undo/i });
+    await expect(undoButton).toBeVisible();
+    await expect(undoButton).toBeEnabled();
 
-    if (await undoButton.isVisible() && await undoButton.isEnabled()) {
-      // Get count from ball counter - use data-testid for precise targeting
-      const calledCount = page.getByTestId('balls-called-count');
-      const countBefore = await calledCount.textContent();
+    // Get count from ball counter - use data-testid for precise targeting
+    const calledCount = page.getByTestId('balls-called-count');
+    const countBefore = await calledCount.textContent();
 
-      await undoButton.click();
+    await undoButton.click();
 
-      // Wait for undo to complete (Pattern 3: count decreases)
-      await expect(async () => {
-        const countAfter = await calledCount.textContent();
-        const before = parseInt(countBefore || '0');
-        const after = parseInt(countAfter || '0');
-        expect(after).toBeLessThan(before);
-      }).toPass({ timeout: 5000 });
-    }
+    // Wait for undo to complete (Pattern 3: count decreases)
+    await expect(async () => {
+      const countAfter = await calledCount.textContent();
+      const before = parseInt(countBefore || '0');
+      const after = parseInt(countAfter || '0');
+      expect(after).toBeLessThan(before);
+    }).toPass({ timeout: 5000 });
   });
 
   test('reset clears all called balls @high', async ({ authenticatedBingoPage: page }) => {
@@ -249,22 +247,20 @@ test.describe('Bingo Presenter View', () => {
       expect(parseInt(countText || '0')).toBeGreaterThan(0);
     }).toPass({ timeout: 10000 });
 
-    // Find reset button
+    // Find reset button - should be visible after calling balls
     const resetButton = page.getByRole('button', { name: /reset/i });
+    await expect(resetButton).toBeVisible();
+    await resetButton.click();
 
-    if (await resetButton.isVisible()) {
-      await resetButton.click();
-
-      // May have confirmation dialog
-      const confirmButton = page.getByRole('button', { name: /confirm|yes|reset/i });
-      if (await confirmButton.isVisible()) {
-        await confirmButton.click();
-      }
-
-      // Wait for reset to complete (Pattern 2: counter back to 0) - use data-testid for precise targeting
-      const calledCount = page.getByTestId('balls-called-count');
-      await expect(calledCount).toHaveText('0');
-      await expect(page.getByText('Called', { exact: true })).toBeVisible();
+    // May have confirmation dialog (legitimately optional UI)
+    const confirmButton = page.getByRole('button', { name: /confirm|yes|reset/i });
+    if (await confirmButton.isVisible()) {
+      await confirmButton.click();
     }
+
+    // Wait for reset to complete (Pattern 2: counter back to 0) - use data-testid for precise targeting
+    const calledCount = page.getByTestId('balls-called-count');
+    await expect(calledCount).toHaveText('0');
+    await expect(page.getByText('Called', { exact: true })).toBeVisible();
   });
 });
