@@ -5,6 +5,10 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm turbo build --filter=@joolie-boolie/trivia...",
   "outputDirectory": ".next",
+  "env": {
+    "TURBO_TEAM": "joolie-boolie",
+    "TURBO_REMOTE_ONLY": "true"
+  },
   "headers": [
     {
       "source": "/sw.js",
