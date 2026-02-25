@@ -1,16 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@joolie-boolie/auth';
-import { Button, Input, Modal } from '@joolie-boolie/ui';
+import { Button, Input } from '@joolie-boolie/ui';
 import { useToast } from '@joolie-boolie/ui';
-import {
-  getLocalStorageUsage,
-  clearAllGameState,
-  formatStorageSize,
-} from '@joolie-boolie/game-engine';
-import type { LocalStorageUsage } from '@joolie-boolie/game-engine';
 import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store';
 import { ThemeMode } from '@/types';
 
@@ -26,24 +20,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [storageUsage, setStorageUsage] = useState<LocalStorageUsage>({ keyCount: 0, totalSizeBytes: 0 });
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-
-  // Load storage usage stats
-  const refreshStorageUsage = useCallback(() => {
-    setStorageUsage(getLocalStorageUsage());
-  }, []);
-
-  useEffect(() => {
-    refreshStorageUsage();
-  }, [refreshStorageUsage]);
-
-  const handleClearGameData = useCallback(() => {
-    clearAllGameState();
-    refreshStorageUsage();
-    setShowClearConfirm(false);
-    toast.success('Game data cleared successfully');
-  }, [refreshStorageUsage, toast]);
 
   // Redirect to login if not authenticated
   // Skip redirect in E2E mode (cookies checked server-side in layout.tsx)
@@ -403,66 +379,6 @@ export default function SettingsPage() {
           </div>
         </form>
 
-        {/* ================================================================
-            Clear Game Data (outside form — independent action)
-            ================================================================ */}
-        <section
-          className="rounded-xl border overflow-hidden mt-6"
-          style={{ background: 'var(--surface)', borderColor: 'var(--border-subtle)' }}
-        >
-          <div
-            className="px-6 py-4 border-b"
-            style={{ borderColor: 'var(--border-subtle)' }}
-          >
-            <h2 className="text-lg font-semibold text-foreground">
-              Game Data
-            </h2>
-            <p className="text-sm text-foreground-secondary mt-1">
-              Clear cached game data stored in your browser, such as themes, audio preferences, and session history.
-            </p>
-          </div>
-          <div className="px-6 py-5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-sm text-foreground-secondary">
-                {storageUsage.keyCount === 0 ? (
-                  <span>No game data stored</span>
-                ) : (
-                  <span>
-                    {storageUsage.keyCount} {storageUsage.keyCount === 1 ? 'entry' : 'entries'} ({formatStorageSize(storageUsage.totalSizeBytes)})
-                  </span>
-                )}
-              </div>
-              <Button
-                type="button"
-                variant="danger"
-                size="md"
-                disabled={storageUsage.keyCount === 0}
-                onClick={() => setShowClearConfirm(true)}
-              >
-                Clear Game Data
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Clear data confirmation modal */}
-        <Modal
-          isOpen={showClearConfirm}
-          onClose={() => setShowClearConfirm(false)}
-          title="Clear Game Data"
-          variant="danger"
-          confirmLabel="Clear Data"
-          cancelLabel="Cancel"
-          onConfirm={handleClearGameData}
-          size="sm"
-        >
-          <p className="text-base">
-            This will remove all cached game data from your browser, including theme preferences, audio settings, and session history.
-          </p>
-          <p className="text-base mt-3">
-            This action cannot be undone.
-          </p>
-        </Modal>
       </div>
     </main>
   );

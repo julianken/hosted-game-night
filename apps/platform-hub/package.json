@@ -18,7 +18,6 @@
     "@joolie-boolie/auth": "workspace:*",
     "@joolie-boolie/database": "workspace:*",
     "@joolie-boolie/error-tracking": "workspace:*",
-    "@joolie-boolie/game-engine": "workspace:*",
     "@joolie-boolie/theme": "workspace:*",
     "@joolie-boolie/ui": "workspace:*",
     "@opentelemetry/api": "^1.9.0",
