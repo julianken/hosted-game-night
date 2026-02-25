@@ -11,6 +11,7 @@
     "./server": "./src/server.ts",
     "./middleware": "./src/middleware.ts",
     "./game-middleware": "./src/game-middleware.ts",
+    "./middleware-factory": "./src/middleware-factory.ts",
     "./hooks": "./src/hooks/index.ts",
     "./components": "./src/components/index.ts"
   },
