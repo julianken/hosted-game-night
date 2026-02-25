@@ -55,6 +55,7 @@ export {
   setTeamRoundScore,
   recordTeamAnswer,
   amendCorrectAnswers,
+  computeScoreDeltas,
 } from './scoring';
 
 // Rounds
