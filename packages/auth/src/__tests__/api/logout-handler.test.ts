@@ -1,8 +1,8 @@
 /**
- * Logout API Route Tests
+ * Logout Handler Factory Tests
  *
- * Tests for POST /api/auth/logout
- * Covers: cookie clearing, admin session revocation, error handling
+ * Tests for createLogoutHandler()
+ * Covers: admin session revocation, cookie clearing, error handling
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -32,43 +32,83 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 // Import after mocks
-import { POST } from '../route';
+import { createLogoutHandler } from '../../api/logout-handler';
+import { createClient } from '@supabase/supabase-js';
 
-describe('POST /api/auth/logout', () => {
+describe('createLogoutHandler', () => {
+  let POST: ReturnType<typeof createLogoutHandler>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    POST = createLogoutHandler();
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
     process.env.COOKIE_DOMAIN = '';
   });
 
   afterEach(() => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    delete process.env.COOKIE_DOMAIN;
     vi.restoreAllMocks();
   });
 
-  // --- Happy path ---
+  // --- Admin session revocation ---
 
-  describe('successful logout', () => {
-    it('should return success response', async () => {
+  describe('admin session revocation', () => {
+    it('should call admin.signOut with userId when jb_user_id cookie is present', async () => {
+      mockCookieStore.get.mockImplementation((name: string) => {
+        if (name === 'jb_user_id') return { value: 'user-abc-123' };
+        return undefined;
+      });
+      mockAdminSignOut.mockResolvedValue({});
+
+      await POST();
+
+      expect(mockAdminSignOut).toHaveBeenCalledWith('user-abc-123');
+    });
+
+    it('should create admin client with service-role key and correct options', async () => {
       mockCookieStore.get.mockImplementation((name: string) => {
         if (name === 'jb_user_id') return { value: 'user-123' };
         return undefined;
       });
       mockAdminSignOut.mockResolvedValue({});
 
+      await POST();
+
+      expect(createClient).toHaveBeenCalledWith(
+        'https://test.supabase.co',
+        'test-service-role-key',
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      );
+    });
+
+    it('should NOT call admin.signOut when jb_user_id cookie is missing', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
       const response = await POST();
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
+      expect(mockAdminSignOut).not.toHaveBeenCalled();
     });
+  });
 
+  // --- Cookie clearing ---
+
+  describe('cookie clearing', () => {
     it('should clear all SSO cookies', async () => {
       mockCookieStore.get.mockReturnValue(undefined);
 
       await POST();
 
-      // Should clear jb_access_token, jb_refresh_token, jb_user_id
       expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
 
       const cookieCalls = mockCookieStore.set.mock.calls;
@@ -86,7 +126,33 @@ describe('POST /api/auth/logout', () => {
       expect(cookieCalls[2][2]).toMatchObject({ maxAge: 0, path: '/' });
     });
 
-    it('should include COOKIE_DOMAIN in cleared cookies when set', async () => {
+    it('should clear cookies even when admin.signOut throws', async () => {
+      mockCookieStore.get.mockImplementation((name: string) => {
+        if (name === 'jb_user_id') return { value: 'user-123' };
+        return undefined;
+      });
+      mockAdminSignOut.mockRejectedValue(new Error('Network error'));
+
+      const response = await POST();
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
+    });
+
+    it('should clear cookies when jb_user_id cookie is missing', async () => {
+      mockCookieStore.get.mockReturnValue(undefined);
+
+      const response = await POST();
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
+    });
+
+    it('should include COOKIE_DOMAIN in cookie options when set', async () => {
       process.env.COOKIE_DOMAIN = '.joolie-boolie.com';
       mockCookieStore.get.mockReturnValue(undefined);
 
@@ -99,47 +165,11 @@ describe('POST /api/auth/logout', () => {
     });
   });
 
-  // --- Admin session revocation ---
+  // --- Graceful degradation ---
 
-  describe('admin session revocation', () => {
-    it('should call admin.signOut with userId when jb_user_id cookie exists', async () => {
-      mockCookieStore.get.mockImplementation((name: string) => {
-        if (name === 'jb_user_id') return { value: 'user-abc-123' };
-        return undefined;
-      });
-      mockAdminSignOut.mockResolvedValue({});
-
-      await POST();
-
-      expect(mockAdminSignOut).toHaveBeenCalledWith('user-abc-123');
-    });
-
-    it('should NOT call admin.signOut when jb_user_id cookie is missing', async () => {
-      mockCookieStore.get.mockReturnValue(undefined);
-
-      await POST();
-
-      expect(mockAdminSignOut).not.toHaveBeenCalled();
-    });
-
-    it('should still clear cookies even if admin.signOut fails', async () => {
-      mockCookieStore.get.mockImplementation((name: string) => {
-        if (name === 'jb_user_id') return { value: 'user-123' };
-        return undefined;
-      });
-      mockAdminSignOut.mockRejectedValue(new Error('Supabase network error'));
-
-      const response = await POST();
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
-    });
-
+  describe('graceful degradation', () => {
     it('should skip admin.signOut when SUPABASE_SERVICE_ROLE_KEY is missing', async () => {
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-
       mockCookieStore.get.mockImplementation((name: string) => {
         if (name === 'jb_user_id') return { value: 'user-123' };
         return undefined;
@@ -151,13 +181,11 @@ describe('POST /api/auth/logout', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(mockAdminSignOut).not.toHaveBeenCalled();
-      // Cookies should still be cleared
       expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
     });
 
     it('should skip admin.signOut when NEXT_PUBLIC_SUPABASE_URL is missing', async () => {
       delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-
       mockCookieStore.get.mockImplementation((name: string) => {
         if (name === 'jb_user_id') return { value: 'user-123' };
         return undefined;
@@ -169,7 +197,6 @@ describe('POST /api/auth/logout', () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(mockAdminSignOut).not.toHaveBeenCalled();
-      // Cookies should still be cleared
       expect(mockCookieStore.set).toHaveBeenCalledTimes(3);
     });
   });
@@ -178,7 +205,6 @@ describe('POST /api/auth/logout', () => {
 
   describe('error handling', () => {
     it('should return 500 when cookie store throws', async () => {
-      // Override the cookies mock to throw
       const { cookies } = await import('next/headers');
       vi.mocked(cookies).mockRejectedValueOnce(new Error('Cookie store unavailable'));
 

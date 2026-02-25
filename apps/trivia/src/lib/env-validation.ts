@@ -190,6 +190,22 @@ export function warnIfMissingTriviaApiKey(): void {
 }
 
 /**
+ * Warns if COOKIE_DOMAIN is not set in production/Vercel environments.
+ *
+ * COOKIE_DOMAIN is required for cross-subdomain SSO cookies to work.
+ * Without it, cookies are host-only and don't propagate between
+ * platform-hub, bingo, and trivia subdomains.
+ *
+ * Only warns (does not throw) to avoid blocking startup.
+ */
+export function warnIfMissingCookieDomain(): void {
+  const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  if (isProduction && !process.env.COOKIE_DOMAIN) {
+    console.warn('[env] COOKIE_DOMAIN is not set — cross-subdomain SSO cookies will not work');
+  }
+}
+
+/**
  * Validates all required environment variables at application startup
  *
  * Trivia requires:
@@ -203,6 +219,7 @@ export function warnIfMissingTriviaApiKey(): void {
  * - E2E_JWT_SECRET (only when E2E_TESTING=true)
  *
  * Optional (warning only):
+ * - COOKIE_DOMAIN (cross-subdomain SSO)
  * - THE_TRIVIA_API_KEY
  *
  * @throws Error if any required environment variable is missing or invalid
@@ -222,4 +239,7 @@ export function validateEnvironment(): void {
 
   // Validate E2E config (only when E2E_TESTING=true)
   validateE2eConfig();
+
+  // Warn about optional but important configuration
+  warnIfMissingCookieDomain();
 }

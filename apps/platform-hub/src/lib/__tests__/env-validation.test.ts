@@ -1,10 +1,11 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   validateSessionTokenSecret,
   validateEnvironment,
   validateSupabaseConfig,
   validateJwtSecret,
   validateE2eConfig,
+  warnIfMissingCookieDomain,
 } from '../env-validation';
 
 // Valid test values
@@ -38,6 +39,10 @@ function clearAllEnv(): void {
   delete process.env.SUPABASE_JWT_SECRET;
   delete process.env.E2E_TESTING;
   delete process.env.E2E_JWT_SECRET;
+  delete process.env.COOKIE_DOMAIN;
+  delete process.env.VERCEL;
+  // NODE_ENV is typed as read-only, use type assertion for test cleanup
+  delete (process.env as Record<string, string | undefined>).NODE_ENV;
 }
 
 describe('env-validation', () => {
@@ -395,6 +400,57 @@ describe('env-validation', () => {
       delete process.env.E2E_JWT_SECRET;
 
       expect(() => validateEnvironment()).not.toThrow();
+    });
+  });
+
+  describe('warnIfMissingCookieDomain', () => {
+    it('does not warn in development', () => {
+      delete process.env.VERCEL;
+      delete (process.env as Record<string, string | undefined>).NODE_ENV;
+      delete process.env.COOKIE_DOMAIN;
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      warnIfMissingCookieDomain();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it('warns when COOKIE_DOMAIN is missing on Vercel', () => {
+      process.env.VERCEL = '1';
+      delete process.env.COOKIE_DOMAIN;
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      warnIfMissingCookieDomain();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[env] COOKIE_DOMAIN is not set — cross-subdomain SSO cookies will not work'
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('warns when COOKIE_DOMAIN is missing in production', () => {
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+      delete process.env.COOKIE_DOMAIN;
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      warnIfMissingCookieDomain();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[env] COOKIE_DOMAIN is not set — cross-subdomain SSO cookies will not work'
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('does not warn when COOKIE_DOMAIN is set', () => {
+      process.env.VERCEL = '1';
+      process.env.COOKIE_DOMAIN = '.joolie-boolie.com';
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      warnIfMissingCookieDomain();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
     });
   });
 
