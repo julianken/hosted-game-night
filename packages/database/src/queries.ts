@@ -1,5 +1,8 @@
 /**
  * Common query patterns for database operations
+ *
+ * @deprecated Scheduled for removal. See R-9a.
+ * The `@joolie-boolie/database/queries` subpath export is unused.
  */
 
 import type { TypedSupabaseClient } from './client';
