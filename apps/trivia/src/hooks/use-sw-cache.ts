@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getCacheStatus,
   clearQuestionsCache,
@@ -47,6 +47,7 @@ export function useSWCache(): UseSWCacheResult {
   });
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadProgress, setPreloadProgress] = useState(0);
+  const isPreloadingRef = useRef(false);
 
   const refresh = useCallback(async () => {
     if (!isSupported) return;
@@ -60,8 +61,9 @@ export function useSWCache(): UseSWCacheResult {
 
   const preload = useCallback(
     async (questionFiles: string[]) => {
-      if (!isSupported || isPreloading) return;
+      if (!isSupported || isPreloadingRef.current) return;
 
+      isPreloadingRef.current = true;
       setIsPreloading(true);
       setPreloadProgress(0);
 
@@ -71,11 +73,12 @@ export function useSWCache(): UseSWCacheResult {
         });
         await refresh();
       } finally {
+        isPreloadingRef.current = false;
         setIsPreloading(false);
         setPreloadProgress(0);
       }
     },
-    [isSupported, isPreloading, refresh]
+    [isSupported, refresh]
   );
 
   const clearQuestions = useCallback(async () => {

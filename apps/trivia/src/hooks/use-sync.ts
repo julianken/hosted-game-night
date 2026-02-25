@@ -202,6 +202,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     }
 
     useSyncStore.getState().setRole(role);
+    useSyncStore.getState().setConnected(true);
     isInitializedRef.current = true;
     hasReceivedStateRef.current = false; // Reset state received flag
 
@@ -331,9 +332,9 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   });
 
   return {
-    isConnected: true,
-    lastSyncTimestamp: null,
-    connectionError: null,
+    isConnected: useSyncStore((state) => state.isConnected),
+    lastSyncTimestamp: useSyncStore((state) => state.lastSyncTimestamp),
+    connectionError: useSyncStore((state) => state.connectionError),
     broadcastState,
     requestSync: () => broadcastSyncRef.current?.requestSync(),
   };
