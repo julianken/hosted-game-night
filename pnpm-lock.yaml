@@ -764,6 +764,9 @@ importers:
       '@joolie-boolie/error-tracking':
         specifier: workspace:*
         version: link:../error-tracking
+      '@joolie-boolie/sync':
+        specifier: workspace:*
+        version: link:../sync
       '@joolie-boolie/types':
         specifier: workspace:*
         version: link:../types

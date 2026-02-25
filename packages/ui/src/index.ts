@@ -122,6 +122,9 @@ export {
 // InstallPrompt
 export { InstallPrompt, type InstallPromptProps } from './install-prompt';
 
+// ShareSession
+export { ShareSession, type ShareSessionProps } from './share-session';
+
 // Hooks
 export { useOnlineStatus, useConnectionInfo } from './hooks/use-online-status';
 export { useFullscreen } from './hooks/use-fullscreen';

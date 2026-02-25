@@ -35,6 +35,7 @@
   "dependencies": {
     "@joolie-boolie/auth": "workspace:*",
     "@joolie-boolie/error-tracking": "workspace:*",
+    "@joolie-boolie/sync": "workspace:*",
     "@joolie-boolie/types": "workspace:*",
     "motion": "^12.34.2",
     "react-aria-components": "^1.14.0",
