@@ -27,6 +27,8 @@ import { RecapScoresScene } from './RecapScoresScene';
 export interface SceneRouterProps {
   isConnected: boolean;
   isResolvingRoomCode?: boolean;
+  /** Room code passed from the display page URL param (BEA-607). */
+  roomCode?: string;
 }
 
 /**
@@ -45,7 +47,7 @@ export interface SceneRouterProps {
  *   Exit:  280ms, ease [0.4, 0, 1, 1], opacity: 0, scale: 0.98
  *   Enter: 180ms, ease [0.22, 1, 0.36, 1], opacity: 0, y: 6 -> opacity: 1, y: 0
  */
-export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneRouterProps) {
+export function SceneRouter({ isConnected, isResolvingRoomCode = false, roomCode }: SceneRouterProps) {
   const shouldReduceMotion = useReducedMotion();
 
   const audienceScene = useGameStore((state) => state.audienceScene);
@@ -63,6 +65,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
     return (
       <WaitingScene
         message={isResolvingRoomCode ? 'Connecting to room...' : 'Waiting for presenter...'}
+        roomCode={roomCode}
       />
     );
   }
@@ -94,7 +97,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
     switch (audienceScene) {
       // -- T1 scenes (fully implemented) ------------------------------------
       case 'waiting':
-        return <WaitingScene />;
+        return <WaitingScene roomCode={roomCode} />;
 
       case 'question_display':
         return <QuestionDisplayScene answersEnabled={timerIsRunning} />;
@@ -142,7 +145,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false }: SceneR
         // Exhaustiveness guard — TypeScript ensures all AudienceScene values handled.
         const _exhaustive: never = audienceScene;
         void _exhaustive;
-        return <WaitingScene />;
+        return <WaitingScene roomCode={roomCode} />;
       }
     }
   };
