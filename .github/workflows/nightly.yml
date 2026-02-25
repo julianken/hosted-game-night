@@ -1,0 +1,114 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Daily at 8am UTC (midnight PST / 3am EST)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  nightly:
+    name: Nightly Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all apps
+        run: pnpm build
+        env:
+          # Stub env vars required at build time (not used at runtime)
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test:run
+
+      - name: Write success summary
+        if: success()
+        run: |
+          echo "## Nightly Build - Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All checks passed on \`main\` at $(date -u '+%Y-%m-%d %H:%M UTC')." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create GitHub issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          FAIL_DATE=$(date -u '+%Y-%m-%d')
+          FAIL_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
+          gh issue create \
+            --title "Nightly build failed - ${FAIL_DATE}" \
+            --body "## Nightly Build Failure
+
+          The nightly build on \`main\` failed at ${FAIL_TIME}.
+
+          **Run:** ${RUN_URL}
+          **Commit:** ${COMMIT_SHA}
+
+          Please investigate the failing step(s) in the workflow run linked above." \
+            --label "bug"
