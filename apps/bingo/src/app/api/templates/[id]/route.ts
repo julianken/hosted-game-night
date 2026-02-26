@@ -123,7 +123,7 @@ export async function PATCH(
       );
     }
 
-    const template = await updateBingoTemplate(supabase, id, updateData);
+    const template = await updateBingoTemplate(supabase, id, updateData, user.id);
 
     return NextResponse.json({ template });
   } catch (error) {
@@ -172,7 +172,7 @@ export async function DELETE(
       );
     }
 
-    await deleteBingoTemplate(supabase, id);
+    await deleteBingoTemplate(supabase, id, user.id);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

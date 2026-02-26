@@ -151,7 +151,7 @@ export async function PATCH(
       );
     }
 
-    const template = await updateTriviaTemplate(supabase, id, updateData);
+    const template = await updateTriviaTemplate(supabase, id, updateData, user.id);
 
     return NextResponse.json({ template });
   } catch (error) {
@@ -200,7 +200,7 @@ export async function DELETE(
       );
     }
 
-    await deleteTriviaTemplate(supabase, id);
+    await deleteTriviaTemplate(supabase, id, user.id);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

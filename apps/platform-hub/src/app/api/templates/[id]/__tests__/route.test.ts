@@ -106,7 +106,7 @@ describe('DELETE /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(mockUserOwnsBingoTemplate).toHaveBeenCalledWith('mock-service-client', 'user-1', 'bingo-1');
-    expect(mockDeleteBingoTemplate).toHaveBeenCalledWith('mock-service-client', 'bingo-1');
+    expect(mockDeleteBingoTemplate).toHaveBeenCalledWith('mock-service-client', 'bingo-1', 'user-1');
     expect(data.success).toBe(true);
   });
 
@@ -123,7 +123,7 @@ describe('DELETE /api/templates/[id]', () => {
     const data = await response.json();
 
     expect(mockUserOwnsTriviaTemplate).toHaveBeenCalledWith('mock-service-client', 'user-1', 'trivia-1');
-    expect(mockDeleteTriviaTemplate).toHaveBeenCalledWith('mock-service-client', 'trivia-1');
+    expect(mockDeleteTriviaTemplate).toHaveBeenCalledWith('mock-service-client', 'trivia-1', 'user-1');
     expect(data.success).toBe(true);
   });
 

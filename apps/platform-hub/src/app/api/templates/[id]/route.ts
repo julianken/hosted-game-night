@@ -108,7 +108,7 @@ export async function DELETE(
           { status: 404 }
         );
       }
-      await deleteBingoTemplate(serviceClient, id);
+      await deleteBingoTemplate(serviceClient, id, user.id);
     } else {
       const owns = await userOwnsTriviaTemplate(serviceClient, user.id, id);
       if (!owns) {
@@ -117,7 +117,7 @@ export async function DELETE(
           { status: 404 }
         );
       }
-      await deleteTriviaTemplate(serviceClient, id);
+      await deleteTriviaTemplate(serviceClient, id, user.id);
     }
 
     return NextResponse.json({ success: true });

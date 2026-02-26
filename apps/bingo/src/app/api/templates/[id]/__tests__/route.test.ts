@@ -312,7 +312,8 @@ describe('PATCH /api/templates/[id]', () => {
         auto_call_enabled: true,
         auto_call_interval: 15000,
         is_default: true,
-      })
+      }),
+      'user-123'
     );
   });
 
@@ -354,7 +355,8 @@ describe('PATCH /api/templates/[id]', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       mockSupabaseClient,
       'template-1',
-      { name: 'Partial Update' }
+      { name: 'Partial Update' },
+      'user-123'
     );
   });
 
@@ -436,7 +438,7 @@ describe('DELETE /api/templates/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
-    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'template-1');
+    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'template-1', 'user-123');
   });
 
   it('returns 404 when user does not own the template', async () => {
