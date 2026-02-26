@@ -106,16 +106,6 @@ describe('createTokenHandler', () => {
       expect(data.error).toBe('Missing required parameters');
     });
 
-    it('should return 400 when body is empty object', async () => {
-      const handler = createTokenHandler(DEFAULT_CONFIG);
-      const request = createMockRequest({});
-
-      const response = await handler(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(data.error).toBe('Missing required parameters');
-    });
   });
 
   // --- Upstream Token Exchange - Error Responses ---

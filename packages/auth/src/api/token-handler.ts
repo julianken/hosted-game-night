@@ -86,7 +86,7 @@ export function createTokenHandler(config: TokenHandlerConfig) {
       const tokens: TokenResponse = await tokenResponse.json();
 
       if (!tokens.access_token || typeof tokens.expires_in !== 'number') {
-        console.error('Malformed token response from Platform Hub:', tokens);
+        console.error('Malformed token response from Platform Hub: missing access_token or non-numeric expires_in');
         return NextResponse.json(
           { error: 'Malformed token response from authorization server' },
           { status: 502 }
