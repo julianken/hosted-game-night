@@ -29,7 +29,7 @@ export default {
 
     if (packages.size === 0) return [];
 
-    const filters = [...packages].map((p) => `--filter=${p}`).join(' ');
+    const filters = [...packages].map((p) => `--filter=${p}...`).join(' ');
     return [
       `turbo run lint ${filters}`,
       `turbo run typecheck ${filters}`,

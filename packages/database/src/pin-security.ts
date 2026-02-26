@@ -88,9 +88,6 @@ export function isValidPin(pin: string): boolean {
 }
 
 export function isLockedOut(failedAttempts: number, lastFailedAt: Date | null): boolean {
-  const MAX_ATTEMPTS = 5;
-  const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
-
   if (failedAttempts < MAX_ATTEMPTS) return false;
   if (!lastFailedAt) return true;
   return Date.now() - lastFailedAt.getTime() < LOCKOUT_DURATION_MS;
