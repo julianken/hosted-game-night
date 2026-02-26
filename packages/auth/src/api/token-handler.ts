@@ -85,6 +85,14 @@ export function createTokenHandler(config: TokenHandlerConfig) {
 
       const tokens: TokenResponse = await tokenResponse.json();
 
+      if (!tokens.access_token || typeof tokens.expires_in !== 'number') {
+        console.error('Malformed token response from Platform Hub:', tokens);
+        return NextResponse.json(
+          { error: 'Malformed token response from authorization server' },
+          { status: 502 }
+        );
+      }
+
       // Extract user info from the access token.
       // E2E tokens are opaque (prefixed "e2e-"), real tokens are JWTs.
       let userId = 'unknown';
