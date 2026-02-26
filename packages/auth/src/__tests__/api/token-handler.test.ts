@@ -336,6 +336,24 @@ describe('createTokenHandler', () => {
       expect(data.user.email).toBe('no-sub@example.com');
     });
 
+    it('should return 200 and userId "unknown" when access token is not a valid JWT', async () => {
+      // Use a token with no dots — this triggers the catch block in JWT decode
+      // because split('.')[1] is undefined, causing Buffer.from() to throw
+      const tokens = buildTokenResponse({
+        access_token: 'not-a-valid-jwt-no-dots',
+      });
+      mockFetch.mockResolvedValue(createMockFetchResponse(tokens, 200));
+
+      const handler = createTokenHandler(DEFAULT_CONFIG);
+      const request = createMockRequest({ code: 'code', codeVerifier: 'verifier' });
+
+      const response = await handler(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.user.id).toBe('unknown');
+    });
+
     it('should set cookieDomain on all cookies when config.cookieDomain is provided', async () => {
       const tokens = buildTokenResponse();
       mockFetch.mockResolvedValue(createMockFetchResponse(tokens, 200));
