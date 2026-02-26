@@ -223,7 +223,8 @@ describe('PATCH /api/presets/[id]', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       mockSupabaseClient,
       'preset-1',
-      expect.objectContaining({ name: 'Updated Preset', rounds_count: 5 })
+      expect.objectContaining({ name: 'Updated Preset', rounds_count: 5 }),
+      'user-123'
     );
   });
 
@@ -292,7 +293,7 @@ describe('DELETE /api/presets/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'preset-1');
-    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'preset-1');
+    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'preset-1', 'user-123');
   });
 
   it('returns 404 when user does not own the preset', async () => {

@@ -108,7 +108,7 @@ export async function PATCH(
     if (body.timer_duration !== undefined) updateData.timer_duration = body.timer_duration;
     if (body.is_default !== undefined) updateData.is_default = body.is_default;
 
-    const preset = await updateTriviaPreset(supabase, id, updateData);
+    const preset = await updateTriviaPreset(supabase, id, updateData, user.id);
 
     return NextResponse.json({ preset });
   } catch (error) {
@@ -157,7 +157,7 @@ export async function DELETE(
       );
     }
 
-    await deleteTriviaPreset(supabase, id);
+    await deleteTriviaPreset(supabase, id, user.id);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

@@ -148,7 +148,7 @@ export async function PATCH(
     if (body.questions !== undefined) updateData.questions = body.questions;
     if (body.is_default !== undefined) updateData.is_default = body.is_default;
 
-    const questionSet = await updateTriviaQuestionSet(supabase, id, updateData);
+    const questionSet = await updateTriviaQuestionSet(supabase, id, updateData, user.id);
 
     return NextResponse.json({ questionSet });
   } catch (error) {
@@ -197,7 +197,7 @@ export async function DELETE(
       );
     }
 
-    await deleteTriviaQuestionSet(supabase, id);
+    await deleteTriviaQuestionSet(supabase, id, user.id);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

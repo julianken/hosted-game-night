@@ -227,7 +227,8 @@ describe('PATCH /api/question-sets/[id]', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       mockSupabaseClient,
       'qs-1',
-      { name: 'Updated Question Set' }
+      { name: 'Updated Question Set' },
+      'user-123'
     );
   });
 
@@ -338,7 +339,7 @@ describe('DELETE /api/question-sets/[id]', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(mockGet).toHaveBeenCalledWith(mockSupabaseClient, 'qs-1');
-    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'qs-1');
+    expect(mockDelete).toHaveBeenCalledWith(mockSupabaseClient, 'qs-1', 'user-123');
   });
 
   it('returns 404 when user does not own the question set', async () => {
