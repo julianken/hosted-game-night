@@ -35,15 +35,6 @@ export {
   springNotification,
 } from './motion/presets';
 
-// WebVitals
-export {
-  WebVitals,
-  useWebVitals,
-  sendToAnalytics,
-  type WebVitalsConfig,
-  type WebVitalsMetric,
-} from './web-vitals';
-
 // Skeleton components
 export { Skeleton, type SkeletonProps } from './skeleton';
 export { SkeletonCard, type SkeletonCardProps } from './skeleton-card';

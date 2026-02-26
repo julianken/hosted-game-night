@@ -21,7 +21,16 @@ import {
   isTokenExpired,
 } from '../session-token';
 import { signToken, verifyAndDecodeToken } from '../hmac-tokens';
-import { generateSessionId } from '../tables/game-sessions';
+
+/**
+ * Generates a unique session ID for database-backed sessions.
+ * Format: session_{base36-timestamp}_{base36-random}
+ */
+function generateSessionId(): string {
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 9);
+  return `session_${timestamp}_${randomPart}`;
+}
 
 /**
  * Configuration for session route handlers
