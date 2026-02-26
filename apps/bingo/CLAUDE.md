@@ -128,6 +128,7 @@ pnpm test:coverage    # Run tests with coverage
 
 | Route | Methods | Description |
 |-------|---------|-------------|
+| `/api/csp-report` | POST | CSP violation report endpoint |
 | `/api/health` | GET | Health check endpoint |
 | `/api/monitoring-tunnel` | POST | Sentry/OTel monitoring tunnel |
 | `/api/auth/logout` | POST | Logout and clear session |

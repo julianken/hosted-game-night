@@ -111,6 +111,7 @@ pnpm test:run          # Run tests once
 
 | Route | Methods | Description |
 |-------|---------|-------------|
+| `/api/csp-report` | POST | CSP violation report endpoint |
 | `/api/auth/login` | POST | Email/password login, sets SSO cookies |
 | `/api/auth/logout` | POST | Revokes session, clears cookies |
 | `/api/auth/reset-password` | POST | Password reset (recovery session only) |

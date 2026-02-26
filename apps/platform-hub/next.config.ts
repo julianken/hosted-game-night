@@ -47,7 +47,15 @@ async rewrites() {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           {
             key: 'Content-Security-Policy-Report-Only',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.grafana.net /monitoring; font-src 'self'; worker-src 'self'; frame-src 'none'",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://*.grafana.net /monitoring; font-src 'self'; worker-src 'self'; frame-src 'none'; report-uri /api/csp-report",
+          },
+          {
+            key: 'Report-To',
+            value: JSON.stringify({
+              group: 'csp-endpoint',
+              max_age: 86400,
+              endpoints: [{ url: '/api/csp-report' }],
+            }),
           },
         ],
       },
