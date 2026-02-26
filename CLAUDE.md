@@ -108,6 +108,40 @@ COOKIE_DOMAIN=.joolie-boolie.com                   # Cross-app SSO cookies
 # Optional (platform-hub only): CRON_SECRET (for Vercel Cron job authentication)
 ```
 
+### API Response Envelopes
+
+Two intentional tiers exist. Do not mix them.
+
+**Tier 1 — CRUD routes** (templates, sessions, presets, question-sets, profiles)
+
+Success responses use resource-keyed objects:
+```json
+{ "template": { "id": "...", "name": "..." } }
+{ "templates": [...] }
+{ "session": { ... } }
+```
+
+Paginated success (via `@joolie-boolie/database` pagination helpers):
+```json
+{ "data": [...], "total": 42, "page": 1, "pageSize": 20 }
+```
+
+Error — same shape regardless of status code:
+```json
+{ "error": "Human-readable message" }
+```
+
+**Tier 2 — OAuth and Auth routes** (`/api/oauth/*`, `/api/auth/*`)
+
+Follow RFC 6749 format. Do not wrap in resource-keyed objects. The divergence from Tier 1 is intentional.
+
+```json
+{ "access_token": "...", "token_type": "Bearer", "expires_in": 3600 }
+{ "error": "invalid_grant", "error_description": "..." }
+```
+
+**Rule for new routes:** Use Tier 1 for any authenticated CRUD endpoint. Use Tier 2 only for OAuth or token endpoints. The `@joolie-boolie/database` API factories return Tier 1 shapes automatically.
+
 ### AI Assistant Configuration
 
 **Context7 MCP:** Automatically use Context7 for up-to-date documentation. Key libraries and versions:
