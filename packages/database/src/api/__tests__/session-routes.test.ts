@@ -16,14 +16,11 @@ vi.mock('../../tables/persistent-sessions');
 vi.mock('../../pin-security');
 vi.mock('../../session-token');
 vi.mock('../../hmac-tokens');
-vi.mock('../../tables/game-sessions');
-
 // Import mocked modules
 import * as persistentSessions from '../../tables/persistent-sessions';
 import * as pinSecurity from '../../pin-security';
 import * as sessionToken from '../../session-token';
 import * as hmacTokens from '../../hmac-tokens';
-import * as gameSessions from '../../tables/game-sessions';
 
 describe('createSessionRoutes', () => {
   let mockClient: TypedSupabaseClient;
@@ -64,14 +61,11 @@ describe('createSessionRoutes', () => {
         salt: 'salt-value',
       });
 
-      // Mock session ID generation
-      vi.mocked(gameSessions.generateSessionId).mockReturnValue('sess_test123');
-
       // Mock session creation
       const mockSession: GameSession = {
         id: 'uuid-123',
         room_code: 'TEST123',
-        session_id: 'sess_test123',
+        session_id: 'session_test123_abc',
         game_type: 'bingo',
         template_id: null,
         preset_id: null,
@@ -93,7 +87,7 @@ describe('createSessionRoutes', () => {
 
       // Mock token creation
       vi.mocked(sessionToken.createSessionToken).mockReturnValue({
-        sessionId: 'sess_test123',
+        sessionId: 'session_test123_abc',
         roomCode: 'TEST123',
         gameType: 'bingo',
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
@@ -115,7 +109,7 @@ describe('createSessionRoutes', () => {
         mockClient,
         expect.objectContaining({
           room_code: 'TEST123',
-          session_id: 'sess_test123',
+          session_id: expect.stringMatching(/^session_[a-z0-9]+_[a-z0-9]+$/),
           game_type: 'bingo',
           pin_hash: 'hashed-pin',
           pin_salt: 'salt-value',

@@ -24,11 +24,6 @@
       "types": "./src/stats/storage.ts",
       "import": "./src/stats/storage.ts",
       "require": "./src/stats/storage.ts"
-    },
-    "./storage-cleanup": {
-      "types": "./src/storage-cleanup.ts",
-      "import": "./src/storage-cleanup.ts",
-      "require": "./src/storage-cleanup.ts"
     }
   },
   "scripts": {
