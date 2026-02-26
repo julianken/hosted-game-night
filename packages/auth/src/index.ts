@@ -41,6 +41,7 @@ export {
   type ProtectedRouteProps,
   type GuestOnlyProps,
 } from './components/protected-route';
+export { OAuthCallbackPage } from './components/OAuthCallbackPage';
 
 // Token refresh utilities
 export {
