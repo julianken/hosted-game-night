@@ -7,7 +7,7 @@ test.describe('Question Set Editor Integration', () => {
     await waitForHydration(page);
   });
 
-  test('displays question editor modal when Create Question Set is clicked', async ({ page }) => {
+  test('displays question editor modal when Create Question Set is clicked @high', async ({ page }) => {
     // Click create button
     const createButton = page.getByRole('button', { name: /create question set/i });
     await createButton.click();
@@ -17,7 +17,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByRole('dialog').getByText(/create question set/i)).toBeVisible();
   });
 
-  test('can create a new question set with 2 rounds and 3 questions total', async ({ page }) => {
+  test('can create a new question set with 2 rounds and 3 questions total @critical', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -104,7 +104,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText(/3 questions/i)).toBeVisible();
   });
 
-  test('can edit existing question set and modify a question', async ({ page }) => {
+  test('can edit existing question set and modify a question @critical', async ({ page }) => {
     // First, ensure we have a question set to edit
     // We'll use the one created in the previous test, but let's create a fresh one
     await page.getByRole('button', { name: /create question set/i }).click();
@@ -182,7 +182,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText('Edit Test Set - Modified')).toBeVisible();
   });
 
-  test('validates required fields when creating', async ({ page }) => {
+  test('validates required fields when creating @high', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -207,7 +207,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText(/at least one question is required/i)).toBeVisible();
   });
 
-  test('can remove a category', async ({ page }) => {
+  test('can remove a category @medium', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
     await page.getByLabel(/question set name/i).fill('Test Set');
@@ -229,7 +229,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText(/history \(0 questions\)/i)).toBeVisible();
   });
 
-  test('cancel button closes modal without saving (no changes)', async ({ page }) => {
+  test('cancel button closes modal without saving (no changes) @medium', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -240,7 +240,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 
-  test('shows discard changes dialog when canceling with unsaved changes', async ({ page }) => {
+  test('shows discard changes dialog when canceling with unsaved changes @medium', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -265,7 +265,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByLabel(/question set name/i)).toHaveValue('Should Not Save');
   });
 
-  test('discards changes when confirmed in discard dialog', async ({ page }) => {
+  test('discards changes when confirmed in discard dialog @medium', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: /create question set/i }).click();
 
@@ -289,7 +289,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText('Should Not Save')).not.toBeVisible();
   });
 
-  test('shows discard dialog when editing and canceling with changes', async ({ page }) => {
+  test('shows discard dialog when editing and canceling with changes @low', async ({ page }) => {
     // First, create a question set to edit
     await page.getByRole('button', { name: /create question set/i }).click();
     await page.getByLabel(/question set name/i).fill('Edit Discard Test');
@@ -343,7 +343,7 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByText('Edit Discard Test - Modified')).not.toBeVisible();
   });
 
-  test('edit, modify, save, and verify persisted changes', async ({ page }) => {
+  test('edit, modify, save, and verify persisted changes @critical', async ({ page }) => {
     // First, create a question set to edit
     await page.getByRole('button', { name: /create question set/i }).click();
     await page.getByLabel(/question set name/i).fill('Persistence Test');

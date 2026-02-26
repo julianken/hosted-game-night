@@ -3,7 +3,7 @@ import { waitForHydration, waitForDualScreenSync, waitForSyncedContent } from '.
 
 test.describe('Trivia Audience Display', () => {
   test.describe('Direct Access - Invalid Session', () => {
-    test('shows invalid session error when accessed directly without session', async ({ page }) => {
+    test('shows invalid session error when accessed directly without session @high', async ({ page }) => {
       await page.goto('/display');
       await waitForHydration(page);
 
@@ -11,14 +11,14 @@ test.describe('Trivia Audience Display', () => {
       await expect(page.getByText(/open display/i)).toBeVisible();
     });
 
-    test('shows invalid session for malformed session ID', async ({ page }) => {
+    test('shows invalid session for malformed session ID @high', async ({ page }) => {
       await page.goto('/display?session=invalid');
       await waitForHydration(page);
 
       await expect(page.getByText(/invalid session/i)).toBeVisible();
     });
 
-    test('shows error icon with invalid session', async ({ page }) => {
+    test('shows error icon with invalid session @low', async ({ page }) => {
       await page.goto('/display');
       await waitForHydration(page);
 
@@ -27,7 +27,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(errorIcon).toBeVisible();
     });
 
-    test('provides guidance on how to open display', async ({ page }) => {
+    test('provides guidance on how to open display @medium', async ({ page }) => {
       await page.goto('/display');
       await waitForHydration(page);
 
@@ -36,7 +36,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Valid Session Display', () => {
-    test('displays correctly when opened from presenter', async ({ authenticatedTriviaPage: page }) => {
+    test('displays correctly when opened from presenter @critical', async ({ authenticatedTriviaPage: page }) => {
       // First go to presenter view
       await waitForHydration(page);
 
@@ -52,7 +52,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('heading', { name: /trivia/i })).toBeVisible();
     });
 
-    test('shows waiting state when game not started', async ({ authenticatedTriviaPage: page }) => {
+    test('shows waiting state when game not started @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -65,7 +65,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByText(/waiting|get ready/i)).toBeVisible();
     });
 
-    test('shows connection status indicator - connected', async ({ authenticatedTriviaPage: page }) => {
+    test('shows connection status indicator - connected @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -82,7 +82,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(syncIndicator).toBeVisible({ timeout: 10000 });
     });
 
-    test('shows sync timestamp when connected', async ({ authenticatedTriviaPage: page }) => {
+    test('shows sync timestamp when connected @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -98,7 +98,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Question Content Display', () => {
-    test('shows question when displayed by presenter', async ({ authenticatedTriviaPage: page }) => {
+    test('shows question when displayed by presenter @critical', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       // Add team and open display
@@ -123,7 +123,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('region', { name: /round 1 of \d+, question \d+ of \d+/i })).toBeVisible();
     });
 
-    test('shows round and question number indicator', async ({ authenticatedTriviaPage: page }) => {
+    test('shows round and question number indicator @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -145,7 +145,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(roundInfoRegion).toBeVisible();
     });
 
-    test('shows category badge for questions', async ({ authenticatedTriviaPage: page }) => {
+    test('shows category badge for questions @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -167,7 +167,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(categoryBadge.first()).toBeVisible();
     });
 
-    test('shows answer options list', async ({ authenticatedTriviaPage: page }) => {
+    test('shows answer options list @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -191,7 +191,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('question hides when display toggled off', async ({ authenticatedTriviaPage: page }) => {
+    test('question hides when display toggled off @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -220,7 +220,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Scoreboard Display', () => {
-    test('shows scoreboard between rounds', async ({ authenticatedTriviaPage: page }) => {
+    test('shows scoreboard between rounds @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       // Add multiple teams
@@ -252,7 +252,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows team names on scoreboard', async ({ authenticatedTriviaPage: page }) => {
+    test('shows team names on scoreboard @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -284,7 +284,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows medal rankings (1st, 2nd, 3rd)', async ({ authenticatedTriviaPage: page }) => {
+    test('shows medal rankings (1st, 2nd, 3rd) @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       // Add 4 teams to see medals
@@ -318,7 +318,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('displays team scores on scoreboard', async ({ authenticatedTriviaPage: page }) => {
+    test('displays team scores on scoreboard @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -354,7 +354,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows "Next round starting soon" message', async ({ authenticatedTriviaPage: page }) => {
+    test('shows "Next round starting soon" message @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -386,7 +386,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Timer Display', () => {
-    test('timer can be visible on display based on settings', async ({ authenticatedTriviaPage: page }) => {
+    test('timer can be visible on display based on settings @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -407,7 +407,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Pause Overlay', () => {
-    test('shows pause overlay when game is paused', async ({ authenticatedTriviaPage: page }) => {
+    test('shows pause overlay when game is paused @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -432,7 +432,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible();
     });
 
-    test('shows blank screen during emergency pause', async ({ authenticatedTriviaPage: page }) => {
+    test('shows blank screen during emergency pause @critical', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -457,7 +457,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('alert', { name: /display blanked for emergency/i })).toBeInViewport();
     });
 
-    test('resumes display when game is resumed', async ({ authenticatedTriviaPage: page }) => {
+    test('resumes display when game is resumed @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -483,7 +483,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Game End Display', () => {
-    test('shows game end state when game is complete', async ({ authenticatedTriviaPage: page }) => {
+    test('shows game end state when game is complete @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -501,7 +501,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('UI Elements and Landmarks', () => {
-    test('has proper ARIA landmarks', async ({ authenticatedTriviaPage: page }) => {
+    test('has proper ARIA landmarks @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -520,7 +520,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('footer, [role="contentinfo"]')).toHaveCount(1);
     });
 
-    test('has fullscreen button', async ({ authenticatedTriviaPage: page }) => {
+    test('has fullscreen button @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -533,7 +533,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(fullscreenBtn).toBeVisible();
     });
 
-    test('footer shows display hint', async ({ authenticatedTriviaPage: page }) => {
+    test('footer shows display hint @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -546,7 +546,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByText(/projector|large display/i)).toBeVisible();
     });
 
-    test('has skip link for keyboard navigation', async ({ authenticatedTriviaPage: page }) => {
+    test('has skip link for keyboard navigation @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -562,7 +562,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Animation Support', () => {
-    test('question display has fade-in animation class', async ({ authenticatedTriviaPage: page }) => {
+    test('question display has fade-in animation class @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -586,7 +586,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('respects motion-reduce preference', async ({ authenticatedTriviaPage: page }) => {
+    test('respects motion-reduce preference @low', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       await page.getByRole('button', { name: /add team/i }).click();
@@ -607,7 +607,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Responsive Design', () => {
-    test('adapts to large viewport (projector)', async ({ authenticatedTriviaPage: page }) => {
+    test('adapts to large viewport (projector) @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -623,7 +623,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('heading', { name: /trivia/i })).toBeVisible();
     });
 
-    test('adapts to medium viewport', async ({ authenticatedTriviaPage: page }) => {
+    test('adapts to medium viewport @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');

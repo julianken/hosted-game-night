@@ -14,14 +14,14 @@ test.describe('Round Editor', () => {
     await waitForHydration(page);
   });
 
-  test('displays round header with correct information', async ({ page }) => {
+  test('displays round header with correct information @low', async ({ page }) => {
     // This test assumes there's at least one question set available
     // If not, we would need to create one first
     const importButton = page.getByRole('button', { name: /import questions/i });
     await expect(importButton).toBeVisible();
   });
 
-  test('round header is accessible with keyboard', async ({ page }) => {
+  test('round header is accessible with keyboard @low', async ({ page }) => {
     // Test keyboard navigation on the question sets page
     const backToHomeLink = page.getByRole('link', { name: /back to home/i });
     await expect(backToHomeLink).toBeVisible();
@@ -32,7 +32,7 @@ test.describe('Round Editor', () => {
     expect(box!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('import questions button has accessible size', async ({ page }) => {
+  test('import questions button has accessible size @low', async ({ page }) => {
     const importButton = page.getByRole('button', { name: /import questions/i });
     const box = await importButton.boundingBox();
 
@@ -41,7 +41,7 @@ test.describe('Round Editor', () => {
     expect(box!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('page has accessible structure', async ({ page }) => {
+  test('page has accessible structure @low', async ({ page }) => {
     // Check for main heading
     const h1 = page.getByRole('heading', { name: /my question sets/i });
     await expect(h1).toBeVisible();
@@ -51,7 +51,7 @@ test.describe('Round Editor', () => {
     await expect(main).toBeVisible();
   });
 
-  test('shows empty state when no question sets exist', async ({ page }) => {
+  test('shows empty state when no question sets exist @medium', async ({ page }) => {
     // This will only pass if no question sets have been created yet
     const emptyState = page.getByText(/no question sets yet/i);
     // Use soft assertion since the state depends on database contents
@@ -60,7 +60,7 @@ test.describe('Round Editor', () => {
     }
   });
 
-  test('displays question sets in grid layout', async ({ page }) => {
+  test('displays question sets in grid layout @medium', async ({ page }) => {
     // Check for grid container
     const grid = page.locator('div.grid');
     // Only verify grid exists if question sets are present
@@ -70,7 +70,7 @@ test.describe('Round Editor', () => {
     }
   });
 
-  test('rename input responds to keyboard (Enter and Escape)', async ({ page }) => {
+  test('rename input responds to keyboard (Enter and Escape) @medium', async ({ page }) => {
     // Find a rename button if any question sets exist
     const renameButton = page.getByRole('button', { name: /rename/i }).first();
     const isVisible = await renameButton.isVisible();
@@ -88,7 +88,7 @@ test.describe('Round Editor', () => {
     }
   });
 
-  test('delete confirmation is keyboard accessible', async ({ page }) => {
+  test('delete confirmation is keyboard accessible @medium', async ({ page }) => {
     // Find a delete button if any question sets exist
     const deleteButton = page.getByRole('button', { name: /delete/i }).first();
     const isVisible = await deleteButton.isVisible();
@@ -111,7 +111,7 @@ test.describe('Round Editor', () => {
     }
   });
 
-  test('importer toggle works correctly', async ({ page }) => {
+  test('importer toggle works correctly @high', async ({ page }) => {
     const importButton = page.getByRole('button', { name: /import questions/i });
     await importButton.click();
 
@@ -127,7 +127,7 @@ test.describe('Round Editor', () => {
     await expect(importerSection).not.toBeVisible();
   });
 
-  test('action buttons have proper aria labels', async ({ page }) => {
+  test('action buttons have proper aria labels @low', async ({ page }) => {
     // Verify import button has accessible name
     const importButton = page.getByRole('button', { name: /import questions/i });
     await expect(importButton).toBeVisible();
@@ -137,7 +137,7 @@ test.describe('Round Editor', () => {
     await expect(backLink).toBeVisible();
   });
 
-  test('error messages are announced with role=alert', async ({ page }) => {
+  test('error messages are announced with role=alert @low', async ({ page }) => {
     // Error messages should have role="alert" for screen readers
     // This test verifies the structure is in place
     const alerts = page.locator('[role="alert"]');
@@ -157,7 +157,7 @@ test.describe('Round Editor - Confirmation Dialog', () => {
     await waitForHydration(page);
   });
 
-  test('confirmation dialog prevents body scroll when open', async ({ page }) => {
+  test('confirmation dialog prevents body scroll when open @low', async ({ page }) => {
     // This test verifies that the body scroll prevention is applied
     // We can check this by looking for the overflow style on the body
     const deleteButton = page.getByRole('button', { name: /delete/i }).first();
@@ -189,7 +189,7 @@ test.describe('Round Editor - Confirmation Dialog', () => {
     }
   });
 
-  test('dialog actions have proper focus management', async ({ page }) => {
+  test('dialog actions have proper focus management @critical', async ({ page }) => {
     const deleteButton = page.getByRole('button', { name: /delete/i }).first();
     const isVisible = await deleteButton.isVisible();
 
