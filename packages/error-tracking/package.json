@@ -14,6 +14,7 @@
     "./server-logger": "./src/server-logger.ts",
     "./faro": "./src/faro.ts",
     "./sentry": "./src/sentry.ts",
+    "./monitoring-tunnel": "./src/monitoring-tunnel.ts",
     "./components": "./src/components/FaroInit.tsx"
   },
   "scripts": {
@@ -29,11 +30,15 @@
   },
   "peerDependencies": {
     "@sentry/nextjs": ">=8.0.0",
+    "next": ">=14.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
     "@sentry/nextjs": {
+      "optional": true
+    },
+    "next": {
       "optional": true
     },
     "react": {
