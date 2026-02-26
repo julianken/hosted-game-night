@@ -123,7 +123,7 @@ Success responses use resource-keyed objects:
 
 Paginated success (via `@joolie-boolie/database` pagination helpers):
 ```json
-{ "data": [...], "total": 42, "page": 1, "pageSize": 20 }
+{ "data": [...], "pagination": { "page": 1, "pageSize": 20, "total": 42, "hasMore": false } }
 ```
 
 Error — same shape regardless of status code:
