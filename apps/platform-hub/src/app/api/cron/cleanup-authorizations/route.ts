@@ -54,7 +54,7 @@ export async function GET(
       );
     }
 
-    const deletedCount = data as number;
+    const deletedCount = typeof data === 'number' ? data : 0;
     logger.info('Successfully cleaned up expired authorizations', { deletedCount });
 
     return NextResponse.json({

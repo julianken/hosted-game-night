@@ -112,8 +112,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract client info
-    const clientArray = authData.oauth_clients as unknown as Array<{ id: string; name: string }>;
-    const client = Array.isArray(clientArray) ? clientArray[0] : clientArray;
+    const clientRaw = authData.oauth_clients as unknown;
+    const clientArray = Array.isArray(clientRaw) ? clientRaw : clientRaw ? [clientRaw] : [];
+    const client = clientArray[0] as { id: string; name: string } | undefined;
+
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Client information not found' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       authorization: {

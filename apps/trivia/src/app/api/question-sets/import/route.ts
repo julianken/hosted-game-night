@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
       parsed &&
       typeof parsed === 'object' &&
       !Array.isArray(parsed) &&
-      'questions' in parsed
+      'questions' in parsed &&
+      Array.isArray((parsed as Record<string, unknown>).questions)
     ) {
       const wrapper = parsed as Record<string, unknown>;
       if (typeof wrapper.name === 'string') wrapperName = wrapper.name;

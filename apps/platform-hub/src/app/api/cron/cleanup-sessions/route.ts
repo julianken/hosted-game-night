@@ -54,7 +54,7 @@ export async function GET(
       );
     }
 
-    const updatedCount = data as number;
+    const updatedCount = typeof data === 'number' ? data : 0;
     logger.info('Successfully marked expired sessions', { updatedCount });
 
     return NextResponse.json({
