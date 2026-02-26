@@ -65,6 +65,7 @@ export function createMessageRouter(handlers: Partial<{
   onSyncRequest: () => void;
   onAudioSettingsChanged: (settings: AudioSettingsPayload) => void;
   onDisplayThemeChanged: (theme: ThemeMode) => void;
+  onChannelReady: () => void;
 }>): MessageHandler {
   return (message: BingoSyncMessage) => {
     switch (message.type) {
@@ -89,6 +90,9 @@ export function createMessageRouter(handlers: Partial<{
       case 'DISPLAY_THEME_CHANGED':
         handlers.onDisplayThemeChanged?.(message.payload.theme);
         break;
+      case 'CHANNEL_READY':
+        handlers.onChannelReady?.();
+        break;
     }
   };
 }
@@ -108,8 +112,11 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   const isInitializedRef = useRef(false);
 
   // Create a session-scoped BroadcastSync instance
-  const broadcastSync = useMemo(() => {
-    return createBingoBroadcastSync(sessionId);
+  const broadcastSyncRef = useRef<BingoBroadcastSync | null>(null);
+  const _broadcastSync = useMemo(() => {
+    const instance = createBingoBroadcastSync(sessionId);
+    broadcastSyncRef.current = instance;
+    return instance;
   }, [sessionId]);
 
   // Get current game state for broadcasting
@@ -131,9 +138,10 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   // Broadcast state update (presenter only)
   const broadcastState = useCallback(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
     const state = getCurrentState();
-    broadcastSync.broadcastState(state);
-  }, [role, getCurrentState, broadcastSync]);
+    broadcastSyncRef.current.broadcastState(state);
+  }, [role, getCurrentState]);
 
   // Handle incoming messages
   const handleStateUpdate = useCallback(
@@ -173,12 +181,14 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
   const handleSyncRequest = useCallback(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
     // Audience requested sync, broadcast current state
-    broadcastState();
+    const state = getCurrentState();
+    broadcastSyncRef.current.broadcastState(state);
     // Also broadcast current display theme
     const { displayTheme } = useThemeStore.getState();
-    broadcastSync.broadcastDisplayTheme(displayTheme);
-  }, [role, broadcastState, broadcastSync]);
+    broadcastSyncRef.current.broadcastDisplayTheme(displayTheme);
+  }, [role, getCurrentState]);
 
   // Handle display theme change from presenter (audience only)
   const handleDisplayThemeChanged = useCallback(
@@ -196,8 +206,17 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   // Initialize broadcast channel
   useEffect(() => {
     if (isInitializedRef.current) return;
+    if (!broadcastSyncRef.current) return;
 
-    const success = broadcastSync.initialize();
+    // CRITICAL FIX (BEA-374): Don't initialize with empty sessionId.
+    // Wait for offline session ID to load asynchronously before initializing channel.
+    if (!sessionId) {
+      return;
+    }
+
+    const sync = broadcastSyncRef.current;
+
+    const success = sync.initialize();
     if (!success) {
       useSyncStore.getState().setConnectionError('Failed to initialize sync channel');
       return;
@@ -219,12 +238,19 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       onPatternChanged: handlePatternChanged,
       onSyncRequest: handleSyncRequest,
       onDisplayThemeChanged: handleDisplayThemeChanged,
+      // Handle CHANNEL_READY from presenter
+      onChannelReady: () => {
+        // Audience: when presenter signals ready, request sync immediately
+        if (role === 'audience') {
+          sync.requestSync();
+        }
+      },
     });
 
     // Cast at the transport boundary: BroadcastSync uses a generic SyncMessage<TPayload>
     // while our router expects the discriminated BingoSyncMessage union.
     // This is safe because the BingoBroadcastSync class only sends valid BingoSyncMessage types.
-    const unsubscribe = broadcastSync.subscribe(
+    const unsubscribe = sync.subscribe(
       router as unknown as (message: import('@joolie-boolie/sync').SyncMessage<BingoSyncPayload>) => void
     );
 
@@ -235,7 +261,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     function requestSyncWithRetry() {
-      broadcastSync.requestSync();
+      sync.requestSync();
 
       // Schedule retry if we haven't received state yet
       retryTimeoutId = setTimeout(() => {
@@ -251,31 +277,45 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
       requestSyncWithRetry();
     }
 
+    // CRITICAL FIX (BEA-374): Presenter broadcasts initial state immediately
+    // to fix race where display REQUEST_SYNC arrives before handler is ready.
+    if (role === 'presenter') {
+      // Send CHANNEL_READY signal so any already-listening audience can request sync
+      sync.broadcastChannelReady();
+
+      // Broadcast initial state immediately
+      const state = getCurrentState();
+      sync.broadcastState(state);
+    }
+
     return () => {
       unsubscribe();
       if (retryTimeoutId) {
         clearTimeout(retryTimeoutId);
       }
-      broadcastSync.close();
+      sync.close();
       useSyncStore.getState().reset();
       isInitializedRef.current = false;
       hasReceivedStateRef.current = false;
     };
   }, [
     role,
-    broadcastSync,
+    sessionId,       // Re-run when sessionId arrives (empty → populated)
+    getCurrentState, // Called directly in presenter init block
     handleStateUpdate,
     handleBallCalled,
     handleReset,
     handlePatternChanged,
     handleSyncRequest,
     handleDisplayThemeChanged,
-  ]); // Zustand actions accessed via getState() - no subscription, no re-renders
+  ]);
 
   // Subscribe to game state changes (presenter only)
   useEffect(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
 
+    const sync = broadcastSyncRef.current;
     // Subscribe to game store changes
     const unsubscribe = useGameStore.subscribe((state, prevState) => {
       // SYNC LOOP PROTECTION: Skip broadcast if state is being hydrated from sync
@@ -285,7 +325,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
 
       // Broadcast on any state change
       if (state !== prevState) {
-        broadcastSync.broadcastState({
+        sync.broadcastState({
           status: state.status,
           calledBalls: state.calledBalls,
           currentBall: state.currentBall,
@@ -300,22 +340,24 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     });
 
     return unsubscribe;
-  }, [role, broadcastSync]);
+  }, [role, sessionId]); // Re-subscribe when sessionId changes (new channel)
 
   // Subscribe to display theme changes (presenter only)
   useEffect(() => {
     if (role !== 'presenter') return;
+    if (!broadcastSyncRef.current) return;
 
+    const sync = broadcastSyncRef.current;
     // Subscribe to theme store changes
     const unsubscribe = useThemeStore.subscribe((state, prevState) => {
       // Broadcast on display theme change
       if (state.displayTheme !== prevState.displayTheme) {
-        broadcastSync.broadcastDisplayTheme(state.displayTheme);
+        sync.broadcastDisplayTheme(state.displayTheme);
       }
     });
 
     return unsubscribe;
-  }, [role, broadcastSync]);
+  }, [role, sessionId]); // Re-subscribe when sessionId changes (new channel)
 
   // Heartbeat monitoring for state divergence detection
   const getHeartbeatState = useCallback(() => {
@@ -323,7 +365,7 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
   }, [getCurrentState]);
 
   useSyncHeartbeat({
-    broadcastSync,
+    broadcastSync: _broadcastSync,
     getState: getHeartbeatState,
     role,
     channelName: getChannelName(sessionId),
@@ -334,6 +376,6 @@ export function useSync({ role, sessionId }: UseSyncOptions) {
     lastSyncTimestamp: useSyncStore((state) => state.lastSyncTimestamp),
     connectionError: useSyncStore((state) => state.connectionError),
     broadcastState,
-    requestSync: () => broadcastSync.requestSync(),
+    requestSync: () => broadcastSyncRef.current?.requestSync(),
   };
 }

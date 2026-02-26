@@ -520,5 +520,105 @@ describe('use-sync', () => {
 
       expect(onSyncRequest).toHaveBeenCalled();
     });
+
+    it('routes CHANNEL_READY to onChannelReady', () => {
+      const onChannelReady = vi.fn();
+      const router = createMessageRouter({ onChannelReady });
+
+      router({
+        type: 'CHANNEL_READY',
+        payload: null,
+        timestamp: Date.now(),
+      });
+
+      expect(onChannelReady).toHaveBeenCalled();
+    });
+  });
+
+  describe('CHANNEL_READY signal (Fix 3)', () => {
+    it('presenter broadcasts CHANNEL_READY on init', () => {
+      const postMessageSpy = vi.fn();
+      vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+        postMessage = postMessageSpy;
+      });
+
+      renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
+
+      const calls = postMessageSpy.mock.calls.map(call => call[0]);
+      expect(calls.some(call => call.type === 'CHANNEL_READY')).toBe(true);
+    });
+
+    it('presenter broadcasts initial GAME_STATE_UPDATE on init', () => {
+      const postMessageSpy = vi.fn();
+      vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+        postMessage = postMessageSpy;
+      });
+
+      renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
+
+      const calls = postMessageSpy.mock.calls.map(call => call[0]);
+      expect(calls.some(call => call.type === 'GAME_STATE_UPDATE')).toBe(true);
+    });
+
+    it('audience requests sync on CHANNEL_READY', () => {
+      const postMessageSpy = vi.fn();
+      vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+        postMessage = postMessageSpy;
+      });
+
+      renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
+
+      // Clear initial REQUEST_SYNC from requestSyncWithRetry
+      postMessageSpy.mockClear();
+
+      // Simulate CHANNEL_READY from presenter
+      act(() => {
+        lastChannelInstance?.simulateMessage({
+          type: 'CHANNEL_READY',
+          payload: null,
+          timestamp: Date.now(),
+        });
+      });
+
+      const calls = postMessageSpy.mock.calls.map(call => call[0]);
+      expect(calls.some(call => call.type === 'REQUEST_SYNC')).toBe(true);
+    });
+  });
+
+  describe('empty sessionId guard (Fix 2)', () => {
+    it('does not initialize channel when sessionId is empty', () => {
+      const postMessageSpy = vi.fn();
+      vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+        postMessage = postMessageSpy;
+      });
+
+      const { result } = renderHook(() =>
+        useSync({ role: 'presenter', sessionId: '' })
+      );
+
+      // Should not be connected
+      expect(result.current.isConnected).toBe(false);
+      // Should not have sent any messages
+      expect(postMessageSpy).not.toHaveBeenCalled();
+    });
+
+    it('initializes once sessionId becomes non-empty', () => {
+      const postMessageSpy = vi.fn();
+      vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+        postMessage = postMessageSpy;
+      });
+
+      const { rerender, result } = renderHook(
+        ({ sessionId }: { sessionId: string }) =>
+          useSync({ role: 'presenter', sessionId }),
+        { initialProps: { sessionId: '' } }
+      );
+
+      expect(result.current.isConnected).toBe(false);
+
+      rerender({ sessionId: TEST_SESSION_ID });
+
+      expect(result.current.isConnected).toBe(true);
+    });
   });
 });
