@@ -1,8 +1,5 @@
 /**
- * Common query patterns for database operations
- *
- * @deprecated Scheduled for removal. See R-9a.
- * The `@joolie-boolie/database/queries` subpath export is unused.
+ * Common query patterns for database operations (internal)
  */
 
 import type { TypedSupabaseClient } from './client';
@@ -249,12 +246,18 @@ export async function update<T extends TableName>(
   table: T,
   id: string,
   data: TableUpdate<T>,
-  options: Pick<QueryOptions, 'select'> = {}
+  options: Pick<QueryOptions, 'select'> & { userId?: string } = {}
 ): Promise<TableRow<T>> {
   return withErrorHandling(async () => {
-    const { data: updated, error } = await fromTable(client, table)
+    let query = fromTable(client, table)
       .update(data)
-      .eq('id', id)
+      .eq('id', id);
+
+    if (options.userId) {
+      query = query.eq('user_id', options.userId);
+    }
+
+    const { data: updated, error } = await query
       .select(options.select ?? '*')
       .single();
 
@@ -300,10 +303,17 @@ export async function updateMany<T extends TableName>(
 export async function remove<T extends TableName>(
   client: TypedSupabaseClient,
   table: T,
-  id: string
+  id: string,
+  options: { userId?: string } = {}
 ): Promise<void> {
   return withErrorHandling(async () => {
-    const { error } = await fromTable(client, table).delete().eq('id', id);
+    let query = fromTable(client, table).delete().eq('id', id);
+
+    if (options.userId) {
+      query = query.eq('user_id', options.userId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       throw error;

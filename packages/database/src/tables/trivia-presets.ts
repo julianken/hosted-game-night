@@ -148,7 +148,8 @@ export async function createTriviaPreset(
 export async function updateTriviaPreset(
   client: TypedSupabaseClient,
   id: string,
-  data: TriviaPresetUpdate
+  data: TriviaPresetUpdate,
+  userId?: string
 ): Promise<TriviaPreset> {
   validateTriviaPreset(data);
 
@@ -158,7 +159,7 @@ export async function updateTriviaPreset(
       await unsetDefaultTriviaPreset(client, existing.user_id);
     }
 
-    return update(client, 'trivia_presets', id, data);
+    return update(client, 'trivia_presets', id, data, { userId });
   });
 }
 
@@ -167,9 +168,10 @@ export async function updateTriviaPreset(
  */
 export async function deleteTriviaPreset(
   client: TypedSupabaseClient,
-  id: string
+  id: string,
+  userId?: string
 ): Promise<void> {
-  return remove(client, 'trivia_presets', id);
+  return remove(client, 'trivia_presets', id, { userId });
 }
 
 /**
@@ -182,7 +184,7 @@ export async function setDefaultTriviaPreset(
   return withErrorHandling(async () => {
     const preset = await getTriviaPreset(client, id);
     await unsetDefaultTriviaPreset(client, preset.user_id);
-    return update(client, 'trivia_presets', id, { is_default: true });
+    return update(client, 'trivia_presets', id, { is_default: true }, { userId: preset.user_id });
   });
 }
 

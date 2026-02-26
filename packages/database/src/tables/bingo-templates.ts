@@ -124,7 +124,8 @@ export async function createBingoTemplate(
 export async function updateBingoTemplate(
   client: TypedSupabaseClient,
   id: string,
-  data: BingoTemplateUpdate
+  data: BingoTemplateUpdate,
+  userId?: string
 ): Promise<BingoTemplate> {
   validateBingoTemplate(data);
 
@@ -135,7 +136,7 @@ export async function updateBingoTemplate(
       await unsetDefaultBingoTemplate(client, existing.user_id);
     }
 
-    return update(client, 'bingo_templates', id, data);
+    return update(client, 'bingo_templates', id, data, { userId });
   });
 }
 
@@ -144,9 +145,10 @@ export async function updateBingoTemplate(
  */
 export async function deleteBingoTemplate(
   client: TypedSupabaseClient,
-  id: string
+  id: string,
+  userId?: string
 ): Promise<void> {
-  return remove(client, 'bingo_templates', id);
+  return remove(client, 'bingo_templates', id, { userId });
 }
 
 /**
@@ -159,7 +161,7 @@ export async function setDefaultBingoTemplate(
   return withErrorHandling(async () => {
     const template = await getBingoTemplate(client, id);
     await unsetDefaultBingoTemplate(client, template.user_id);
-    return update(client, 'bingo_templates', id, { is_default: true });
+    return update(client, 'bingo_templates', id, { is_default: true }, { userId: template.user_id });
   });
 }
 

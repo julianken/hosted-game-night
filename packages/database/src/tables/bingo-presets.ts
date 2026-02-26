@@ -124,7 +124,8 @@ export async function createBingoPreset(
 export async function updateBingoPreset(
   client: TypedSupabaseClient,
   id: string,
-  data: BingoPresetUpdate
+  data: BingoPresetUpdate,
+  userId?: string
 ): Promise<BingoPreset> {
   validateBingoPreset(data);
 
@@ -135,7 +136,7 @@ export async function updateBingoPreset(
       await unsetDefaultBingoPreset(client, existing.user_id);
     }
 
-    return update(client, 'bingo_presets', id, data);
+    return update(client, 'bingo_presets', id, data, { userId });
   });
 }
 
@@ -144,9 +145,10 @@ export async function updateBingoPreset(
  */
 export async function deleteBingoPreset(
   client: TypedSupabaseClient,
-  id: string
+  id: string,
+  userId?: string
 ): Promise<void> {
-  return remove(client, 'bingo_presets', id);
+  return remove(client, 'bingo_presets', id, { userId });
 }
 
 /**
@@ -159,7 +161,7 @@ export async function setDefaultBingoPreset(
   return withErrorHandling(async () => {
     const preset = await getBingoPreset(client, id);
     await unsetDefaultBingoPreset(client, preset.user_id);
-    return update(client, 'bingo_presets', id, { is_default: true });
+    return update(client, 'bingo_presets', id, { is_default: true }, { userId: preset.user_id });
   });
 }
 

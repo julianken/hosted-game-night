@@ -144,7 +144,8 @@ export async function createTriviaQuestionSet(
 export async function updateTriviaQuestionSet(
   client: TypedSupabaseClient,
   id: string,
-  data: TriviaQuestionSetUpdate
+  data: TriviaQuestionSetUpdate,
+  userId?: string
 ): Promise<TriviaQuestionSet> {
   validateTriviaQuestionSet(data);
 
@@ -154,7 +155,7 @@ export async function updateTriviaQuestionSet(
       await unsetDefaultTriviaQuestionSet(client, existing.user_id);
     }
 
-    return update(client, 'trivia_question_sets', id, data);
+    return update(client, 'trivia_question_sets', id, data, { userId });
   });
 }
 
@@ -163,9 +164,10 @@ export async function updateTriviaQuestionSet(
  */
 export async function deleteTriviaQuestionSet(
   client: TypedSupabaseClient,
-  id: string
+  id: string,
+  userId?: string
 ): Promise<void> {
-  return remove(client, 'trivia_question_sets', id);
+  return remove(client, 'trivia_question_sets', id, { userId });
 }
 
 /**
@@ -178,7 +180,7 @@ export async function setDefaultTriviaQuestionSet(
   return withErrorHandling(async () => {
     const questionSet = await getTriviaQuestionSet(client, id);
     await unsetDefaultTriviaQuestionSet(client, questionSet.user_id);
-    return update(client, 'trivia_question_sets', id, { is_default: true });
+    return update(client, 'trivia_question_sets', id, { is_default: true }, { userId: questionSet.user_id });
   });
 }
 
@@ -264,7 +266,7 @@ export async function addQuestionsToSet(
     const existing = await getTriviaQuestionSet(client, id);
     const allQuestions = [...existing.questions, ...newQuestions];
     validateQuestions(allQuestions);
-    return update(client, 'trivia_question_sets', id, { questions: allQuestions });
+    return update(client, 'trivia_question_sets', id, { questions: allQuestions }, { userId: existing.user_id });
   });
 }
 
@@ -282,7 +284,7 @@ export async function removeQuestionFromSet(
       throw new ValidationError('Invalid question index', 'questionIndex');
     }
     const updatedQuestions = existing.questions.filter((_, i) => i !== questionIndex);
-    return update(client, 'trivia_question_sets', id, { questions: updatedQuestions });
+    return update(client, 'trivia_question_sets', id, { questions: updatedQuestions }, { userId: existing.user_id });
   });
 }
 
@@ -308,7 +310,7 @@ export async function updateQuestionInSet(
     };
 
     validateQuestions(updatedQuestions);
-    return update(client, 'trivia_question_sets', id, { questions: updatedQuestions });
+    return update(client, 'trivia_question_sets', id, { questions: updatedQuestions }, { userId: existing.user_id });
   });
 }
 
@@ -334,7 +336,7 @@ export async function reorderQuestionsInSet(
       return existing.questions[index];
     });
 
-    return update(client, 'trivia_question_sets', id, { questions: reordered });
+    return update(client, 'trivia_question_sets', id, { questions: reordered }, { userId: existing.user_id });
   });
 }
 
