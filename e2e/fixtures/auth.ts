@@ -1,6 +1,6 @@
 import { test as base, expect as playwrightExpect, type Page } from '@playwright/test';
 import { getE2EPortConfig } from '../utils/port-config';
-import { dismissSetupOverlay } from '../utils/helpers';
+import { startGameViaWizard } from '../utils/helpers';
 
 // -----------------------------------------------------------------------------
 // Dynamic URL Constants for Worktree Isolation
@@ -691,9 +691,11 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
       await dismissRoomSetupModal(page, navigationTimeout);
     }
 
-    // 4. Dismiss setup overlay / SetupGate (unless test opts out)
+    // 4. Start game via setup wizard (unless test opts out)
+    // Navigates the wizard to add 1 team and click Start Game.
+    // After this, the overlay is gone and the dashboard is interactive.
     if (!skipSetupDismissal) {
-      await dismissSetupOverlay(page, navigationTimeout);
+      await startGameViaWizard(page);
     }
 
     // Provide authenticated Trivia page to test

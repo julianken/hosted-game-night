@@ -248,7 +248,10 @@ export async function waitForRoomSetupModal(page: Page, timeout = 10000): Promis
  */
 export async function waitForDualScreenSync(displayPage: Page, timeout = 10000): Promise<void> {
   await expect(async () => {
-    const syncIndicator = displayPage.locator('[class*="bg-success"], [class*="bg-green-500"]').first();
+    // Check for sync indicator on presenter (green dot) OR display page (data-connected attribute)
+    const syncIndicator = displayPage.locator(
+      '[class*="bg-success"], [class*="bg-green-500"], [data-connected="true"]'
+    ).first();
     await expect(syncIndicator).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout });
 }
@@ -267,20 +270,21 @@ export async function waitForCondition(condition: () => Promise<void>, timeout =
 }
 
 /**
- * Dismiss the setup overlay (SetupGate) on the Trivia /play page.
+ * Start a trivia game by navigating the SetupGate wizard overlay.
  *
- * The SetupGate is a full-viewport overlay (fixed inset-0 z-40) shown when
- * game.status === 'setup'. It contains a 4-step wizard. To dismiss it:
- *   1. Navigate to the Teams step (wizard-step-2)
- *   2. Add a team (required to enable Start Game)
- *   3. Navigate to the Review step (wizard-step-3)
- *   4. Click "Start Game"
- *   5. Wait for the gate to detach from the DOM
+ * Navigates to the Teams step, adds the requested number of teams,
+ * navigates to the Review step, and clicks Start Game. The overlay
+ * unmounts after the game starts (200ms fade-out), leaving the
+ * dashboard fully accessible and interactive.
+ *
+ * The overlay itself is tested in setup-overlay.spec.ts which uses
+ * skipSetupDismissal: true to keep it visible.
  *
  * @param page - Playwright page instance
- * @param timeout - Maximum time to wait for each step (default: 5000ms)
+ * @param teamCount - Number of teams to add (default: 1)
+ * @param timeout - Maximum time to wait for transitions (default: 15000ms)
  */
-export async function dismissSetupOverlay(page: Page, timeout = 5000): Promise<void> {
+export async function startGameViaWizard(page: Page, teamCount = 1, timeout = 15000): Promise<void> {
   const gate = page.locator('[data-testid="setup-gate"]');
 
   // Check if the setup gate is visible — if not, game may already be started
@@ -291,30 +295,30 @@ export async function dismissSetupOverlay(page: Page, timeout = 5000): Promise<v
     return;
   }
 
-  // Step 1: Click the Teams step indicator (wizard-step-2)
-  const teamsStep = page.locator('[data-testid="wizard-step-2"]');
-  await teamsStep.waitFor({ state: 'visible', timeout });
-  await teamsStep.click();
+  // Scope all interactions to the overlay to avoid strict-mode violations
+  // (the dashboard behind the overlay also has matching elements)
 
-  // Step 2: Click the "Add Team" button within the gate
-  const addTeamBtn = gate.getByRole('button', { name: /add team/i });
-  await addTeamBtn.waitFor({ state: 'visible', timeout });
-  await addTeamBtn.click();
+  // Navigate to Teams step (wizard step index 2)
+  await gate.locator('[data-testid="wizard-step-2"]').click();
 
-  // Wait for team to appear (confirms the add was successful)
-  await expect(gate.getByText(/table 1/i)).toBeVisible({ timeout });
+  // Add the requested number of teams
+  for (let i = 0; i < teamCount; i++) {
+    const addTeamBtn = gate.getByRole('button', { name: /add team/i });
+    await addTeamBtn.click();
+    // Wait for team to appear within the overlay
+    await expect(gate.getByText(new RegExp(`table ${i + 1}`, 'i'))).toBeVisible();
+  }
 
-  // Step 3: Click the Review step indicator (wizard-step-3)
-  const reviewStep = page.locator('[data-testid="wizard-step-3"]');
-  await reviewStep.click();
+  // Navigate to Review step (wizard step index 3)
+  await gate.locator('[data-testid="wizard-step-3"]').click();
 
-  // Step 4: Click "Start Game" button in the review step
-  const startGameBtn = gate.getByRole('button', { name: /start game/i });
-  await expect(startGameBtn).toBeEnabled({ timeout });
-  await startGameBtn.click();
+  // Click Start Game (wait for it to be enabled first)
+  const startBtn = gate.getByRole('button', { name: /start game/i });
+  await expect(startBtn).toBeEnabled({ timeout: 5000 });
+  await startBtn.click();
 
-  // Step 5: Wait for the gate to be detached from the DOM (fade out + removal)
-  await gate.waitFor({ state: 'detached', timeout: timeout + 2000 });
+  // Wait for overlay to fade out (200ms) and unmount
+  await gate.waitFor({ state: 'detached', timeout });
 }
 
 /**
