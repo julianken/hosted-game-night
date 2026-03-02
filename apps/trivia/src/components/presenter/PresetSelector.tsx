@@ -2,6 +2,7 @@
 
 import { useId, useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { useToast } from "@joolie-boolie/ui";
 import type { TriviaPreset } from '@joolie-boolie/database/types';
 
@@ -75,6 +76,12 @@ export function PresetSelector({
         roundsCount: preset.rounds_count,
         questionsPerRound: preset.questions_per_round,
       });
+
+      // Mirror to settings-store (fixes sync race — BEA-setup-flow)
+      const { updateSetting } = useSettingsStore.getState();
+      updateSetting('timerDuration', preset.timer_duration);
+      updateSetting('roundsCount', preset.rounds_count);
+      updateSetting('questionsPerRound', preset.questions_per_round);
 
       success(`Loaded preset "${preset.name}"`);
       onPresetLoad?.(preset);

@@ -2,6 +2,7 @@
 
 import { useId, useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { useToast } from "@joolie-boolie/ui";
 import type { TriviaTemplate, TriviaQuestion } from '@joolie-boolie/database/types';
 import type { Question, QuestionId } from '@/types';
@@ -18,7 +19,7 @@ export interface TemplateSelectorProps {
 /**
  * Convert database TriviaQuestion to app Question format
  */
-function convertTemplateQuestion(
+export function convertTemplateQuestion(
   dbQuestion: TriviaQuestion,
   roundIndex: number
 ): Question {
@@ -123,6 +124,12 @@ export function TemplateSelector({
         roundsCount: template.rounds_count,
         questionsPerRound: template.questions_per_round,
       });
+
+      // Mirror to settings-store (fixes sync race — BEA-setup-flow)
+      const { updateSetting } = useSettingsStore.getState();
+      updateSetting('timerDuration', template.timer_duration);
+      updateSetting('roundsCount', template.rounds_count);
+      updateSetting('questionsPerRound', template.questions_per_round);
 
       success(`Loaded template "${template.name}"`);
 

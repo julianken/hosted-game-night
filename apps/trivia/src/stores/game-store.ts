@@ -44,6 +44,7 @@ import {
   getOverallLeaders,
   getTeamsSortedByScore,
   orchestrateSceneTransition,
+  validateGameSetup,
 } from '@/lib/game/engine';
 
 const lifecycleLogger = createGameLifecycleLogger({ game: 'trivia' });
@@ -457,6 +458,9 @@ export function useGameSelectors() {
       audienceScene === 'question_anticipation' ||
       audienceScene === 'final_buildup'
     ),
+
+    // Validation
+    validation: validateGameSetup(state),
   };
 }
 
