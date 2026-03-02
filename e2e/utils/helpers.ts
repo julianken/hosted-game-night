@@ -267,6 +267,57 @@ export async function waitForCondition(condition: () => Promise<void>, timeout =
 }
 
 /**
+ * Dismiss the setup overlay (SetupGate) on the Trivia /play page.
+ *
+ * The SetupGate is a full-viewport overlay (fixed inset-0 z-40) shown when
+ * game.status === 'setup'. It contains a 4-step wizard. To dismiss it:
+ *   1. Navigate to the Teams step (wizard-step-2)
+ *   2. Add a team (required to enable Start Game)
+ *   3. Navigate to the Review step (wizard-step-3)
+ *   4. Click "Start Game"
+ *   5. Wait for the gate to detach from the DOM
+ *
+ * @param page - Playwright page instance
+ * @param timeout - Maximum time to wait for each step (default: 5000ms)
+ */
+export async function dismissSetupOverlay(page: Page, timeout = 5000): Promise<void> {
+  const gate = page.locator('[data-testid="setup-gate"]');
+
+  // Check if the setup gate is visible — if not, game may already be started
+  try {
+    await gate.waitFor({ state: 'visible', timeout: 3000 });
+  } catch {
+    // Gate not visible — already dismissed or game already started
+    return;
+  }
+
+  // Step 1: Click the Teams step indicator (wizard-step-2)
+  const teamsStep = page.locator('[data-testid="wizard-step-2"]');
+  await teamsStep.waitFor({ state: 'visible', timeout });
+  await teamsStep.click();
+
+  // Step 2: Click the "Add Team" button within the gate
+  const addTeamBtn = gate.getByRole('button', { name: /add team/i });
+  await addTeamBtn.waitFor({ state: 'visible', timeout });
+  await addTeamBtn.click();
+
+  // Wait for team to appear (confirms the add was successful)
+  await expect(gate.getByText(/table 1/i)).toBeVisible({ timeout });
+
+  // Step 3: Click the Review step indicator (wizard-step-3)
+  const reviewStep = page.locator('[data-testid="wizard-step-3"]');
+  await reviewStep.click();
+
+  // Step 4: Click "Start Game" button in the review step
+  const startGameBtn = gate.getByRole('button', { name: /start game/i });
+  await expect(startGameBtn).toBeEnabled({ timeout });
+  await startGameBtn.click();
+
+  // Step 5: Wait for the gate to be detached from the DOM (fade out + removal)
+  await gate.waitFor({ state: 'detached', timeout: timeout + 2000 });
+}
+
+/**
  * Wait for sync state change by checking for specific content on display.
  * Polls until the expected content appears.
  *
