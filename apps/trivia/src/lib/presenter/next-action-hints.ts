@@ -2,14 +2,14 @@
  * T4.5: next-action-hints mapping table
  *
  * Extracted from components/presenter/NextActionHint.tsx for standalone use.
- * Maps all 12 AudienceScene values to one-liner presenter action hints.
+ * Maps all 15 AudienceScene values to one-liner presenter action hints.
  */
 
 import type { AudienceScene } from '@/types/audience-scene';
 
 /**
  * Context-sensitive presenter instructions for each audience scene.
- * Maps all 12 AudienceScene values to one-liner action hints.
+ * Maps all 15 AudienceScene values to one-liner action hints.
  */
 export const NEXT_ACTION_HINTS: Record<AudienceScene, string> = {
   waiting: 'Add teams and questions, then press Start Game',
