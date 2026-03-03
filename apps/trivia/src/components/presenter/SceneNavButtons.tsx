@@ -6,10 +6,12 @@ import { SCENE_TRIGGERS } from '@/lib/game/scene';
 /**
  * SceneNavButtons
  *
- * Always-visible ← → buttons that mirror ArrowLeft / ArrowRight keyboard behavior.
- * Forward (→) dispatches ADVANCE trigger; back (←) dispatches BACK trigger.
- * The scene state machine in getNextScene() determines whether the trigger
- * produces a transition — the buttons are pure dispatchers.
+ * Always-visible ← → buttons. The → button is a "smart next step" that
+ * walks through the entire game flow: start game → skip intros → show
+ * question → close & advance to next question → ... → results → next
+ * round → final podium.
+ *
+ * The ← button dispatches the BACK trigger for recap navigation.
  *
  * Forward is disabled during the reveal animation lock on answer_reveal.
  */
@@ -20,7 +22,51 @@ export function SceneNavButtons() {
   const forwardDisabled = revealPhase !== null && audienceScene === 'answer_reveal';
 
   const handleForward = () => {
-    useGameStore.getState().advanceScene(SCENE_TRIGGERS.ADVANCE);
+    const store = useGameStore.getState();
+    const scene = store.audienceScene;
+
+    switch (scene) {
+      // Pre-game: start the game
+      case 'waiting':
+        store.startGame();
+        break;
+
+      // Timed scenes: skip to the next scene
+      case 'game_intro':
+      case 'round_intro':
+      case 'question_anticipation':
+      case 'final_buildup':
+        store.advanceScene(SCENE_TRIGGERS.SKIP);
+        break;
+
+      // Question showing: close it and advance past question_closed in one step
+      case 'question_display':
+        if (store.timer.isRunning) store.stopTimer();
+        store.advanceScene(SCENE_TRIGGERS.CLOSE);
+        // State is now question_closed — advance again to next question or round_summary
+        store.advanceScene(SCENE_TRIGGERS.CLOSE);
+        break;
+
+      // Question closed (if reached via S key): advance to next question or round_summary
+      case 'question_closed':
+        store.advanceScene(SCENE_TRIGGERS.CLOSE);
+        break;
+
+      // Results, recap, and answer review: advance through the flow
+      case 'answer_reveal':
+      case 'round_summary':
+      case 'recap_title':
+      case 'recap_qa':
+      case 'recap_scores':
+        store.advanceScene(SCENE_TRIGGERS.ADVANCE);
+        break;
+
+      // Terminal / overlay scenes: no-op
+      case 'final_podium':
+      case 'emergency_blank':
+      case 'paused':
+        break;
+    }
   };
 
   const handleBack = () => {

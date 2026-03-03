@@ -35,11 +35,78 @@ describe('SceneNavButtons', () => {
   });
 
   describe('forward button', () => {
-    it('calls advanceScene with "advance" trigger', () => {
+    it('calls startGame on waiting scene', () => {
+      useGameStore.setState({ audienceScene: 'waiting', revealPhase: null });
+      const startGameMock = vi.fn();
+      vi.spyOn(useGameStore, 'getState').mockReturnValue({
+        ...useGameStore.getState(),
+        audienceScene: 'waiting',
+        startGame: startGameMock,
+      });
+
+      render(<SceneNavButtons />);
+      fireEvent.click(screen.getByRole('button', { name: 'Forward' }));
+
+      expect(startGameMock).toHaveBeenCalled();
+    });
+
+    it('calls advanceScene with SKIP on timed intro scenes', () => {
+      useGameStore.setState({ audienceScene: 'game_intro', revealPhase: null });
+      const advanceSceneMock = vi.fn().mockReturnValue(true);
+      vi.spyOn(useGameStore, 'getState').mockReturnValue({
+        ...useGameStore.getState(),
+        audienceScene: 'game_intro',
+        advanceScene: advanceSceneMock,
+      });
+
+      render(<SceneNavButtons />);
+      fireEvent.click(screen.getByRole('button', { name: 'Forward' }));
+
+      expect(advanceSceneMock).toHaveBeenCalledWith('skip');
+    });
+
+    it('stops timer and chains two CLOSE advances on question_display', () => {
+      useGameStore.setState({ audienceScene: 'question_display', revealPhase: null });
+      const advanceSceneMock = vi.fn().mockReturnValue(true);
+      const stopTimerMock = vi.fn();
+      vi.spyOn(useGameStore, 'getState').mockReturnValue({
+        ...useGameStore.getState(),
+        audienceScene: 'question_display',
+        advanceScene: advanceSceneMock,
+        stopTimer: stopTimerMock,
+        timer: { isRunning: true, remaining: 10, duration: 30 },
+      });
+
+      render(<SceneNavButtons />);
+      fireEvent.click(screen.getByRole('button', { name: 'Forward' }));
+
+      expect(stopTimerMock).toHaveBeenCalled();
+      expect(advanceSceneMock).toHaveBeenCalledTimes(2);
+      expect(advanceSceneMock).toHaveBeenNthCalledWith(1, 'close');
+      expect(advanceSceneMock).toHaveBeenNthCalledWith(2, 'close');
+    });
+
+    it('calls advanceScene with CLOSE on question_closed', () => {
+      useGameStore.setState({ audienceScene: 'question_closed', revealPhase: null });
+      const advanceSceneMock = vi.fn().mockReturnValue(true);
+      vi.spyOn(useGameStore, 'getState').mockReturnValue({
+        ...useGameStore.getState(),
+        audienceScene: 'question_closed',
+        advanceScene: advanceSceneMock,
+      });
+
+      render(<SceneNavButtons />);
+      fireEvent.click(screen.getByRole('button', { name: 'Forward' }));
+
+      expect(advanceSceneMock).toHaveBeenCalledWith('close');
+    });
+
+    it('calls advanceScene with ADVANCE on results scenes', () => {
       useGameStore.setState({ audienceScene: 'round_summary', revealPhase: null });
       const advanceSceneMock = vi.fn().mockReturnValue(true);
       vi.spyOn(useGameStore, 'getState').mockReturnValue({
         ...useGameStore.getState(),
+        audienceScene: 'round_summary',
         advanceScene: advanceSceneMock,
       });
 

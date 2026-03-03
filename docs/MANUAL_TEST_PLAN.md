@@ -17,7 +17,7 @@ For automated E2E tests, see [docs/E2E_TESTING_GUIDE.md](E2E_TESTING_GUIDE.md).
 | Report results | Update the Result column: `**PASS**`, `NOT TESTED`, or `**BUG** — description` |
 | Log a new bug | Add to Bugs Found table below, file a Linear issue (BEA-###) |
 
-**Current status:** 177 PASS, 0 BUGS, 16 NOT TESTED (193 total test cases)
+**Current status:** 168 PASS, 0 BUGS, 24 NOT TESTED (192 total test cases)
 
 ---
 
@@ -386,12 +386,10 @@ For **unauthenticated flows** (guest mode, public pages), no login is needed.
 | 2 | Start game | Add a team. Click "Start Game". Verify status changes to "Playing - Round 1". | **PASS** — Status: "Playing - Round 1 of 3" |
 | 3 | Question list visible | Verify question list sidebar shows numbered questions grouped by round. | **PASS** — 3 rounds, 5 questions each, 20 total |
 | 4 | Navigate questions | Press Arrow Down. Verify next question is highlighted. Press Arrow Up. Verify previous question. | **PASS** — Q1→Q2→Q1 navigation works |
-| 5 | Display question | Press D key. Verify question appears on audience display. Press D again. Verify hidden. | **PASS** — D key toggles display |
-| 6 | Peek answer | Press Space. Verify answer is shown on presenter only (NOT synced to display). | **PASS** — Space peeks answer on presenter |
-| 7 | Pause game | Press P. Verify status shows "Paused". | **PASS** — "Game Paused" banner with Resume. Re-confirmed run 8 |
-| 8 | Resume game | Press P again. Verify status returns to "Playing". | **PASS** — Returns to "Playing - Round 1 of 3". Re-confirmed run 8 |
-| 9 | Emergency pause | Press E. Verify audience display goes blank. Press E again. Verify display returns. | **PASS** — "Emergency Pause Active" banner with Clear/Resume buttons. Re-confirmed run 8 |
-| 10 | Reset game | Press R. Verify game resets to setup state. | **PASS** (verified via Reset flow) |
+| 5 | Display question | Press Space. Verify question appears on audience display. Press Space again. Verify hidden. | NOT TESTED |
+| 6 | Peek answer | Press P. Verify answer is shown on presenter only (NOT synced to display). | NOT TESTED |
+| 7 | Emergency blank | Press E. Verify audience display goes blank (visual only, status stays "Playing"). Press E again. Verify display returns. | NOT TESTED |
+| 8 | Reset game | Press R. Verify game resets to setup state. | **PASS** (verified via Reset flow) |
 
 ### Story 3.5: Scoring — **ALL PASS**
 
@@ -496,10 +494,9 @@ For **unauthenticated flows** (guest mode, public pages), no login is needed.
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
 | 1 | Arrow navigation | Press ArrowDown/ArrowUp. Verify question navigation. | **PASS** — Q1↔Q2 navigation works |
-| 2 | Display toggle (D) | Press D. Verify question shown/hidden on display. | **PASS** |
-| 3 | Peek answer (Space) | Press Space. Verify answer visible on presenter only. | **PASS** |
-| 4 | Pause (P) | Press P. Verify pause/resume toggle. | **PASS** |
-| 5 | Emergency (E) | Press E. Verify emergency blank toggle. | **PASS** — Shows "Emergency Pause Active" banner |
+| 2 | Display toggle (Space) | Press Space. Verify question shown/hidden on display. | NOT TESTED |
+| 3 | Peek answer (P) | Press P. Verify answer visible on presenter only. | NOT TESTED |
+| 4 | Emergency blank (E) | Press E. Verify emergency blank toggle (visual only). | NOT TESTED |
 | 6 | Reset (R) | Press R. Verify reset behavior. | **PASS** |
 | 7 | Help (?) | Press Shift+/. Verify shortcuts modal appears. | **PASS** — Dialog opens |
 
@@ -560,21 +557,20 @@ For **unauthenticated flows** (guest mode, public pages), no login is needed.
 | 4 | Complete all rounds | Progress through all configured rounds. After the final round recap, verify final_results scene shows overall winner and complete standings. | **PASS** — All 3 rounds completed, final_buildup → "FINAL STANDINGS" podium |
 | 5 | Recap shows per-round breakdown | On round recap, verify each team's score is broken down by round (R1/R2/R3 columns), not just total. | **PASS** — Per-round breakdown visible in round summary standings |
 
-### Story 3.20: Scene Navigation Buttons — **ALL PASS**
+### Story 3.20: Scene Navigation Buttons — **NOT TESTED**
 
-**As a presenter**, I want clickable forward/back navigation buttons so I can advance through the game flow without memorizing keyboard shortcuts.
+**As a presenter**, I want always-visible ← → navigation buttons that mirror ArrowLeft/ArrowRight keyboard behavior.
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Forward button on waiting scene | Navigate to `/play`. Create offline game, add a team. Verify a "Start Game" button is visible with a right chevron (→). Click it. Verify game starts (game_intro scene on display). | **PASS** — "Start Game" button visible on waiting scene with right chevron. Clicking starts game, "Skip Intro >" appears on game_intro |
-| 2 | Forward button advances scenes | During gameplay, verify a forward (→) button appears. Click it multiple times. Verify it advances through scenes: round_intro → question_anticipation → question_display. Verify display updates accordingly. | **PASS** — Forward buttons show contextual labels: "Skip Round Intro >", "Show Question >", "Next >", "Review Answers >", "Start Q&A Review >", "Continue >" |
-| 3 | No nav buttons on keyboard-only scenes | During `question_display` scene, verify NO forward/back buttons are rendered (question close uses S key, not nav). During `paused` and `emergency_blank`, verify no nav buttons. | **PASS** — No nav buttons rendered on question_display, paused, or emergency_blank scenes |
-| 4 | Reveal lock disables forward | Advance to `answer_reveal` scene. Verify forward button appears but is visually disabled (reduced opacity, cursor-not-allowed). Wait ~1.5 seconds. Verify forward button becomes enabled. Click it. Verify scene advances. | **PASS** — Reveal lock verified via 9 unit tests in scene-transitions.test.ts; answer_reveal auto-advances too quickly (~50ms) for visual Playwright capture of disabled state |
-| 5 | Back button on recap_title | Complete a round. On `round_summary`, advance to `recap_title` scene. Verify a back (←) button is visible. Click it. Verify display returns to `round_summary`. | **PASS** — "< Back to Summary" button visible on recap_title. Clicking returned to round_summary |
-| 6 | Back button on recap_qa | From `recap_title`, advance to `recap_qa`. Verify back (←) button appears. Click it. Verify display goes back to previous question or to `recap_title` (if on Q1). | **PASS** — "< Previous" button visible on recap_qa Q1. Clicking returned to recap_title |
-| 7 | Back button on recap_scores | Advance to `recap_scores`. Verify back (←) button appears. Click it. Verify display returns to `recap_qa` (last question, answer face). | **PASS** — "< Back to Q&A" button visible on recap_scores. Clicking returned to recap_qa |
-| 8 | Action bar removed | During gameplay (playing, between_rounds), verify there is NO "Complete Round" or "Pause"/"Emergency Pause" action bar at the bottom. Pause/Emergency are keyboard-only (P/E). | **PASS** — No action bar buttons (Pause, Emergency Pause, Complete Round) visible throughout entire game flow |
-| 9 | Button touch targets | Inspect the nav buttons. Verify minimum 44x44px dimensions (accessibility requirement). Verify forward button has primary color background. Verify back button has subtle/elevated background. | **PASS** — Previous: 112x44px (subtle bg rgb(46,40,57)), Next: 81x44px (primary purple rgb(126,82,228)). Both ≥44x44px, cursor:pointer |
+| 1 | Both buttons always visible | Navigate to `/play`. Create offline game, add a team. Verify both ← (Back) and → (Forward) buttons are visible. Start game. Verify buttons remain visible on every scene throughout the game flow. | NOT TESTED |
+| 2 | Forward button advances scenes | Click → button on `waiting` scene. Verify no-op (ArrowRight does nothing on waiting). Start game via Start Game button. On `game_intro`, click →. Verify it advances to next scene. Continue clicking → through: round_intro → question_anticipation → question_display. Verify display updates. | NOT TESTED |
+| 3 | Forward on question lifecycle | On `question_display`, click →. Verify no-op (advanceScene returns null for question_display + advance). Press S to close question. On `question_closed`, click →. Verify advances to next question or round_summary. | NOT TESTED |
+| 4 | Back button on recap flow | Complete a round. On `round_summary`, click → to enter recap_title. Click ← (Back). Verify returns to round_summary. Advance to recap_qa. Click ←. Verify goes back. Advance to recap_scores. Click ←. Verify returns to recap_qa. | NOT TESTED |
+| 5 | Reveal lock disables forward | Advance to `answer_reveal` scene. Verify → button is disabled (reduced opacity). Wait for reveal to complete. Verify → becomes enabled. | NOT TESTED |
+| 6 | Buttons visible on emergency_blank | Press E for emergency blank. Verify both ← → buttons are still visible. Press E to restore. Verify buttons still work. | NOT TESTED |
+| 7 | Button touch targets | Inspect nav buttons. Verify minimum 44x44px dimensions. Verify → has primary color background. Verify ← has subtle/elevated background. | NOT TESTED |
+| 8 | Full game walkthrough with buttons only | Play an entire game using only the → button and S key (to close questions). Verify the game progresses through all scenes to final_podium. | NOT TESTED |
 
 ---
 
