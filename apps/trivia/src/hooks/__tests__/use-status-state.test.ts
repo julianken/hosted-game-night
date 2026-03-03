@@ -4,7 +4,6 @@ import {
   useSetupState,
   usePlayingState,
   useBetweenRoundsState,
-  usePausedState,
   useEndedState,
   useActiveGameState,
   useGameStatus,
@@ -95,27 +94,6 @@ describe('use-status-state hooks', () => {
   });
 
   // ===========================================================================
-  // usePausedState
-  // ===========================================================================
-  describe('usePausedState', () => {
-    it('returns null when not paused', () => {
-      const { result } = renderHook(() => usePausedState());
-      expect(result.current).toBeNull();
-    });
-
-    it('returns state when paused', () => {
-      useGameStore.getState().addTeam('Team A');
-      useGameStore.getState().startGame();
-      useGameStore.getState().pauseGame();
-
-      const { result } = renderHook(() => usePausedState());
-      expect(result.current).not.toBeNull();
-      expect(result.current?.status).toBe('paused');
-      expect(result.current?.statusBeforePause).toBe('playing');
-    });
-  });
-
-  // ===========================================================================
   // useEndedState
   // ===========================================================================
   describe('useEndedState', () => {
@@ -161,15 +139,6 @@ describe('use-status-state hooks', () => {
       expect(result.current).not.toBeNull();
     });
 
-    it('returns state during paused', () => {
-      useGameStore.getState().addTeam('Team A');
-      useGameStore.getState().startGame();
-      useGameStore.getState().pauseGame();
-
-      const { result } = renderHook(() => useActiveGameState());
-      expect(result.current).not.toBeNull();
-    });
-
     it('returns null after game ends', () => {
       useGameStore.getState().addTeam('Team A');
       useGameStore.getState().startGame();
@@ -191,11 +160,9 @@ describe('use-status-state hooks', () => {
       expect(result.current.isSetup).toBe(true);
       expect(result.current.isPlaying).toBe(false);
       expect(result.current.isBetweenRounds).toBe(false);
-      expect(result.current.isPaused).toBe(false);
       expect(result.current.isEnded).toBe(false);
       expect(result.current.isActive).toBe(false);
-      expect(result.current.isEmergencyPause).toBe(false);
-      expect(result.current.resumeTarget).toBeNull();
+      expect(result.current.isEmergencyBlank).toBe(false);
     });
 
     it('returns correct values during playing', () => {
@@ -208,34 +175,6 @@ describe('use-status-state hooks', () => {
       expect(result.current.isSetup).toBe(false);
       expect(result.current.isPlaying).toBe(true);
       expect(result.current.isActive).toBe(true);
-      expect(result.current.resumeTarget).toBeNull();
-    });
-
-    it('returns correct values during pause from playing', () => {
-      useGameStore.getState().addTeam('Team A');
-      useGameStore.getState().startGame();
-      useGameStore.getState().pauseGame();
-
-      const { result } = renderHook(() => useGameStatus());
-
-      expect(result.current.status).toBe('paused');
-      expect(result.current.isPaused).toBe(true);
-      expect(result.current.isActive).toBe(true);
-      expect(result.current.isEmergencyPause).toBe(false);
-      expect(result.current.resumeTarget).toBe('playing');
-    });
-
-    it('returns correct values during emergency pause', () => {
-      useGameStore.getState().addTeam('Team A');
-      useGameStore.getState().startGame();
-      useGameStore.getState().emergencyPause();
-
-      const { result } = renderHook(() => useGameStatus());
-
-      expect(result.current.status).toBe('paused');
-      expect(result.current.isPaused).toBe(true);
-      expect(result.current.isEmergencyPause).toBe(true);
-      expect(result.current.resumeTarget).toBe('playing');
     });
 
     it('returns correct values during between_rounds', () => {
@@ -260,7 +199,6 @@ describe('use-status-state hooks', () => {
       expect(result.current.status).toBe('ended');
       expect(result.current.isEnded).toBe(true);
       expect(result.current.isActive).toBe(false);
-      expect(result.current.resumeTarget).toBeNull();
     });
 
     it('updates when status transitions', () => {

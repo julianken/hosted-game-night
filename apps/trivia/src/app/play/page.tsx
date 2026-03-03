@@ -295,11 +295,6 @@ export default function PlayPage() {
           text: `Playing - ${game.roundProgress}`,
           className: 'bg-success/20 text-success',
         };
-      case 'paused':
-        return {
-          text: game.emergencyBlank ? 'Emergency Pause' : 'Paused',
-          className: 'bg-warning/20 text-warning',
-        };
       case 'between_rounds':
         return {
           text: `Round ${game.currentRound + 1} Complete`,

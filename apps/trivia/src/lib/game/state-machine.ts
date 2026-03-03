@@ -8,10 +8,7 @@ export type TriviaGameAction =
   | 'COMPLETE_ROUND'
   | 'NEXT_ROUND'
   | 'END_GAME'
-  | 'RESET_GAME'
-  | 'PAUSE_GAME'
-  | 'RESUME_GAME'
-  | 'EMERGENCY_PAUSE';
+  | 'RESET_GAME';
 
 /**
  * Valid actions from each game status.
@@ -19,9 +16,8 @@ export type TriviaGameAction =
  */
 export const VALID_TRANSITIONS = {
   setup: ['START_GAME'],
-  playing: ['COMPLETE_ROUND', 'END_GAME', 'RESET_GAME', 'PAUSE_GAME', 'EMERGENCY_PAUSE'],
-  between_rounds: ['NEXT_ROUND', 'END_GAME', 'RESET_GAME', 'PAUSE_GAME', 'EMERGENCY_PAUSE'],
-  paused: ['RESUME_GAME', 'END_GAME', 'RESET_GAME'],
+  playing: ['COMPLETE_ROUND', 'END_GAME', 'RESET_GAME'],
+  between_rounds: ['NEXT_ROUND', 'END_GAME', 'RESET_GAME'],
   ended: ['RESET_GAME'],
 } as const satisfies Record<GameStatus, readonly TriviaGameAction[]>;
 
@@ -29,7 +25,6 @@ export const VALID_TRANSITIONS = {
  * Resulting status after each action.
  * Note: NEXT_ROUND can result in either 'playing' or 'ended' depending on
  * whether there are more rounds — the engine handles that branching logic.
- * RESUME_GAME restores statusBeforePause — also handled in the engine.
  */
 export const ACTION_RESULTS = {
   START_GAME: 'playing',
@@ -37,9 +32,6 @@ export const ACTION_RESULTS = {
   NEXT_ROUND: 'playing', // may become 'ended' if last round — see nextRound()
   END_GAME: 'ended',
   RESET_GAME: 'setup',
-  PAUSE_GAME: 'paused',
-  RESUME_GAME: 'playing', // restores statusBeforePause — see resumeGame()
-  EMERGENCY_PAUSE: 'paused',
 } as const satisfies Record<TriviaGameAction, GameStatus>;
 
 /**
@@ -96,22 +88,8 @@ export function canStart(status: GameStatus): boolean {
 }
 
 /**
- * Check if the game can be paused from the current status.
- */
-export function canPause(status: GameStatus): boolean {
-  return status === 'playing' || status === 'between_rounds';
-}
-
-/**
- * Check if the game can be resumed from the current status.
- */
-export function canResume(status: GameStatus): boolean {
-  return status === 'paused';
-}
-
-/**
  * Check if the game is actively in progress (not setup or ended).
  */
 export function isGameActive(status: GameStatus): boolean {
-  return status === 'playing' || status === 'between_rounds' || status === 'paused';
+  return status === 'playing' || status === 'between_rounds';
 }

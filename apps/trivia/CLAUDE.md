@@ -91,7 +91,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Presenter view (`/play`): Question list, team manager, scoring, controls
 - Audience view (`/display`): Large question display, scoreboard, timer, waiting screen
 - BroadcastChannel API for same-device sync via `@joolie-boolie/sync`
-- Emergency pause (blanks audience display)
+- Emergency blank (blanks audience display, visual only)
 
 ### PWA Support
 - Service worker with Serwist
@@ -175,11 +175,10 @@ pnpm test:coverage     # Run tests with coverage
 | Arrow Down | Navigate to next question | Always |
 | Arrow Left | Backward navigation in recap flow: `recap_qa` → previous question (or back to `recap_title` at Q1); `recap_title` → `round_summary`; `recap_scores` → `recap_qa` (last question, answer face) | `between_rounds` + `recap_qa`, `recap_title`, or `recap_scores` |
 | Arrow Right | Advance scene | Always |
-| Space | Peek answer (local only) | Always |
-| D | Toggle display question on audience | Always |
+| Space | Toggle display question on audience | Always |
+| P | Peek answer (local only) | Always |
 | N | Next round | `between_rounds`: `round_summary`, `answer_reveal`, `recap_title`, `recap_qa`, `recap_scores` |
-| P | Pause/Resume game | When game is pausable or resumable |
-| E | Emergency pause (blank display) | When game is pausable or resumable |
+| E | Toggle emergency blank (visual only) | `playing` or `between_rounds` |
 | R | Reset game | Always |
 | M | Mute/unmute TTS | Always |
 | T | Start timer / Toggle scoreboard | `question_display`: starts timer; `question_anticipation`: starts timer + advances to `question_display`; otherwise: toggle scoreboard |
@@ -202,7 +201,7 @@ pnpm test:coverage     # Run tests with coverage
 
 ### Scene Engine (AudienceScene)
 
-The AudienceScene system is a visual routing layer orthogonal to the 5-state GameStatus engine (`setup`, `playing`, `between_rounds`, `paused`, `ended`). It controls what the audience display renders without changing game state.
+The AudienceScene system is a visual routing layer orthogonal to the 4-state GameStatus engine (`setup`, `playing`, `between_rounds`, `ended`). It controls what the audience display renders without changing game state.
 
 **15 scene values:** `waiting`, `game_intro`, `round_intro`, `question_anticipation`, `question_display`, `question_closed`, `answer_reveal`, `round_summary`, `recap_title`, `recap_qa`, `recap_scores`, `final_buildup`, `final_podium`, `paused`, `emergency_blank`
 
@@ -212,7 +211,7 @@ The AudienceScene system is a visual routing layer orthogonal to the 5-state Gam
 - `hooks/use-audience-scene.ts` — React hook for scene state and auto-advance timers
 - `components/audience/scenes/SceneRouter.tsx` — Routes `audienceScene` value to the correct display component
 
-**Scene transitions** flow through `store.advanceScene(trigger)` which calls `getNextScene()` as the single source of truth. Keyboard handlers dispatch triggers (e.g., `SCENE_TRIGGERS.ADVANCE`, `SCENE_TRIGGERS.SKIP`), never set scenes directly — except P (pause), E (emergency), and R (reset) which bypass the state machine.
+**Scene transitions** flow through `store.advanceScene(trigger)` which calls `getNextScene()` as the single source of truth. Keyboard handlers dispatch triggers (e.g., `SCENE_TRIGGERS.ADVANCE`, `SCENE_TRIGGERS.SKIP`), never set scenes directly — except E (emergency blank) and R (reset) which bypass the state machine.
 
 ## Design Requirements
 
@@ -242,7 +241,7 @@ pnpm test:coverage    # With coverage
 - **Scoring:** Hybrid - presenter records team answers, auto-scored
 - **Correct Answers:** Can be amended on-the-fly with automatic re-scoring
 - **Teams:** Up to 20 teams, default "Table N" naming (renameable)
-- **Emergency Pause:** Blanks audience display for emergencies
+- **Emergency Blank:** Blanks audience display for emergencies (visual only, doesn't change game status)
 
 ## Future Work (TODO)
 

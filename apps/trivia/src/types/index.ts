@@ -28,27 +28,20 @@ export {
   type SetupState,
   type PlayingState,
   type BetweenRoundsState,
-  type PausedState,
   type EndedState,
   type GameStateVariant,
   // Type guard functions
   isSetupState,
   isPlayingState,
   isBetweenRoundsState,
-  isPausedState,
   isEndedState,
   isGameActive,
-  canPauseState,
   isConfigurable,
-  // Accessors
-  getEffectiveDisplayStatus,
-  getResumeTarget,
   // Assertion helpers
   assertNever,
   assertSetupState,
   assertPlayingState,
   assertBetweenRoundsState,
-  assertPausedState,
   assertEndedState,
 } from './guards';
 
@@ -110,7 +103,7 @@ export type QuestionCategory =
  * Trivia needs `'setup'` for its configuration phase and `'between_rounds'`
  * for multi-round game flow.
  */
-export type GameStatus = 'setup' | 'playing' | 'between_rounds' | 'paused' | 'ended';
+export type GameStatus = 'setup' | 'playing' | 'between_rounds' | 'ended';
 
 // =============================================================================
 // TIMER
@@ -185,7 +178,6 @@ export interface TriviaGameState {
   // -- Session --
   sessionId: string;
   status: GameStatus;
-  statusBeforePause: GameStatus | null; // For pause/resume functionality
 
   // -- Questions --
   questions: Question[]; // All questions for the game

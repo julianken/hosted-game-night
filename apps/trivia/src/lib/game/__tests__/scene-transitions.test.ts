@@ -721,18 +721,6 @@ describe('orchestrateSceneTransition() — no-op paths', () => {
     expect(result).toBeNull();
   });
 
-  it('should return null for paused scene with non-resume trigger', () => {
-    const state = createPlayingState();
-    const modState = {
-      ...state,
-      status: 'paused' as const,
-      audienceScene: 'paused' as AudienceScene,
-    };
-
-    const result = orchestrateSceneTransition(modState, 'advance');
-
-    expect(result).toBeNull();
-  });
 });
 
 // =============================================================================

@@ -177,15 +177,14 @@ export const VALID_SCENES_BY_STATUS: Record<string, ReadonlySet<AudienceScene>> 
   playing: new Set<AudienceScene>([
     'game_intro', 'round_intro', 'question_anticipation',
     'question_display', 'question_closed',
-    'waiting', 'paused', 'emergency_blank',
+    'waiting', 'emergency_blank',
   ]),
   between_rounds: new Set<AudienceScene>([
     'round_summary', 'answer_reveal',
     'recap_title', 'recap_qa', 'recap_scores',
-    'paused', 'emergency_blank',
+    'emergency_blank',
   ]),
-  paused: new Set<AudienceScene>(['paused', 'emergency_blank']),
   ended: new Set<AudienceScene>([
-    'final_buildup', 'final_podium', 'paused', 'emergency_blank',
+    'final_buildup', 'final_podium', 'emergency_blank',
   ]),
 };

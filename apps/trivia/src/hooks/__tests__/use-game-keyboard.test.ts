@@ -101,34 +101,14 @@ describe('useGameKeyboard', () => {
     });
   });
 
-  describe('Space key - peek answer', () => {
-    it('should toggle peek answer', () => {
-      const { result } = renderHook(() => useGameKeyboard());
-
-      expect(result.current.peekAnswer).toBe(false);
-
-      act(() => {
-        dispatchKeyDown('Space');
-      });
-
-      expect(result.current.peekAnswer).toBe(true);
-
-      act(() => {
-        dispatchKeyDown('Space');
-      });
-
-      expect(result.current.peekAnswer).toBe(false);
-    });
-  });
-
-  describe('D key - toggle display', () => {
+  describe('Space key - toggle display', () => {
     it('should show question on display', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
       expect(result.current.displayQuestionIndex).toBeNull();
 
       act(() => {
-        dispatchKeyDown('KeyD');
+        dispatchKeyDown('Space');
       });
 
       expect(result.current.displayQuestionIndex).toBe(0);
@@ -138,13 +118,13 @@ describe('useGameKeyboard', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
       act(() => {
-        dispatchKeyDown('KeyD');
+        dispatchKeyDown('Space');
       });
 
       expect(result.current.displayQuestionIndex).toBe(0);
 
       act(() => {
-        dispatchKeyDown('KeyD');
+        dispatchKeyDown('Space');
       });
 
       expect(result.current.displayQuestionIndex).toBeNull();
@@ -160,7 +140,7 @@ describe('useGameKeyboard', () => {
         dispatchKeyDown('ArrowDown');
       });
       act(() => {
-        dispatchKeyDown('KeyD');
+        dispatchKeyDown('Space');
       });
 
       expect(result.current.selectedQuestionIndex).toBe(2);
@@ -168,48 +148,23 @@ describe('useGameKeyboard', () => {
     });
   });
 
-  describe('P key - pause/resume', () => {
-    it('should pause when playing', () => {
+  describe('P key - peek answer', () => {
+    it('should toggle peek answer', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
-      // Start a game
-      act(() => {
-        result.current.addTeam('Team A');
-      });
-      act(() => {
-        result.current.startGame();
-      });
-
-      expect(result.current.status).toBe('playing');
+      expect(result.current.peekAnswer).toBe(false);
 
       act(() => {
         dispatchKeyDown('KeyP');
       });
 
-      expect(result.current.status).toBe('paused');
-    });
-
-    it('should resume when paused', () => {
-      const { result } = renderHook(() => useGameKeyboard());
-
-      // Start a game and pause it
-      act(() => {
-        result.current.addTeam('Team A');
-      });
-      act(() => {
-        result.current.startGame();
-      });
-      act(() => {
-        dispatchKeyDown('KeyP');
-      });
-
-      expect(result.current.status).toBe('paused');
+      expect(result.current.peekAnswer).toBe(true);
 
       act(() => {
         dispatchKeyDown('KeyP');
       });
 
-      expect(result.current.status).toBe('playing');
+      expect(result.current.peekAnswer).toBe(false);
     });
   });
 
@@ -230,8 +185,8 @@ describe('useGameKeyboard', () => {
         dispatchKeyDown('KeyE');
       });
 
-      expect(result.current.status).toBe('paused');
-      expect(result.current.emergencyBlank).toBe(true);
+      // Emergency blank is now visual-only — status stays 'playing'
+      expect(result.current.status).toBe('playing');
     });
   });
 
@@ -269,7 +224,7 @@ describe('useGameKeyboard', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
       act(() => {
-        dispatchKeyDown('Space');
+        dispatchKeyDown('KeyP');
       });
 
       expect(result.current.peekAnswer).toBe(true);

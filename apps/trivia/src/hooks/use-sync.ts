@@ -46,7 +46,6 @@ function storeToGameState(state: import('@/stores/game-store').GameStore): Trivi
     // -- Session --
     sessionId: state.sessionId,
     status: state.status,
-    statusBeforePause: state.statusBeforePause,
 
     // -- Questions --
     questions: state.questions,

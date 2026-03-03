@@ -16,25 +16,25 @@ import { SCENE_TRIGGERS } from '@/lib/game/scene';
  * consults getNextScene() as the single source of truth. The keyboard
  * handler is a pure dispatcher: key -> trigger -> advanceScene.
  *
- * Exceptions that bypass advanceScene (need sceneBeforePause management):
- * - P (pause/resume)
- * - E (emergency blank/restore)
+ * Exceptions that bypass advanceScene:
+ * - E (emergency blank/restore — visual only, no game status change)
  * - R (reset game -- goes to 'waiting' unconditionally)
  *
  * Navigation:
  * - ArrowUp/ArrowDown = Navigate questions
  *
+ * Display:
+ * - Space = Toggle display (show/hide question on audience)
+ *
  * Answer reveal:
- * - Space = Peek answer (toggle, local only)
+ * - P = Peek answer (toggle, local only)
  *
  * Game controls:
- * - P = Pause/Resume game (scene-aware: sets/restores audienceScene)
  * - E = Emergency pause (blanks display, scene-aware)
  * - R = Reset game
  * - N = Next round (when in between_rounds AND scene is round_summary)
  *
- * Display:
- * - D = Toggle display (show/hide question on audience)
+ * Display (additional):
  * - T = Toggle scoreboard on audience display
  * - F = Toggle fullscreen
  *
@@ -185,14 +185,9 @@ export function useGameKeyboard() {
           store.advanceScene(SCENE_TRIGGERS.ADVANCE);
           break;
 
-        // Peek answer (local only)
+        // Toggle display question on audience
         case 'Space':
           event.preventDefault();
-          setPeekAnswer((prev) => !prev);
-          break;
-
-        // Toggle display question on audience
-        case 'KeyD':
           if (game.displayQuestionIndex === game.selectedQuestionIndex) {
             game.setDisplayQuestion(null);
           } else {
@@ -200,42 +195,14 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Pause/Resume game -- scene-aware (bypasses advanceScene)
+        // Peek answer (local only)
         case 'KeyP':
-          if (game.canPause) {
-            const sceneBeforePause = currentScene;
-            game.pauseGame();
-            useGameStore.setState({ sceneBeforePause });
-            store.setAudienceScene('paused');
-          } else if (game.canResume) {
-            game.resumeGame();
-            const sceneBeforePause = useGameStore.getState().sceneBeforePause;
-            if (sceneBeforePause) {
-              store.setAudienceScene(sceneBeforePause);
-              useGameStore.setState({ sceneBeforePause: null });
-            } else {
-              store.setAudienceScene('waiting');
-            }
-          }
+          setPeekAnswer((prev) => !prev);
           break;
 
-        // Emergency pause -- blanks audience display (bypasses advanceScene)
+        // Emergency blank -- blanks audience display (visual only, bypasses advanceScene)
         case 'KeyE':
-          if (currentScene === 'emergency_blank') {
-            game.resumeGame();
-            const sceneBeforePause = useGameStore.getState().sceneBeforePause;
-            if (sceneBeforePause) {
-              store.setAudienceScene(sceneBeforePause);
-              useGameStore.setState({ sceneBeforePause: null });
-            } else {
-              store.setAudienceScene('waiting');
-            }
-          } else if (game.canPause || game.canResume) {
-            const sceneBeforePause = currentScene;
-            game.emergencyPause();
-            useGameStore.setState({ sceneBeforePause });
-            store.setAudienceScene('emergency_blank');
-          }
+          store.toggleEmergencyBlank();
           break;
 
         // Reset game (bypasses advanceScene -- unconditional return to waiting)

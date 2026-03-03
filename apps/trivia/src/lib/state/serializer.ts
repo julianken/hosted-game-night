@@ -13,7 +13,7 @@ import {
 // ZOD SCHEMAS
 // =============================================================================
 
-const GameStatusSchema = z.enum(['setup', 'playing', 'between_rounds', 'paused', 'ended']);
+const GameStatusSchema = z.enum(['setup', 'playing', 'between_rounds', 'ended']);
 
 const QuestionSchema = z.object({
   id: z.string(),
@@ -69,7 +69,6 @@ const GameSettingsSchema = z.object({
 export interface SerializedTriviaState {
   sessionId: string;
   status: string;
-  statusBeforePause: string | null;
   questions: Question[];
   selectedQuestionIndex: number;
   displayQuestionIndex: number | null;
@@ -109,7 +108,6 @@ export function serializeTriviaState(state: TriviaGameState): SerializedTriviaSt
   return {
     sessionId: state.sessionId,
     status: state.status,
-    statusBeforePause: state.statusBeforePause,
     questions: state.questions,
     selectedQuestionIndex: state.selectedQuestionIndex,
     displayQuestionIndex: state.displayQuestionIndex,
@@ -153,19 +151,7 @@ export function deserializeTriviaState(data: unknown): Partial<TriviaGameState> 
   // Validate status (with targeted error message matching original)
   if (!GameStatusSchema.safeParse(record.status).success) {
     throw new SerializationError(
-      `Invalid status: expected 'setup', 'playing', 'between_rounds', 'paused', or 'ended', got ${record.status}`
-    );
-  }
-
-  // Validate statusBeforePause (with targeted error message)
-  const statusBeforePause = record.statusBeforePause;
-  if (
-    statusBeforePause !== null &&
-    statusBeforePause !== undefined &&
-    !GameStatusSchema.safeParse(statusBeforePause).success
-  ) {
-    throw new SerializationError(
-      'Invalid statusBeforePause: expected valid GameStatus or null'
+      `Invalid status: expected 'setup', 'playing', 'between_rounds', or 'ended', got ${record.status}`
     );
   }
 
@@ -239,7 +225,6 @@ export function deserializeTriviaState(data: unknown): Partial<TriviaGameState> 
   return {
     sessionId: record.sessionId as string,
     status: record.status as GameStatus,
-    statusBeforePause: (statusBeforePause ?? null) as GameStatus | null,
     questions: questionsResult.data as Question[],
     selectedQuestionIndex: record.selectedQuestionIndex as number,
     displayQuestionIndex: (displayQuestionIndex ?? null) as number | null,
