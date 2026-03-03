@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game-keyboard';
 import { useSync } from '@/hooks/use-sync';
 import { useAutoSync, usePresenterSession, generateSecurePin } from '@joolie-boolie/sync';
@@ -25,11 +25,9 @@ import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
 import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
-import { filterQuestionsByCategory } from '@/lib/categories';
-import type { QuestionCategory } from '@/types';
 import { Button } from '@joolie-boolie/ui';
 import { serializeTriviaState, deserializeTriviaState } from '@/lib/state/serializer';
-import { SetupWizard } from '@/components/presenter/SetupWizard';
+import { SetupGate } from '@/components/presenter/SetupGate';
 import { PresenterActionBar } from '@/components/presenter/PresenterActionBar';
 
 export default function PlayPage() {
@@ -205,13 +203,6 @@ export default function PlayPage() {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showSavePresetModal, setShowSavePresetModal] = useState(false);
   const [showSaveQuestionSetModal, setShowSaveQuestionSetModal] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<QuestionCategory[]>([]);
-
-  const filteredQuestions = useMemo(() => {
-    if (selectedCategories.length === 0) return game.questions;
-    return filterQuestionsByCategory(game.questions, selectedCategories);
-  }, [game.questions, selectedCategories]);
-
   const {
     roundsCount,
     questionsPerRound,
@@ -320,6 +311,15 @@ export default function PlayPage() {
   };
 
   const statusDisplay = getStatusDisplay();
+
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  // Focus main content when transitioning from setup to playing
+  useEffect(() => {
+    if (game.status === 'playing' && mainRef.current) {
+      mainRef.current.focus();
+    }
+  }, [game.status]);
 
   return (
     <>
@@ -476,16 +476,20 @@ export default function PlayPage() {
         </header>
 
         {/* ---- MAIN 3-COLUMN AREA ---- */}
-        <div className="flex flex-1 overflow-hidden">
+        <div
+          className="flex flex-1 overflow-hidden"
+          aria-hidden={game.status === 'setup' ? true : undefined}
+          inert={game.status === 'setup' ? true : undefined}
+        >
 
           {/* LEFT RAIL: Question Navigator (w-64) */}
           <aside
-            className="w-64 flex-shrink-0 border-r border-border overflow-y-auto bg-surface/40"
+            className="w-64 flex-shrink-0 border-r border-border overflow-y-auto bg-surface/40 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted"
             aria-label="Question navigator"
           >
             <div className="p-3">
               <QuestionList
-                questions={game.status === 'setup' ? filteredQuestions : game.questions}
+                questions={game.questions}
                 selectedIndex={game.selectedQuestionIndex}
                 displayIndex={game.displayQuestionIndex}
                 currentRound={game.currentRound}
@@ -498,9 +502,11 @@ export default function PlayPage() {
 
           {/* CENTER: Hero Question Panel (flex-1) */}
           <main
+            ref={mainRef}
             id="main-content"
             className="flex-1 overflow-y-auto p-4"
             aria-label="Current question"
+            tabIndex={-1}
           >
             {/* Question display */}
             <div className="bg-surface border border-border rounded-xl p-4 shadow-md mb-3">
@@ -585,36 +591,6 @@ export default function PlayPage() {
                   onSaveTeams={handleSaveTeams}
                 />
               </div>
-            )}
-
-            {/* Setup mode content — SetupWizard (T4.1) */}
-            {game.status === 'setup' && (
-              <SetupWizard
-                questions={game.questions}
-                onImport={gameState.importQuestions}
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-                onSaveQuestionSet={() => setShowSaveQuestionSetModal(true)}
-                roundsCount={roundsCount}
-                questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
-                timerAutoStart={timerAutoStart}
-                timerVisible={timerVisible}
-                ttsEnabled={ttsEnabled}
-                lastTeamSetup={lastTeamSetup}
-                currentTeams={game.teams}
-                onUpdateSetting={updateSetting}
-                onLoadTeams={handleLoadTeams}
-                onSaveTeams={handleSaveTeams}
-                onSavePreset={() => setShowSavePresetModal(true)}
-                canStart={game.canStart}
-                onAddTeam={game.addTeam}
-                onRemoveTeam={game.removeTeam}
-                onRenameTeam={game.renameTeam}
-                onLoadTeamsFromSetup={game.loadTeamsFromSetup}
-                onSaveTemplate={() => setShowSaveTemplateModal(true)}
-                onStartGame={game.startGame}
-              />
             )}
 
             {/* Round summary */}
@@ -721,6 +697,19 @@ export default function PlayPage() {
           onEmergencyPause={game.emergencyPause}
         />
       </div>
+
+      {/* Setup Gate Overlay (z-40) */}
+      {game.status === 'setup' && (
+        <SetupGate
+          isConnected={isConnected}
+          roomCode={session.roomCode}
+          onOpenDisplay={openDisplay}
+          onStartGame={game.startGame}
+          onSaveTemplate={() => setShowSaveTemplateModal(true)}
+          onSavePreset={() => setShowSavePresetModal(true)}
+          onSaveQuestionSet={() => setShowSaveQuestionSetModal(true)}
+        />
+      )}
 
       {/* Modals */}
       <KeyboardShortcutsModal

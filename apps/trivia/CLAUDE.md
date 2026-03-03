@@ -152,6 +152,7 @@ pnpm test:coverage     # Run tests with coverage
 | `/api/auth/token` | POST | Token exchange/refresh |
 | `/api/auth/token-redirect` | GET | Token redirect handler (post-OAuth) |
 | `/api/templates` | GET, POST | Template CRUD |
+| `/api/templates/default` | GET | Returns user's default trivia template |
 | `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
 | `/api/sessions` | POST | Create game session |
 | `/api/sessions/room/[roomCode]` | GET | Get session by room code |

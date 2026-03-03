@@ -63,6 +63,9 @@ export function useGame() {
     canPause: selectors.canPause,
     canResume: selectors.canResume,
 
+    // Validation
+    validation: selectors.validation,
+
     // Actions (Zustand actions are stable references)
     startGame: gameStore.startGame,
     endGame: gameStore.endGame,

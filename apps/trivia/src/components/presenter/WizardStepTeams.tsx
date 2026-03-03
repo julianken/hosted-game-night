@@ -3,9 +3,10 @@
 /**
  * T4.4: WizardStepTeams
  *
- * Step 3 of the SetupWizard. Team setup and game launch:
+ * Step 3 (index 2) of the SetupWizard. Team management:
  * TeamManager, quick-fill buttons, load/save team setup,
- * readiness summary, Save Template, and Start Game button.
+ * and readiness summary. Start Game and Save Template
+ * have moved to WizardStepReview (step 4).
  */
 
 import { TeamManager } from '@/components/presenter/TeamManager';
@@ -14,7 +15,6 @@ import type { TeamSetup } from '@/stores/settings-store';
 
 export interface WizardStepTeamsProps {
   teams: Team[];
-  canStart: boolean;
   questionCount: number;
   roundsCount: number;
   lastTeamSetup: TeamSetup | null;
@@ -23,8 +23,6 @@ export interface WizardStepTeamsProps {
   onRenameTeam: (teamId: string, name: string) => void;
   onLoadTeamsFromSetup: (names: string[]) => void;
   onSaveTeams: () => void;
-  onSaveTemplate: () => void;
-  onStartGame: () => void;
 }
 
 const QUICK_FILL_OPTIONS = [
@@ -39,7 +37,6 @@ function buildTableNames(count: number): string[] {
 
 export function WizardStepTeams({
   teams,
-  canStart,
   questionCount,
   roundsCount,
   lastTeamSetup,
@@ -48,8 +45,6 @@ export function WizardStepTeams({
   onRenameTeam,
   onLoadTeamsFromSetup,
   onSaveTeams,
-  onSaveTemplate,
-  onStartGame,
 }: WizardStepTeamsProps) {
   return (
     <div className="space-y-4">
@@ -154,35 +149,6 @@ export function WizardStepTeams({
         </button>
       )}
 
-      {/* Bottom action row: Save Template + Start Game */}
-      <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
-          type="button"
-          onClick={onSaveTemplate}
-          disabled={questionCount === 0}
-          className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px]
-            ${questionCount > 0
-              ? 'bg-secondary hover:bg-secondary-hover text-secondary-foreground'
-              : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-            }`}
-          aria-disabled={questionCount === 0}
-        >
-          Save Template
-        </button>
-        <button
-          type="button"
-          onClick={onStartGame}
-          disabled={!canStart}
-          className={`flex-1 px-6 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]
-            ${canStart
-              ? 'bg-success hover:bg-success/90 text-success-foreground'
-              : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-            }`}
-          aria-disabled={!canStart}
-        >
-          Start Game
-        </button>
-      </div>
     </div>
   );
 }

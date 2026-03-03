@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@joolie-boolie/theme/globals.css";
 
+@source "../../../../packages/ui/src";
+
 /* ================================================================
    TRIVIA APP TOKEN OVERRIDES
    Cinematic blue-black quiz show atmosphere.

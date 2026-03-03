@@ -93,7 +93,10 @@ export {
   getOverallLeaders,
   getTeamsSortedByScore,
   toggleScoreboard,
+  validateGameSetup,
 } from './selectors';
+
+export type { ValidationSeverity, ValidationIssue, GameSetupValidation } from './selectors';
 
 // Helpers (exported for use in tests and extensions)
 export { deepFreeze, padRoundScores } from './helpers';

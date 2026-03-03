@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * T4.1: SetupWizard — 3-step presenter setup wizard
+ * T4.1: SetupWizard — 4-step presenter setup wizard
  *
  * Replaces the flat setup section in play/page.tsx when game.status === 'setup'.
  *
@@ -9,6 +9,7 @@
  *   0 — Questions  (WizardStepQuestions)
  *   1 — Settings   (WizardStepSettings)
  *   2 — Teams      (WizardStepTeams)
+ *   3 — Review     (WizardStepReview)
  *
  * Features:
  * - Step indicators with labels
@@ -16,6 +17,7 @@
  * - AnimatePresence step transitions (opacity fade, mode="wait")
  * - 44x44px touch targets on all interactive elements
  * - Dark-mode compatible via CSS variables
+ * - Auto-loads user's default template on mount
  */
 
 import { useState } from 'react';
@@ -23,6 +25,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { WizardStepQuestions } from '@/components/presenter/WizardStepQuestions';
 import { WizardStepSettings } from '@/components/presenter/WizardStepSettings';
 import { WizardStepTeams } from '@/components/presenter/WizardStepTeams';
+import { WizardStepReview } from '@/components/presenter/WizardStepReview';
+import { useAutoLoadDefaultTemplate } from '@/hooks/use-auto-load-default-template';
+import type { GameSetupValidation } from '@/lib/game/selectors';
 import type { TeamSetup, SettingsState } from '@/stores/settings-store';
 import type { Team, Question, QuestionCategory } from '@/types';
 
@@ -48,7 +53,8 @@ export interface SetupWizardProps {
   onSaveTeams: () => void;
   onSavePreset: () => void;
 
-  // Teams & launch
+  // Validation & launch
+  validation: GameSetupValidation;
   canStart: boolean;
   onAddTeam: (name?: string) => void;
   onRemoveTeam: (teamId: string) => void;
@@ -62,6 +68,7 @@ const STEPS = [
   { label: 'Questions', shortLabel: '1' },
   { label: 'Settings', shortLabel: '2' },
   { label: 'Teams', shortLabel: '3' },
+  { label: 'Review', shortLabel: '4' },
 ] as const;
 
 export function SetupWizard({
@@ -86,7 +93,8 @@ export function SetupWizard({
   onSaveTeams,
   onSavePreset,
 
-  // Teams & launch
+  // Validation & launch
+  validation,
   canStart,
   onAddTeam,
   onRemoveTeam,
@@ -95,11 +103,14 @@ export function SetupWizard({
   onSaveTemplate,
   onStartGame,
 }: SetupWizardProps) {
+  useAutoLoadDefaultTemplate();
+
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = STEPS.length;
 
   const goNext = () => setCurrentStep((s) => Math.min(s + 1, totalSteps - 1));
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
+  const goToStep = (step: number) => setCurrentStep(step);
 
   return (
     <div className="flex flex-col gap-4">
@@ -112,6 +123,7 @@ export function SetupWizard({
           return (
             <button
               key={index}
+              data-testid={`wizard-step-${index}`}
               type="button"
               onClick={() => setCurrentStep(index)}
               aria-current={isActive ? 'step' : undefined}
@@ -192,7 +204,6 @@ export function SetupWizard({
             {currentStep === 2 && (
               <WizardStepTeams
                 teams={currentTeams}
-                canStart={canStart}
                 questionCount={questions.length}
                 roundsCount={roundsCount}
                 lastTeamSetup={lastTeamSetup}
@@ -201,6 +212,19 @@ export function SetupWizard({
                 onRenameTeam={onRenameTeam}
                 onLoadTeamsFromSetup={onLoadTeamsFromSetup}
                 onSaveTeams={onSaveTeams}
+              />
+            )}
+
+            {currentStep === 3 && (
+              <WizardStepReview
+                validation={validation}
+                canStart={canStart}
+                questions={questions}
+                teams={currentTeams}
+                roundsCount={roundsCount}
+                questionsPerRound={questionsPerRound}
+                timerDuration={timerDuration}
+                onGoToStep={goToStep}
                 onSaveTemplate={onSaveTemplate}
                 onStartGame={onStartGame}
               />
@@ -238,7 +262,7 @@ export function SetupWizard({
             Next: {STEPS[currentStep + 1].label}
           </button>
         ) : (
-          /* On the last step, the Start Game button is inside WizardStepTeams */
+          /* On the last step, Start Game is inside WizardStepReview */
           <div />
         )}
       </div>

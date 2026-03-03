@@ -7,6 +7,16 @@ import type { TriviaTemplate } from '@joolie-boolie/database/types';
 // Mock fetch globally
 global.fetch = vi.fn();
 
+// Mock settings-store
+const mockUpdateSetting = vi.fn();
+vi.mock('@/stores/settings-store', () => ({
+  useSettingsStore: {
+    getState: () => ({
+      updateSetting: mockUpdateSetting,
+    }),
+  },
+}));
+
 // Mock store actions
 const mockImportQuestions = vi.fn();
 const mockUpdateSettings = vi.fn();
@@ -240,6 +250,28 @@ describe('TemplateSelector', () => {
         roundsCount: 1,
         questionsPerRound: 2,
       });
+    });
+  });
+
+  it('mirrors settings to settings-store (sync race fix)', async () => {
+    renderWithProviders(<TemplateSelector />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
+    });
+
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: mockTemplates[0] }),
+    } as Response);
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'template-1' } });
+
+    await waitFor(() => {
+      expect(mockUpdateSetting).toHaveBeenCalledWith('timerDuration', 30);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('roundsCount', 1);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('questionsPerRound', 2);
     });
   });
 

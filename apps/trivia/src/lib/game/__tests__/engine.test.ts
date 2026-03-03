@@ -52,6 +52,8 @@ import {
   addQuestion,
   removeQuestion,
   updateQuestion,
+  // Validation
+  validateGameSetup,
 } from '../engine';
 import { MAX_TEAMS, DEFAULT_ROUNDS, QuestionId } from '@/types';
 
@@ -1722,6 +1724,246 @@ describe('Trivia Game Engine', () => {
       const result = updateQuestion(state, 0, updatedQuestion);
 
       expect(result).toBe(state);
+    });
+  });
+
+  // ==========================================================================
+  // VALIDATE GAME SETUP
+  // ==========================================================================
+  describe('validateGameSetup', () => {
+    it('V1: should block when no questions loaded', () => {
+      let state = createInitialState();
+      state = clearQuestions(state);
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V1', severity: 'block', message: 'No questions loaded' })
+      );
+    });
+
+    it('V2: should block when round 0 has no questions', () => {
+      let state = createInitialState();
+      // Import questions only for round 1, none for round 0
+      const round1Only = [
+        {
+          id: 'q1' as QuestionId,
+          text: 'Q1',
+          type: 'multiple_choice' as const,
+          options: ['A', 'B', 'C', 'D'],
+          optionTexts: ['A', 'B', 'C', 'D'],
+          correctAnswers: ['A'],
+          category: 'general_knowledge' as const,
+          roundIndex: 1,
+        },
+      ];
+      state = importQuestions(state, round1Only);
+      state = updateSettings(state, { roundsCount: 2 });
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V2', severity: 'block', message: 'Round 1 has no questions', roundIndex: 0 })
+      );
+    });
+
+    it('V3: should block when round 1 is empty (roundsCount > 1)', () => {
+      let state = createInitialState();
+      // Import questions only for round 0, none for round 1
+      const round0Only = [
+        {
+          id: 'q1' as QuestionId,
+          text: 'Q1',
+          type: 'multiple_choice' as const,
+          options: ['A', 'B', 'C', 'D'],
+          optionTexts: ['A', 'B', 'C', 'D'],
+          correctAnswers: ['A'],
+          category: 'general_knowledge' as const,
+          roundIndex: 0,
+        },
+      ];
+      state = importQuestions(state, round0Only);
+      state = updateSettings(state, { roundsCount: 2 });
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V3', severity: 'block', message: 'Round 2 has no questions', roundIndex: 1 })
+      );
+    });
+
+    it('V4: should block when no teams added', () => {
+      const state = createInitialState();
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V4', severity: 'block', message: 'No teams added' })
+      );
+    });
+
+    it('V5: should warn when timer duration is very short', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = addTeam(state, 'Team B');
+      state = updateSettings(state, { timerDuration: 5 });
+      const result = validateGameSetup(state);
+
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V5', severity: 'warn', message: 'Timer duration is very short' })
+      );
+    });
+
+    it('V6: should warn when round question count mismatches questionsPerRound', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = addTeam(state, 'Team B');
+      // Default has 5 questions per round and questionsPerRound=5
+      // Change questionsPerRound to 3 to trigger mismatch
+      state = updateSettings(state, { questionsPerRound: 3 });
+      const result = validateGameSetup(state);
+
+      const v6Issues = result.issues.filter(i => i.id === 'V6');
+      expect(v6Issues.length).toBeGreaterThan(0);
+      expect(v6Issues[0]).toMatchObject({
+        severity: 'warn',
+        message: expect.stringContaining('has 5 questions but 3 are configured'),
+      });
+    });
+
+    it('V7: should warn when only one team', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      const result = validateGameSetup(state);
+
+      expect(result.issues).toContainEqual(
+        expect.objectContaining({ id: 'V7', severity: 'warn', message: 'Only one team — consider adding more' })
+      );
+    });
+
+    it('should report both blocks when no questions and no teams', () => {
+      let state = createInitialState();
+      state = clearQuestions(state);
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.blockCount).toBeGreaterThanOrEqual(2);
+      const blockIds = result.issues.filter(i => i.severity === 'block').map(i => i.id);
+      expect(blockIds).toContain('V1');
+      expect(blockIds).toContain('V4');
+    });
+
+    it('should return canStart true with valid setup', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = addTeam(state, 'Team B');
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(true);
+      expect(result.blockCount).toBe(0);
+    });
+
+    it('should report correct counts when blocks and warns coexist', () => {
+      let state = createInitialState();
+      // No teams = 1 block (V4), 1 team warn not possible since 0 teams
+      // Short timer = 1 warn (V5)
+      state = updateSettings(state, { timerDuration: 5 });
+      const result = validateGameSetup(state);
+
+      expect(result.canStart).toBe(false);
+      expect(result.blockCount).toBeGreaterThanOrEqual(1);
+      expect(result.warnCount).toBeGreaterThanOrEqual(1);
+      expect(result.issues.some(i => i.id === 'V4')).toBe(true);
+      expect(result.issues.some(i => i.id === 'V5')).toBe(true);
+    });
+
+    it('should report multiple blocks for empty state', () => {
+      let state = createInitialState();
+      state = clearQuestions(state);
+      const result = validateGameSetup(state);
+
+      // V1 (no questions) + V4 (no teams)
+      expect(result.blockCount).toBeGreaterThanOrEqual(2);
+      expect(result.canStart).toBe(false);
+    });
+
+    it('should block exactly the empty round among many', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = addTeam(state, 'Team B');
+      // Create questions for rounds 0 and 2, but not round 1
+      const questions = [
+        {
+          id: 'q1' as QuestionId,
+          text: 'Q1',
+          type: 'multiple_choice' as const,
+          options: ['A', 'B', 'C', 'D'],
+          optionTexts: ['A', 'B', 'C', 'D'],
+          correctAnswers: ['A'],
+          category: 'general_knowledge' as const,
+          roundIndex: 0,
+        },
+        {
+          id: 'q2' as QuestionId,
+          text: 'Q2',
+          type: 'multiple_choice' as const,
+          options: ['A', 'B', 'C', 'D'],
+          optionTexts: ['A', 'B', 'C', 'D'],
+          correctAnswers: ['A'],
+          category: 'general_knowledge' as const,
+          roundIndex: 2,
+        },
+      ];
+      state = importQuestions(state, questions);
+      const result = validateGameSetup(state);
+
+      const emptyRoundIssues = result.issues.filter(
+        i => (i.id === 'V3') && i.roundIndex === 1
+      );
+      expect(emptyRoundIssues).toHaveLength(1);
+      expect(emptyRoundIssues[0].message).toBe('Round 2 has no questions');
+    });
+
+    it('should report correct warnCount for full state with warnings', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Solo Team');
+      state = updateSettings(state, { timerDuration: 5, questionsPerRound: 3 });
+      const result = validateGameSetup(state);
+
+      // V5 (short timer) + V7 (single team) + V6 (mismatch per round)
+      expect(result.warnCount).toBeGreaterThanOrEqual(3);
+      expect(result.canStart).toBe(true); // All are warns, no blocks
+    });
+  });
+
+  // ==========================================================================
+  // canStartGame BEHAVIORAL TESTS (post-validateGameSetup integration)
+  // ==========================================================================
+  describe('canStartGame (behavioral)', () => {
+    it('should return false when teams present but no questions', () => {
+      let state = createInitialState();
+      state = clearQuestions(state);
+      state = addTeam(state, 'Team A');
+      const result = canStartGame(state);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when questions present but no teams', () => {
+      const state = createInitialState();
+      // State has SAMPLE_QUESTIONS but no teams
+      const result = canStartGame(state);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return true when both teams and questions present', () => {
+      let state = createInitialState();
+      state = addTeam(state, 'Team A');
+      state = addTeam(state, 'Team B');
+      const result = canStartGame(state);
+
+      expect(result).toBe(true);
     });
   });
 });
