@@ -1,7 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   orchestrateSceneTransition,
   deriveTransitionContext,
+  clearRevealLock,
+  armRevealLock,
 } from '../scene-transitions';
 import { createInitialState, startGame } from '../lifecycle';
 import { addTeam } from '../teams';
@@ -12,6 +14,16 @@ import type { TriviaGameState, AudienceScene } from '@/types';
 vi.mock('uuid', () => ({
   v4: vi.fn(() => `test-uuid-${Date.now()}`),
 }));
+
+// Clear the module-level reveal lock before each test so lock state from one
+// test cannot bleed into the next (the lock is intentionally module-scoped).
+beforeEach(() => {
+  clearRevealLock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 // =============================================================================
 // TEST HELPERS
@@ -164,7 +176,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
       expect(result!.recapShowingAnswer).toBe(false);
     });
 
-    it('should be a no-op at the first question', () => {
+    it('should transition to recap_title at the first question (Path B)', () => {
       const state = setupRecapQa({
         displayAtRoundQIndex: 0,
         recapShowingAnswer: false,
@@ -172,8 +184,10 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
 
       const result = orchestrateSceneTransition(state, 'back');
 
-      // Returns empty object (handled but no-op)
-      expect(result).toEqual({});
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('recap_title');
+      expect(result!.recapShowingAnswer).toBeNull();
+      expect(result!.sceneTimestamp).toBeGreaterThan(0);
     });
   });
 
@@ -452,6 +466,35 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
+  describe('Path A: recap_title -> round_summary (back)', () => {
+    it('should clear recapShowingAnswer when going back to round_summary', () => {
+      const state = createBetweenRoundsState('recap_title');
+
+      const result = orchestrateSceneTransition(state, 'back');
+
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('round_summary');
+      expect(result!.recapShowingAnswer).toBeNull();
+      expect(result!.sceneTimestamp).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Path C: recap_scores -> recap_qa (back)', () => {
+    it('should show last question with answer face on backward entry', () => {
+      const state = createBetweenRoundsState('recap_scores');
+      const indices = getRoundQuestionIndices(state, 0);
+      const lastGlobalIndex = indices[indices.length - 1];
+
+      const result = orchestrateSceneTransition(state, 'back');
+
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('recap_qa');
+      expect(result!.displayQuestionIndex).toBe(lastGlobalIndex);
+      expect(result!.selectedQuestionIndex).toBe(lastGlobalIndex);
+      expect(result!.recapShowingAnswer).toBe(true);
+    });
+  });
+
   describe('round_summary -> answer_reveal', () => {
     it('should not transition on advance (advance goes to recap_title)', () => {
       const state = createBetweenRoundsState('round_summary');
@@ -678,18 +721,6 @@ describe('orchestrateSceneTransition() — no-op paths', () => {
     expect(result).toBeNull();
   });
 
-  it('should return null for paused scene with non-resume trigger', () => {
-    const state = createPlayingState();
-    const modState = {
-      ...state,
-      status: 'paused' as const,
-      audienceScene: 'paused' as AudienceScene,
-    };
-
-    const result = orchestrateSceneTransition(modState, 'advance');
-
-    expect(result).toBeNull();
-  });
 });
 
 // =============================================================================
@@ -730,5 +761,134 @@ describe('orchestrateSceneTransition() — purity', () => {
     const result2 = orchestrateSceneTransition(modState, 'auto');
 
     expect(result1).not.toBe(result2);
+  });
+});
+
+// =============================================================================
+// REVEAL LOCK — module-level guard
+// =============================================================================
+
+describe('reveal lock', () => {
+  describe('clearRevealLock()', () => {
+    it('allows advancement triggers after being called', () => {
+      // Arm the lock, then immediately clear it.
+      armRevealLock();
+      clearRevealLock();
+
+      // recap_qa advance on question face: flip to answer face.
+      // This is an advancement trigger that should NOT be blocked after clear.
+      const state = createBetweenRoundsState('recap_qa');
+      const indices = getRoundQuestionIndices(state, 0);
+      const modState: TriviaGameState = {
+        ...state,
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+        recapShowingAnswer: false,
+      };
+      const result = orchestrateSceneTransition(modState, 'advance');
+      expect(result).not.toBeNull();
+      expect(result!.recapShowingAnswer).toBe(true);
+    });
+  });
+
+  describe('when locked', () => {
+    it('blocks "advance" trigger and returns null', () => {
+      armRevealLock();
+
+      const state = createPlayingState();
+      const modState = { ...state, audienceScene: 'game_intro' as AudienceScene };
+      expect(orchestrateSceneTransition(modState, 'advance')).toBeNull();
+    });
+
+    it('blocks "skip" trigger and returns null', () => {
+      armRevealLock();
+
+      const state = createPlayingState();
+      const modState = { ...state, audienceScene: 'game_intro' as AudienceScene };
+      expect(orchestrateSceneTransition(modState, 'skip')).toBeNull();
+    });
+
+    it('blocks "next_round" trigger and returns null', () => {
+      armRevealLock();
+
+      const state = createBetweenRoundsState('round_summary');
+      expect(orchestrateSceneTransition(state, 'next_round')).toBeNull();
+    });
+
+    it('blocks "close" trigger and returns null', () => {
+      armRevealLock();
+
+      const state = createPlayingState();
+      const indices = getRoundQuestionIndices(state, 0);
+      const modState: TriviaGameState = {
+        ...state,
+        audienceScene: 'question_display',
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+      };
+      expect(orchestrateSceneTransition(modState, 'close')).toBeNull();
+    });
+
+    it('does NOT block the "back" trigger', () => {
+      armRevealLock();
+
+      // recap_qa back from index > 0 should still navigate backward.
+      const state = createBetweenRoundsState('recap_qa');
+      const indices = getRoundQuestionIndices(state, 0);
+      const modState: TriviaGameState = {
+        ...state,
+        displayQuestionIndex: indices[2],
+        selectedQuestionIndex: indices[2],
+        recapShowingAnswer: false,
+      };
+      const result = orchestrateSceneTransition(modState, 'back');
+      expect(result).not.toBeNull();
+      expect(result!.displayQuestionIndex).toBe(indices[1]);
+    });
+
+    it('does NOT block the "auto" trigger', () => {
+      armRevealLock();
+
+      const state = createPlayingState();
+      const modState = { ...state, audienceScene: 'game_intro' as AudienceScene };
+      const result = orchestrateSceneTransition(modState, 'auto');
+      // game_intro + auto -> round_intro
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('round_intro');
+    });
+  });
+
+  describe('lock expiry via fake timers', () => {
+    it('allows advancement after POST_REVEAL_LOCK_MS (1100ms) elapses', () => {
+      vi.useFakeTimers();
+
+      armRevealLock();
+
+      const state = createPlayingState();
+      const modState = { ...state, audienceScene: 'game_intro' as AudienceScene };
+
+      // Immediately after arming: blocked
+      expect(orchestrateSceneTransition(modState, 'skip')).toBeNull();
+
+      // Advance time past the lock window
+      vi.advanceTimersByTime(1101);
+
+      // After expiry: no longer blocked
+      const result = orchestrateSceneTransition(modState, 'skip');
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('round_intro');
+    });
+
+    it('remains locked within the lock window', () => {
+      vi.useFakeTimers();
+
+      armRevealLock();
+
+      vi.advanceTimersByTime(1000); // Still within 1100ms window
+
+      const state = createPlayingState();
+      const modState = { ...state, audienceScene: 'game_intro' as AudienceScene };
+      expect(orchestrateSceneTransition(modState, 'skip')).toBeNull();
+    });
   });
 });

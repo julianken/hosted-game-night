@@ -19,8 +19,89 @@ export function getProgress(state: TriviaGameState): string {
   return `Question ${current} of ${total}`;
 }
 
+// =============================================================================
+// VALIDATION TYPES
+// =============================================================================
+
+export type ValidationSeverity = 'block' | 'warn';
+
+export interface ValidationIssue {
+  id: string;
+  severity: ValidationSeverity;
+  message: string;
+  roundIndex?: number;
+}
+
+export interface GameSetupValidation {
+  canStart: boolean;
+  issues: ValidationIssue[];
+  blockCount: number;
+  warnCount: number;
+}
+
+// =============================================================================
+// GAME SETUP VALIDATION
+// =============================================================================
+
+export function validateGameSetup(state: TriviaGameState): GameSetupValidation {
+  const issues: ValidationIssue[] = [];
+
+  // V1 BLOCK: No questions loaded at all
+  if (state.questions.length === 0) {
+    issues.push({ id: 'V1', severity: 'block', message: 'No questions loaded' });
+  } else {
+    // V2 BLOCK: Round 0 has zero questions
+    if (getQuestionsForRound(state, 0).length === 0) {
+      issues.push({ id: 'V2', severity: 'block', message: 'Round 1 has no questions', roundIndex: 0 });
+    }
+
+    // V3 BLOCK: Any round has zero questions
+    for (let i = 1; i < state.settings.roundsCount; i++) {
+      if (getQuestionsForRound(state, i).length === 0) {
+        issues.push({ id: 'V3', severity: 'block', message: `Round ${i + 1} has no questions`, roundIndex: i });
+      }
+    }
+  }
+
+  // V4 BLOCK: No teams added
+  if (state.teams.length === 0) {
+    issues.push({ id: 'V4', severity: 'block', message: 'No teams added' });
+  }
+
+  // V5 WARN: Timer duration very short
+  if (state.settings.timerDuration < 10) {
+    issues.push({ id: 'V5', severity: 'warn', message: 'Timer duration is very short' });
+  }
+
+  // V6 WARN: Per-round question count mismatch
+  if (state.questions.length > 0) {
+    for (let i = 0; i < state.settings.roundsCount; i++) {
+      const actual = getQuestionsForRound(state, i).length;
+      const expected = state.settings.questionsPerRound;
+      if (actual !== expected && actual > 0) {
+        issues.push({
+          id: 'V6',
+          severity: 'warn',
+          message: `Round ${i + 1} has ${actual} questions but ${expected} are configured`,
+          roundIndex: i,
+        });
+      }
+    }
+  }
+
+  // V7 WARN: Only one team
+  if (state.teams.length === 1) {
+    issues.push({ id: 'V7', severity: 'warn', message: 'Only one team — consider adding more' });
+  }
+
+  const blockCount = issues.filter(i => i.severity === 'block').length;
+  const warnCount = issues.filter(i => i.severity === 'warn').length;
+
+  return { canStart: blockCount === 0, issues, blockCount, warnCount };
+}
+
 export function canStartGame(state: TriviaGameState): boolean {
-  return state.status === 'setup' && state.teams.length > 0;
+  return state.status === 'setup' && validateGameSetup(state).canStart;
 }
 
 export function isGameOver(state: TriviaGameState): boolean {

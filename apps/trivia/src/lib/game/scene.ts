@@ -60,8 +60,6 @@ export function deriveSceneFromStatus(
       return 'waiting';
     case 'between_rounds':
       return 'round_summary';
-    case 'paused':
-      return 'paused';
     case 'ended':
       return 'final_buildup';
     default: {
@@ -246,6 +244,8 @@ export function getNextScene(
 
     // -- Recap flow (between-rounds answer review) -------------------------
     case 'recap_title':
+      // Left Arrow: back to round summary
+      if (trigger === 'back') return 'round_summary';
       // Right Arrow: begin Q/A review
       if (trigger === 'advance') return 'recap_qa';
       // N key: skip recap entirely, go to next round
@@ -264,6 +264,8 @@ export function getNextScene(
       return null;
 
     case 'recap_scores':
+      // Left Arrow: back to Q/A review
+      if (trigger === 'back') return 'recap_qa';
       // Right Arrow / Enter / N: proceed to next round
       if (trigger === 'advance' || trigger === 'next_round') {
         return isLastRound ? 'final_buildup' : 'round_intro';
@@ -279,20 +281,13 @@ export function getNextScene(
       // Indefinite end state -- no auto-advance
       return null;
 
-    // -- Pause / emergency --------------------------------------------------
+    // -- Emergency blank (visual-only, no game status change) ----------------
     case 'paused':
-      if (trigger === 'resume') {
-        // Caller uses state.sceneBeforePause -- scene.ts returns a sentinel
-        // The actual target is in sceneBeforePause; store action handles this
-        return null; // Store action restores from sceneBeforePause directly
-      }
+      // Legacy scene value — should not be reached but handle gracefully
       return null;
 
     case 'emergency_blank':
-      if (trigger === 'restore') {
-        // Same pattern as paused -- store action restores from sceneBeforePause
-        return null;
-      }
+      // Restore handled by store action directly (reads sceneBeforePause)
       return null;
 
     default: {
@@ -322,31 +317,29 @@ export function buildSceneUpdate(scene: AudienceScene): {
 }
 
 /**
- * Returns a partial state update for entering pause or emergency_blank.
- * Saves the current scene to sceneBeforePause.
+ * Returns a partial state update for entering emergency_blank.
+ * Saves the current scene to sceneBeforePause for restoration.
  */
-export function buildPauseSceneUpdate(
-  currentScene: AudienceScene,
-  type: 'pause' | 'emergency'
+export function buildEmergencyBlankUpdate(
+  currentScene: AudienceScene
 ): {
   audienceScene: AudienceScene;
   sceneBeforePause: AudienceScene;
   sceneTimestamp: number;
 } {
-  const targetScene: AudienceScene = type === 'emergency' ? 'emergency_blank' : 'paused';
   return {
-    audienceScene: targetScene,
+    audienceScene: 'emergency_blank',
     sceneBeforePause: currentScene,
     sceneTimestamp: Date.now(),
   };
 }
 
 /**
- * Returns a partial state update for resuming from pause or emergency_blank.
+ * Returns a partial state update for restoring from emergency_blank.
  * Restores the scene from sceneBeforePause.
  * Falls back to deriveSceneFromStatus() if sceneBeforePause is null.
  */
-export function buildResumeSceneUpdate(
+export function buildEmergencyRestoreUpdate(
   state: Pick<TriviaGameState, 'sceneBeforePause' | 'status'>
 ): {
   audienceScene: AudienceScene;

@@ -87,7 +87,6 @@ describe('serializer', () => {
   ): TriviaGameState => ({
     sessionId: 'test-session',
     status: 'setup',
-    statusBeforePause: null,
     questions: [],
     selectedQuestionIndex: 0,
     displayQuestionIndex: null,
@@ -121,7 +120,6 @@ describe('serializer', () => {
       expect(serialized).toEqual({
         sessionId: 'test-session',
         status: 'setup',
-        statusBeforePause: null,
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -158,20 +156,6 @@ describe('serializer', () => {
       expect(serialized.teams).toEqual([mockTeam1, mockTeam2]);
       expect(serialized.teamAnswers).toEqual([mockTeamAnswer1]);
       expect(serialized.showScoreboard).toBe(true);
-    });
-
-    it('serializes paused state with statusBeforePause', () => {
-      const state = createMockGameState({
-        status: 'paused',
-        statusBeforePause: 'playing',
-        questions: [mockQuestion1],
-        selectedQuestionIndex: 0,
-        displayQuestionIndex: 0,
-      });
-      const serialized = serializeTriviaState(state);
-
-      expect(serialized.status).toBe('paused');
-      expect(serialized.statusBeforePause).toBe('playing');
     });
 
     it('serializes ended state', () => {
@@ -241,7 +225,7 @@ describe('serializer', () => {
       const serialized: SerializedTriviaState = {
         sessionId: 'test-session',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -260,7 +244,6 @@ describe('serializer', () => {
 
       expect(deserialized.sessionId).toBe('test-session');
       expect(deserialized.status).toBe('setup');
-      expect(deserialized.statusBeforePause).toBeNull();
       expect(deserialized.questions).toEqual([]);
       expect(deserialized.selectedQuestionIndex).toBe(0);
       expect(deserialized.displayQuestionIndex).toBeNull();
@@ -279,7 +262,7 @@ describe('serializer', () => {
       const serialized: SerializedTriviaState = {
         sessionId: 'test-session',
         status: 'playing',
-        statusBeforePause: null,
+
         questions: [mockQuestion1, mockQuestion2],
         selectedQuestionIndex: 1,
         displayQuestionIndex: 1,
@@ -310,7 +293,7 @@ describe('serializer', () => {
       const serialized = {
         sessionId: 'test-session',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -333,7 +316,7 @@ describe('serializer', () => {
       const serialized = {
         sessionId: 'test-session',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -356,7 +339,7 @@ describe('serializer', () => {
       const serialized = {
         sessionId: 'test-session',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -395,7 +378,7 @@ describe('serializer', () => {
       it('throws for missing sessionId', () => {
         const serialized = {
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -417,7 +400,7 @@ describe('serializer', () => {
       it('throws for missing status', () => {
         const serialized = {
           sessionId: 'test-session',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -440,7 +423,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'invalid-status',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -463,7 +446,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: 'not-an-array',
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -486,7 +469,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [{ invalid: 'question' }],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -509,7 +492,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: -1,
           displayQuestionIndex: null,
@@ -532,7 +515,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: -1,
@@ -555,7 +538,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -578,7 +561,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -601,7 +584,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -624,7 +607,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -655,7 +638,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -677,7 +660,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -700,7 +683,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -723,7 +706,7 @@ describe('serializer', () => {
         const serialized = {
           sessionId: 'test-session',
           status: 'setup',
-          statusBeforePause: null,
+  
           questions: [],
           selectedQuestionIndex: 0,
           displayQuestionIndex: null,
@@ -742,28 +725,6 @@ describe('serializer', () => {
         expect(() => deserializeTriviaState(serialized)).toThrow('Invalid settings');
       });
 
-      it('throws for invalid statusBeforePause', () => {
-        const serialized = {
-          sessionId: 'test-session',
-          status: 'paused',
-          statusBeforePause: 'invalid-status',
-          questions: [],
-          selectedQuestionIndex: 0,
-          displayQuestionIndex: null,
-          currentRound: 0,
-          totalRounds: DEFAULT_ROUNDS,
-          teams: [],
-          teamAnswers: [],
-          timer: mockTimer,
-          settings: mockSettings,
-          showScoreboard: false,
-          emergencyBlank: false,
-          ttsEnabled: false,
-        };
-
-        expect(() => deserializeTriviaState(serialized)).toThrow(SerializationError);
-        expect(() => deserializeTriviaState(serialized)).toThrow('Invalid statusBeforePause');
-      });
     });
   });
 
@@ -772,7 +733,7 @@ describe('serializer', () => {
       const originalState = createMockGameState({
         sessionId: 'round-trip-test',
         status: 'playing',
-        statusBeforePause: null,
+
         questions: [mockQuestion1, mockQuestion2],
         selectedQuestionIndex: 1,
         displayQuestionIndex: 1,
@@ -804,7 +765,6 @@ describe('serializer', () => {
       // Compare all serializable fields
       expect(deserialized.sessionId).toBe(originalState.sessionId);
       expect(deserialized.status).toBe(originalState.status);
-      expect(deserialized.statusBeforePause).toBe(originalState.statusBeforePause);
       expect(deserialized.questions).toEqual(originalState.questions);
       expect(deserialized.selectedQuestionIndex).toBe(originalState.selectedQuestionIndex);
       expect(deserialized.displayQuestionIndex).toBe(originalState.displayQuestionIndex);
@@ -817,33 +777,6 @@ describe('serializer', () => {
       expect(deserialized.showScoreboard).toBe(originalState.showScoreboard);
       expect(deserialized.emergencyBlank).toBe(originalState.emergencyBlank);
       expect(deserialized.ttsEnabled).toBe(originalState.ttsEnabled);
-    });
-
-    it('preserves state with paused status', () => {
-      const originalState = createMockGameState({
-        sessionId: 'paused-test',
-        status: 'paused',
-        statusBeforePause: 'playing',
-        questions: [mockQuestion1],
-        selectedQuestionIndex: 0,
-        displayQuestionIndex: 0,
-        currentRound: 1,
-        totalRounds: 3,
-        teams: [mockTeam1],
-        teamAnswers: [],
-        timer: mockTimer,
-        settings: mockSettings,
-        showScoreboard: false,
-        emergencyBlank: true,
-        ttsEnabled: false,
-      });
-
-      const serialized = serializeTriviaState(originalState);
-      const deserialized = deserializeTriviaState(serialized);
-
-      expect(deserialized.status).toBe('paused');
-      expect(deserialized.statusBeforePause).toBe('playing');
-      expect(deserialized.emergencyBlank).toBe(true);
     });
 
     it('preserves teams with empty roundScores (as created by addTeam)', () => {
@@ -928,7 +861,7 @@ describe('serializer', () => {
       const serialized: SerializedTriviaState = {
         sessionId: 'test',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -952,7 +885,7 @@ describe('serializer', () => {
       const serialized: SerializedTriviaState = {
         sessionId: 'test',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -980,7 +913,7 @@ describe('serializer', () => {
       const serialized = {
         sessionId: 'test',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -1002,7 +935,7 @@ describe('serializer', () => {
       const serialized = {
         sessionId: 'test',
         status: 'setup',
-        statusBeforePause: null,
+
         questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,

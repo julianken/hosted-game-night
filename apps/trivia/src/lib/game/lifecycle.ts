@@ -24,7 +24,6 @@ export function createInitialState(): TriviaGameState {
   return deepFreeze({
     sessionId: uuidv4(),
     status: 'setup',
-    statusBeforePause: null,
     questions: SAMPLE_QUESTIONS,
     selectedQuestionIndex: 0,
     displayQuestionIndex: null,
@@ -75,7 +74,6 @@ export function startGame(state: TriviaGameState): TriviaGameState {
   return deepFreeze({
     ...state,
     status: 'playing',
-    statusBeforePause: null,
     currentRound: 0,
     selectedQuestionIndex: firstQuestionIndex >= 0 ? firstQuestionIndex : 0,
     displayQuestionIndex: null,
@@ -99,7 +97,6 @@ export function endGame(state: TriviaGameState): TriviaGameState {
   return deepFreeze({
     ...state,
     status: 'ended',
-    statusBeforePause: null,
     displayQuestionIndex: null,
     timer: {
       ...state.timer,
@@ -128,66 +125,6 @@ export function resetGame(state: TriviaGameState): TriviaGameState {
       roundScores: [], // Reset per-round scores
     })),
     teamAnswers: [],
-  });
-}
-
-/**
- * Pause the game — saves current status and pauses timer.
- */
-export function pauseGame(state: TriviaGameState): TriviaGameState {
-  // Can only pause from playing or between_rounds
-  if (state.status !== 'playing' && state.status !== 'between_rounds') {
-    return state;
-  }
-
-  return deepFreeze({
-    ...state,
-    status: 'paused',
-    statusBeforePause: state.status,
-    timer: {
-      ...state.timer,
-      isRunning: false,
-    },
-  });
-}
-
-/**
- * Resume from paused state — restores previous status.
- */
-export function resumeGame(state: TriviaGameState): TriviaGameState {
-  if (state.status !== 'paused') return state;
-  if (!state.statusBeforePause) return state;
-
-  return deepFreeze({
-    ...state,
-    status: state.statusBeforePause,
-    statusBeforePause: null,
-    emergencyBlank: false,
-  });
-}
-
-/**
- * Emergency pause — blanks the audience display.
- */
-export function emergencyPause(state: TriviaGameState): TriviaGameState {
-  // Can only emergency pause from playing, paused, or between_rounds
-  if (state.status !== 'playing' && state.status !== 'paused' && state.status !== 'between_rounds') {
-    return state;
-  }
-
-  const statusBeforePause = state.status === 'paused'
-    ? state.statusBeforePause
-    : state.status;
-
-  return deepFreeze({
-    ...state,
-    status: 'paused',
-    statusBeforePause,
-    timer: {
-      ...state.timer,
-      isRunning: false,
-    },
-    emergencyBlank: true,
   });
 }
 

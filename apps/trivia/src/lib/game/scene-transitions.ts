@@ -11,6 +11,7 @@
  */
 
 import type { TriviaGameState, AudienceScene, Question } from '@/types';
+import { REVEAL_TIMING } from '@/types/audience-scene';
 import {
   getNextScene,
   buildSceneUpdate,
@@ -20,6 +21,29 @@ import { completeRound as completeRoundEngine } from './rounds';
 import { nextRound as nextRoundEngine } from './rounds';
 import { endGame as endGameEngine } from './lifecycle';
 import { computeScoreDeltas } from './scoring';
+
+// =============================================================================
+// REVEAL LOCK — module-level guard
+// =============================================================================
+
+let revealLockUntil = 0;
+
+/** @internal Exported for testing only. Arms the reveal lock. */
+export function armRevealLock(): void {
+  revealLockUntil = Date.now() + REVEAL_TIMING.POST_REVEAL_LOCK_MS;
+}
+
+function isRevealLocked(): boolean {
+  return Date.now() < revealLockUntil;
+}
+
+/** Clear the reveal lock. Call on game reset so a stale lock cannot block a fresh game. */
+export function clearRevealLock(): void {
+  revealLockUntil = 0;
+}
+
+/** Advancement triggers that are blocked during the reveal lock window. */
+const ADVANCEMENT_TRIGGERS = new Set(['advance', 'skip', 'next_round', 'close']);
 
 // =============================================================================
 // TYPES
@@ -107,8 +131,11 @@ function handleRecapQaCycling(
         sceneTimestamp: Date.now(),
       };
     }
-    // No-op at first question — return empty update (not null, to signal handled)
-    return {};
+    // At Q1, back goes to recap_title
+    return {
+      ...buildSceneUpdate('recap_title'),
+      recapShowingAnswer: null,
+    };
   }
 
   // 2. ADVANCE + showing question face: flip to answer face.
@@ -219,11 +246,20 @@ function applyTransitionSideEffects(
   ) {
     const firstQ = roundQuestions[0];
     const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
+    armRevealLock();
     return {
       ...buildSceneUpdate(nextScene),
       displayQuestionIndex: globalIndex,
       selectedQuestionIndex: globalIndex,
       revealPhase: null,
+    };
+  }
+
+  // Side effect: Path A backward — recap_title -> round_summary, clear recap state.
+  if (state.audienceScene === 'recap_title' && nextScene === 'round_summary') {
+    return {
+      ...buildSceneUpdate(nextScene),
+      recapShowingAnswer: null,
     };
   }
 
@@ -239,8 +275,20 @@ function applyTransitionSideEffects(
     };
   }
 
-  // Side effect: seed recap_qa — start on question face.
+  // Side effect: seed recap_qa — origin-aware entry.
   if (nextScene === 'recap_qa') {
+    // Path C: backward entry from recap_scores — show last question with answer face.
+    if (state.audienceScene === 'recap_scores') {
+      const lastQ = roundQuestions[roundQuestions.length - 1];
+      const globalIndex = lastQ ? state.questions.indexOf(lastQ) : 0;
+      return {
+        ...buildSceneUpdate(nextScene),
+        displayQuestionIndex: globalIndex,
+        selectedQuestionIndex: globalIndex,
+        recapShowingAnswer: true,
+      };
+    }
+    // Forward entry from recap_title — start on question face.
     return {
       ...buildSceneUpdate(nextScene),
       recapShowingAnswer: false,
@@ -318,6 +366,11 @@ export function orchestrateSceneTransition(
   state: TriviaGameState,
   trigger: string
 ): SceneTransitionResult {
+  // Reveal lock guard: block advancement triggers during the 1.1s reveal choreography.
+  if (isRevealLocked() && ADVANCEMENT_TRIGGERS.has(trigger)) {
+    return null; // Silent rejection
+  }
+
   const ctx = deriveTransitionContext(state);
 
   // Layer 1: Recap Q/A cycling

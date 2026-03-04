@@ -132,6 +132,16 @@ describe('SCENE_TRIGGERS.BACK', () => {
   it('is defined as "back"', () => {
     expect(SCENE_TRIGGERS.BACK).toBe('back');
   });
+
+  it('recap_title + back -> round_summary', () => {
+    const result = getNextScene('recap_title', SCENE_TRIGGERS.BACK, {});
+    expect(result).toBe('round_summary');
+  });
+
+  it('recap_scores + back -> recap_qa', () => {
+    const result = getNextScene('recap_scores', SCENE_TRIGGERS.BACK, {});
+    expect(result).toBe('recap_qa');
+  });
 });
 
 // =============================================================================

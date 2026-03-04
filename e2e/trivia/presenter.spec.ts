@@ -21,8 +21,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('shows game status indicator @high', async ({ authenticatedTriviaPage: page }) => {
-      // Should show setup status initially - look for the status badge specifically
-      await expect(page.locator('span').filter({ hasText: /^setup$/i })).toBeVisible();
+      // Should show playing status - fixture starts the game via wizard
+      await expect(page.locator('span').filter({ hasText: /^playing$/i })).toBeVisible();
     });
 
     test('shows Open Display button @high', async ({ authenticatedTriviaPage: page }) => {
@@ -43,29 +43,36 @@ test.describe('Trivia Presenter View', () => {
   });
 
   test.describe('Starting a New Game', () => {
+    test.use({ skipSetupDismissal: true });
+
     test('cannot start game without teams @critical', async ({ authenticatedTriviaPage: page }) => {
+      // Navigate to Review step in the setup wizard
+      await page.locator('[data-testid="wizard-step-3"]').click();
       const startBtn = page.getByRole('button', { name: /start game/i });
       await expect(startBtn).toBeVisible();
       await expect(startBtn).toBeDisabled();
     });
 
     test('can start game after adding a team @critical', async ({ authenticatedTriviaPage: page }) => {
-      // Add a team - wait for team to appear (Pattern 1)
+      // Navigate to Teams step and add a team
+      await page.locator('[data-testid="wizard-step-2"]').click();
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
       await expect(page.getByText(/table 1/i)).toBeVisible();
 
-      // Start button should now be enabled
+      // Navigate to Review - Start button should be enabled
+      await page.locator('[data-testid="wizard-step-3"]').click();
       const startBtn = page.getByRole('button', { name: /start game/i });
       await expect(startBtn).toBeEnabled();
 
-      // Click start and wait for state change (Pattern 2)
+      // Click start and wait for state change
       await startBtn.click();
       await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
     });
 
     test('shows ready message with team count @medium', async ({ authenticatedTriviaPage: page }) => {
-      // Add teams - wait for each to appear (Pattern 1)
+      // Navigate to Teams step and add teams
+      await page.locator('[data-testid="wizard-step-2"]').click();
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
 
       await addTeamBtn.click();
@@ -74,17 +81,24 @@ test.describe('Trivia Presenter View', () => {
       await addTeamBtn.click();
       await expect(page.getByText(/table 2/i)).toBeVisible();
 
-      // Should show team count
-      await expect(page.getByText(/2 teams? ready/i)).toBeVisible();
+      // Navigate to Review step - should show ready status
+      await page.locator('[data-testid="wizard-step-3"]').click();
+      await expect(page.getByText(/ready to start/i)).toBeVisible();
     });
   });
 
   test.describe('Team Management', () => {
+    test.use({ skipSetupDismissal: true });
+
     test('displays team manager section @medium', async ({ authenticatedTriviaPage: page }) => {
-      await expect(page.getByRole('heading', { name: /teams/i })).toBeVisible();
+      // Navigate to Teams step in the setup wizard
+      await page.locator('[data-testid="wizard-step-2"]').click();
+      await expect(page.getByRole('region', { name: /team management/i })).toBeVisible();
     });
 
     test('can add a team @critical', async ({ authenticatedTriviaPage: page }) => {
+      // Navigate to Teams step in the setup wizard
+      await page.locator('[data-testid="wizard-step-2"]').click();
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await expect(addTeamBtn).toBeVisible();
 
@@ -101,6 +115,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can remove a team during setup @high', async ({ authenticatedTriviaPage: page }) => {
+      // Navigate to Teams step in the setup wizard
+      await page.locator('[data-testid="wizard-step-2"]').click();
       // Add a team
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
@@ -120,6 +136,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can rename a team @high', async ({ authenticatedTriviaPage: page }) => {
+      // Navigate to Teams step in the setup wizard
+      await page.locator('[data-testid="wizard-step-2"]').click();
       // Add a team
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
@@ -144,15 +162,15 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('shows team count limit @medium', async ({ authenticatedTriviaPage: page }) => {
-      // Check for the counter showing current/max teams
+      // Navigate to Teams step in the setup wizard
+      await page.locator('[data-testid="wizard-step-2"]').click();
       const addTeamBtn = page.getByRole('button', { name: /add team/i });
       await addTeamBtn.click();
 
       // Wait for team to be added
       await expect(page.getByRole('listitem', { name: /team: table 1/i })).toBeVisible();
 
-      // Should show 1/20 - use exact text to avoid matching question numbers like "Q1/"
-      // The team counter is within the Team management region
+      // Should show 1/20
       const teamSection = page.getByRole('region', { name: /team management/i });
       await expect(teamSection.getByText('1/20', { exact: true })).toBeVisible();
     });
@@ -166,13 +184,6 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can navigate questions with keyboard @high', async ({ authenticatedTriviaPage: page }) => {
-      // Add team and start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Navigate down with arrow key - keyboard events are synchronous
       await pressKey(page, 'ArrowDown');
 
@@ -184,13 +195,6 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can select a question by clicking @high', async ({ authenticatedTriviaPage: page }) => {
-      // Start game first
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Find and click a question item in the list
       const questionItems = page.locator('[role="listitem"]').filter({ hasText: /Q\d|question/i });
       if (await questionItems.count() > 1) {
@@ -202,13 +206,6 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Answer Reveal', () => {
     test('can toggle peek answer @high', async ({ authenticatedTriviaPage: page }) => {
-      // Start game first
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Find peek button - button may not exist in this version, so just check page structure
       const peekBtn = page.getByRole('button', { name: /peek|show answer/i });
       // If button exists, test it; otherwise, test still passes (feature may not be implemented)
@@ -224,13 +221,6 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can peek answer with Space key @medium', async ({ authenticatedTriviaPage: page }) => {
-      // Start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Press Space to peek - keyboard events are synchronous
       await pressKey(page, 'Space');
 
@@ -239,28 +229,12 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can toggle display question with D key @high', async ({ authenticatedTriviaPage: page }) => {
-      // Start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Press D to toggle display - keyboard events are synchronous
       await pressKey(page, 'KeyD');
     });
   });
 
   test.describe('Score Adjustment', () => {
-    test.beforeEach(async ({ authenticatedTriviaPage: page }) => {
-      // Add team and start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-    });
-
     test('shows team score input during game @high', async ({ authenticatedTriviaPage: page }) => {
       await expect(page.getByRole('heading', { name: /team scores/i })).toBeVisible();
     });
@@ -354,31 +328,21 @@ test.describe('Trivia Presenter View', () => {
   });
 
   test.describe('Game Flow', () => {
-    test.beforeEach(async ({ authenticatedTriviaPage: page }) => {
-      // Start game with a team
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-    });
-
     test('can pause game @critical', async ({ authenticatedTriviaPage: page }) => {
-      const pauseBtn = page.getByRole('button', { name: /^pause$/i });
-      await pauseBtn.click();
+      // Pause is keyboard-only (P) — action bar removed in WU-05
+      await pressKey(page, 'KeyP');
 
       // Wait for paused state (Pattern 2: state change indicator)
       await expect(page.locator('span').filter({ hasText: /^paused$/i })).toBeVisible();
     });
 
     test('can resume game from pause @critical', async ({ authenticatedTriviaPage: page }) => {
-      // Pause first
-      await page.getByRole('button', { name: /^pause$/i }).click();
+      // Pause first (keyboard P)
+      await pressKey(page, 'KeyP');
       await expect(page.locator('span').filter({ hasText: /^paused$/i })).toBeVisible();
 
-      // Resume
-      const resumeBtn = page.getByRole('button', { name: /resume/i });
-      await resumeBtn.click();
+      // Resume (keyboard P)
+      await pressKey(page, 'KeyP');
 
       // Wait for playing state (Pattern 2)
       await expect(page.locator('span').filter({ hasText: /^playing/i })).toBeVisible();
@@ -398,8 +362,8 @@ test.describe('Trivia Presenter View', () => {
     });
 
     test('can trigger emergency pause @high', async ({ authenticatedTriviaPage: page }) => {
-      const emergencyBtn = page.getByRole('button', { name: /^emergency$/i });
-      await emergencyBtn.click();
+      // Emergency pause is keyboard-only (E) — action bar removed in WU-05
+      await pressKey(page, 'KeyE');
 
       // Wait for emergency pause state (Pattern 2)
       await expect(page.locator('span').filter({ hasText: /^emergency pause$/i })).toBeVisible();
@@ -414,58 +378,51 @@ test.describe('Trivia Presenter View', () => {
   });
 
   test.describe('Round Completion', () => {
-    test('shows complete round button on last question of round @high', async ({ authenticatedTriviaPage: page }) => {
-      // Start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
+    test('shows scene nav Next button at question_closed scene @high', async ({ authenticatedTriviaPage: page }) => {
       // Navigate to last question of round (5 questions per round by default)
       for (let i = 0; i < 4; i++) {
         await pressKey(page, 'ArrowDown');
       }
 
-      // Wait for navigation to complete using .toPass() (Pattern 3)
+      // Close the question (S key) to enter question_closed scene —
+      // SceneNavButtons renders a "Next" button at this scene (WU-05: action bar removed)
+      await pressKey(page, 'KeyS');
+
+      // Wait for the SceneNavButtons "Next" button to appear (Pattern 3)
       await expect(async () => {
-        const completeBtn = page.getByRole('button', { name: /complete round/i });
-        // May not appear if we're not at last question, so check if visible
-        if (await completeBtn.isVisible()) {
-          await expect(completeBtn).toBeVisible();
+        const nextBtn = page.getByRole('button', { name: /^next$/i });
+        if (await nextBtn.isVisible()) {
+          await expect(nextBtn).toBeVisible();
         }
       }).toPass({ timeout: 5000 });
     });
 
     test('can complete round and proceed to next @critical', async ({ authenticatedTriviaPage: page }) => {
-      // Start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
-      // Navigate to end of round
+      // Navigate to last question of round
       for (let i = 0; i < 4; i++) {
         await pressKey(page, 'ArrowDown');
       }
 
-      // Wait for navigation and complete button (Pattern 3)
+      // Close the question (S key) → question_closed scene → SceneNavButtons shows "Next"
+      await pressKey(page, 'KeyS');
+
+      // Wait for "Next" button from SceneNavButtons (Pattern 3)
       await expect(async () => {
-        const completeBtn = page.getByRole('button', { name: /complete round/i });
-        await expect(completeBtn).toBeVisible({ timeout: 1000 });
+        const nextBtn = page.getByRole('button', { name: /^next$/i });
+        await expect(nextBtn).toBeVisible({ timeout: 1000 });
       }).toPass({ timeout: 5000 });
 
-      // Complete round
-      const completeBtn = page.getByRole('button', { name: /complete round/i });
-      if (await completeBtn.isVisible()) {
-        await completeBtn.click();
+      // Click "Next" — CLOSE trigger at last question → round_summary scene
+      // auto-show useEffect reveals RoundSummary overlay (WU-04)
+      const nextBtn = page.getByRole('button', { name: /^next$/i });
+      if (await nextBtn.isVisible()) {
+        await nextBtn.click();
 
         // Wait for between rounds state (Pattern 2)
         // Use first() to handle multiple "Round Complete" headings
         await expect(page.getByRole('heading', { name: /round.*complete/i }).first()).toBeVisible();
 
-        // Click next round
+        // Click "Next Round" from the RoundSummary overlay (still present)
         const nextRoundBtn = page.getByRole('button', { name: /next round/i });
         if (await nextRoundBtn.isVisible()) {
           await nextRoundBtn.click();
@@ -479,13 +436,6 @@ test.describe('Trivia Presenter View', () => {
 
   test.describe('Game Reset', () => {
     test('can reset game back to setup @high', async ({ authenticatedTriviaPage: page }) => {
-      // Start game
-      await page.getByRole('button', { name: /add team/i }).click();
-      await expect(page.getByText(/table 1/i)).toBeVisible();
-
-      await page.getByRole('button', { name: /start game/i }).click();
-      await expect(page.locator('span').filter({ hasText: /^Playing/i })).toBeVisible();
-
       // Find reset via keyboard shortcut modal or settings
       await pressKey(page, 'KeyR');
 

@@ -225,7 +225,7 @@ function AudienceDisplay({
   }, [requestSync]);
 
   return (
-    <main className="h-screen bg-background flex flex-col overflow-hidden relative" role="main" aria-label="Trivia audience display">
+    <main className="h-screen bg-background flex flex-col overflow-hidden relative" role="main" aria-label="Trivia audience display" data-connected={isConnected || undefined}>
       <div id="display-content" className="flex-1" role="region" aria-label="Game display area" aria-live="polite">
         <SceneRouter isConnected={isConnected} isResolvingRoomCode={isResolvingRoomCode} roomCode={roomCode ?? undefined} />
       </div>

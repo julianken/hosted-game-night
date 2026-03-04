@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game-keyboard';
 import { useSync } from '@/hooks/use-sync';
 import { useAutoSync, usePresenterSession, generateSecurePin } from '@joolie-boolie/sync';
@@ -13,7 +13,7 @@ import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
 import { TeamScoreInput } from '@/components/presenter/TeamScoreInput';
 import { TeamManager } from '@/components/presenter/TeamManager';
 import { QuickScoreGrid } from '@/components/presenter/QuickScoreGrid';
-import { NextActionHint } from '@/components/presenter/NextActionHint';
+import { SceneNavButtons } from '@/components/presenter/SceneNavButtons';
 import { useQuickScore } from '@/hooks/use-quick-score';
 import { useGameEventSounds } from '@/hooks/use-sounds';
 import { useRevealSequence } from '@/hooks/use-reveal-sequence';
@@ -25,12 +25,9 @@ import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
 import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
-import { filterQuestionsByCategory } from '@/lib/categories';
-import type { QuestionCategory } from '@/types';
 import { Button } from '@joolie-boolie/ui';
 import { serializeTriviaState, deserializeTriviaState } from '@/lib/state/serializer';
-import { SetupWizard } from '@/components/presenter/SetupWizard';
-import { PresenterActionBar } from '@/components/presenter/PresenterActionBar';
+import { SetupGate } from '@/components/presenter/SetupGate';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
@@ -86,6 +83,15 @@ export default function PlayPage() {
   useEffect(() => {
     if (game.status === 'between_rounds' && audienceScene !== 'round_summary') {
       setShowRoundSummary(false);
+    }
+  }, [audienceScene, game.status]);
+
+  // WU-04: Auto-show RoundSummary overlay when scene enters round_summary.
+  // Decouples the overlay from handleCompleteRound so SceneNavButtons can
+  // trigger round_summary via advanceScene without knowing about the overlay.
+  useEffect(() => {
+    if (audienceScene === 'round_summary' && game.status === 'between_rounds') {
+      setShowRoundSummary(true);
     }
   }, [audienceScene, game.status]);
 
@@ -195,23 +201,10 @@ export default function PlayPage() {
     useGameStore.getState().setAudienceScene('round_intro');
   };
 
-  const handleCompleteRound = () => {
-    game.completeRound();
-    setShowRoundSummary(true);
-    useGameStore.getState().setAudienceScene('round_summary');
-  };
-
   const [showSettings, setShowSettings] = useState(false);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showSavePresetModal, setShowSavePresetModal] = useState(false);
   const [showSaveQuestionSetModal, setShowSaveQuestionSetModal] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<QuestionCategory[]>([]);
-
-  const filteredQuestions = useMemo(() => {
-    if (selectedCategories.length === 0) return game.questions;
-    return filterQuestionsByCategory(game.questions, selectedCategories);
-  }, [game.questions, selectedCategories]);
-
   const {
     roundsCount,
     questionsPerRound,
@@ -302,11 +295,6 @@ export default function PlayPage() {
           text: `Playing - ${game.roundProgress}`,
           className: 'bg-success/20 text-success',
         };
-      case 'paused':
-        return {
-          text: game.emergencyBlank ? 'Emergency Pause' : 'Paused',
-          className: 'bg-warning/20 text-warning',
-        };
       case 'between_rounds':
         return {
           text: `Round ${game.currentRound + 1} Complete`,
@@ -320,6 +308,15 @@ export default function PlayPage() {
   };
 
   const statusDisplay = getStatusDisplay();
+
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  // Focus main content when transitioning from setup to playing
+  useEffect(() => {
+    if (game.status === 'playing' && mainRef.current) {
+      mainRef.current.focus();
+    }
+  }, [game.status]);
 
   return (
     <>
@@ -342,7 +339,6 @@ export default function PlayPage() {
         Left rail: question navigator (w-64)
         Center: hero question panel (flex-1)
         Right: leaderboard sidebar (w-80)
-        Bottom: fixed action bar (h-16)
         No viewport scrolling during gameplay.
       */}
       <div
@@ -476,16 +472,20 @@ export default function PlayPage() {
         </header>
 
         {/* ---- MAIN 3-COLUMN AREA ---- */}
-        <div className="flex flex-1 overflow-hidden">
+        <div
+          className="flex flex-1 overflow-hidden"
+          aria-hidden={game.status === 'setup' ? true : undefined}
+          inert={game.status === 'setup' ? true : undefined}
+        >
 
           {/* LEFT RAIL: Question Navigator (w-64) */}
           <aside
-            className="w-64 flex-shrink-0 border-r border-border overflow-y-auto bg-surface/40"
+            className="w-64 flex-shrink-0 border-r border-border overflow-y-auto bg-surface/40 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted"
             aria-label="Question navigator"
           >
             <div className="p-3">
               <QuestionList
-                questions={game.status === 'setup' ? filteredQuestions : game.questions}
+                questions={game.questions}
                 selectedIndex={game.selectedQuestionIndex}
                 displayIndex={game.displayQuestionIndex}
                 currentRound={game.currentRound}
@@ -498,9 +498,11 @@ export default function PlayPage() {
 
           {/* CENTER: Hero Question Panel (flex-1) */}
           <main
+            ref={mainRef}
             id="main-content"
             className="flex-1 overflow-y-auto p-4"
             aria-label="Current question"
+            tabIndex={-1}
           >
             {/* Question display */}
             <div className="bg-surface border border-border rounded-xl p-4 shadow-md mb-3">
@@ -518,9 +520,9 @@ export default function PlayPage() {
               />
             </div>
 
-            {/* Next action hint (T3.6) */}
+            {/* Scene navigation buttons (WU-03) */}
             <div className="mb-4 px-1">
-              <NextActionHint />
+              <SceneNavButtons />
             </div>
 
             {/* Keyboard shortcuts reference */}
@@ -585,36 +587,6 @@ export default function PlayPage() {
                   onSaveTeams={handleSaveTeams}
                 />
               </div>
-            )}
-
-            {/* Setup mode content — SetupWizard (T4.1) */}
-            {game.status === 'setup' && (
-              <SetupWizard
-                questions={game.questions}
-                onImport={gameState.importQuestions}
-                selectedCategories={selectedCategories}
-                onCategoryChange={setSelectedCategories}
-                onSaveQuestionSet={() => setShowSaveQuestionSetModal(true)}
-                roundsCount={roundsCount}
-                questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
-                timerAutoStart={timerAutoStart}
-                timerVisible={timerVisible}
-                ttsEnabled={ttsEnabled}
-                lastTeamSetup={lastTeamSetup}
-                currentTeams={game.teams}
-                onUpdateSetting={updateSetting}
-                onLoadTeams={handleLoadTeams}
-                onSaveTeams={handleSaveTeams}
-                onSavePreset={() => setShowSavePresetModal(true)}
-                canStart={game.canStart}
-                onAddTeam={game.addTeam}
-                onRemoveTeam={game.removeTeam}
-                onRenameTeam={game.renameTeam}
-                onLoadTeamsFromSetup={game.loadTeamsFromSetup}
-                onSaveTemplate={() => setShowSaveTemplateModal(true)}
-                onStartGame={game.startGame}
-              />
             )}
 
             {/* Round summary */}
@@ -704,23 +676,20 @@ export default function PlayPage() {
             </div>
           </aside>
         </div>
-
-        {/* ---- FIXED BOTTOM ACTION BAR (T4.6) ---- */}
-        <PresenterActionBar
-          status={game.status}
-          currentRound={game.currentRound}
-          totalRounds={game.totalRounds}
-          isLastRound={game.isLastRound}
-          isLastQuestionOfRound={game.isLastQuestionOfRound}
-          emergencyBlank={game.emergencyBlank}
-          onCompleteRound={handleCompleteRound}
-          onNextRound={handleNextRound}
-          onShowSummary={() => setShowRoundSummary(true)}
-          onResumeGame={game.resumeGame}
-          onPauseGame={game.pauseGame}
-          onEmergencyPause={game.emergencyPause}
-        />
       </div>
+
+      {/* Setup Gate Overlay (z-40) */}
+      {game.status === 'setup' && (
+        <SetupGate
+          isConnected={isConnected}
+          roomCode={session.roomCode}
+          onOpenDisplay={openDisplay}
+          onStartGame={game.startGame}
+          onSaveTemplate={() => setShowSaveTemplateModal(true)}
+          onSavePreset={() => setShowSavePresetModal(true)}
+          onSaveQuestionSet={() => setShowSaveQuestionSetModal(true)}
+        />
+      )}
 
       {/* Modals */}
       <KeyboardShortcutsModal

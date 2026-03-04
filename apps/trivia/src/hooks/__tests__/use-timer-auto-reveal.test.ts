@@ -23,7 +23,7 @@ function setTimerState(patch: {
 }
 
 /** Mock for advanceScene that we inject into the store. */
-let mockAdvanceScene: ReturnType<typeof vi.fn<(trigger: string) => void>>;
+let mockAdvanceScene: ReturnType<typeof vi.fn<(trigger: string) => boolean>>;
 
 /** Default hook options for a "ready to auto-reveal" scenario. */
 const defaultOptions = () => ({
@@ -42,7 +42,7 @@ describe('useTimerAutoReveal', () => {
     vi.useFakeTimers();
 
     // Create a fresh mock for advanceScene
-    mockAdvanceScene = vi.fn<(trigger: string) => void>();
+    mockAdvanceScene = vi.fn<(trigger: string) => boolean>().mockReturnValue(true);
 
     // Reset store to a clean playing state with a running timer at 5 s.
     // Inject our mock advanceScene so the hook's

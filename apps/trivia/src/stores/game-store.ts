@@ -25,9 +25,6 @@ import {
   startTimer as startTimerEngine,
   stopTimer as stopTimerEngine,
   resetTimer as resetTimerEngine,
-  pauseGame as pauseGameEngine,
-  resumeGame as resumeGameEngine,
-  emergencyPause as emergencyPauseEngine,
   updateSettings as updateSettingsEngine,
   importQuestions as importQuestionsEngine,
   getSelectedQuestion,
@@ -44,7 +41,11 @@ import {
   getOverallLeaders,
   getTeamsSortedByScore,
   orchestrateSceneTransition,
+  validateGameSetup,
+  buildEmergencyBlankUpdate,
+  buildEmergencyRestoreUpdate,
 } from '@/lib/game/engine';
+import { clearRevealLock } from '@/lib/game/scene-transitions';
 
 const lifecycleLogger = createGameLifecycleLogger({ game: 'trivia' });
 
@@ -71,10 +72,8 @@ export interface GameStore extends TriviaGameState {
   stopTimer: () => void;
   resetTimer: (duration?: number) => void;
 
-  // Pause actions
-  pauseGame: () => void;
-  resumeGame: () => void;
-  emergencyPause: () => void;
+  // Emergency blank (visual-only, no game status change)
+  toggleEmergencyBlank: () => void;
 
   // Settings actions
   updateSettings: (settings: Partial<GameSettings>) => void;
@@ -92,10 +91,11 @@ export interface GameStore extends TriviaGameState {
 
   /**
    * Advance the audience scene by consulting getNextScene().
-   * This is the SINGLE AUTHORITY for all scene transitions (except pause/emergency).
+   * This is the SINGLE AUTHORITY for all scene transitions (except emergency blank).
    * The trigger is one of the SCENE_TRIGGERS constants.
+   * Returns true when a transition was applied, false when rejected or no-op.
    */
-  advanceScene: (trigger: string) => void;
+  advanceScene: (trigger: string) => boolean;
 
   /** Set the reveal phase. Null clears an active reveal. */
   setRevealPhase: (phase: RevealPhase) => void;
@@ -133,6 +133,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
   resetGame: () => {
     lifecycleLogger.emit('game.reset');
+    clearRevealLock();
     set((state) => ({
       ...resetGameEngine(state),
       sceneTimestamp: Date.now(),
@@ -236,20 +237,18 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     set((state) => resetTimerEngine(state, duration));
   },
 
-  // Pause actions
-  pauseGame: () => {
-    lifecycleLogger.emit('game.paused');
-    set((state) => pauseGameEngine(state));
-  },
-
-  resumeGame: () => {
-    lifecycleLogger.emit('game.resumed');
-    set((state) => resumeGameEngine(state));
-  },
-
-  emergencyPause: () => {
-    lifecycleLogger.emit('game.emergency_pause');
-    set((state) => emergencyPauseEngine(state));
+  // Emergency blank — visual-only toggle, no game status change
+  toggleEmergencyBlank: () => {
+    const state = get();
+    if (state.audienceScene === 'emergency_blank') {
+      // Restore previous scene
+      lifecycleLogger.emit('game.emergency_restore');
+      set(buildEmergencyRestoreUpdate(state));
+    } else if (state.status === 'playing' || state.status === 'between_rounds') {
+      // Blank the display
+      lifecycleLogger.emit('game.emergency_blank');
+      set(buildEmergencyBlankUpdate(state.audienceScene));
+    }
   },
 
   _hydrate: (newState: Partial<TriviaGameState>) => {
@@ -298,7 +297,6 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         // -- Existing fields (unchanged) ------------------------------------
         sessionId: state.sessionId,
         status: state.status,
-        statusBeforePause: state.statusBeforePause,
         teams: [],
         questions: state.questions,
         selectedQuestionIndex: state.selectedQuestionIndex,
@@ -339,12 +337,12 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     set({ audienceScene: scene, sceneTimestamp: Date.now() });
   },
 
-  advanceScene: (trigger: string) => {
+  advanceScene: (trigger: string): boolean => {
     const state = get();
     const update = orchestrateSceneTransition(state, trigger);
 
     // No-op: orchestrator found no valid transition.
-    if (update === null || Object.keys(update).length === 0) return;
+    if (update === null || Object.keys(update).length === 0) return false;
 
     // Lifecycle logging — detect which transition occurred and emit the
     // appropriate log event. These are store-level side effects that the
@@ -359,6 +357,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     }
 
     set(update);
+    return true;
   },
 
   setRevealPhase: (phase: RevealPhase) => {
@@ -399,7 +398,6 @@ export function useGameSelectors() {
   const state: TriviaGameState = {
     sessionId: '',                   // Not used by any selector
     status,
-    statusBeforePause: null,         // Not used by any selector
     questions,
     selectedQuestionIndex,
     displayQuestionIndex,
@@ -438,11 +436,6 @@ export function useGameSelectors() {
     roundWinners: getRoundWinners(state, currentRound),
     overallLeaders: getOverallLeaders(state),
     teamsSortedByScore: getTeamsSortedByScore(state),
-    // Pause selectors
-    isPaused: status === 'paused',
-    canPause: status === 'playing' || status === 'between_rounds',
-    canResume: status === 'paused',
-
     // -- Scene layer ---------------------------------------------------
     /** Current audience display scene. */
     audienceScene,
@@ -457,6 +450,9 @@ export function useGameSelectors() {
       audienceScene === 'question_anticipation' ||
       audienceScene === 'final_buildup'
     ),
+
+    // Validation
+    validation: validateGameSetup(state),
   };
 }
 

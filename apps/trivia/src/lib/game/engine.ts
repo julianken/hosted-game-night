@@ -3,7 +3,7 @@
  *
  * All imports from '@/lib/game/engine' continue to work unchanged.
  * Implementation is split across focused modules:
- *   - lifecycle.ts   — startGame, pauseGame, resumeGame, endGame, resetGame, emergencyPause, updateSettings, createInitialState
+ *   - lifecycle.ts   — startGame, endGame, resetGame, updateSettings, createInitialState
  *   - teams.ts       — addTeam, removeTeam, renameTeam, updateTeamOrder
  *   - questions.ts   — selectQuestion, setDisplayQuestion, importQuestions, exportQuestionsFromState, clearQuestions, addQuestion, removeQuestion, updateQuestion
  *   - scoring.ts     — adjustTeamScore, setTeamScore, setTeamRoundScore, amendCorrectAnswers, recordTeamAnswer
@@ -12,7 +12,7 @@
  *   - selectors.ts   — getSelectedQuestion, getDisplayQuestion, getProgress, canStartGame, isGameOver, getCurrentRoundQuestions, getQuestionsForRound, getRoundProgress, getQuestionInRoundProgress, isLastQuestionOfRound, isLastRound, getRoundScores, getTeamRoundScore, getOverallLeaders, getTeamsSortedByScore, toggleScoreboard
  *   - helpers.ts     — deepFreeze, padRoundScores
  *   - state-machine.ts — VALID_TRANSITIONS, transition, canTransition, getNextStatus, getValidActions
- *   - scene.ts       — deriveSceneFromStatus, getNextScene, isSceneValidForStatus, buildSceneUpdate, buildPauseSceneUpdate, buildResumeSceneUpdate
+ *   - scene.ts       — deriveSceneFromStatus, getNextScene, isSceneValidForStatus, buildSceneUpdate, buildEmergencyBlankUpdate, buildEmergencyRestoreUpdate
  *   - scene-transitions.ts — orchestrateSceneTransition, deriveTransitionContext (extracted from advanceScene)
  */
 
@@ -23,9 +23,6 @@ export {
   startGame,
   endGame,
   resetGame,
-  pauseGame,
-  resumeGame,
-  emergencyPause,
   updateSettings,
 } from './lifecycle';
 
@@ -93,7 +90,10 @@ export {
   getOverallLeaders,
   getTeamsSortedByScore,
   toggleScoreboard,
+  validateGameSetup,
 } from './selectors';
+
+export type { ValidationSeverity, ValidationIssue, GameSetupValidation } from './selectors';
 
 // Helpers (exported for use in tests and extensions)
 export { deepFreeze, padRoundScores } from './helpers';
@@ -108,8 +108,6 @@ export {
   transition,
   getValidActions,
   canStart,
-  canPause,
-  canResume,
   isGameActive,
 } from './state-machine';
 
@@ -123,8 +121,8 @@ export {
   isSceneTimed,
   getNextScene,
   buildSceneUpdate,
-  buildPauseSceneUpdate,
-  buildResumeSceneUpdate,
+  buildEmergencyBlankUpdate,
+  buildEmergencyRestoreUpdate,
 } from './scene';
 
 // Scene transition orchestrator (extracted from advanceScene)

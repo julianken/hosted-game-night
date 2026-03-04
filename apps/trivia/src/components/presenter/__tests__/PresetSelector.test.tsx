@@ -6,6 +6,15 @@ import type { TriviaPreset } from '@joolie-boolie/database/types';
 
 global.fetch = vi.fn();
 
+const mockUpdateSetting = vi.fn();
+vi.mock('@/stores/settings-store', () => ({
+  useSettingsStore: {
+    getState: () => ({
+      updateSetting: mockUpdateSetting,
+    }),
+  },
+}));
+
 const mockUpdateSettings = vi.fn();
 
 vi.mock('@/stores/game-store', () => ({
@@ -91,6 +100,27 @@ describe('PresetSelector', () => {
         roundsCount: 2,
         questionsPerRound: 5,
       });
+    });
+  });
+
+  it('mirrors settings to settings-store (sync race fix)', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: mockPresets }),
+    });
+
+    renderWithToast(<PresetSelector />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'preset-1' } });
+
+    await waitFor(() => {
+      expect(mockUpdateSetting).toHaveBeenCalledWith('timerDuration', 15);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('roundsCount', 2);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('questionsPerRound', 5);
     });
   });
 

@@ -1,5 +1,6 @@
 import { test as base, expect as playwrightExpect, type Page } from '@playwright/test';
 import { getE2EPortConfig } from '../utils/port-config';
+import { startGameViaWizard } from '../utils/helpers';
 
 // -----------------------------------------------------------------------------
 // Dynamic URL Constants for Worktree Isolation
@@ -77,6 +78,13 @@ export interface GameAuthFixtures {
    * Use this when testing the modal itself.
    */
   skipModalDismissal: boolean;
+
+  /**
+   * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
+   * Use this when testing the setup overlay itself.
+   * Defaults to false (overlay IS dismissed automatically).
+   */
+  skipSetupDismissal: boolean;
 
   /**
    * Navigation timeout for game app pages in milliseconds.
@@ -362,6 +370,13 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   skipModalDismissal: [false, { option: true }],
 
   /**
+   * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
+   * Defaults to false (overlay IS dismissed automatically).
+   * Set to true in tests that need to test the setup overlay itself.
+   */
+  skipSetupDismissal: [false, { option: true }],
+
+  /**
    * Navigation timeout for game app pages.
    * Mobile viewports may need longer timeouts due to slower rendering
    * and potential auth redirect race conditions (BEA-375).
@@ -626,7 +641,7 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
    * Logs in via Platform Hub OAuth, then navigates to Trivia /play.
    * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal, navigationTimeout }, use) => {
+  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal, skipSetupDismissal, navigationTimeout }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
     // Copy cookies to Trivia domain (different ports = different origins)
     await loginViaPlatformHub(page, testUser, {
@@ -674,6 +689,13 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
     // 3. Dismiss Room Setup modal (unless test opts out)
     if (!skipModalDismissal) {
       await dismissRoomSetupModal(page, navigationTimeout);
+    }
+
+    // 4. Start game via setup wizard (unless test opts out)
+    // Navigates the wizard to add 1 team and click Start Game.
+    // After this, the overlay is gone and the dashboard is interactive.
+    if (!skipSetupDismissal) {
+      await startGameViaWizard(page);
     }
 
     // Provide authenticated Trivia page to test

@@ -7,6 +7,16 @@ import type { TriviaTemplate } from '@joolie-boolie/database/types';
 // Mock fetch globally
 global.fetch = vi.fn();
 
+// Mock settings-store
+const mockUpdateSetting = vi.fn();
+vi.mock('@/stores/settings-store', () => ({
+  useSettingsStore: {
+    getState: () => ({
+      updateSetting: mockUpdateSetting,
+    }),
+  },
+}));
+
 // Mock store actions
 const mockImportQuestions = vi.fn();
 const mockUpdateSettings = vi.fn();
@@ -16,7 +26,6 @@ vi.mock('@/stores/game-store', () => ({
     const store = {
       sessionId: 'test-session',
       status: 'setup' as const,
-      statusBeforePause: null,
       questions: [],
       selectedQuestionIndex: 0,
       displayQuestionIndex: null,
@@ -67,16 +76,14 @@ vi.mock('@/stores/game-store', () => ({
       startTimer: vi.fn(),
       stopTimer: vi.fn(),
       resetTimer: vi.fn(),
-      pauseGame: vi.fn(),
-      resumeGame: vi.fn(),
-      emergencyPause: vi.fn(),
+      toggleEmergencyBlank: vi.fn(),
       updateSettings: mockUpdateSettings,
       loadTeamsFromSetup: vi.fn(),
       importQuestions: mockImportQuestions,
       _hydrate: vi.fn(),
       // Scene action methods (BEA-587/588)
       setAudienceScene: vi.fn(),
-      advanceScene: vi.fn(),
+      advanceScene: vi.fn().mockReturnValue(true),
       setRevealPhase: vi.fn(),
       setScoreDeltasBatch: vi.fn(),
     };
@@ -243,6 +250,28 @@ describe('TemplateSelector', () => {
     });
   });
 
+  it('mirrors settings to settings-store (sync race fix)', async () => {
+    renderWithProviders(<TemplateSelector />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
+    });
+
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ template: mockTemplates[0] }),
+    } as Response);
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'template-1' } });
+
+    await waitFor(() => {
+      expect(mockUpdateSetting).toHaveBeenCalledWith('timerDuration', 30);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('roundsCount', 1);
+      expect(mockUpdateSetting).toHaveBeenCalledWith('questionsPerRound', 2);
+    });
+  });
+
   it('calls onTemplateLoad callback when template is loaded', async () => {
     const mockOnTemplateLoad = vi.fn();
     // Use fireEvent for testing
@@ -286,8 +315,7 @@ describe('TemplateSelector', () => {
       const store = {
         sessionId: 'test-session',
         status: 'playing' as const,
-        statusBeforePause: null,
-        questions: [],
+          questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
         currentRound: 0,
@@ -337,16 +365,14 @@ describe('TemplateSelector', () => {
         startTimer: vi.fn(),
         stopTimer: vi.fn(),
         resetTimer: vi.fn(),
-        pauseGame: vi.fn(),
-        resumeGame: vi.fn(),
-        emergencyPause: vi.fn(),
+        toggleEmergencyBlank: vi.fn(),
         updateSettings: mockUpdateSettings,
         loadTeamsFromSetup: vi.fn(),
         importQuestions: mockImportQuestions,
         _hydrate: vi.fn(),
         // Scene action methods (BEA-587/588)
         setAudienceScene: vi.fn(),
-        advanceScene: vi.fn(),
+        advanceScene: vi.fn().mockReturnValue(true),
         setRevealPhase: vi.fn(),
         setScoreDeltasBatch: vi.fn(),
       };

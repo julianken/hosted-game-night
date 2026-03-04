@@ -14,7 +14,6 @@ export function useGame() {
   const {
     sessionId,
     status,
-    statusBeforePause,
     questions,
     selectedQuestionIndex,
     displayQuestionIndex,
@@ -31,7 +30,6 @@ export function useGame() {
     // State
     sessionId,
     status,
-    statusBeforePause,
     questions,
     selectedQuestionIndex,
     displayQuestionIndex,
@@ -58,10 +56,9 @@ export function useGame() {
     roundWinners: selectors.roundWinners,
     overallLeaders: selectors.overallLeaders,
     teamsSortedByScore: selectors.teamsSortedByScore,
-    // Pause selectors
-    isPaused: selectors.isPaused,
-    canPause: selectors.canPause,
-    canResume: selectors.canResume,
+
+    // Validation
+    validation: selectors.validation,
 
     // Actions (Zustand actions are stable references)
     startGame: gameStore.startGame,
@@ -76,10 +73,8 @@ export function useGame() {
     setTeamScore: gameStore.setTeamScore,
     completeRound: gameStore.completeRound,
     nextRound: gameStore.nextRound,
-    // Pause actions
-    pauseGame: gameStore.pauseGame,
-    resumeGame: gameStore.resumeGame,
-    emergencyPause: gameStore.emergencyPause,
+    // Emergency blank (visual-only toggle)
+    toggleEmergencyBlank: gameStore.toggleEmergencyBlank,
     // Settings actions
     updateSettings: gameStore.updateSettings,
     loadTeamsFromSetup: gameStore.loadTeamsFromSetup,

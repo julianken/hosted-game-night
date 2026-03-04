@@ -41,12 +41,7 @@ export function QuestionList({
         </span>
       </div>
 
-      <nav aria-labelledby="questions-heading" className="space-y-4 max-h-[500px] overflow-y-auto pr-2
-        [&::-webkit-scrollbar]:w-1.5
-        [&::-webkit-scrollbar-track]:bg-transparent
-        [&::-webkit-scrollbar-thumb]:bg-muted/50
-        [&::-webkit-scrollbar-thumb]:rounded-full
-        hover:[&::-webkit-scrollbar-thumb]:bg-muted">
+      <nav aria-labelledby="questions-heading" className="space-y-4">
         {questionsByRound.map((roundQuestions, roundIndex) => {
           const isCurrentRound = roundIndex === currentRound;
           const isPastRound = roundIndex < currentRound;
