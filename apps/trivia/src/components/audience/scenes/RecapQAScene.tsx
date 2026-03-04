@@ -92,6 +92,12 @@ export function RecapQAScene() {
   }
 
   const revealedAnswer = currentQuestion.correctAnswers[0] ?? '';
+  const answerOptionIndex = currentQuestion.options.indexOf(revealedAnswer);
+  const answerText = answerOptionIndex >= 0 ? currentQuestion.optionTexts[answerOptionIndex] : null;
+  // "B) Paris" for multiple choice, "True" for true/false (where letter === text)
+  const displayAnswer = answerText && answerText !== revealedAnswer
+    ? `${revealedAnswer}) ${answerText}`
+    : revealedAnswer;
 
   return (
     <section
@@ -177,7 +183,7 @@ export function RecapQAScene() {
                     color: '#4ade80',
                   }}
                 >
-                  {revealedAnswer}
+                  {displayAnswer}
                 </p>
               </div>
 
