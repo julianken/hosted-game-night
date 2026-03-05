@@ -102,8 +102,8 @@ test.describe('@critical Seamless SSO - Auto-Approve Flow', () => {
     });
 
     // Verify the page actually loaded (presence of play UI elements)
-    // Room setup modal should appear for authenticated user without active session
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Bingo play page should show game controls (Roll or Start Game button)
+    await expect(page.getByRole('button', { name: /roll|start game/i })).toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -146,8 +146,8 @@ test.describe('@critical Seamless SSO - Auto-Approve Flow', () => {
       timeout: 10000,
     });
 
-    // Verify room setup modal appears (indicates successful auth)
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Verify setup gate appears (indicates successful auth on Trivia)
+    await expect(page.locator('[data-testid="setup-gate"]')).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -193,8 +193,8 @@ test.describe('@high Cross-App SSO', () => {
       timeout: 10000,
     });
 
-    // Verify room setup modal appears (indicates successful auth)
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Verify setup gate appears (indicates successful auth on Trivia)
+    await expect(page.locator('[data-testid="setup-gate"]')).toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -233,8 +233,8 @@ test.describe('@high Cross-App SSO', () => {
       timeout: 10000,
     });
 
-    // Verify room setup modal appears (indicates successful auth)
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Verify Bingo play page loaded (indicates successful auth)
+    await expect(page.getByRole('button', { name: /roll|start game/i })).toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -296,8 +296,8 @@ test.describe('@high Token Refresh Handling', () => {
       timeout: 10000,
     });
 
-    // Modal should still appear (session valid)
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Bingo play page should show game controls (session valid)
+    await expect(page.getByRole('button', { name: /roll|start game/i })).toBeVisible({ timeout: 5000 });
   });
 
   /**
@@ -334,8 +334,8 @@ test.describe('@high Token Refresh Handling', () => {
       timeout: 10000,
     });
 
-    // Modal should still appear (session valid)
-    await expect(page.getByRole('dialog', { name: /room setup/i })).toBeVisible({ timeout: 5000 });
+    // Trivia setup gate should appear (session valid)
+    await expect(page.locator('[data-testid="setup-gate"]')).toBeVisible({ timeout: 5000 });
   });
 
   /**

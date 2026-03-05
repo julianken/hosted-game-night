@@ -14,8 +14,7 @@
     "./filters": "./src/filters.ts",
     "./queries": "./src/queries.ts",
     "./tables": "./src/tables/index.ts",
-    "./hooks": "./src/hooks/index.ts",
-    "./api": "./src/api/index.ts"
+    "./hooks": "./src/hooks/index.ts"
   },
   "scripts": {
     "lint": "eslint src/",

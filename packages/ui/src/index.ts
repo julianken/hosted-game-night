@@ -45,13 +45,6 @@ export { SkeletonText, type SkeletonTextProps } from './skeleton-text';
 export { Confetti, type ConfettiProps, type ConfettiOptions } from './confetti';
 export { useConfetti, type UseConfettiOptions, type UseConfettiReturn } from './hooks/use-confetti';
 
-// SyncStatusIndicator
-export {
-  SyncStatusIndicator,
-  type SyncStatusIndicatorProps,
-  type SyncStatus,
-} from './sync-status-indicator';
-
 // Modal
 export { Modal, type ModalProps } from './modal';
 
@@ -69,11 +62,6 @@ export {
   type StandaloneToastProps,
 } from './toast';
 
-// Session Management
-export { CreateGameModal, type CreateGameModalProps } from './create-game-modal';
-export { JoinGameModal, type JoinGameModalProps } from './join-game-modal';
-export { RoomCodeDisplay, type RoomCodeDisplayProps } from './room-code-display';
-
 // ThemeSelector
 export {
   ThemeSelector,
@@ -81,9 +69,6 @@ export {
   type ThemeSelectorProps,
   type ThemeOption,
 } from './theme-selector';
-
-// RoomSetupModal
-export { RoomSetupModal, type RoomSetupModalProps } from './room-setup-modal';
 
 // ErrorBoundary
 export { ErrorBoundary, type ErrorBoundaryProps } from './error-boundary';
@@ -98,9 +83,6 @@ export {
   type KeyboardShortcut,
 } from './keyboard-shortcuts-modal';
 
-// OfflineBanner
-export { OfflineBanner, type OfflineBannerProps } from './offline-banner';
-
 // LoginButton
 export { LoginButton, type LoginButtonProps } from './login-button';
 
@@ -113,10 +95,6 @@ export {
 // InstallPrompt
 export { InstallPrompt, type InstallPromptProps } from './install-prompt';
 
-// ShareSession
-export { ShareSession, type ShareSessionProps } from './share-session';
-
 // Hooks
-export { useOnlineStatus, useConnectionInfo } from './hooks/use-online-status';
 export { useFullscreen } from './hooks/use-fullscreen';
 export { useApplyTheme, useDisplayTheme, useResolvedTheme } from './hooks/use-theme';

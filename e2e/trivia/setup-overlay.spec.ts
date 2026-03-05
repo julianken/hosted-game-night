@@ -162,39 +162,4 @@ test.describe('Trivia Setup Overlay', () => {
     });
   });
 
-  test.describe('Modal Z-Index Ordering', () => {
-    test.use({ skipModalDismissal: true });
-
-    test('RoomSetupModal renders above overlay @high', async ({ authenticatedTriviaPage: page }) => {
-      // The RoomSetupModal auto-opens when the user has no active session.
-      // It should render above the SetupGate overlay (z-40).
-      // The modal uses the shared Modal component which has z-50.
-
-      // Wait for either the setup gate or the modal to appear
-      const gate = page.locator('[data-testid="setup-gate"]');
-      await expect(gate).toBeVisible();
-
-      // Check if the Room Setup modal is visible (it auto-opens)
-      const modal = page.getByRole('dialog');
-      try {
-        await modal.waitFor({ state: 'visible', timeout: 5000 });
-
-        // Both should be visible at the same time — modal above overlay
-        await expect(gate).toBeVisible();
-        await expect(modal).toBeVisible();
-
-        // Verify that the modal is interactable (not blocked by the overlay)
-        // The modal should have a "Play Offline" button that is clickable
-        const playOfflineBtn = modal.getByRole('button', { name: /play offline/i });
-        if (await playOfflineBtn.isVisible()) {
-          // Button is visible and should be interactable above the overlay
-          await expect(playOfflineBtn).toBeEnabled();
-        }
-      } catch {
-        // Modal didn't appear — user may already have an active session
-        // In that case, the z-index test is not applicable, but the gate should still be visible
-        await expect(gate).toBeVisible();
-      }
-    });
-  });
 });

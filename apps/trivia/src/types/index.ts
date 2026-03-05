@@ -312,38 +312,6 @@ export type TriviaSyncMessage =
 export type SyncMessage = TriviaSyncMessage;
 
 // =============================================================================
-// GAME SESSION TYPES (API)
-// =============================================================================
-
-export interface TriviaGameSession {
-  id: string;
-  name: string;
-  status: GameStatus;
-  currentRound: number;
-  totalRounds: number;
-  teams: Team[];
-  questionSetId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTriviaGameRequest {
-  name: string;
-  totalRounds?: number;
-  questionsPerRound?: number;
-  questionSetId?: string;
-}
-
-export interface UpdateTriviaGameRequest {
-  name?: string;
-  status?: GameStatus;
-  currentRound?: number;
-  totalRounds?: number;
-  teams?: Team[];
-  questionSetId?: string;
-}
-
-// =============================================================================
 // QUESTION SET TYPES (API)
 // =============================================================================
 
@@ -369,85 +337,6 @@ export interface UpdateQuestionSetRequest {
   description?: string;
   questions?: Omit<Question, 'id' | 'roundIndex'>[];
   category?: QuestionCategory;
-}
-
-// =============================================================================
-// SESSION HISTORY TYPES (API)
-// =============================================================================
-
-/**
- * Summary of team scores for a completed session
- */
-export interface SessionTeamScore {
-  teamId: TeamId;
-  teamName: string;
-  totalScore: number;
-  roundScores: number[];
-}
-
-/**
- * Summary of a question answer for session history
- */
-export interface SessionQuestionSummary {
-  questionId: QuestionId;
-  questionText: string;
-  correctAnswers: string[];
-  teamsCorrect: number;
-  teamsIncorrect: number;
-}
-
-/**
- * Complete session history record
- */
-export interface TriviaSessionHistory {
-  id: string;
-  startedAt: string;
-  endedAt: string | null;
-  roundsPlayed: number;
-  totalRounds: number;
-  questionsAnswered: number;
-  totalQuestions: number;
-  teamScores: SessionTeamScore[];
-  winnerTeamId: TeamId | null;
-  winnerTeamName: string | null;
-  userId: string | null; // For future auth integration
-  questionSetId: string | null;
-  questionSetName: string | null;
-  questionSummaries: SessionQuestionSummary[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Request to create a new session history record
- */
-export interface CreateSessionHistoryRequest {
-  startedAt: string;
-  endedAt?: string;
-  roundsPlayed: number;
-  totalRounds: number;
-  questionsAnswered: number;
-  totalQuestions: number;
-  teamScores: SessionTeamScore[];
-  winnerTeamId?: TeamId;
-  winnerTeamName?: string;
-  userId?: string;
-  questionSetId?: string;
-  questionSetName?: string;
-  questionSummaries?: SessionQuestionSummary[];
-}
-
-/**
- * Request to update an existing session history record
- */
-export interface UpdateSessionHistoryRequest {
-  endedAt?: string;
-  roundsPlayed?: number;
-  questionsAnswered?: number;
-  teamScores?: SessionTeamScore[];
-  winnerTeamId?: TeamId;
-  winnerTeamName?: string;
-  questionSummaries?: SessionQuestionSummary[];
 }
 
 // =============================================================================

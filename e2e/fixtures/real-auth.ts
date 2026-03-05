@@ -125,24 +125,6 @@ async function loginViaPlatformHub(
 }
 
 /**
- * Dismiss the Room Setup modal that appears on Bingo/Trivia /play pages.
- */
-async function dismissRoomSetupModal(page: Page): Promise<void> {
-  const modal = page.getByRole('dialog', { name: /room setup/i });
-
-  try {
-    await modal.waitFor({ state: 'visible', timeout: 3000 });
-  } catch {
-    return; // Modal didn't appear — user may already have a session
-  }
-
-  const playOfflineButton = modal.getByRole('button', { name: /Play offline/i });
-  await playOfflineButton.waitFor({ state: 'visible', timeout: 2000 });
-  await playOfflineButton.click();
-  await modal.waitFor({ state: 'hidden', timeout: 5000 });
-}
-
-/**
  * Extended test with real-auth fixtures.
  *
  * Usage:
@@ -189,9 +171,6 @@ export const test = base.extend<RealAuthFixtures>({
       waitUntil: 'load',
       timeout: AUTH_TIMEOUT_MS,
     });
-
-    // Dismiss Room Setup modal
-    await dismissRoomSetupModal(page);
 
     await use(page);
   },
