@@ -18,8 +18,6 @@ describe('useGameStore', () => {
     it('should match createInitialState()', () => {
       const state = useGameStore.getState();
 
-      // sessionId is generated at module load, not at test time
-      expect(state.sessionId).toMatch(/^mock-uuid-\d+$/);
       expect(state.status).toBe('setup');
       expect(state.selectedQuestionIndex).toBe(0);
       expect(state.displayQuestionIndex).toBeNull();
@@ -167,7 +165,6 @@ describe('useGameStore', () => {
 
   describe('_hydrate', () => {
     it('should merge partial state', () => {
-      const originalState = useGameStore.getState();
       useGameStore.getState()._hydrate({
         status: 'playing',
         currentRound: 2,
@@ -176,7 +173,6 @@ describe('useGameStore', () => {
       const newState = useGameStore.getState();
       expect(newState.status).toBe('playing');
       expect(newState.currentRound).toBe(2);
-      expect(newState.sessionId).toBe(originalState.sessionId);
     });
   });
 

@@ -27,7 +27,6 @@ import {
  * WARNING: This builds a partial state object. For full state, use getState().
  */
 function useGameStateSnapshot(): TriviaGameState {
-  const sessionId = useGameStore((s) => s.sessionId);
   const status = useGameStore((s) => s.status);
   const questions = useGameStore((s) => s.questions);
   const selectedQuestionIndex = useGameStore((s) => s.selectedQuestionIndex);
@@ -54,7 +53,6 @@ function useGameStateSnapshot(): TriviaGameState {
   const questionStartScores = useGameStore((s) => s.questionStartScores);
 
   return useMemo<TriviaGameState>(() => ({
-    sessionId,
     status,
     questions,
     selectedQuestionIndex,
@@ -79,7 +77,6 @@ function useGameStateSnapshot(): TriviaGameState {
     // Round start score snapshot (BEA-601)
     questionStartScores,
   }), [
-    sessionId,
     status,
     questions,
     selectedQuestionIndex,

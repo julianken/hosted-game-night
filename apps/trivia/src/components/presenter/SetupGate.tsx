@@ -8,7 +8,6 @@ import type { QuestionCategory } from '@/types';
 
 interface SetupGateProps {
   isConnected: boolean;
-  roomCode: string | null;
   onOpenDisplay: () => void;
   onStartGame: () => void;
   onSaveTemplate: () => void;
@@ -18,7 +17,6 @@ interface SetupGateProps {
 
 export function SetupGate({
   isConnected,
-  roomCode,
   onOpenDisplay,
   onStartGame,
   onSaveTemplate,
@@ -97,12 +95,6 @@ export function SetupGate({
           <div data-testid="setup-gate-connection" className="flex items-center gap-2" title={isConnected ? 'Sync active' : 'Sync not active'}>
             <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-success' : 'bg-muted-foreground'}`} aria-hidden="true" />
           </div>
-          {/* Room code */}
-          {roomCode && (
-            <span data-testid="setup-gate-room-code" className="font-mono text-sm font-semibold text-foreground bg-surface px-2 py-1 rounded-md">
-              {roomCode}
-            </span>
-          )}
           {/* Open Display */}
           <button
             data-testid="setup-gate-open-display"

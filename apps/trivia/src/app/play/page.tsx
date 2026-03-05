@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game-keyboard';
 import { useSync } from '@/hooks/use-sync';
-import { useAutoSync, usePresenterSession, generateSecurePin } from '@joolie-boolie/sync';
+import { generateSessionId } from '@/lib/sync/session';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { useGameStore } from '@/stores/game-store';
@@ -21,12 +21,10 @@ import { RoundSummary } from '@/components/presenter/RoundSummary';
 import { ThemeSelector } from '@joolie-boolie/ui';
 import { SettingsPanel } from '@/components/presenter/SettingsPanel';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
-import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
 import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
 import { Button } from '@joolie-boolie/ui';
-import { serializeTriviaState, deserializeTriviaState } from '@/lib/state/serializer';
 import { SetupGate } from '@/components/presenter/SetupGate';
 
 export default function PlayPage() {
@@ -41,29 +39,12 @@ export default function PlayPage() {
   // Apply presenter theme
   useApplyTheme(presenterTheme);
 
-  // Shared presenter session management
-  const session = usePresenterSession({
-    gameType: 'trivia',
-    storagePrefix: 'trivia',
-    offlineSessionStoragePrefix: 'trivia_offline_session',
-    fetchGameState: async (roomCode: string, token: string) => {
-      const response = await fetch(`/api/sessions/${roomCode}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw response;
-      const data = await response.json();
-      return data.gameState;
-    },
-    hydrateStore: (state: unknown) => {
-      const partialState = deserializeTriviaState(state);
-      useGameStore.setState(partialState);
-    },
-    serializeState: () => serializeTriviaState(useGameStore.getState()),
-    autoCreateOffline: false,
-  });
+  // Local session ID — stable for the lifetime of this presenter window
+  const sessionIdRef = useRef(generateSessionId());
+  const sessionId = sessionIdRef.current;
 
   // Initialize sync as presenter role with session-scoped channel
-  const { isConnected } = useSync({ role: 'presenter', sessionId: session.sessionId });
+  const { isConnected } = useSync({ role: 'presenter', sessionId });
 
   // Round summary overlay control
   const [showRoundSummary, setShowRoundSummary] = useState(false);
@@ -95,105 +76,10 @@ export default function PlayPage() {
     }
   }, [audienceScene, game.status]);
 
-  // Auto-sync game state to database (only in online mode)
-  const gameState = useGameStore();
-  const { isSyncing: _isSyncing, lastSyncTime: _lastSyncTime } = useAutoSync(
-    gameState,
-    async (state) => {
-      if (session.mode !== 'online' || !session.roomCode) return;
-      const serialized = serializeTriviaState(state);
-      const response = await fetch(`/api/sessions/${session.roomCode}/state`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionToken: null, state: serialized }),
-      });
-      if (!response.ok) throw new Error('Failed to sync state');
-    },
-    {
-      debounceMs: 2000,
-      enabled: session.mode === 'online' && !!session.roomCode,
-      isCriticalChange: (prev, next) => {
-        if (prev?.status !== next?.status) return 'STATUS_CHANGED';
-        if (prev?.displayQuestionIndex !== next?.displayQuestionIndex) return 'QUESTION_CHANGED';
-        if (prev?.currentRound !== next?.currentRound) return 'ROUND_CHANGED';
-        return null;
-      },
-    }
-  );
-
-  // Save offline session state to localStorage
-  useEffect(() => {
-    if (session.mode === 'offline' && session.offlineSessionId) {
-      try {
-        const sessionKey = `trivia_offline_session_${session.offlineSessionId}`;
-        const sessionData = {
-          sessionId: session.offlineSessionId,
-          isOffline: true,
-          gameState: serializeTriviaState(gameState),
-          lastUpdated: new Date().toISOString(),
-        };
-        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-      } catch (error) {
-        console.error('Failed to save offline session:', error);
-      }
-    }
-  }, [session.mode, session.offlineSessionId, gameState]);
-
-  // Session handlers
-  const handlePlayOffline = useCallback(() => {
-    session.playOffline();
-  }, [session]);
-
-  const handleModalCreateRoom = useCallback(async () => {
-    const pin = session.pin || generateSecurePin();
-    await session.createRoom({
-      pin,
-      initialState: serializeTriviaState(gameState),
-    });
-  }, [session, gameState]);
-
-  const handleModalJoinRoom = useCallback((roomCode: string, pin: string) => {
-    void session.joinRoom(roomCode, pin);
-  }, [session]);
-
-  const handleModalPlayOffline = useCallback(() => {
-    session.playOffline();
-    session.closeModal();
-  }, [session]);
-
-  const handleCreateNewGame = useCallback(() => {
-    if (game.status !== 'setup' && game.status !== 'ended') {
-      const confirmed = window.confirm(
-        'This will end the current game and create a new one. Are you sure?'
-      );
-      if (!confirmed) return;
-    }
-    game.resetGame();
-    session.resetSession({ showModal: true });
-  }, [game, session]);
-
   const openDisplay = useCallback(() => {
-    let displayUrl: string;
-    let windowName: string;
-
-    if (session.mode === 'offline' && session.offlineSessionId) {
-      displayUrl = `${window.location.origin}/display?offline=${session.offlineSessionId}`;
-      windowName = `trivia-display-offline-${session.offlineSessionId}`;
-    } else if (session.roomCode) {
-      displayUrl = `${window.location.origin}/display?room=${session.roomCode}`;
-      windowName = `trivia-display-${session.roomCode}`;
-    } else {
-      displayUrl = `${window.location.origin}/display`;
-      windowName = 'trivia-display';
-    }
-
-    const displayWindow = window.open(
-      displayUrl,
-      windowName,
-      'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
-    );
-    if (displayWindow) displayWindow.focus();
-  }, [session]);
+    const displayUrl = `${window.location.origin}/display?session=${sessionId}`;
+    window.open(displayUrl, `trivia-display-${sessionId}`, 'popup');
+  }, [sessionId]);
 
   const handleNextRound = () => {
     game.nextRound();
@@ -390,31 +276,10 @@ export default function PlayPage() {
               </span>
             </div>
 
-            {/* Room code */}
-            {session.roomCode && session.mode !== 'offline' && (
-              <span className="font-mono text-sm font-semibold text-foreground bg-surface px-2 py-1 rounded-md">
-                {session.roomCode}
-              </span>
-            )}
-
-            {/* Play Offline */}
-            {!session.roomCode && session.mode !== 'offline' && (
-              <Button onClick={handlePlayOffline} variant="secondary" size="sm">
-                Play Offline
-              </Button>
-            )}
-
             {/* Open Display */}
             <Button onClick={openDisplay} variant="secondary" size="sm">
               Open Display
             </Button>
-
-            {/* Create New Game */}
-            {(session.roomCode || session.mode === 'offline') && (
-              <Button onClick={handleCreateNewGame} variant="secondary" size="sm">
-                New Game
-              </Button>
-            )}
 
             {/* Fullscreen */}
             <button
@@ -682,7 +547,6 @@ export default function PlayPage() {
       {game.status === 'setup' && (
         <SetupGate
           isConnected={isConnected}
-          roomCode={session.roomCode}
           onOpenDisplay={openDisplay}
           onStartGame={game.startGame}
           onSaveTemplate={() => setShowSaveTemplateModal(true)}
@@ -695,15 +559,6 @@ export default function PlayPage() {
       <KeyboardShortcutsModal
         isOpen={game.showHelp}
         onClose={() => game.setShowHelp(false)}
-      />
-      <RoomSetupModal
-        isOpen={session.shouldShowModal}
-        onClose={session.closeModal}
-        onCreateRoom={handleModalCreateRoom}
-        onJoinRoom={handleModalJoinRoom}
-        onPlayOffline={handleModalPlayOffline}
-        error={session.error}
-        isLoading={session.isLoading}
       />
       <SaveTemplateModal
         isOpen={showSaveTemplateModal}

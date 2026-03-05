@@ -26,9 +26,6 @@ import { RecapScoresScene } from './RecapScoresScene';
 
 export interface SceneRouterProps {
   isConnected: boolean;
-  isResolvingRoomCode?: boolean;
-  /** Room code passed from the display page URL param (BEA-607). */
-  roomCode?: string;
 }
 
 /**
@@ -47,7 +44,7 @@ export interface SceneRouterProps {
  *   Exit:  280ms, ease [0.4, 0, 1, 1], opacity: 0, scale: 0.98
  *   Enter: 180ms, ease [0.22, 1, 0.36, 1], opacity: 0, y: 6 -> opacity: 1, y: 0
  */
-export function SceneRouter({ isConnected, isResolvingRoomCode = false, roomCode }: SceneRouterProps) {
+export function SceneRouter({ isConnected }: SceneRouterProps) {
   const shouldReduceMotion = useReducedMotion();
 
   const audienceScene = useGameStore((state) => state.audienceScene);
@@ -62,12 +59,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false, roomCode
 
   // Pre-connection: render WaitingScene outside AnimatePresence
   if (!isConnected) {
-    return (
-      <WaitingScene
-        message={isResolvingRoomCode ? 'Connecting to room...' : 'Waiting for presenter...'}
-        roomCode={roomCode}
-      />
-    );
+    return <WaitingScene message="Waiting for presenter..." />;
   }
 
   // Derive stable scene key for AnimatePresence — ensures remount on question change
@@ -97,7 +89,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false, roomCode
     switch (audienceScene) {
       // -- T1 scenes (fully implemented) ------------------------------------
       case 'waiting':
-        return <WaitingScene roomCode={roomCode} />;
+        return <WaitingScene />;
 
       case 'question_display':
         return <QuestionDisplayScene answersEnabled={timerIsRunning} />;
@@ -145,7 +137,7 @@ export function SceneRouter({ isConnected, isResolvingRoomCode = false, roomCode
         // Exhaustiveness guard — TypeScript ensures all AudienceScene values handled.
         const _exhaustive: never = audienceScene;
         void _exhaustive;
-        return <WaitingScene roomCode={roomCode} />;
+        return <WaitingScene />;
       }
     }
   };

@@ -12,7 +12,6 @@ export function useGame() {
 
   // Get game state
   const {
-    sessionId,
     status,
     questions,
     selectedQuestionIndex,
@@ -28,7 +27,6 @@ export function useGame() {
 
   return {
     // State
-    sessionId,
     status,
     questions,
     selectedQuestionIndex,

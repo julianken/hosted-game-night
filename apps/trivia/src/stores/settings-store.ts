@@ -133,7 +133,6 @@ export const useSettingsStore = create<SettingsStore>()(
 
         if (fromVersion <= 2) {
           // v1 had no revealMode; v2 added it. Either way, strip it out.
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { revealMode: _rm, ...rest } = stored;
           return rest;
         }

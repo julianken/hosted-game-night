@@ -4,17 +4,13 @@ import { useReducedMotion } from 'motion/react';
 
 export interface WaitingDisplayProps {
   message: string;
-  /** Room code to display prominently (Issue 2.5) */
-  roomCode?: string;
 }
 
 /**
  * Cinematic waiting display for the audience view.
  *
- * Features (Issue 2.5 — Player Join Flow):
+ * Features:
  * - Large "Trivia" wordmark in display font with breathing scale animation.
- * - Room code displayed prominently in large font when provided.
- * - Join URL: trivia.joolie-boolie.com/join shown below room code.
  * - Ambient gradient background with 20s loop animation.
  *
  * Reduced motion (Issue A-19):
@@ -22,7 +18,7 @@ export interface WaitingDisplayProps {
  * - Breathing: motion-reduce:animate-none (stops waiting-breathe keyframe).
  * - Spinner: replaced with static dot when reduced motion is on.
  */
-export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
+export function WaitingDisplay({ message }: WaitingDisplayProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -57,40 +53,6 @@ export function WaitingDisplay({ message, roomCode }: WaitingDisplayProps) {
           Trivia
         </span>
       </div>
-
-      {/* Room code — displayed prominently (Issue 2.5) */}
-      {roomCode && (
-        <div className="flex flex-col items-center" style={{ gap: 'clamp(6px, 1vh, 16px)' }}>
-          <span
-            className="text-foreground-secondary font-medium uppercase tracking-widest"
-            style={{ fontSize: 'clamp(1.25rem, 2.5vw, 2rem)', letterSpacing: '0.15em' }}
-          >
-            Room Code
-          </span>
-          <span
-            className="font-bold text-foreground font-mono"
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(4rem, 10vw, 8rem)',
-              letterSpacing: '0.08em',
-              background: 'linear-gradient(135deg, #4F7BF7 0%, #7E52E4 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-            aria-label={`Room code: ${roomCode}`}
-          >
-            {roomCode}
-          </span>
-          {/* Join URL (Issue 2.5) */}
-          <p
-            className="text-foreground-secondary font-medium"
-            style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}
-          >
-            trivia.joolie-boolie.com/join
-          </p>
-        </div>
-      )}
 
       {/* Status message + spinner / dot */}
       <div className="flex flex-col items-center" style={{ gap: 'clamp(12px, 2vh, 24px)' }}>

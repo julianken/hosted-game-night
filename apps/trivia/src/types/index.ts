@@ -175,8 +175,6 @@ export interface TeamAnswer {
 // =============================================================================
 
 export interface TriviaGameState {
-  // -- Session --
-  sessionId: string;
   status: GameStatus;
 
   // -- Questions --

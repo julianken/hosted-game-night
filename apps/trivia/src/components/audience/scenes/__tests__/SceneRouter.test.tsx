@@ -174,15 +174,6 @@ describe('SceneRouter', () => {
       expect(waiting).toHaveTextContent('Waiting for presenter...');
     });
 
-    it('renders WaitingScene with resolving message when isResolvingRoomCode is true', () => {
-      setScene('question_display');
-      render(<SceneRouter isConnected={false} isResolvingRoomCode={true} />);
-
-      const waiting = screen.getByTestId('WaitingScene');
-      expect(waiting).toBeInTheDocument();
-      expect(waiting).toHaveTextContent('Connecting to room...');
-    });
-
     it('does not render the active scene component when not connected', () => {
       setScene('question_display');
       render(<SceneRouter isConnected={false} />);

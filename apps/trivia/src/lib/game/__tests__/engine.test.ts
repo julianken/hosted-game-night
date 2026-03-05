@@ -78,10 +78,6 @@ describe('Trivia Game Engine', () => {
       expect(Array.isArray(state.questions)).toBe(true);
     });
 
-    it('should generate unique sessionId', () => {
-      const state = createInitialState();
-      expect(state.sessionId).toMatch(/^mock-uuid-\d+$/);
-    });
   });
 
   // ==========================================================================
@@ -180,15 +176,13 @@ describe('Trivia Game Engine', () => {
   });
 
   describe('resetGame', () => {
-    it('should reset state but preserve sessionId', () => {
+    it('should reset state back to setup', () => {
       let state = createInitialState();
-      const originalSessionId = state.sessionId;
       state = addTeam(state, 'Team A');
       state = startGame(state);
       state = adjustTeamScore(state, state.teams[0].id, 50);
       const result = resetGame(state);
 
-      expect(result.sessionId).toBe(originalSessionId);
       expect(result.status).toBe('setup');
     });
 

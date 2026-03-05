@@ -35,7 +35,6 @@ vi.mock('@/stores/game-store', () => ({
   useGameStore: vi.fn((selector) => {
     const store = {
       // TriviaGameState properties
-      sessionId: 'test-session',
       status: 'setup' as const,
       questions: mockQuestions,
       selectedQuestionIndex: 0,
@@ -293,8 +292,7 @@ describe('SaveTemplateModal', () => {
     // Mock empty questions temporarily
     vi.mocked(vi.mocked(await import('@/stores/game-store')).useGameStore).mockImplementation((selector) => {
       const store = {
-        sessionId: 'test-session',
-        status: 'setup' as const,
+          status: 'setup' as const,
           questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,
@@ -375,8 +373,7 @@ describe('SaveTemplateModal', () => {
     // Restore the original mock with questions
     vi.mocked(await import('@/stores/game-store')).useGameStore.mockImplementation((selector) => {
       const store = {
-        sessionId: 'test-session',
-        status: 'setup' as const,
+          status: 'setup' as const,
           questions: mockQuestions,
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,

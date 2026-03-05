@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
-import { isValidRoomCode } from '@joolie-boolie/sync';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { SceneRouter } from '@/components/audience/scenes';
@@ -15,9 +14,9 @@ import { useGameStore } from '@/stores/game-store';
 
 /**
  * Invalid Session Error Component
- * Displayed when the session ID or room code is missing or invalid.
+ * Displayed when the session ID is missing or invalid.
  */
-function InvalidSessionError({ type: _type }: { type: 'room' | 'session' }) {
+function InvalidSessionError() {
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-8" role="main">
       <div className="max-w-lg text-center space-y-6" role="alert">
@@ -78,113 +77,25 @@ function DisplayLoading() {
  * Inner component that uses useSearchParams (requires Suspense boundary).
  */
 function DisplayContent() {
-  // Parse room code or session ID from URL
   const searchParams = useSearchParams();
-  const roomCode = searchParams.get('room');
-  const offlineSessionId = searchParams.get('offline'); // offline mode session ID
-  const sessionId = searchParams.get('session'); // backward compatibility
+  const sessionId = searchParams.get('session');
 
-  // Validate room code first (preferred for online mode)
-  if (roomCode) {
-    if (!isValidRoomCode(roomCode)) {
-      return <InvalidSessionError type="room" />;
-    }
-    return <AudienceDisplay roomCode={roomCode} />;
+  if (!sessionId || !isValidSessionId(sessionId)) {
+    return <InvalidSessionError />;
   }
 
-  // Check for offline session ID
-  if (offlineSessionId) {
-    if (!isValidSessionId(offlineSessionId)) {
-      return <InvalidSessionError type="session" />;
-    }
-    return <AudienceDisplay sessionId={offlineSessionId} />;
-  }
-
-  // Fall back to session ID for backward compatibility
-  if (sessionId) {
-    if (!isValidSessionId(sessionId)) {
-      return <InvalidSessionError type="session" />;
-    }
-    return <AudienceDisplay sessionId={sessionId} />;
-  }
-
-  // No room code or session ID provided
-  return <InvalidSessionError type="room" />;
+  return <AudienceDisplay sessionId={sessionId} />;
 }
 
 /**
  * Audience Display Component
- * Renders the game display once we have a valid session or room code.
+ * Renders the game display once we have a valid session ID.
  */
-function AudienceDisplay({
-  roomCode,
-  sessionId,
-}: {
-  roomCode?: string;
-  sessionId?: string;
-}) {
-  // State for database polling
-  const [dbSessionId, setDbSessionId] = useState<string | null>(sessionId || null);
-  const [isResolvingRoomCode, setIsResolvingRoomCode] = useState(false);
-
-  // Poll database for session ID when using room code
-  useEffect(() => {
-    if (!roomCode) return;
-
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
-    let isFirstFetch = true;
-
-    const fetchSessionId = async () => {
-      try {
-        if (isFirstFetch) {
-          setIsResolvingRoomCode(true);
-          isFirstFetch = false;
-        }
-        const response = await fetch(`/api/sessions/room/${roomCode}`);
-
-        if (!response.ok) {
-          // Graceful failure - don't set error on 404, just keep polling
-          if (response.status !== 404) {
-            console.warn(`Failed to fetch session for room ${roomCode}:`, response.statusText);
-          }
-          return;
-        }
-
-        const data = await response.json();
-        if (isMounted && data.sessionId) {
-          setDbSessionId(data.sessionId);
-          setIsResolvingRoomCode(false);
-        }
-      } catch (error) {
-        // Graceful failure - log but don't show error to user
-        console.warn('Error fetching session ID:', error);
-        setIsResolvingRoomCode(false);
-      } finally {
-        // Schedule next poll - stop after session ID is resolved
-        if (isMounted && !dbSessionId) {
-          timeoutId = setTimeout(fetchSessionId, 5000);
-        }
-      }
-    };
-
-    // Start polling
-    fetchSessionId();
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [roomCode, dbSessionId]);
-
-  // Determine which session ID to use for BroadcastChannel sync
-  // CRITICAL: Must match presenter's channel name logic (roomCode || offlineSessionId || '')
-  const effectiveSessionId = roomCode || sessionId;
-
+function AudienceDisplay({ sessionId }: { sessionId: string }) {
   // Initialize sync as audience role with session-scoped channel
   const { isConnected, requestSync } = useSync({
     role: 'audience',
-    sessionId: effectiveSessionId || '',
+    sessionId,
   });
 
   // Fullscreen support
@@ -227,7 +138,7 @@ function AudienceDisplay({
   return (
     <main className="h-screen bg-background flex flex-col overflow-hidden relative" role="main" aria-label="Trivia audience display" data-connected={isConnected || undefined}>
       <div id="display-content" className="flex-1" role="region" aria-label="Game display area" aria-live="polite">
-        <SceneRouter isConnected={isConnected} isResolvingRoomCode={isResolvingRoomCode} roomCode={roomCode ?? undefined} />
+        <SceneRouter isConnected={isConnected} />
       </div>
       {timer.isRunning && (
         <div className="absolute bottom-8 right-8 z-50">
