@@ -310,8 +310,9 @@ describe('advanceScene() recap paths', () => {
       useGameStore.getState().advanceScene('advance');
 
       const state = useGameStore.getState();
-      expect(state.audienceScene).toBe('recap_scores');
+      expect(state.audienceScene).toBe('round_scoring');
       expect(state.recapShowingAnswer).toBeNull();
+      expect(state.roundScoringInProgress).toBe(true);
     });
   });
 
@@ -352,7 +353,7 @@ describe('advanceScene() recap paths', () => {
       expect(state.recapShowingAnswer).toBe(false);
     });
 
-    it('should seed recap_scores: set recapShowingAnswer to null on exit from last answer', () => {
+    it('should seed round_scoring: set roundScoringInProgress and clear recapShowingAnswer on exit from last answer', () => {
       const state0 = useGameStore.getState();
       const roundQuestions = state0.questions.filter(q => q.roundIndex === 0);
       const lastIndex = state0.questions.indexOf(roundQuestions[roundQuestions.length - 1]);
@@ -367,7 +368,25 @@ describe('advanceScene() recap paths', () => {
         selectedQuestionIndex: lastIndex,
       });
 
-      useGameStore.getState().advanceScene('advance'); // last answer -> recap_scores
+      useGameStore.getState().advanceScene('advance'); // last answer -> round_scoring
+
+      const state = useGameStore.getState();
+      expect(state.audienceScene).toBe('round_scoring');
+      expect(state.recapShowingAnswer).toBeNull();
+      expect(state.roundScoringInProgress).toBe(true);
+      expect(state.roundScoringEntries).toEqual({});
+    });
+
+    it('should seed recap_scores: clear recapShowingAnswer on entry from round_scoring', () => {
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.setState({
+        status: 'between_rounds',
+        audienceScene: 'round_scoring',
+        recapShowingAnswer: null,
+      });
+
+      useGameStore.getState().advanceScene('advance'); // round_scoring -> recap_scores
 
       const state = useGameStore.getState();
       expect(state.audienceScene).toBe('recap_scores');

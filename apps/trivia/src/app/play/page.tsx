@@ -13,6 +13,7 @@ import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
 import { TeamScoreInput } from '@/components/presenter/TeamScoreInput';
 import { TeamManager } from '@/components/presenter/TeamManager';
 import { QuickScoreGrid } from '@/components/presenter/QuickScoreGrid';
+import { RoundScoringPanel } from '@/components/presenter/RoundScoringPanel';
 import { SceneNavButtons } from '@/components/presenter/SceneNavButtons';
 import { useQuickScore } from '@/hooks/use-quick-score';
 import { useGameEventSounds } from '@/hooks/use-sounds';
@@ -170,6 +171,15 @@ export default function PlayPage() {
     audienceScene === 'answer_reveal' ||
     audienceScene === 'round_summary'
   );
+
+  /** Per-round scoring scene (BEA-662) */
+  const isRoundScoringScene = audienceScene === 'round_scoring';
+
+  /** Handle round scores submission from RoundScoringPanel */
+  const handleRoundScoresSubmitted = useCallback((scores: Record<string, number>) => {
+    useGameStore.getState().setRoundScores(scores);
+    useGameStore.getState().advanceScene('advance');
+  }, []);
 
   /** Status badge for the presenter header */
   const getStatusDisplay = () => {
@@ -493,7 +503,7 @@ export default function PlayPage() {
               </div>
 
               {/* Quick Score Grid (T3.6) — shown during scoring-phase scenes */}
-              {(game.status === 'playing' || game.status === 'between_rounds') && isScoringScene && (
+              {(game.status === 'playing' || game.status === 'between_rounds') && isScoringScene && !isRoundScoringScene && (
                 <div className="bg-surface border border-border rounded-xl p-3 shadow-sm">
                   <QuickScoreGrid
                     teams={game.teams}
@@ -502,8 +512,19 @@ export default function PlayPage() {
                 </div>
               )}
 
+              {/* Round Scoring Panel (BEA-662) — shown during round_scoring scene */}
+              {game.status === 'between_rounds' && isRoundScoringScene && (
+                <div className="bg-surface border border-border rounded-xl p-3 shadow-sm">
+                  <RoundScoringPanel
+                    teams={game.teams}
+                    currentRound={game.currentRound}
+                    onSubmitScores={handleRoundScoresSubmitted}
+                  />
+                </div>
+              )}
+
               {/* Team Score Input */}
-              {(game.status === 'playing' || game.status === 'between_rounds') && !isScoringScene && (
+              {(game.status === 'playing' || game.status === 'between_rounds') && !isScoringScene && !isRoundScoringScene && (
                 <div className="bg-surface border border-border rounded-xl p-3 shadow-sm">
                   <TeamScoreInput
                     teams={game.teams}

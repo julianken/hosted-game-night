@@ -15,7 +15,7 @@
 // =============================================================================
 
 /**
- * All 15 audience scene values.
+ * All 16 audience scene values.
  *
  * Scene validity by GameStatus:
  *   setup          -> waiting
@@ -24,8 +24,8 @@
  *                    answer_reveal,
  *                    waiting, paused, emergency_blank
  *   between_rounds -> round_summary, answer_reveal,
- *                    recap_title, recap_qa, recap_scores,
- *                    paused, emergency_blank
+ *                    recap_title, recap_qa, round_scoring,
+ *                    recap_scores, paused, emergency_blank
  *   paused         -> paused, emergency_blank
  *   ended          -> final_buildup, final_podium, paused, emergency_blank
  */
@@ -50,6 +50,8 @@ export type AudienceScene =
   | 'recap_title'
   /** Bidirectional Q/A review. recapShowingAnswer controls question vs answer face. Indefinite. */
   | 'recap_qa'
+  /** Per-round scoring step: facilitator enters one total score per team. Indefinite. */
+  | 'round_scoring'
   /** Animated scoreboard with final round scores. Terminal recap scene before next round. Indefinite. */
   | 'recap_scores'
   /** "GAME OVER" scales in dramatically. 3s auto-advance. */
@@ -181,7 +183,7 @@ export const VALID_SCENES_BY_STATUS: Record<string, ReadonlySet<AudienceScene>> 
   ]),
   between_rounds: new Set<AudienceScene>([
     'round_summary', 'answer_reveal',
-    'recap_title', 'recap_qa', 'recap_scores',
+    'recap_title', 'recap_qa', 'round_scoring', 'recap_scores',
     'emergency_blank',
   ]),
   ended: new Set<AudienceScene>([

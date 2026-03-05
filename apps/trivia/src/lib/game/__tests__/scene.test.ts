@@ -48,14 +48,14 @@ describe('getNextScene — recap flow transitions', () => {
   // recap_qa transitions
   // -------------------------------------------------------------------------
 
-  it('recap_qa + advance -> recap_scores', () => {
+  it('recap_qa + advance -> round_scoring', () => {
     const result = getNextScene('recap_qa', SCENE_TRIGGERS.ADVANCE, {});
-    expect(result).toBe('recap_scores');
+    expect(result).toBe('round_scoring');
   });
 
-  it('recap_qa + skip -> recap_scores', () => {
+  it('recap_qa + skip -> round_scoring', () => {
     const result = getNextScene('recap_qa', SCENE_TRIGGERS.SKIP, {});
-    expect(result).toBe('recap_scores');
+    expect(result).toBe('round_scoring');
   });
 
   it('recap_qa + next_round -> round_intro (not last round)', () => {
@@ -157,6 +157,10 @@ describe('VALID_SCENES_BY_STATUS — recap scenes', () => {
     expect(VALID_SCENES_BY_STATUS.between_rounds.has('recap_qa')).toBe(true);
   });
 
+  it('between_rounds includes round_scoring', () => {
+    expect(VALID_SCENES_BY_STATUS.between_rounds.has('round_scoring')).toBe(true);
+  });
+
   it('between_rounds includes recap_scores', () => {
     expect(VALID_SCENES_BY_STATUS.between_rounds.has('recap_scores')).toBe(true);
   });
@@ -164,6 +168,7 @@ describe('VALID_SCENES_BY_STATUS — recap scenes', () => {
   it('isSceneValidForStatus accepts recap scenes in between_rounds', () => {
     expect(isSceneValidForStatus('recap_title', 'between_rounds')).toBe(true);
     expect(isSceneValidForStatus('recap_qa', 'between_rounds')).toBe(true);
+    expect(isSceneValidForStatus('round_scoring', 'between_rounds')).toBe(true);
     expect(isSceneValidForStatus('recap_scores', 'between_rounds')).toBe(true);
   });
 

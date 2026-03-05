@@ -168,7 +168,7 @@ pnpm test:coverage     # Run tests with coverage
 | Arrow Right | Advance scene | Always |
 | Space | Toggle display question on audience | Always |
 | P | Peek answer (local only) | Always |
-| N | Next round | `between_rounds`: `round_summary`, `answer_reveal`, `recap_title`, `recap_qa`, `recap_scores` |
+| N | Next round | `between_rounds`: `round_summary`, `answer_reveal`, `recap_title`, `recap_qa`, `round_scoring`, `recap_scores` |
 | E | Toggle emergency blank (visual only) | `playing` or `between_rounds` |
 | R | Reset game | Always |
 | M | Mute/unmute TTS | Always |
@@ -176,7 +176,7 @@ pnpm test:coverage     # Run tests with coverage
 | S | Close question | `question_display` or `question_closed` |
 | Enter | Skip timed scene | Always (advances via `SKIP` trigger) |
 | F | Toggle fullscreen | Always |
-| 1-9, 0 | Quick score: toggle point for team N | Scoring phases: `question_closed`, `answer_reveal`, `round_summary`, `recap_*` |
+| 1-9, 0 | Quick score: toggle point for team N | Scoring phases: `question_closed`, `answer_reveal`, `round_summary`, `round_scoring`, `recap_*` |
 | Shift+1-9 | Remove point from team N | Scoring phases |
 | Ctrl/Cmd+Z | Undo last score action | Scoring phases |
 | ? | Show help modal | Always |
@@ -194,7 +194,7 @@ pnpm test:coverage     # Run tests with coverage
 
 The AudienceScene system is a visual routing layer orthogonal to the 4-state GameStatus engine (`setup`, `playing`, `between_rounds`, `ended`). It controls what the audience display renders without changing game state.
 
-**15 scene values:** `waiting`, `game_intro`, `round_intro`, `question_anticipation`, `question_display`, `question_closed`, `answer_reveal`, `round_summary`, `recap_title`, `recap_qa`, `recap_scores`, `final_buildup`, `final_podium`, `paused`, `emergency_blank`
+**16 scene values:** `waiting`, `game_intro`, `round_intro`, `question_anticipation`, `question_display`, `question_closed`, `answer_reveal`, `round_summary`, `recap_title`, `recap_qa`, `round_scoring`, `recap_scores`, `final_buildup`, `final_podium`, `paused`, `emergency_blank`
 
 **Core files:**
 - `types/audience-scene.ts` — `AudienceScene` type, timing constants, scene validity maps

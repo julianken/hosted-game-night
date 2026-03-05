@@ -49,6 +49,8 @@ export function createInitialState(): TriviaGameState {
     scoreDeltas: [],
     recapShowingAnswer: null,
     questionStartScores: {},
+    roundScoringInProgress: false,
+    roundScoringEntries: {},
   });
 }
 

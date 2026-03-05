@@ -295,6 +295,16 @@ function applyTransitionSideEffects(
     };
   }
 
+  // Side effect: entering round_scoring — set flag and clear entries.
+  if (nextScene === 'round_scoring') {
+    return {
+      ...buildSceneUpdate(nextScene),
+      roundScoringInProgress: true,
+      roundScoringEntries: {},
+      recapShowingAnswer: null,
+    };
+  }
+
   // Side effect: seed recap_scores — clear recapShowingAnswer sub-state.
   if (nextScene === 'recap_scores') {
     return {

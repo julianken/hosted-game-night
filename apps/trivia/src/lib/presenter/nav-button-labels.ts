@@ -92,6 +92,9 @@ function getForwardLabel(
       if (!isLastQuestion) return 'Next Question';
       return 'View Scores';
 
+    case 'round_scoring':
+      return 'View Scores';
+
     case 'recap_scores':
       return isLastRound ? 'End Game' : 'Next Round';
 

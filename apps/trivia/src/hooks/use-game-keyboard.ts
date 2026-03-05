@@ -67,6 +67,7 @@ const SCORING_PHASE_SCENES: ReadonlySet<AudienceScene> = new Set([
   'round_summary',
   'recap_title',
   'recap_qa',
+  'round_scoring',
   'recap_scores',
 ]);
 
@@ -221,6 +222,7 @@ export function useGameKeyboard() {
               currentScene === 'answer_reveal' ||
               currentScene === 'recap_title' ||
               currentScene === 'recap_qa' ||
+              currentScene === 'round_scoring' ||
               currentScene === 'recap_scores'
             )
           ) {

@@ -70,6 +70,8 @@ vi.mock('@/stores/game-store', () => ({
       recapShowingAnswer: null,
       // Round start score snapshot (BEA-601)
       questionStartScores: {},
+      roundScoringInProgress: false,
+      roundScoringEntries: {},
       // GameStore action methods
       startGame: vi.fn(),
       endGame: vi.fn(),
@@ -81,6 +83,7 @@ vi.mock('@/stores/game-store', () => ({
       renameTeam: vi.fn(),
       adjustTeamScore: vi.fn(),
       setTeamScore: vi.fn(),
+      setRoundScores: vi.fn(),
       completeRound: vi.fn(),
       nextRound: vi.fn(),
       tickTimer: vi.fn(),
@@ -327,6 +330,8 @@ describe('SaveTemplateModal', () => {
         recapShowingAnswer: null,
         // Round start score snapshot (BEA-601)
         questionStartScores: {},
+        roundScoringInProgress: false,
+        roundScoringEntries: {},
         startGame: vi.fn(),
         endGame: vi.fn(),
         resetGame: vi.fn(),
@@ -337,6 +342,7 @@ describe('SaveTemplateModal', () => {
         renameTeam: vi.fn(),
         adjustTeamScore: vi.fn(),
         setTeamScore: vi.fn(),
+        setRoundScores: vi.fn(),
         completeRound: vi.fn(),
         nextRound: vi.fn(),
         tickTimer: vi.fn(),
@@ -408,6 +414,8 @@ describe('SaveTemplateModal', () => {
         recapShowingAnswer: null,
         // Round start score snapshot (BEA-601)
         questionStartScores: {},
+        roundScoringInProgress: false,
+        roundScoringEntries: {},
         startGame: vi.fn(),
         endGame: vi.fn(),
         resetGame: vi.fn(),
@@ -418,6 +426,7 @@ describe('SaveTemplateModal', () => {
         renameTeam: vi.fn(),
         adjustTeamScore: vi.fn(),
         setTeamScore: vi.fn(),
+        setRoundScores: vi.fn(),
         completeRound: vi.fn(),
         nextRound: vi.fn(),
         tickTimer: vi.fn(),
