@@ -24,7 +24,6 @@ const mockUpdateSettings = vi.fn();
 vi.mock('@/stores/game-store', () => ({
   useGameStore: vi.fn((selector) => {
     const store = {
-      sessionId: 'test-session',
       status: 'setup' as const,
       questions: [],
       selectedQuestionIndex: 0,
@@ -313,8 +312,7 @@ describe('TemplateSelector', () => {
     // Mock non-setup status
     vi.mocked(vi.mocked(await import('@/stores/game-store')).useGameStore).mockImplementation((selector) => {
       const store = {
-        sessionId: 'test-session',
-        status: 'playing' as const,
+          status: 'playing' as const,
           questions: [],
         selectedQuestionIndex: 0,
         displayQuestionIndex: null,

@@ -25,7 +25,6 @@ import {
 
 function createMockState(overrides?: Partial<TriviaGameState>): TriviaGameState {
   return {
-    sessionId: 'test-session',
     status: 'setup',
     questions: [],
     selectedQuestionIndex: 0,

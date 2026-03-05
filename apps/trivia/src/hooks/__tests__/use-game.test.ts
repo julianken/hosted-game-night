@@ -18,7 +18,6 @@ describe('useGame', () => {
     it('should return all game state properties', () => {
       const { result } = renderHook(() => useGame());
 
-      expect(result.current.sessionId).toBeDefined();
       expect(result.current.status).toBe('setup');
       expect(Array.isArray(result.current.questions)).toBe(true);
       expect(result.current.selectedQuestionIndex).toBe(0);

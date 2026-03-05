@@ -5,22 +5,18 @@ import { WaitingDisplay } from '@/components/audience/WaitingDisplay';
 
 export interface WaitingSceneProps {
   message?: string;
-  /** Room code to display prominently for audience join (BEA-607). */
-  roomCode?: string;
 }
 
 /**
- * WaitingScene (T1.9 / BEA-607)
+ * WaitingScene (T1.9)
  *
  * Wraps the existing WaitingDisplay component for use in SceneRouter.
  * Renders the cinematic "Trivia" wordmark with a configurable status message.
  *
- * BEA-607 additions:
- * - Accepts roomCode prop and passes it to WaitingDisplay for prominent display.
- * - Reads teams from the game store and renders a team roster grid below
- *   WaitingDisplay so the audience can see who has connected before the game starts.
+ * Reads teams from the game store and renders a team roster grid below
+ * WaitingDisplay so the audience can see who has connected before the game starts.
  */
-export function WaitingScene({ message = 'Waiting for presenter...', roomCode }: WaitingSceneProps) {
+export function WaitingScene({ message = 'Waiting for presenter...' }: WaitingSceneProps) {
   // Targeted selector — only re-renders when teams array changes.
   const teams = useGameStore((state) => state.teams);
 
@@ -28,7 +24,7 @@ export function WaitingScene({ message = 'Waiting for presenter...', roomCode }:
     <div className="flex flex-col h-full">
       {/* Cinematic waiting display with room code */}
       <div className={teams.length > 0 ? 'flex-1' : 'h-full'}>
-        <WaitingDisplay message={message} roomCode={roomCode} />
+        <WaitingDisplay message={message} />
       </div>
 
       {/* Team roster grid — only shown when teams are connected (BEA-607) */}

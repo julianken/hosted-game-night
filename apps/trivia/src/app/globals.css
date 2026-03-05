@@ -131,7 +131,6 @@
   --display-text-round:      clamp(4rem,    10vw,   9rem);
   --display-text-round-num:  clamp(8rem,    20vmin, 16rem);
   --display-text-wordmark:   clamp(6rem,    18vw,   16rem);
-  --display-text-roomcode:   clamp(4rem,    10vw,   8rem);
   --display-text-countdown:  30vmin;
   --display-text-hero:       clamp(4rem,    10vw,   9rem);
   --display-text-answers:    clamp(3rem,    8vw,    7rem);

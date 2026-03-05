@@ -295,7 +295,6 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       // Extract only TriviaGameState properties (not store actions)
       let newState: TriviaGameState = {
         // -- Existing fields (unchanged) ------------------------------------
-        sessionId: state.sessionId,
         status: state.status,
         teams: [],
         questions: state.questions,
@@ -396,7 +395,6 @@ export function useGameSelectors() {
   // reconciliation phase, causing computed selectors to return wrong values.
   // This was causing display components to not re-render after state hydration.
   const state: TriviaGameState = {
-    sessionId: '',                   // Not used by any selector
     status,
     questions,
     selectedQuestionIndex,

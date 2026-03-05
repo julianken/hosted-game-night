@@ -43,8 +43,6 @@ function createTriviaBroadcastSync(sessionId: string): TriviaBroadcastSync {
  */
 function storeToGameState(state: import('@/stores/game-store').GameStore): TriviaGameState {
   return {
-    // -- Session --
-    sessionId: state.sessionId,
     status: state.status,
 
     // -- Questions --

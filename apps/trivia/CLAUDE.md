@@ -98,10 +98,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Offline-capable
 - Cache management
 
-### Session Management
-- Share session with room codes (`components/presenter/ShareSession.tsx`)
-- Session persistence and recovery
-
 ### Templates
 - Saved game templates with CRUD API
 - Template selector UI for quick game setup
@@ -154,11 +150,6 @@ pnpm test:coverage     # Run tests with coverage
 | `/api/templates` | GET, POST | Template CRUD |
 | `/api/templates/default` | GET | Returns user's default trivia template |
 | `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
-| `/api/sessions` | POST | Create game session |
-| `/api/sessions/room/[roomCode]` | GET | Get session by room code |
-| `/api/sessions/[roomCode]` | GET | Get session details |
-| `/api/sessions/[roomCode]/verify-pin` | POST | Verify PIN to join session |
-| `/api/sessions/[roomCode]/state` | PATCH | Update session state |
 | `/api/presets` | GET, POST | Preset CRUD |
 | `/api/presets/[id]` | GET, PUT, DELETE | Preset by ID |
 | `/api/question-sets` | GET, POST | Question set CRUD |

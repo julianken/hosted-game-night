@@ -1,6 +1,5 @@
 import type { TriviaGameState, GameSettings } from '@/types';
 import { DEFAULT_ROUNDS, QUESTIONS_PER_ROUND, DEFAULT_TIMER_DURATION } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 import { deepFreeze } from './helpers';
 import { SAMPLE_QUESTIONS } from './sample-questions';
 
@@ -22,7 +21,6 @@ export function createDefaultSettings(): GameSettings {
 export function createInitialState(): TriviaGameState {
   const settings = createDefaultSettings();
   return deepFreeze({
-    sessionId: uuidv4(),
     status: 'setup',
     questions: SAMPLE_QUESTIONS,
     selectedQuestionIndex: 0,
@@ -110,7 +108,6 @@ export function resetGame(state: TriviaGameState): TriviaGameState {
   const initial = createInitialState();
   return deepFreeze({
     ...initial,
-    sessionId: state.sessionId, // Keep same session
     settings: state.settings, // Keep settings
     questions: state.questions, // Keep imported question set
     totalRounds: state.settings.roundsCount,
