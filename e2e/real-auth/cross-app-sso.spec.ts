@@ -28,7 +28,6 @@ test.describe('Cross-App SSO', () => {
     // 1. Logged in via Platform Hub (real Supabase)
     // 2. Copied SSO cookies to Bingo domain
     // 3. Navigated to Bingo /play
-    // 4. Dismissed the Room Setup modal
 
     // If we're on /play (not redirected to / or /login), middleware accepted the token
     const currentUrl = new URL(authenticatedBingoPage.url());

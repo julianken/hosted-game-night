@@ -22,7 +22,6 @@ const nextConfig: NextConfig = {
   ],
   turbopack: {
     resolveAlias: {
-      '@joolie-boolie/database/api': '../../packages/database/src/api/index.ts',
       '@joolie-boolie/database/tables': '../../packages/database/src/tables/index.ts',
     },
   },

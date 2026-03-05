@@ -217,55 +217,6 @@ export interface TriviaQuestionSetUpdate {
 }
 
 // =============================================================================
-// Game Session Types (Persistent Sessions)
-// =============================================================================
-
-export interface GameSession {
-  id: string;
-  room_code: string;
-  session_id: string;
-  game_type: 'bingo' | 'trivia';
-  template_id: string | null;
-  preset_id: string | null;
-  question_set_id: string | null;
-  pin_hash: string;
-  pin_salt: string;
-  failed_pin_attempts: number;
-  last_failed_attempt_at: string | null;
-  status: 'active' | 'paused' | 'completed' | 'expired';
-  game_state: Record<string, unknown>;
-  user_id: string | null;
-  last_sync_at: string;
-  sequence_number: number;
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GameSessionInsert {
-  room_code: string;
-  session_id: string;
-  game_type: 'bingo' | 'trivia';
-  template_id?: string | null;
-  preset_id?: string | null;
-  question_set_id?: string | null;
-  pin_hash: string;
-  pin_salt: string;
-  status?: 'active' | 'paused' | 'completed' | 'expired';
-  game_state?: Record<string, unknown>;
-  user_id?: string | null;
-  expires_at?: string;
-}
-
-export interface GameSessionUpdate {
-  status?: 'active' | 'paused' | 'completed' | 'expired';
-  game_state?: Record<string, unknown>;
-  failed_pin_attempts?: number;
-  last_failed_attempt_at?: string;
-  last_sync_at?: string;
-}
-
-// =============================================================================
 // Database Schema Type (for Supabase client)
 // =============================================================================
 
@@ -301,11 +252,6 @@ export interface Database {
         Row: TriviaQuestionSet;
         Insert: TriviaQuestionSetInsert;
         Update: TriviaQuestionSetUpdate;
-      };
-      game_sessions: {
-        Row: GameSession;
-        Insert: GameSessionInsert;
-        Update: GameSessionUpdate;
       };
     };
     Views: Record<string, never>;
@@ -411,28 +357,6 @@ const TriviaQuestionSetSchema = z.object({
   updated_at: z.string(),
 });
 
-const GameSessionSchema = z.object({
-  id: z.string(),
-  room_code: z.string(),
-  session_id: z.string(),
-  game_type: z.enum(['bingo', 'trivia']),
-  template_id: z.string().nullable(),
-  preset_id: z.string().nullable(),
-  question_set_id: z.string().nullable(),
-  pin_hash: z.string(),
-  pin_salt: z.string(),
-  failed_pin_attempts: z.number(),
-  last_failed_attempt_at: z.string().nullable(),
-  status: z.enum(['active', 'paused', 'completed', 'expired']),
-  game_state: z.record(z.string(), z.unknown()),
-  user_id: z.string().nullable(),
-  last_sync_at: z.string(),
-  sequence_number: z.number(),
-  expires_at: z.string(),
-  created_at: z.string(),
-  updated_at: z.string(),
-});
-
 // Type guard helpers
 export function isProfile(obj: unknown): obj is Profile {
   return ProfileSchema.safeParse(obj).success;
@@ -456,8 +380,4 @@ export function isTriviaPreset(obj: unknown): obj is TriviaPreset {
 
 export function isTriviaQuestionSet(obj: unknown): obj is TriviaQuestionSet {
   return TriviaQuestionSetSchema.safeParse(obj).success;
-}
-
-export function isGameSession(obj: unknown): obj is GameSession {
-  return GameSessionSchema.safeParse(obj).success;
 }

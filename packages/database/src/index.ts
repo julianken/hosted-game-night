@@ -76,16 +76,10 @@ export {
   type TriviaQuestionSetInsert,
   type TriviaQuestionSetUpdate,
 
-  // Game session types (persistent)
-  type GameSession,
-  type GameSessionInsert,
-  type GameSessionUpdate,
-
   // Type guards
   isProfile,
   isBingoTemplate,
   isTriviaTemplate,
-  isGameSession,
 
   // Preset type guards
   isBingoPreset,
@@ -306,15 +300,6 @@ export {
   getQuestionSetTotalCount,
   TRIVIA_QUESTION_SET_SEARCH_COLUMNS,
 
-  // Persistent Game Sessions (Database-backed)
-  createGameSession,
-  getGameSessionByRoomCode,
-  getGameSessionBySessionId,
-  updateGameSessionState,
-  incrementFailedPinAttempt,
-  resetFailedPinAttempts,
-  markSessionCompleted,
-  cleanupExpiredSessions,
 } from './tables';
 
 // =============================================================================
@@ -334,13 +319,6 @@ export {
   useDeleteMutation,
   useOptimisticMutation,
 
-  // Game session hooks
-  useGameSession,
-  useCreateGameSession,
-  useUpdateGameSessionState,
-  useMarkSessionCompleted,
-  useVerifyPin,
-
   // Query types
   type QueryStatus,
   type QueryState,
@@ -356,47 +334,5 @@ export {
   type UpdateVariables,
   type OptimisticMutationOptions,
 
-  // Game session hook types
-  type VerifyPinVariables,
-  type VerifyPinResult,
-  type UpdateGameStateVariables,
 } from './hooks';
 
-// Session Tokens
-// =============================================================================
-
-export {
-  // Functions
-  createSessionToken,
-  encodeSessionToken,
-  decodeSessionToken,
-  isTokenExpired,
-
-  // Constants
-  TOKEN_DURATION_MS,
-
-  // Types
-  type SessionToken,
-} from './session-token';
-
-// =============================================================================
-// PIN Security
-// =============================================================================
-
-export {
-  createPinHash,
-  verifyPin,
-  isValidPin,
-  isLockedOut,
-  MAX_ATTEMPTS,
-  LOCKOUT_DURATION_MS,
-} from './pin-security';
-
-// =============================================================================
-// API Route Factories
-// =============================================================================
-
-export {
-  createSessionRoutes,
-  type SessionRouteConfig,
-} from './api';

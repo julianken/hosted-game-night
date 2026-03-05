@@ -82,17 +82,13 @@ export type {
 
 export type {
   Branded,
-  SessionId,
   TeamId,
   QuestionId,
-  RoomCode,
   BallNumber,
 } from './branded';
 
 export {
-  makeSessionId,
   makeTeamId,
   makeQuestionId,
-  makeRoomCode,
   makeBallNumber,
 } from './branded';

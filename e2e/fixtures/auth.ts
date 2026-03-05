@@ -62,22 +62,14 @@ export interface GameAuthFixtures {
   /**
    * Pre-authenticated page for Bingo app.
    * Logs in via Platform Hub, then navigates to Bingo with SSO cookies.
-   * By default, dismisses the Room Setup modal automatically.
    */
   authenticatedBingoPage: Page;
 
   /**
    * Pre-authenticated page for Trivia app.
    * Logs in via Platform Hub, then navigates to Trivia with SSO cookies.
-   * By default, dismisses the Room Setup modal automatically.
    */
   authenticatedTriviaPage: Page;
-
-  /**
-   * Skip automatic Room Setup modal dismissal.
-   * Use this when testing the modal itself.
-   */
-  skipModalDismissal: boolean;
 
   /**
    * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
@@ -315,40 +307,6 @@ async function copySSOCookiesToDomain(page: Page, targetUrl: string): Promise<vo
 }
 
 /**
- * Helper function to dismiss the Room Setup modal on Bingo/Trivia /play pages.
- * The modal auto-opens when the user is authenticated but has no active session.
- * This helper clicks "Play Offline" to create an offline session and dismiss the modal.
- *
- * @param page - Playwright page instance
- * @param timeout - Maximum time to wait for modal (default: 5000ms)
- */
-async function dismissRoomSetupModal(page: Page, timeout = 5000): Promise<void> {
-  const modal = page.getByRole('dialog', { name: /room setup/i });
-
-  // First, check if modal appears - if not, user might already have a session
-  try {
-    await modal.waitFor({ state: 'visible', timeout: 3000 });
-  } catch {
-    // Modal didn't appear - that's fine, user might already have an active session
-    return;
-  }
-
-  // Modal is visible - we need to dismiss it
-  // Wait for modal content to be fully rendered and click Play Offline
-  // Use the button's aria-label for precise selection
-  const playOfflineButton = modal.getByRole('button', {
-    name: /Play offline/i,
-  });
-  await playOfflineButton.waitFor({ state: 'visible', timeout: 2000 });
-
-  // Click "Play Offline" button
-  await playOfflineButton.click();
-
-  // Wait for modal to close with generous timeout for animation
-  await modal.waitFor({ state: 'hidden', timeout });
-}
-
-/**
  * Extended test with authentication fixtures.
  *
  * Usage:
@@ -362,13 +320,6 @@ async function dismissRoomSetupModal(page: Page, timeout = 5000): Promise<void> 
  * ```
  */
 export const test = base.extend<AuthFixtures & GameAuthFixtures>({
-  /**
-   * Skip automatic Room Setup modal dismissal.
-   * Defaults to false (modal IS dismissed automatically).
-   * Set to true in tests that need to test the modal itself.
-   */
-  skipModalDismissal: [false, { option: true }],
-
   /**
    * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
    * Defaults to false (overlay IS dismissed automatically).
@@ -633,9 +584,8 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   /**
    * Authenticated Trivia page fixture.
    * Logs in via Platform Hub OAuth, then navigates to Trivia /play.
-   * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedTriviaPage: async ({ page, testUser, skipModalDismissal, skipSetupDismissal, navigationTimeout }, use) => {
+  authenticatedTriviaPage: async ({ page, testUser, skipSetupDismissal, navigationTimeout }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
     // Copy cookies to Trivia domain (different ports = different origins)
     await loginViaPlatformHub(page, testUser, {
@@ -680,12 +630,7 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
       }
     }
 
-    // 3. Dismiss Room Setup modal (unless test opts out)
-    if (!skipModalDismissal) {
-      await dismissRoomSetupModal(page, navigationTimeout);
-    }
-
-    // 4. Start game via setup wizard (unless test opts out)
+    // 3. Start game via setup wizard (unless test opts out)
     // Navigates the wizard to add 1 team and click Start Game.
     // After this, the overlay is gone and the dashboard is interactive.
     if (!skipSetupDismissal) {
