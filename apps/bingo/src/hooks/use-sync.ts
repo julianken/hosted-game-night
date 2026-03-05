@@ -230,11 +230,16 @@ export function useSync({ role, sessionId, displayAudioUnlocked }: UseSyncOption
     const { displayTheme } = useThemeStore.getState();
     broadcastSyncRef.current.broadcastDisplayTheme(displayTheme);
     // Also broadcast current audio settings
-    const { voicePack, voiceVolume, enabled } = useAudioStore.getState();
+    const { voicePack, voiceVolume, enabled, rollSoundVolume, chimeVolume, rollSoundType, rollDuration, revealChime } = useAudioStore.getState();
     broadcastSyncRef.current.broadcastAudioSettings({
       voicePack,
       volume: voiceVolume,
       enabled,
+      rollSoundVolume,
+      chimeVolume,
+      rollSoundType,
+      rollDuration,
+      revealChime,
     });
   }, [role, getCurrentState]);
 
@@ -316,6 +321,10 @@ export function useSync({ role, sessionId, displayAudioUnlocked }: UseSyncOption
         audioStore.setVoicePack(settings.voicePack);
         audioStore.setVoiceVolume(settings.volume);
         audioStore.setEnabled(settings.enabled);
+        audioStore.setRollSoundVolume(settings.rollSoundVolume);
+        audioStore.setChimeVolume(settings.chimeVolume);
+        audioStore.setRollSound(settings.rollSoundType, settings.rollDuration);
+        audioStore.setRevealChime(settings.revealChime);
         useSyncStore.getState().updateLastSync();
       },
       // Presenter receives this when display audio is unlocked
@@ -453,12 +462,22 @@ export function useSync({ role, sessionId, displayAudioUnlocked }: UseSyncOption
       if (
         state.voicePack !== prevState.voicePack ||
         state.voiceVolume !== prevState.voiceVolume ||
-        state.enabled !== prevState.enabled
+        state.enabled !== prevState.enabled ||
+        state.rollSoundVolume !== prevState.rollSoundVolume ||
+        state.chimeVolume !== prevState.chimeVolume ||
+        state.rollSoundType !== prevState.rollSoundType ||
+        state.rollDuration !== prevState.rollDuration ||
+        state.revealChime !== prevState.revealChime
       ) {
         sync.broadcastAudioSettings({
           voicePack: state.voicePack,
           volume: state.voiceVolume,
           enabled: state.enabled,
+          rollSoundVolume: state.rollSoundVolume,
+          chimeVolume: state.chimeVolume,
+          rollSoundType: state.rollSoundType,
+          rollDuration: state.rollDuration,
+          revealChime: state.revealChime,
         });
       }
     });

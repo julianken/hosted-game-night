@@ -87,6 +87,9 @@ describe('use-sync', () => {
       voiceVolume: 0.7,
       rollSoundVolume: 0.8,
       chimeVolume: 0.8,
+      rollSoundType: 'metal-cage',
+      rollDuration: '2s',
+      revealChime: 'none',
     });
 
   });
@@ -766,6 +769,11 @@ describe('use-sync', () => {
           voicePack: 'british',
           volume: 0.5,
           enabled: true,
+          rollSoundVolume: 0.6,
+          chimeVolume: 0.7,
+          rollSoundType: 'plastic-cage',
+          rollDuration: '4s',
+          revealChime: 'gold-coin-prize',
         };
 
         router({
@@ -835,6 +843,67 @@ describe('use-sync', () => {
         expect(settingsCall.payload.volume).toBe(0.3);
       });
 
+      it('presenter broadcasts AUDIO_SETTINGS_CHANGED when rollSoundVolume changes', () => {
+        const postMessageSpy = vi.fn();
+        vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+          postMessage = postMessageSpy;
+        });
+
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
+
+        postMessageSpy.mockClear();
+
+        act(() => {
+          useAudioStore.getState().setRollSoundVolume(0.4);
+        });
+
+        const calls = postMessageSpy.mock.calls.map(call => call[0]);
+        const settingsCall = calls.find(call => call.type === 'AUDIO_SETTINGS_CHANGED');
+        expect(settingsCall).toBeDefined();
+        expect(settingsCall.payload.rollSoundVolume).toBe(0.4);
+      });
+
+      it('presenter broadcasts AUDIO_SETTINGS_CHANGED when rollSoundType changes', () => {
+        const postMessageSpy = vi.fn();
+        vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+          postMessage = postMessageSpy;
+        });
+
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
+
+        postMessageSpy.mockClear();
+
+        act(() => {
+          useAudioStore.getState().setRollSound('plastic-swirl', '4s');
+        });
+
+        const calls = postMessageSpy.mock.calls.map(call => call[0]);
+        const settingsCall = calls.find(call => call.type === 'AUDIO_SETTINGS_CHANGED');
+        expect(settingsCall).toBeDefined();
+        expect(settingsCall.payload.rollSoundType).toBe('plastic-swirl');
+        expect(settingsCall.payload.rollDuration).toBe('4s');
+      });
+
+      it('presenter broadcasts AUDIO_SETTINGS_CHANGED when revealChime changes', () => {
+        const postMessageSpy = vi.fn();
+        vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
+          postMessage = postMessageSpy;
+        });
+
+        renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
+
+        postMessageSpy.mockClear();
+
+        act(() => {
+          useAudioStore.getState().setRevealChime('gold-coin-prize');
+        });
+
+        const calls = postMessageSpy.mock.calls.map(call => call[0]);
+        const settingsCall = calls.find(call => call.type === 'AUDIO_SETTINGS_CHANGED');
+        expect(settingsCall).toBeDefined();
+        expect(settingsCall.payload.revealChime).toBe('gold-coin-prize');
+      });
+
       it('audience updates audio store when receiving AUDIO_SETTINGS_CHANGED', () => {
         renderHook(() => useSync({ role: 'audience', sessionId: TEST_SESSION_ID }));
 
@@ -848,7 +917,16 @@ describe('use-sync', () => {
         act(() => {
           lastChannelInstance?.simulateMessage({
             type: 'AUDIO_SETTINGS_CHANGED',
-            payload: { voicePack: 'british-hall', volume: 0.4, enabled: true },
+            payload: {
+              voicePack: 'british-hall',
+              volume: 0.4,
+              enabled: true,
+              rollSoundVolume: 0.6,
+              chimeVolume: 0.5,
+              rollSoundType: 'plastic-swirl',
+              rollDuration: '6s',
+              revealChime: 'positive-notification',
+            },
             timestamp: Date.now(),
           });
         });
@@ -856,9 +934,14 @@ describe('use-sync', () => {
         expect(useAudioStore.getState().voicePack).toBe('british-hall');
         expect(useAudioStore.getState().voiceVolume).toBe(0.4);
         expect(useAudioStore.getState().enabled).toBe(true);
+        expect(useAudioStore.getState().rollSoundVolume).toBe(0.6);
+        expect(useAudioStore.getState().chimeVolume).toBe(0.5);
+        expect(useAudioStore.getState().rollSoundType).toBe('plastic-swirl');
+        expect(useAudioStore.getState().rollDuration).toBe('6s');
+        expect(useAudioStore.getState().revealChime).toBe('positive-notification');
       });
 
-      it('presenter includes audio settings in REQUEST_SYNC response', () => {
+      it('presenter includes all audio settings in REQUEST_SYNC response', () => {
         const postMessageSpy = vi.fn();
         vi.stubGlobal('BroadcastChannel', class extends MockBroadcastChannel {
           postMessage = postMessageSpy;
@@ -867,6 +950,10 @@ describe('use-sync', () => {
         // Set specific audio settings before init
         useAudioStore.getState().setVoicePack('british');
         useAudioStore.getState().setVoiceVolume(0.5);
+        useAudioStore.getState().setRollSoundVolume(0.6);
+        useAudioStore.getState().setChimeVolume(0.7);
+        useAudioStore.getState().setRollSound('plastic-swirl', '4s');
+        useAudioStore.getState().setRevealChime('gold-coin-prize');
 
         renderHook(() => useSync({ role: 'presenter', sessionId: TEST_SESSION_ID }));
 
@@ -886,6 +973,11 @@ describe('use-sync', () => {
         expect(settingsCall).toBeDefined();
         expect(settingsCall.payload.voicePack).toBe('british');
         expect(settingsCall.payload.volume).toBe(0.5);
+        expect(settingsCall.payload.rollSoundVolume).toBe(0.6);
+        expect(settingsCall.payload.chimeVolume).toBe(0.7);
+        expect(settingsCall.payload.rollSoundType).toBe('plastic-swirl');
+        expect(settingsCall.payload.rollDuration).toBe('4s');
+        expect(settingsCall.payload.revealChime).toBe('gold-coin-prize');
       });
     });
 

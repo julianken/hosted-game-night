@@ -168,6 +168,11 @@ export interface AudioSettingsPayload {
   voicePack: VoicePackId;
   volume: number;
   enabled: boolean;
+  rollSoundVolume: number;
+  chimeVolume: number;
+  rollSoundType: RollSoundType;
+  rollDuration: RollDuration;
+  revealChime: RevealChimeType;
 }
 
 export interface ThemePayload {
