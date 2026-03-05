@@ -20,6 +20,8 @@ import {
 export interface TriviaApiImporterProps {
   disabled?: boolean;
   onSaveSuccess?: () => void;
+  /** When 'management', suppresses game-state warnings and hides "Load into Game" button. */
+  context?: 'game' | 'management';
 }
 
 type ImporterState = 'idle' | 'loading' | 'preview' | 'saving' | 'error';
@@ -52,6 +54,7 @@ const COUNT_STEP = 5;
 export function TriviaApiImporter({
   disabled = false,
   onSaveSuccess,
+  context = 'game',
 }: TriviaApiImporterProps) {
   const difficultyGroupId = useId();
   const countSliderId = useId();
@@ -231,7 +234,8 @@ export function TriviaApiImporter({
   // Derived state
   // ---------------------------------------------------------------------------
 
-  const isGameSetup = gameStatus === 'setup';
+  const isManagement = context === 'management';
+  const isGameSetup = isManagement || gameStatus === 'setup';
   // isDisabled gates the Fetch button; isGameSetup gates Load into Game separately
   const isDisabled = disabled || !isGameSetup;
 
@@ -243,8 +247,8 @@ export function TriviaApiImporter({
     <div className="space-y-4" role="region" aria-label="Fetch questions from Trivia API">
       <h3 className="text-lg font-semibold">Fetch from Trivia API</h3>
 
-      {/* Status guard -- mirrors QuestionSetSelector warning pattern */}
-      {!isGameSetup && state === 'idle' && (
+      {/* Status guard -- mirrors QuestionSetSelector warning pattern (hidden in management context) */}
+      {!isManagement && !isGameSetup && state === 'idle' && (
         <p className="text-base text-warning" role="alert">
           API question fetching is only available during game setup.
         </p>
@@ -596,24 +600,26 @@ export function TriviaApiImporter({
               Cancel
             </button>
 
-            {/* Load into Game */}
-            <button
-              type="button"
-              onClick={handleLoadIntoGame}
-              disabled={!isGameSetup}
-              title={!isGameSetup ? 'Game must be in setup mode to load questions' : undefined}
-              className={`
-                flex-1 px-4 min-h-[48px] py-2 rounded-lg
-                text-base font-medium transition-colors
-                focus:outline-none focus:ring-2 focus:ring-primary/50
-                ${isGameSetup
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }
-              `}
-            >
-              Load into Game
-            </button>
+            {/* Load into Game (hidden in management context) */}
+            {!isManagement && (
+              <button
+                type="button"
+                onClick={handleLoadIntoGame}
+                disabled={!isGameSetup}
+                title={!isGameSetup ? 'Game must be in setup mode to load questions' : undefined}
+                className={`
+                  flex-1 px-4 min-h-[48px] py-2 rounded-lg
+                  text-base font-medium transition-colors
+                  focus:outline-none focus:ring-2 focus:ring-primary/50
+                  ${isGameSetup
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  }
+                `}
+              >
+                Load into Game
+              </button>
+            )}
 
             {/* Save to My Question Sets */}
             <button
@@ -634,8 +640,8 @@ export function TriviaApiImporter({
             </button>
           </div>
 
-          {/* Warning when game is not in setup (Load into Game disabled) */}
-          {!isGameSetup && (
+          {/* Warning when game is not in setup (Load into Game disabled) -- hidden in management context */}
+          {!isManagement && !isGameSetup && (
             <p className="text-base text-warning" role="alert">
               &quot;Load into Game&quot; is only available during game setup. You can still save to your library.
             </p>

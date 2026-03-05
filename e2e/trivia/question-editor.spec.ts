@@ -1,6 +1,27 @@
 import { test, expect } from '@playwright/test';
 import { waitForHydration } from '../utils/helpers';
 
+/**
+ * Helper to open the "Create Question Set" modal from the question-sets page.
+ *
+ * In the redesigned UX:
+ * - Empty state: "Create Question Set" button is directly visible in the onboarding cards
+ * - Has sets: Must open "Add Questions" panel, switch to "Create Manually" tab, then click "Create Question Set"
+ */
+async function openCreateModal(page: import('@playwright/test').Page) {
+  // Check if we're in the has-sets state (the "+ Add Questions" button is visible)
+  const addQuestionsButton = page.getByRole('button', { name: /add questions/i });
+  if (await addQuestionsButton.isVisible()) {
+    // Has sets: open Add Questions panel
+    await addQuestionsButton.click();
+    // Switch to "Create Manually" tab
+    const manualTab = page.getByRole('tab', { name: /create manually/i });
+    await manualTab.click();
+  }
+  // Click the "Create Question Set" button (present in both empty state and manual tab)
+  await page.getByRole('button', { name: /create question set/i }).click();
+}
+
 test.describe('Question Set Editor Integration', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/question-sets');
@@ -8,9 +29,8 @@ test.describe('Question Set Editor Integration', () => {
   });
 
   test('displays question editor modal when Create Question Set is clicked @high', async ({ page }) => {
-    // Click create button
-    const createButton = page.getByRole('button', { name: /create question set/i });
-    await createButton.click();
+    // Click create button (handles both empty and has-sets states)
+    await openCreateModal(page);
 
     // Modal should appear
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -19,7 +39,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('can create a new question set with 2 rounds and 3 questions total @critical', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     // Fill in question set name
     const nameInput = page.getByLabel(/question set name/i);
@@ -107,7 +127,7 @@ test.describe('Question Set Editor Integration', () => {
   test('can edit existing question set and modify a question @critical', async ({ page }) => {
     // First, ensure we have a question set to edit
     // We'll use the one created in the previous test, but let's create a fresh one
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     const nameInput = page.getByLabel(/question set name/i);
     await nameInput.fill('Edit Test Set');
@@ -184,7 +204,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('validates required fields when creating @high', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     // Try to save without filling anything
     await page.getByRole('button', { name: /^save$/i }).click();
@@ -209,7 +229,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('can remove a category @medium', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
     await page.getByLabel(/question set name/i).fill('Test Set');
 
     // Add two categories
@@ -231,7 +251,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('cancel button closes modal without saving (no changes) @medium', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     // Click cancel without making changes
     await page.getByRole('button', { name: /cancel/i }).click();
@@ -242,7 +262,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('shows discard changes dialog when canceling with unsaved changes @medium', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     // Fill some data to make it dirty
     await page.getByLabel(/question set name/i).fill('Should Not Save');
@@ -267,7 +287,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('discards changes when confirmed in discard dialog @medium', async ({ page }) => {
     // Open modal
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
 
     // Fill some data
     await page.getByLabel(/question set name/i).fill('Should Not Save');
@@ -291,7 +311,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('shows discard dialog when editing and canceling with changes @low', async ({ page }) => {
     // First, create a question set to edit
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
     await page.getByLabel(/question set name/i).fill('Edit Discard Test');
     await page.getByRole('button', { name: /\+ science/i }).click();
 
@@ -345,7 +365,7 @@ test.describe('Question Set Editor Integration', () => {
 
   test('edit, modify, save, and verify persisted changes @critical', async ({ page }) => {
     // First, create a question set to edit
-    await page.getByRole('button', { name: /create question set/i }).click();
+    await openCreateModal(page);
     await page.getByLabel(/question set name/i).fill('Persistence Test');
     await page.getByRole('button', { name: /\+ science/i }).click();
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import QuestionSetsPage from '../page';
 
 // Mock next/link
@@ -9,11 +9,22 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock QuestionSetImporter
-vi.mock('@/components/presenter/QuestionSetImporter', () => ({
-  QuestionSetImporter: ({ onImportSuccess }: { onImportSuccess: () => void }) => (
-    <div data-testid="question-set-importer">
-      <button onClick={onImportSuccess}>Mock Import</button>
+// Mock EmptyStateOnboarding
+vi.mock('@/components/presenter/EmptyStateOnboarding', () => ({
+  EmptyStateOnboarding: ({ onSuccess }: { onSuccess: () => void }) => (
+    <div data-testid="empty-state-onboarding">
+      <p>Get Started with Trivia Questions</p>
+      <button onClick={onSuccess}>Mock Onboarding Success</button>
+    </div>
+  ),
+}));
+
+// Mock AddQuestionsPanel
+vi.mock('@/components/presenter/AddQuestionsPanel', () => ({
+  AddQuestionsPanel: ({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) => (
+    <div data-testid="add-questions-panel">
+      <button onClick={onClose}>Close Panel</button>
+      <button onClick={onSuccess}>Mock Panel Success</button>
     </div>
   ),
 }));
@@ -61,17 +72,20 @@ beforeEach(() => {
 });
 
 describe('QuestionSetsPage', () => {
-  it('renders the page title', async () => {
+  it('renders the page title when sets exist', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ data: [] }),
+      json: async () => ({ data: mockQuestionSets }),
     });
 
     render(<QuestionSetsPage />);
-    expect(screen.getByText('My Question Sets')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('My Question Sets')).toBeInTheDocument();
+    });
   });
 
-  it('shows empty state when no sets exist', async () => {
+  it('renders "Question Sets" title when empty', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
       json: async () => ({ data: [] }),
@@ -80,7 +94,20 @@ describe('QuestionSetsPage', () => {
     render(<QuestionSetsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/No question sets yet/)).toBeInTheDocument();
+      expect(screen.getByText('Question Sets')).toBeInTheDocument();
+    });
+  });
+
+  it('shows empty state onboarding when no sets exist', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    render(<QuestionSetsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-onboarding')).toBeInTheDocument();
     });
   });
 
@@ -101,5 +128,66 @@ describe('QuestionSetsPage', () => {
     expect(screen.getByText('0 questions')).toBeInTheDocument();
     expect(screen.getByText('(Default)')).toBeInTheDocument();
     expect(screen.getByText('A collection of history trivia')).toBeInTheDocument();
+  });
+
+  it('shows Add Questions button when sets exist', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: mockQuestionSets }),
+    });
+
+    render(<QuestionSetsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('+ Add Questions')).toBeInTheDocument();
+    });
+  });
+
+  it('does not show Add Questions button when empty', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    render(<QuestionSetsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-onboarding')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('+ Add Questions')).not.toBeInTheDocument();
+  });
+
+  it('toggles add questions panel', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: mockQuestionSets }),
+    });
+
+    render(<QuestionSetsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('+ Add Questions')).toBeInTheDocument();
+    });
+
+    // Open panel
+    fireEvent.click(screen.getByText('+ Add Questions'));
+    expect(screen.getByTestId('add-questions-panel')).toBeInTheDocument();
+
+    // Button text changes
+    expect(screen.getByText('Hide Panel')).toBeInTheDocument();
+  });
+
+  it('shows set count badge when sets exist', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: mockQuestionSets }),
+    });
+
+    render(<QuestionSetsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('2 sets')).toBeInTheDocument();
+    });
   });
 });

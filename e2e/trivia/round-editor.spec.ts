@@ -14,11 +14,15 @@ test.describe('Round Editor', () => {
     await waitForHydration(page);
   });
 
-  test('displays round header with correct information @low', async ({ page }) => {
-    // This test assumes there's at least one question set available
-    // If not, we would need to create one first
-    const importButton = page.getByRole('button', { name: /import questions/i });
-    await expect(importButton).toBeVisible();
+  test('displays add questions button or onboarding when page loads @low', async ({ page }) => {
+    // In the redesigned UX, the page shows either:
+    // - "Add Questions" button (when sets exist)
+    // - Onboarding with "Get Started with Trivia Questions" (when empty)
+    const addButton = page.getByRole('button', { name: /add questions/i });
+    const onboardingHeading = page.getByRole('heading', { name: /get started/i });
+    const hasAddButton = await addButton.isVisible();
+    const hasOnboarding = await onboardingHeading.isVisible();
+    expect(hasAddButton || hasOnboarding).toBe(true);
   });
 
   test('round header is accessible with keyboard @low', async ({ page }) => {
@@ -32,18 +36,27 @@ test.describe('Round Editor', () => {
     expect(box!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('import questions button has accessible size @low', async ({ page }) => {
-    const importButton = page.getByRole('button', { name: /import questions/i });
-    const box = await importButton.boundingBox();
+  test('add questions button has accessible size @low', async ({ page }) => {
+    // Check for "Add Questions" button (has-sets) or "Create Question Set" button (empty)
+    const addButton = page.getByRole('button', { name: /add questions/i });
+    const createButton = page.getByRole('button', { name: /create question set/i });
 
+    let targetButton;
+    if (await addButton.isVisible()) {
+      targetButton = addButton;
+    } else {
+      targetButton = createButton;
+    }
+
+    const box = await targetButton.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
     expect(box!.height).toBeGreaterThanOrEqual(44);
   });
 
   test('page has accessible structure @low', async ({ page }) => {
-    // Check for main heading
-    const h1 = page.getByRole('heading', { name: /my question sets/i });
+    // Check for main heading (either "My Question Sets" or "Question Sets")
+    const h1 = page.getByRole('heading', { level: 1 });
     await expect(h1).toBeVisible();
 
     // Check for main landmark
@@ -51,12 +64,14 @@ test.describe('Round Editor', () => {
     await expect(main).toBeVisible();
   });
 
-  test('shows empty state when no question sets exist @medium', async ({ page }) => {
-    // This will only pass if no question sets have been created yet
-    const emptyState = page.getByText(/no question sets yet/i);
+  test('shows empty state onboarding when no question sets exist @medium', async ({ page }) => {
+    // The empty state now shows the onboarding with "Get Started with Trivia Questions"
+    const onboardingHeading = page.getByRole('heading', { name: /get started/i });
     // Use soft assertion since the state depends on database contents
-    if (await emptyState.isVisible()) {
-      await expect(emptyState).toBeVisible();
+    if (await onboardingHeading.isVisible()) {
+      await expect(onboardingHeading).toBeVisible();
+      // Should also show the recommended badge
+      await expect(page.getByText(/recommended/i)).toBeVisible();
     }
   });
 
@@ -111,30 +126,45 @@ test.describe('Round Editor', () => {
     }
   });
 
-  test('importer toggle works correctly @high', async ({ page }) => {
-    const importButton = page.getByRole('button', { name: /import questions/i });
-    await importButton.click();
+  test('add questions panel with tabs works correctly @high', async ({ page }) => {
+    // This test only applies when question sets exist
+    const addButton = page.getByRole('button', { name: /add questions/i });
+    if (await addButton.isVisible()) {
+      // Open Add Questions panel
+      await addButton.click();
 
-    // Importer section should appear
-    const importerSection = page.locator('.border.border-border.rounded-xl.bg-card');
-    await expect(importerSection).toBeVisible();
+      // Panel should appear with tabbed interface
+      const tablist = page.getByRole('tablist');
+      await expect(tablist).toBeVisible();
 
-    // Click again to hide
-    const hideButton = page.getByRole('button', { name: /hide importer/i });
-    await hideButton.click();
+      // Should have 3 tabs
+      const tabs = page.getByRole('tab');
+      await expect(tabs).toHaveCount(3);
 
-    // Importer section should disappear
-    await expect(importerSection).not.toBeVisible();
+      // "Fetch from API" should be selected by default
+      const apiTab = page.getByRole('tab', { name: /fetch from api/i });
+      await expect(apiTab).toHaveAttribute('aria-selected', 'true');
+
+      // Close the panel
+      const closeButton = page.getByRole('button', { name: /close add questions panel/i });
+      await closeButton.click();
+
+      // Panel should disappear
+      await expect(tablist).not.toBeVisible();
+    }
   });
 
   test('action buttons have proper aria labels @low', async ({ page }) => {
-    // Verify import button has accessible name
-    const importButton = page.getByRole('button', { name: /import questions/i });
-    await expect(importButton).toBeVisible();
-
     // Verify back link has accessible text
     const backLink = page.getByRole('link', { name: /back to home/i });
     await expect(backLink).toBeVisible();
+
+    // Verify either the add button or onboarding content is accessible
+    const addButton = page.getByRole('button', { name: /add questions/i });
+    const createButton = page.getByRole('button', { name: /create question set/i });
+    const hasAddButton = await addButton.isVisible();
+    const hasCreateButton = await createButton.isVisible();
+    expect(hasAddButton || hasCreateButton).toBe(true);
   });
 
   test('error messages are announced with role=alert @low', async ({ page }) => {
