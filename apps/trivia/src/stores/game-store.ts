@@ -19,6 +19,8 @@ import {
   renameTeam as renameTeamEngine,
   adjustTeamScore as adjustTeamScoreEngine,
   setTeamScore as setTeamScoreEngine,
+  setTeamRoundScore as setTeamRoundScoreEngine,
+  computeScoreDeltas as computeScoreDeltasEngine,
   completeRound as completeRoundEngine,
   nextRound as nextRoundEngine,
   tickTimer as tickTimerEngine,
@@ -81,6 +83,10 @@ export interface GameStore extends TriviaGameState {
 
   // Question management
   importQuestions: (questions: import('@/types').Question[], mode?: 'replace' | 'append') => void;
+
+  // Per-round scoring (bar trivia)
+  setRoundScores: (teamScoresMap: Record<string, number>) => void;
+  updateRoundScoringProgress: (entries: Record<string, number>) => void;
 
   // Hydration for sync
   _hydrate: (state: Partial<TriviaGameState>) => void;
@@ -202,6 +208,50 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     set((state) => setTeamScoreEngine(state, teamId, score));
   },
 
+  setRoundScores: (teamScoresMap: Record<string, number>) => {
+    set((state) => {
+      let newState: TriviaGameState = {
+        status: state.status,
+        questions: state.questions,
+        selectedQuestionIndex: state.selectedQuestionIndex,
+        displayQuestionIndex: state.displayQuestionIndex,
+        currentRound: state.currentRound,
+        totalRounds: state.totalRounds,
+        teams: state.teams,
+        teamAnswers: state.teamAnswers,
+        timer: state.timer,
+        settings: state.settings,
+        showScoreboard: state.showScoreboard,
+        emergencyBlank: state.emergencyBlank,
+        ttsEnabled: state.ttsEnabled,
+        audienceScene: state.audienceScene,
+        sceneBeforePause: state.sceneBeforePause,
+        sceneTimestamp: state.sceneTimestamp,
+        scoreDeltas: state.scoreDeltas,
+        revealPhase: state.revealPhase,
+        recapShowingAnswer: state.recapShowingAnswer,
+        questionStartScores: state.questionStartScores,
+        roundScoringInProgress: state.roundScoringInProgress,
+        roundScoringEntries: state.roundScoringEntries,
+      };
+      for (const [teamId, score] of Object.entries(teamScoresMap)) {
+        newState = setTeamRoundScoreEngine(newState, teamId, state.currentRound, score);
+      }
+      const prevScores = state.questionStartScores ?? {};
+      const deltas = computeScoreDeltasEngine(newState.teams, prevScores);
+      return {
+        ...newState,
+        scoreDeltas: [...deltas],
+        roundScoringInProgress: false,
+        roundScoringEntries: {},
+      };
+    });
+  },
+
+  updateRoundScoringProgress: (entries: Record<string, number>) => {
+    set({ roundScoringEntries: entries });
+  },
+
   completeRound: () => {
     set((state) => {
       lifecycleLogger.emit('game.round_completed', { round: state.currentRound, totalRounds: state.totalRounds });
@@ -317,6 +367,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         revealPhase: state.revealPhase,
         recapShowingAnswer: null,    // Not in recap during setup
         questionStartScores: {},     // No round started yet during setup
+        roundScoringInProgress: false,
+        roundScoringEntries: {},
       };
 
       for (const name of names) {
@@ -417,6 +469,8 @@ export function useGameSelectors() {
     revealPhase,
     recapShowingAnswer: null,        // Not used for selector computation
     questionStartScores: {},         // Not used for selector computation
+    roundScoringInProgress: false,   // Not used for selector computation
+    roundScoringEntries: {},         // Not used for selector computation
   };
 
   return {

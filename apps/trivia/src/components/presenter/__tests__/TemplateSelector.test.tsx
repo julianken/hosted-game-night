@@ -59,6 +59,8 @@ vi.mock('@/stores/game-store', () => ({
       recapShowingAnswer: null,
       // Round start score snapshot (BEA-601)
       questionStartScores: {},
+      roundScoringInProgress: false,
+      roundScoringEntries: {},
       startGame: vi.fn(),
       endGame: vi.fn(),
       resetGame: vi.fn(),
@@ -69,6 +71,7 @@ vi.mock('@/stores/game-store', () => ({
       renameTeam: vi.fn(),
       adjustTeamScore: vi.fn(),
       setTeamScore: vi.fn(),
+      setRoundScores: vi.fn(),
       completeRound: vi.fn(),
       nextRound: vi.fn(),
       tickTimer: vi.fn(),
@@ -347,6 +350,8 @@ describe('TemplateSelector', () => {
         recapShowingAnswer: null,
         // Round start score snapshot (BEA-601)
         questionStartScores: {},
+        roundScoringInProgress: false,
+        roundScoringEntries: {},
         startGame: vi.fn(),
         endGame: vi.fn(),
         resetGame: vi.fn(),
@@ -357,6 +362,7 @@ describe('TemplateSelector', () => {
         renameTeam: vi.fn(),
         adjustTeamScore: vi.fn(),
         setTeamScore: vi.fn(),
+        setRoundScores: vi.fn(),
         completeRound: vi.fn(),
         nextRound: vi.fn(),
         tickTimer: vi.fn(),
@@ -373,6 +379,7 @@ describe('TemplateSelector', () => {
         advanceScene: vi.fn().mockReturnValue(true),
         setRevealPhase: vi.fn(),
         setScoreDeltasBatch: vi.fn(),
+        updateRoundScoringProgress: vi.fn(),
       };
       return selector ? selector(store) : store;
     });

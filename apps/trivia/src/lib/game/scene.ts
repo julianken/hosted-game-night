@@ -259,9 +259,18 @@ export function getNextScene(
       return null;
 
     case 'recap_qa':
-      // Right Arrow / skip: advance to score reveal (store handles mid-sequence Q cycling)
-      if (trigger === 'advance' || trigger === 'skip') return 'recap_scores';
+      // Right Arrow / skip: advance to round_scoring (facilitator enters per-team round scores)
+      if (trigger === 'advance' || trigger === 'skip') return 'round_scoring';
       // N key: skip remaining recap, go to next round
+      if (trigger === 'next_round') {
+        return isLastRound ? 'final_buildup' : 'round_intro';
+      }
+      return null;
+
+    case 'round_scoring':
+      // Right Arrow / advance / Enter (skip): proceed to recap_scores (show updated leaderboard)
+      if (trigger === 'advance' || trigger === 'skip') return 'recap_scores';
+      // N key: skip scores display, go directly to next round
       if (trigger === 'next_round') {
         return isLastRound ? 'final_buildup' : 'round_intro';
       }

@@ -22,6 +22,7 @@ import { FinalPodiumScene } from './FinalPodiumScene';
 // Recap scenes (WU-06)
 import { RecapTitleScene } from './RecapTitleScene';
 import { RecapQAScene } from './RecapQAScene';
+import { RoundScoringScene } from './RoundScoringScene';
 import { RecapScoresScene } from './RecapScoresScene';
 
 export interface SceneRouterProps {
@@ -129,6 +130,9 @@ export function SceneRouter({ isConnected }: SceneRouterProps) {
 
       case 'recap_qa':
         return <RecapQAScene />;
+
+      case 'round_scoring':
+        return <RoundScoringScene />;
 
       case 'recap_scores':
         return <RecapScoresScene />;

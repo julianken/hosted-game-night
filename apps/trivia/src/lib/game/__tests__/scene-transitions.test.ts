@@ -236,7 +236,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
   });
 
   describe('ADVANCE — answer face, last question', () => {
-    it('should transition to recap_scores', () => {
+    it('should transition to round_scoring', () => {
       const state = setupRecapQa({
         displayAtRoundQIndex: 4, // last question (0-based, 5 questions)
         recapShowingAnswer: true,
@@ -245,7 +245,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
       const result = orchestrateSceneTransition(state, 'advance');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_scores');
+      expect(result!.audienceScene).toBe('round_scoring');
       expect(result!.recapShowingAnswer).toBeNull();
     });
   });
@@ -417,9 +417,9 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
-  describe('-> recap_scores', () => {
-    it('should clear recapShowingAnswer', () => {
-      // recap_qa + advance + last question + answer face -> recap_scores
+  describe('-> round_scoring (from recap_qa last question)', () => {
+    it('should enter round_scoring and clear recapShowingAnswer', () => {
+      // recap_qa + advance + last question + answer face -> round_scoring
       const state = createBetweenRoundsState('recap_qa');
       const indices = getRoundQuestionIndices(state, 0);
       const lastQIdx = indices[indices.length - 1];
@@ -434,8 +434,10 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
       const result = orchestrateSceneTransition(modState, 'advance');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_scores');
+      expect(result!.audienceScene).toBe('round_scoring');
       expect(result!.recapShowingAnswer).toBeNull();
+      expect(result!.roundScoringInProgress).toBe(true);
+      expect(result!.roundScoringEntries).toEqual({});
     });
   });
 

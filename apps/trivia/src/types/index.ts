@@ -267,6 +267,19 @@ export interface TriviaGameState {
    */
   recapShowingAnswer: boolean | null;
 
+  /**
+   * True while the facilitator is entering per-round scores during
+   * the `round_scoring` scene. Set to true when entering the scene,
+   * cleared to false when scores are submitted via `setRoundScores()`.
+   */
+  roundScoringInProgress: boolean;
+
+  /**
+   * Partial entries during per-round scoring. Maps teamId to the
+   * score value entered so far. Cleared when leaving round_scoring.
+   */
+  roundScoringEntries: Record<string, number>;
+
 }
 
 // =============================================================================
