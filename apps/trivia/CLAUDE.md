@@ -46,7 +46,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Configurable question timer with countdown display
 - Auto-reveal answer when timer expires
 - Presenter timer display (`components/presenter/TimerDisplay.tsx`)
-- Audience timer display (`components/audience/AudienceTimerDisplay.tsx`)
 - Timer hook: `hooks/use-timer-auto-reveal.ts`
 
 ### Question Sets & Import
@@ -89,7 +88,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Dual-Screen Sync
 - Presenter view (`/play`): Question list, team manager, scoring, controls
-- Audience view (`/display`): Large question display, scoreboard, timer, waiting screen
+- Audience view (`/display`): Large question display, scoreboard, waiting screen
 - BroadcastChannel API for same-device sync via `@joolie-boolie/sync`
 - Emergency blank (blanks audience display, visual only)
 

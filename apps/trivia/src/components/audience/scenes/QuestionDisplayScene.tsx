@@ -19,8 +19,7 @@ export interface QuestionDisplaySceneProps {
  *
  * Merged replacement for QuestionReadingScene and QuestionActiveScene.
  * Shows question text + answer options. The `answersEnabled` prop controls
- * whether the timer is running — the actual timer display is handled by the
- * scene layer (AudienceTimerDisplay), not by this component.
+ * whether the timer is running.
  *
  * Reads question data from the game store.
  * Uses useFrozenOnExit to prevent visual glitches during AnimatePresence exit —
