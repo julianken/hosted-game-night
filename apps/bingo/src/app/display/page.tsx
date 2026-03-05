@@ -6,8 +6,6 @@ import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
-import { isValidRoomCode } from '@joolie-boolie/sync';
-import { RoomCodeDisplay } from '@joolie-boolie/ui';
 import {
   BallReveal,
   AudienceBingoBoard,
@@ -92,98 +90,25 @@ function DisplayLoading() {
  */
 function DisplayContent() {
   const searchParams = useSearchParams();
-  const roomCode = searchParams.get('room');
-  const offlineSessionId = searchParams.get('offline');
   const sessionId = searchParams.get('session');
 
-  if (roomCode) {
-    if (!isValidRoomCode(roomCode)) return <InvalidSessionError />;
-    return <AudienceDisplay roomCode={roomCode} />;
+  if (!sessionId || !isValidSessionId(sessionId)) {
+    return <InvalidSessionError />;
   }
 
-  if (offlineSessionId) {
-    if (!isValidSessionId(offlineSessionId)) return <InvalidSessionError />;
-    return <AudienceDisplay sessionId={offlineSessionId} />;
-  }
-
-  if (sessionId) {
-    if (!isValidSessionId(sessionId)) return <InvalidSessionError />;
-    return <AudienceDisplay sessionId={sessionId} />;
-  }
-
-  return <InvalidSessionError />;
+  return <AudienceDisplay sessionId={sessionId} />;
 }
 
 /**
  * Audience Display Component
  * Board-dominant layout: board fills bottom 2/3, ball + pattern in top 1/3.
- * No header bar — full-screen immersive display for projector/TV.
+ * No header bar -- full-screen immersive display for projector/TV.
  * Keyboard shortcuts (F=fullscreen, ?=help) remain active.
  */
-function AudienceDisplay({
-  roomCode,
-  sessionId,
-}: {
-  roomCode?: string;
-  sessionId?: string;
-}) {
-  const [dbSessionId, setDbSessionId] = useState<string | null>(sessionId || null);
-  const [dbError, setDbError] = useState<string | null>(null);
-  const [isResolvingRoomCode, setIsResolvingRoomCode] = useState(false);
-
-  // Poll database for session ID when using room code
-  useEffect(() => {
-    if (!roomCode) return;
-
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
-    let isFirstFetch = true;
-
-    const fetchSessionId = async () => {
-      try {
-        if (isFirstFetch) {
-          setIsResolvingRoomCode(true);
-          isFirstFetch = false;
-        }
-        const response = await fetch(`/api/sessions/room/${roomCode}`);
-
-        if (!response.ok) {
-          if (response.status !== 404) {
-            console.warn(`Failed to fetch session for room ${roomCode}:`, response.statusText);
-          }
-          return;
-        }
-
-        const data = await response.json();
-        if (isMounted && data.sessionId) {
-          setDbSessionId(data.sessionId);
-          setDbError(null);
-          setIsResolvingRoomCode(false);
-        }
-      } catch (error) {
-        console.warn('Error fetching session ID:', error);
-        setIsResolvingRoomCode(false);
-      } finally {
-        if (isMounted && !dbSessionId) {
-          timeoutId = setTimeout(fetchSessionId, 5000);
-        }
-      }
-    };
-
-    fetchSessionId();
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [roomCode, dbSessionId]);
-
-  // CRITICAL: Match presenter's sessionId calculation
-  const effectiveSessionId = roomCode || sessionId || '';
-
+function AudienceDisplay({ sessionId }: { sessionId: string }) {
   const { isConnected, connectionError, requestSync } = useSync({
     role: 'audience',
-    sessionId: effectiveSessionId,
+    sessionId,
   });
 
   const { toggleFullscreen } = useFullscreen();
@@ -264,29 +189,18 @@ function AudienceDisplay({
       >
 
         {/* Error banner */}
-        {(connectionError || dbError) && (
+        {connectionError && (
           <div
             className="px-4 py-3 text-center font-medium flex-shrink-0"
             role="alert"
             style={{ backgroundColor: 'rgba(239, 68, 68, 0.10)', borderBottom: '1px solid var(--error)', color: 'var(--error)' }}
           >
-            {connectionError ? `Connection Error: ${connectionError}` : `Database Error: ${dbError}`}
+            Connection Error: {connectionError}
           </div>
         )}
 
         {/* Main display content */}
         <div id="main-display" className="flex-1 flex flex-col overflow-hidden" aria-label="Audience display">
-
-          {/* Room Code Display — shown when using room code and waiting */}
-          {roomCode && !hasContent && (
-            <div className="p-4">
-              <RoomCodeDisplay
-                roomCode={roomCode}
-                showSyncStatus={false}
-                className="max-w-md mx-auto"
-              />
-            </div>
-          )}
 
           {/* Waiting state */}
           {!hasContent && (
@@ -301,12 +215,10 @@ function AudienceDisplay({
                 aria-hidden="true"
               />
               <p className="text-4xl md:text-5xl text-foreground-secondary font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-                {isResolvingRoomCode ? 'Connecting...' : 'Waiting for presenter'}
+                Waiting for presenter
               </p>
               <p className="text-2xl text-foreground-muted">
-                {isResolvingRoomCode
-                  ? 'Establishing connection with the game session.'
-                  : 'Open the presenter view to start the game.'}
+                Open the presenter view to start the game.
               </p>
             </div>
           )}
@@ -392,7 +304,7 @@ function AudienceDisplay({
                   )}
                 </div>
 
-                {/* Counter — glass-like container */}
+                {/* Counter -- glass-like container */}
                 <div
                   className="flex-shrink min-w-0 rounded-2xl"
                   style={{

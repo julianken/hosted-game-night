@@ -1,16 +1,15 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
 import { useSync } from '@/hooks/use-sync';
-import { useAutoSync, usePresenterSession } from '@joolie-boolie/sync';
+import { generateSessionId } from '@/lib/sync/session';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
 import { BingoBoard } from '@/components/presenter/BingoBoard';
 import { PatternSelector, PatternPreview } from '@/components/presenter/PatternSelector';
 import { ControlPanel } from '@/components/presenter/ControlPanel';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@joolie-boolie/ui';
-import { RoomSetupModal } from '@/components/presenter/RoomSetupModal';
 import { Button } from "@joolie-boolie/ui";
 import { VoiceSelector } from '@/components/ui/VoiceSelector';
 import { RollSoundSelector } from '@/components/presenter/RollSoundSelector';
@@ -20,12 +19,7 @@ import { ThemeSelector } from '@joolie-boolie/ui';
 import { useAudioPreload, useAudio } from '@/hooks/use-audio';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
-import { OfflineBanner } from '@/components/pwa';
 import { InstallPrompt } from '@joolie-boolie/ui';
-import { serializeBingoState, deserializeBingoState } from '@/lib/session/serializer';
-import { useGameStore } from '@/stores/game-store';
-import { patternRegistry } from '@/lib/game/patterns';
-import { generateSecurePin } from '@joolie-boolie/sync';
 
 export default function PlayPage() {
   const game = useGameKeyboard();
@@ -39,105 +33,17 @@ export default function PlayPage() {
   // Apply presenter theme
   useApplyTheme(presenterTheme);
 
-  // Shared presenter session management
-  const session = usePresenterSession({
-    gameType: 'bingo',
-    storagePrefix: 'bingo',
-    offlineSessionStoragePrefix: 'bingo_offline_session',
-    fetchGameState: async (roomCode: string, token: string) => {
-      const response = await fetch(`/api/sessions/${roomCode}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw response;
-      const data = await response.json();
-      return data.gameState;
-    },
-    hydrateStore: (state: unknown) => {
-      const partialState = deserializeBingoState(state);
-      useGameStore.setState(partialState);
-    },
-    serializeState: () => serializeBingoState(useGameStore.getState()),
-    autoCreateOffline: true,
-    onAutoCreateOffline: (newSessionId) => {
-      // Set default pattern (Blackout) and ensure audio is enabled
-      const blackoutPattern = patternRegistry.get('blackout');
-      if (blackoutPattern) {
-        useGameStore.setState((state) => ({
-          ...state,
-          pattern: blackoutPattern,
-          audioEnabled: true,
-        }));
-      }
-      // Suppress unused variable warning - newSessionId used by the hook itself
-      void newSessionId;
-    },
-  });
+  // Local-only session: stable UUID for BroadcastChannel sync
+  const [sessionId] = useState(generateSessionId);
 
   // Initialize sync as presenter role with session-scoped channel
-  const { isConnected } = useSync({ role: 'presenter', sessionId: session.sessionId });
+  const { isConnected } = useSync({ role: 'presenter', sessionId });
 
   // Audio preloading and controls
   const { preloadProgress } = useAudioPreload();
   const { voicePack, setVoicePack, voiceVolume, setVoiceVolume } = useAudio();
 
-  // Full store subscription intentional — useAutoSync needs complete state for serialization
-  // and change detection (the hook's useEffect dependency on `state` drives reactivity).
-  // Passing a selector here would break the sync trigger mechanism.
-  const gameState = useGameStore();
-  useAutoSync(
-    gameState,
-    async (state) => {
-      // Skip API calls in offline/setup mode
-      if (session.mode !== 'online' || !session.roomCode) return;
-      const serialized = serializeBingoState(state);
-      const response = await fetch(`/api/sessions/${session.roomCode}/state`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionToken: null, state: serialized }),
-      });
-      if (!response.ok) throw new Error('Failed to sync state');
-    },
-    {
-      debounceMs: 2000,
-      enabled: session.mode === 'online' && !!session.roomCode,
-      isCriticalChange: (prev, next) => {
-        if (prev?.calledBalls?.length !== next?.calledBalls?.length) {
-          return 'BALL_CALLED';
-        }
-        if (prev?.pattern?.id !== next?.pattern?.id) {
-          return 'PATTERN_CHANGED';
-        }
-        if (prev?.status !== next?.status) {
-          return 'STATUS_CHANGED';
-        }
-        return null;
-      },
-    }
-  );
-
-  // Session handlers that wrap the shared hook
-  const handlePlayOffline = useCallback(() => {
-    session.playOffline();
-  }, [session]);
-
-  const handleModalCreateRoom = useCallback(async () => {
-    const pin = session.pin || generateSecurePin();
-    await session.createRoom({
-      pin,
-      initialState: serializeBingoState(gameState),
-    });
-  }, [session, gameState]);
-
-  const handleModalJoinRoom = useCallback((roomCode: string, pin: string) => {
-    void session.joinRoom(roomCode, pin);
-  }, [session]);
-
-  const handleModalPlayOffline = useCallback(() => {
-    session.closeModal();
-    session.playOffline();
-  }, [session]);
-
-  // Create new game handler - clears all session data and shows room setup modal
+  // Create new game handler - resets game state
   const handleCreateNewGame = useCallback(() => {
     // Show confirmation if game is active
     if (game.status !== 'idle' && game.status !== 'ended') {
@@ -151,40 +57,15 @@ export default function PlayPage() {
 
     // Reset game state to initial
     game.resetGame();
+  }, [game]);
 
-    // Clear session and show modal
-    session.resetSession({ showModal: true });
-  }, [game, session]);
-
-  // Open display window with room code or offline session ID in URL
+  // Open display window with session ID in URL
   const openDisplay = useCallback(() => {
-    if (session.mode === 'offline' && session.offlineSessionId) {
-      const displayUrl = `${window.location.origin}/display?offline=${session.offlineSessionId}`;
-      const displayWindow = window.open(
-        displayUrl,
-        `bingo-display-offline-${session.offlineSessionId}`,
-        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
-      );
-      if (displayWindow) {
-        displayWindow.focus();
-      }
-    } else if (session.roomCode) {
-      const displayUrl = `${window.location.origin}/display?room=${session.roomCode}`;
-      const displayWindow = window.open(
-        displayUrl,
-        `bingo-display-${session.roomCode}`,
-        'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no'
-      );
-      if (displayWindow) {
-        displayWindow.focus();
-      }
-    } else {
-      // No session: show create modal
-      session.openModal();
-    }
-  }, [session]);
+    const displayUrl = `${window.location.origin}/display?session=${sessionId}`;
+    window.open(displayUrl, `bingo-display-${sessionId}`, 'popup');
+  }, [sessionId]);
 
-  // Audience state label (Issue 2.3 — presenter audience-state indicator)
+  // Audience state label (Issue 2.3 -- presenter audience-state indicator)
   const audienceStateLabel = {
     idle: 'Waiting',
     playing: 'Game in Progress',
@@ -202,7 +83,6 @@ export default function PlayPage() {
         Skip to main content
       </a>
 
-      <OfflineBanner />
       <main id="main" className="min-h-screen bg-background p-3 md:p-4">
         <div className="max-w-[1600px] mx-auto">
 
@@ -228,28 +108,8 @@ export default function PlayPage() {
               </span>
             </div>
 
-            {/* Room info + controls row */}
+            {/* Controls row */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Session info */}
-              {session.roomCode && session.mode !== 'offline' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-foreground-secondary">Room:</span>
-                  <span className="font-mono font-semibold text-foreground text-sm">{session.roomCode}</span>
-                  {session.pin && (
-                    <>
-                      <span className="text-sm text-foreground-secondary ml-1">PIN:</span>
-                      <span className="font-mono font-semibold text-foreground text-sm">{session.pin}</span>
-                    </>
-                  )}
-                </div>
-              )}
-              {session.mode === 'offline' && session.offlineSessionId && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-foreground-secondary">Offline:</span>
-                  <span className="font-mono font-semibold text-foreground text-sm">{session.offlineSessionId}</span>
-                </div>
-              )}
-
               {/* Connection status */}
               <div className="flex items-center gap-2" data-testid="sync-indicator">
                 <div
@@ -263,11 +123,6 @@ export default function PlayPage() {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2">
-                {!session.roomCode && session.mode !== 'offline' && (
-                  <Button onClick={handlePlayOffline} variant="secondary" size="md" aria-label="Quick offline play">
-                    Offline
-                  </Button>
-                )}
                 <Button onClick={handleCreateNewGame} variant="secondary" size="md" className="shadow-lg">
                   New Game
                 </Button>
@@ -280,7 +135,7 @@ export default function PlayPage() {
 
           {/* Command center 3-column grid
               Left(col-span-4): board
-              Center(col-span-5): current ball + controls — slightly wider
+              Center(col-span-5): current ball + controls -- slightly wider
               Right(col-span-3): settings/pattern
           */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 md:gap-4">
@@ -472,17 +327,6 @@ export default function PlayPage() {
           </div>
         </div>
       </main>
-
-      {/* Session modals */}
-      <RoomSetupModal
-        isOpen={session.shouldShowModal}
-        onClose={session.closeModal}
-        onCreateRoom={handleModalCreateRoom}
-        onJoinRoom={handleModalJoinRoom}
-        onPlayOffline={handleModalPlayOffline}
-        error={session.error}
-        isLoading={session.isLoading}
-      />
 
       <InstallPrompt appName="Bingo" />
     </>

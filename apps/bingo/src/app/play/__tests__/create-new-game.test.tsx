@@ -1,40 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import PlayPage from '../page';
 import { ToastProvider } from "@joolie-boolie/ui";
 
 // Create mock functions to be shared across tests
-const mockClearToken = vi.fn();
 const mockResetGame = vi.fn();
 const mockConfirm = vi.fn(() => true);
 
 // Create a mutable status variable for dynamic mock behavior
 let mockGameStatus: 'idle' | 'playing' | 'paused' | 'ended' = 'idle';
-
-// Mutable session state for dynamic mock behavior
-let mockSessionState = {
-  mode: 'offline' as 'setup' | 'online' | 'offline' | 'joined',
-  roomCode: null as string | null,
-  offlineSessionId: 'TEST12' as string | null,
-  sessionId: 'TEST12',
-  pin: null as string | null,
-  isLoading: false,
-  error: null as string | null,
-  isRecovering: false,
-  isRecovered: false,
-  shouldShowModal: false,
-};
-
-const mockResetSession = vi.fn((opts?: { showModal?: boolean }) => {
-  mockClearToken();
-  if (opts?.showModal !== false) {
-    mockSessionState.shouldShowModal = true;
-  }
-});
-
-const mockCloseModal = vi.fn(() => {
-  mockSessionState.shouldShowModal = false;
-});
 
 // Mock dependencies
 vi.mock('@/hooks/use-game', () => ({
@@ -82,42 +56,13 @@ vi.mock('@/hooks/use-sync', () => ({
   useSync: () => ({ isConnected: true }),
 }));
 
-vi.mock('@joolie-boolie/sync', () => ({
-  useSessionRecovery: () => ({
-    isRecovering: false,
-    isRecovered: false,
-    error: null,
-    roomCode: null,
-    requiresPin: false,
-    recover: vi.fn(),
-    clearToken: mockClearToken,
-    storeToken: vi.fn(),
-  }),
-  useAutoSync: () => ({
-    isSyncing: false,
-    lastSyncTime: null,
-  }),
-  usePresenterSession: () => ({
-    ...mockSessionState,
-    createRoom: vi.fn(),
-    joinRoom: vi.fn(),
-    playOffline: vi.fn(),
-    resetSession: mockResetSession,
-    openModal: vi.fn(),
-    closeModal: mockCloseModal,
-    storeToken: vi.fn(),
-    clearToken: mockClearToken,
-    recover: vi.fn(),
-  }),
-  generateSecurePin: () => '1234',
-  generateShortSessionId: () => 'TEST12',
-}));
-
 vi.mock('@/hooks/use-audio', () => ({
   useAudioPreload: () => ({ preloadProgress: 100 }),
   useAudio: () => ({
     voicePack: 'standard',
     setVoicePack: vi.fn(),
+    voiceVolume: 1,
+    setVoiceVolume: vi.fn(),
   }),
 }));
 
@@ -133,33 +78,8 @@ vi.mock('@/stores/theme-store', () => ({
   ],
 }));
 
-vi.mock('@/stores/game-store', () => ({
-  useGameStore: () => ({
-    status: mockGameStatus,
-    calledBalls: [],
-    pattern: {
-      id: 'any-line',
-      name: 'Any Line',
-      description: 'Any row, column, or diagonal',
-      cells: [],
-    },
-    autoCallEnabled: false,
-    autoCallSpeed: 10,
-    audioEnabled: true,
-  }),
-}));
-
-vi.mock('@/lib/session/serializer', () => ({
-  serializeBingoState: (state: unknown) => state,
-  deserializeBingoState: (state: unknown) => state,
-}));
-
 vi.mock('@/lib/sync/session', () => ({
   generateSessionId: () => 'test-session-id',
-}));
-
-vi.mock('@/components/pwa', () => ({
-  OfflineBanner: () => null,
 }));
 
 vi.mock('@joolie-boolie/ui', async (importOriginal) => {
@@ -182,25 +102,8 @@ describe('PlayPage - Create New Game Button', () => {
 
     // Reset all mocks before each test
     vi.clearAllMocks();
-    mockClearToken.mockClear();
     mockResetGame.mockClear();
-    mockResetSession.mockClear();
-    mockCloseModal.mockClear();
     mockConfirm.mockReturnValue(true);
-
-    // Reset session state
-    mockSessionState = {
-      mode: 'offline',
-      roomCode: null,
-      offlineSessionId: 'TEST12',
-      sessionId: 'TEST12',
-      pin: null,
-      isLoading: false,
-      error: null,
-      isRecovering: false,
-      isRecovered: false,
-      shouldShowModal: false,
-    };
 
     // Mock window.confirm
     global.confirm = mockConfirm;
@@ -230,37 +133,13 @@ describe('PlayPage - Create New Game Button', () => {
     expect(button.className).toContain('shadow-lg');
   });
 
-  it('clicking button clears session token', async () => {
+  it('clicking button resets game state', () => {
     renderWithProviders(<PlayPage />);
 
     const createButton = screen.getByRole('button', { name: /new game/i });
     fireEvent.click(createButton);
 
-    await waitFor(() => {
-      expect(mockClearToken).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('clicking button resets game state', async () => {
-    renderWithProviders(<PlayPage />);
-
-    const createButton = screen.getByRole('button', { name: /new game/i });
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(mockResetGame).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('clicking button calls resetSession with showModal', async () => {
-    renderWithProviders(<PlayPage />);
-
-    const createButton = screen.getByRole('button', { name: /new game/i });
-    fireEvent.click(createButton);
-
-    await waitFor(() => {
-      expect(mockResetSession).toHaveBeenCalledWith({ showModal: true });
-    });
+    expect(mockResetGame).toHaveBeenCalledTimes(1);
   });
 
   it('does not show confirmation in idle state', () => {
@@ -280,24 +159,8 @@ describe('PlayPage - Create New Game with Active Game', () => {
     mockGameStatus = 'playing';
 
     vi.clearAllMocks();
-    mockClearToken.mockClear();
     mockResetGame.mockClear();
-    mockResetSession.mockClear();
     mockConfirm.mockReturnValue(true);
-
-    // Reset session state
-    mockSessionState = {
-      mode: 'offline',
-      roomCode: null,
-      offlineSessionId: 'TEST12',
-      sessionId: 'TEST12',
-      pin: null,
-      isLoading: false,
-      error: null,
-      isRecovering: false,
-      isRecovered: false,
-      shouldShowModal: false,
-    };
 
     global.confirm = mockConfirm;
   });
@@ -312,7 +175,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('does not clear session or reset game when user cancels confirmation', () => {
+  it('does not reset game when user cancels confirmation', () => {
     mockConfirm.mockReturnValue(false); // User clicks "Cancel"
 
     renderWithProviders(<PlayPage />);
@@ -324,8 +187,7 @@ describe('PlayPage - Create New Game with Active Game', () => {
       'This will end the current game and create a new one. Are you sure?'
     );
 
-    // Should NOT clear token or reset game
-    expect(mockClearToken).not.toHaveBeenCalled();
+    // Should NOT reset game
     expect(mockResetGame).not.toHaveBeenCalled();
   });
 });

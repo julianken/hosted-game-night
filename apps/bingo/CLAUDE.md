@@ -74,22 +74,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Offline-capable game play
 - Cache management hooks
 
-### Room Creation Flow
-- **Online Mode:** Create room with Supabase session, generates 4-digit PIN (1000-9999)
-- **Offline Mode:** Local-only session with 6-character session ID (no ambiguous chars: 0, O, 1, I)
-- **Join Room:** Enter room code and 4-digit PIN to join existing session
-- **Session Recovery:** Automatic recovery from localStorage on page refresh
-
-#### PIN Generation
-- Uses `crypto.getRandomValues()` for cryptographic security (no `Math.random()`)
-- 4-digit PINs: Range 1000-9999 (9000 possible values)
-- Stored in localStorage key: `bingo_pin`
-
-#### Offline Session IDs
-- 6-character alphanumeric IDs (uppercase)
-- Character set: `23456789ABCDEFGHJKLMNPQRSTUVWXYZ` (32 chars, excludes 0/O/1/I)
-- Total possibilities: 32^6 = 1,073,741,824
-
 ## Shared Packages
 
 - `@joolie-boolie/sync` - Dual-screen synchronization
@@ -136,12 +120,6 @@ pnpm test:coverage    # Run tests with coverage
 | `/api/auth/token-redirect` | GET | Token redirect handler (post-OAuth) |
 | `/api/templates` | GET, POST | Template CRUD |
 | `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
-| `/api/sessions` | POST | Create game session |
-| `/api/sessions/room/[roomCode]` | GET | Get session by room code |
-| `/api/sessions/[roomCode]` | GET | Get session details |
-| `/api/sessions/[roomCode]/verify-pin` | POST | Verify PIN to join session |
-| `/api/sessions/[roomCode]/state` | PATCH | Update session state |
-| `/api/sessions/[roomCode]/complete` | POST | Complete/end session |
 
 ## Keyboard Shortcuts
 
@@ -159,7 +137,7 @@ pnpm test:coverage    # Run tests with coverage
 - **Game Engine:** Pure functions in `lib/game/engine.ts` transform `GameState`. Zustand store wraps these for React integration.
 - **Auth:** OAuth 2.1 via Platform Hub with middleware-based JWT verification. OAuth client utilities in `lib/auth/` (oauth-client.ts, pkce.ts). Middleware uses lazy JWKS initialization to avoid server hang.
 - **Audio:** Audio logic lives in `hooks/use-audio.ts` and `stores/audio-store.ts`. The `lib/audio/` directory is a placeholder (`.gitkeep` only).
-- **Sync:** Session sync wrapper in `lib/sync/session.ts` and `lib/sync/offline-session.ts`, built on `@joolie-boolie/sync`
+- **Sync:** Session ID generation and BroadcastChannel naming in `lib/sync/session.ts`, built on `@joolie-boolie/sync`
 - **Patterns:** 29 patterns defined in `lib/game/patterns/` across 7 category files using `createPattern()`
 
 ## Design Requirements

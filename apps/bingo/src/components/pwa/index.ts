@@ -1,1 +1,1 @@
-export { OfflineBanner } from './OfflineBanner';
+// PWA components barrel export

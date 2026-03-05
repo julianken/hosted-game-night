@@ -177,9 +177,6 @@ export const test = base.extend<RealAuthFixtures>({
       timeout: AUTH_TIMEOUT_MS,
     });
 
-    // Dismiss Room Setup modal
-    await dismissRoomSetupModal(page);
-
     await use(page);
   },
 

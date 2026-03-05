@@ -578,9 +578,8 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
   /**
    * Authenticated Bingo page fixture.
    * Logs in via Platform Hub OAuth, then navigates to Bingo /play.
-   * Automatically dismisses Room Setup modal unless skipModalDismissal is true.
    */
-  authenticatedBingoPage: async ({ page, testUser, skipModalDismissal, navigationTimeout }, use) => {
+  authenticatedBingoPage: async ({ page, testUser, navigationTimeout }, use) => {
     // 1. Login via Platform Hub to get SSO cookies
     // Copy cookies to Bingo domain (different ports = different origins)
     await loginViaPlatformHub(page, testUser, {
@@ -623,11 +622,6 @@ export const test = base.extend<AuthFixtures & GameAuthFixtures>({
         }
         throw error;
       }
-    }
-
-    // 3. Dismiss Room Setup modal (unless test opts out)
-    if (!skipModalDismissal) {
-      await dismissRoomSetupModal(page, navigationTimeout);
     }
 
     // Provide authenticated Bingo page to test

@@ -10,5 +10,3 @@ export type { PatternSelectorProps, PatternPreviewProps } from './PatternSelecto
 export { ControlPanel } from './ControlPanel';
 export type { ControlPanelProps } from './ControlPanel';
 
-export { RoomSetupModal } from './RoomSetupModal';
-export type { RoomSetupModalProps } from './RoomSetupModal';

@@ -60,6 +60,12 @@ describe('session', () => {
       expect(isValidSessionId('550e8400-e29b-41d4-0716-446655440000')).toBe(false);
     });
 
+    it('returns false for offline-style session IDs (no longer valid)', () => {
+      expect(isValidSessionId('ABC234')).toBe(false);
+      expect(isValidSessionId('TEST12')).toBe(false);
+      expect(isValidSessionId('ZYXWVU')).toBe(false);
+    });
+
     it('validates generated session IDs', () => {
       for (let i = 0; i < 100; i++) {
         const sessionId = generateSessionId();
