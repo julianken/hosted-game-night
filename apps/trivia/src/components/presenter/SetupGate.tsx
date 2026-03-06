@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
 import { SetupWizard } from '@/components/presenter/SetupWizard';
@@ -23,6 +23,15 @@ export function SetupGate({
   onSaveQuestionSet,
 }: SetupGateProps) {
   const [isExiting, setIsExiting] = useState(false);
+
+  // Clear sample questions on first mount so setup starts clean
+  const hasCleared = useRef(false);
+  useEffect(() => {
+    if (!hasCleared.current) {
+      hasCleared.current = true;
+      useGameStore.getState().importQuestions([], 'replace');
+    }
+  }, []);
 
   // Game store selectors
   const questions = useGameStore((state) => state.questions);
