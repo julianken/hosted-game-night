@@ -37,7 +37,8 @@ export function RoundScoringPanel({
   const [entries, setEntries] = useState<Record<string, number | null>>(() => {
     const initial: Record<string, number | null> = {};
     for (const team of teams) {
-      initial[team.id] = null;
+      const committed = team.roundScores[currentRound];
+      initial[team.id] = (committed !== undefined && committed > 0) ? committed : null;
     }
     return initial;
   });
