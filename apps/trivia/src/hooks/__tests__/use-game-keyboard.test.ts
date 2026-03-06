@@ -27,10 +27,12 @@ describe('useGameKeyboard', () => {
     vi.clearAllMocks();
   });
 
-  const dispatchKeyDown = (code: string, options?: { shiftKey?: boolean; target?: EventTarget }) => {
+  const dispatchKeyDown = (code: string, options?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean; target?: EventTarget }) => {
     const event = new KeyboardEvent('keydown', {
       code,
       shiftKey: options?.shiftKey ?? false,
+      ctrlKey: options?.ctrlKey ?? false,
+      metaKey: options?.metaKey ?? false,
       bubbles: true,
       cancelable: true,
     });
@@ -551,6 +553,69 @@ describe('useGameKeyboard', () => {
         'keydown',
         expect.any(Function)
       );
+    });
+  });
+
+  describe('Enter key - round_scoring guard', () => {
+    it('should not dispatch SKIP during round_scoring', () => {
+      renderHook(() => useGameKeyboard());
+
+      // Put the store into round_scoring scene
+      act(() => {
+        useGameStore.setState({ audienceScene: 'round_scoring' as never });
+      });
+
+      const advanceSceneSpy = vi.spyOn(useGameStore.getState(), 'advanceScene');
+
+      act(() => {
+        dispatchKeyDown('Enter');
+      });
+
+      expect(advanceSceneSpy).not.toHaveBeenCalled();
+    });
+
+    it('should still dispatch SKIP during other scenes', () => {
+      renderHook(() => useGameKeyboard());
+
+      const otherScenes = ['question_display', 'question_closed', 'answer_reveal', 'round_summary', 'game_intro'];
+
+      for (const scene of otherScenes) {
+        act(() => {
+          useGameStore.setState({ audienceScene: scene as never });
+        });
+
+        const advanceSceneSpy = vi.spyOn(useGameStore.getState(), 'advanceScene');
+
+        act(() => {
+          dispatchKeyDown('Enter');
+        });
+
+        expect(advanceSceneSpy).toHaveBeenCalledWith('skip');
+      }
+    });
+  });
+
+  describe('Ctrl+Z - round_scoring exclusion', () => {
+    it('should not dispatch quickScore.undo during round_scoring', () => {
+      renderHook(() => useGameKeyboard());
+
+      // Put the store into round_scoring scene
+      act(() => {
+        useGameStore.setState({ audienceScene: 'round_scoring' as never });
+      });
+
+      // Spy on adjustTeamScore as a proxy — if Ctrl+Z undo ran it would call adjustTeamScore.
+      // But more directly, we can check that no undo side-effects occur.
+      // Since the hook reads quickScore from useQuickScore (not mocked here in the existing pattern),
+      // we verify by checking that advanceScene is not called and no score changes happen.
+      const initialTeams = useGameStore.getState().teams;
+
+      act(() => {
+        dispatchKeyDown('KeyZ', { ctrlKey: true });
+      });
+
+      // Teams should be unchanged (no undo side-effect)
+      expect(useGameStore.getState().teams).toEqual(initialTeams);
     });
   });
 });

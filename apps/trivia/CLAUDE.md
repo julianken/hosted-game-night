@@ -173,11 +173,11 @@ pnpm test:coverage     # Run tests with coverage
 | M | Mute/unmute TTS | Always |
 | T | Start timer / Toggle scoreboard | `question_display`: starts timer; `question_anticipation`: starts timer + advances to `question_display`; otherwise: toggle scoreboard |
 | S | Close question | `question_display` or `question_closed` |
-| Enter | Skip timed scene | Always (advances via `SKIP` trigger) |
+| Enter | Skip timed scene | Always except `round_scoring` (blocked; use Right Arrow to advance) |
 | F | Toggle fullscreen | Always |
 | 1-9, 0 | Quick score: toggle point for team N | Scoring phases: `question_closed`, `answer_reveal`, `round_summary`, `round_scoring`, `recap_*` |
 | Shift+1-9 | Remove point from team N | Scoring phases |
-| Ctrl/Cmd+Z | Undo last score action | Scoring phases |
+| Ctrl/Cmd+Z | Undo last score action | Scoring phases except `round_scoring` (panel owns undo in that scene) |
 | ? | Show help modal | Always |
 
 ## Architecture Notes

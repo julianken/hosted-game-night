@@ -268,8 +268,9 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Enter -- skip timed scenes
+        // Enter -- skip timed scenes (blocked during round_scoring to prevent accidental advance)
         case 'Enter':
+          if (currentScene === 'round_scoring') break;
           store.advanceScene(SCENE_TRIGGERS.SKIP);
           break;
 
@@ -278,10 +279,10 @@ export function useGameKeyboard() {
           fullscreen.toggleFullscreen();
           break;
 
-        // Ctrl/Cmd+Z -- undo last score action
+        // Ctrl/Cmd+Z -- undo last score action (excluded during round_scoring; panel owns undo)
         case 'KeyZ':
           if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
-            if (SCORING_PHASE_SCENES.has(currentScene)) {
+            if (SCORING_PHASE_SCENES.has(currentScene) && currentScene !== 'round_scoring') {
               event.preventDefault();
               quickScore.undo();
             }
