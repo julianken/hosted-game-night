@@ -3,13 +3,18 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { RoundScoringPanel } from '../RoundScoringPanel';
 import type { Team } from '@/types';
 
-function createTeam(id: string, name: string, score: number): Team {
+function createTeam(
+  id: string,
+  name: string,
+  score: number,
+  roundScores: number[] = [score],
+): Team {
   return {
     id: id as import('@joolie-boolie/types/branded').TeamId,
     name,
     score,
     tableNumber: parseInt(id, 10) || 1,
-    roundScores: [score],
+    roundScores,
   };
 }
 
@@ -36,7 +41,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -50,7 +55,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -62,7 +67,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -78,7 +83,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={onSubmit}
       />,
     );
@@ -109,7 +114,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={onSubmit}
       />,
     );
@@ -133,7 +138,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -154,7 +159,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -182,7 +187,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -203,7 +208,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -227,7 +232,7 @@ describe('RoundScoringPanel', () => {
     render(
       <RoundScoringPanel
         teams={mockTeams}
-        currentRound={0}
+        currentRound={1}
         onSubmitScores={vi.fn()}
       />,
     );
@@ -242,5 +247,175 @@ describe('RoundScoringPanel', () => {
     for (const input of inputs) {
       expect(input.style.minHeight).toBe('44px');
     }
+  });
+
+  // =========================================================================
+  // Pre-fill with quick-score values (BEA-666)
+  // =========================================================================
+
+  describe('pre-fill with quick-score values', () => {
+    // Teams with round 0 scores of [3], [0], and no round 1 score
+    const teamsWithQuickScores: Team[] = [
+      createTeam('team-a', 'Alpha', 8, [3, 5]),   // round 0=3, round 1=5
+      createTeam('team-b', 'Beta', 2, [2]),        // round 0=2, round 1=undefined
+      createTeam('team-c', 'Gamma', 0, [0, 0]),    // round 0=0, round 1=0
+    ];
+
+    it('should pre-fill inputs with quick-score values from team.roundScores[currentRound]', () => {
+      render(
+        <RoundScoringPanel
+          teams={teamsWithQuickScores}
+          currentRound={0}
+          onSubmitScores={vi.fn()}
+        />,
+      );
+
+      // Alpha has roundScores[0]=3, should be pre-filled
+      expect(
+        (screen.getByLabelText('Score for Alpha') as HTMLInputElement).value,
+      ).toBe('3');
+
+      // Beta has roundScores[0]=2, should be pre-filled
+      expect(
+        (screen.getByLabelText('Score for Beta') as HTMLInputElement).value,
+      ).toBe('2');
+
+      // Gamma has roundScores[0]=0, treated as blank
+      expect(
+        (screen.getByLabelText('Score for Gamma') as HTMLInputElement).value,
+      ).toBe('');
+    });
+
+    it('should show correct entered count reflecting pre-filled values', () => {
+      render(
+        <RoundScoringPanel
+          teams={teamsWithQuickScores}
+          currentRound={0}
+          onSubmitScores={vi.fn()}
+        />,
+      );
+
+      // Alpha (3) and Beta (2) are pre-filled, Gamma (0) is not
+      expect(screen.getByText('2/3 entered')).toBeTruthy();
+    });
+
+    it('should call onProgressChange with pre-filled values on mount', () => {
+      const onProgress = vi.fn();
+      render(
+        <RoundScoringPanel
+          teams={teamsWithQuickScores}
+          currentRound={0}
+          onSubmitScores={vi.fn()}
+          onProgressChange={onProgress}
+        />,
+      );
+
+      // onProgressChange should be called with the pre-filled entries
+      expect(onProgress).toHaveBeenCalled();
+      const progressArg = onProgress.mock.calls[0][0];
+      expect(progressArg['team-a']).toBe(3);
+      expect(progressArg['team-b']).toBe(2);
+      expect(progressArg['team-c']).toBeUndefined();
+    });
+
+    it('should submit pre-filled values on Done without modification', () => {
+      const onSubmit = vi.fn();
+      render(
+        <RoundScoringPanel
+          teams={teamsWithQuickScores}
+          currentRound={0}
+          onSubmitScores={onSubmit}
+        />,
+      );
+
+      // Click Done immediately without changing anything
+      fireEvent.click(screen.getByText('Done'));
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      const args = onSubmit.mock.calls[0][0];
+      expect(args['team-a']).toBe(3);
+      expect(args['team-b']).toBe(2);
+      expect(args['team-c']).toBe(0); // null entries submit as 0
+    });
+
+    it('handleClear resets to null, not pre-fill values', () => {
+      render(
+        <RoundScoringPanel
+          teams={teamsWithQuickScores}
+          currentRound={0}
+          onSubmitScores={vi.fn()}
+        />,
+      );
+
+      // Pre-filled: Alpha=3, Beta=2 → 2/3 entered
+      expect(screen.getByText('2/3 entered')).toBeTruthy();
+
+      // Click Clear
+      fireEvent.click(screen.getByText('Clear'));
+
+      // All inputs should be empty
+      expect(screen.getByText('0/3 entered')).toBeTruthy();
+      expect(
+        (screen.getByLabelText('Score for Alpha') as HTMLInputElement).value,
+      ).toBe('');
+      expect(
+        (screen.getByLabelText('Score for Beta') as HTMLInputElement).value,
+      ).toBe('');
+      expect(
+        (screen.getByLabelText('Score for Gamma') as HTMLInputElement).value,
+      ).toBe('');
+    });
+
+    it('full quick-score + pre-fill + modify + Done sequence', () => {
+      const onSubmit = vi.fn();
+      // Simulate: round 1, Alpha has 5 from quick-score, Beta has nothing
+      const teamsRound1: Team[] = [
+        createTeam('team-a', 'Alpha', 8, [3, 5]),   // round 1=5
+        createTeam('team-b', 'Beta', 2, [2]),        // round 1=undefined
+        createTeam('team-c', 'Gamma', 0, [0, 0]),    // round 1=0
+      ];
+
+      render(
+        <RoundScoringPanel
+          teams={teamsRound1}
+          currentRound={1}
+          onSubmitScores={onSubmit}
+        />,
+      );
+
+      // Alpha should be pre-filled with 5
+      expect(
+        (screen.getByLabelText('Score for Alpha') as HTMLInputElement).value,
+      ).toBe('5');
+
+      // Beta should be empty (roundScores[1] is undefined)
+      expect(
+        (screen.getByLabelText('Score for Beta') as HTMLInputElement).value,
+      ).toBe('');
+
+      // Gamma should be empty (roundScores[1] is 0, treated as blank)
+      expect(
+        (screen.getByLabelText('Score for Gamma') as HTMLInputElement).value,
+      ).toBe('');
+
+      // Modify Alpha's score
+      fireEvent.change(screen.getByLabelText('Score for Alpha'), {
+        target: { value: '7' },
+      });
+
+      // Enter Beta's score
+      fireEvent.change(screen.getByLabelText('Score for Beta'), {
+        target: { value: '4' },
+      });
+
+      // Leave Gamma empty, click Done
+      fireEvent.click(screen.getByText('Done'));
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      const args = onSubmit.mock.calls[0][0];
+      expect(args['team-a']).toBe(7);  // modified from pre-fill
+      expect(args['team-b']).toBe(4);  // manually entered
+      expect(args['team-c']).toBe(0);  // null → 0
+    });
   });
 });
