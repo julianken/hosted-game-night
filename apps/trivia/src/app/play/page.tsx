@@ -578,9 +578,6 @@ export default function PlayPage() {
           isConnected={isConnected}
           onOpenDisplay={openDisplay}
           onStartGame={game.startGame}
-          onSaveTemplate={() => setShowSaveTemplateModal(true)}
-          onSavePreset={() => setShowSavePresetModal(true)}
-          onSaveQuestionSet={() => setShowSaveQuestionSetModal(true)}
         />
       )}
 

@@ -23,9 +23,7 @@ export interface WizardStepReviewProps {
   teams: Team[];
   roundsCount: number;
   questionsPerRound: number;
-  timerDuration: number;
   onGoToStep: (step: number) => void;
-  onSaveTemplate: () => void;
   onStartGame: () => void;
 }
 
@@ -36,9 +34,7 @@ export function WizardStepReview({
   teams,
   roundsCount,
   questionsPerRound,
-  timerDuration,
   onGoToStep,
-  onSaveTemplate,
   onStartGame,
 }: WizardStepReviewProps) {
   return (
@@ -130,9 +126,6 @@ export function WizardStepReview({
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground-secondary">
           <span>
-            <span className="font-medium text-foreground">{timerDuration}s</span> timer
-          </span>
-          <span>
             <span className="font-medium text-foreground">{roundsCount}</span> round{roundsCount !== 1 ? 's' : ''}
           </span>
           <span>
@@ -170,26 +163,13 @@ export function WizardStepReview({
         )}
       </div>
 
-      {/* Bottom action row: Save Template + Start Game */}
-      <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
-          type="button"
-          onClick={onSaveTemplate}
-          disabled={questions.length === 0}
-          className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px]
-            ${questions.length > 0
-              ? 'bg-secondary hover:bg-secondary-hover text-secondary-foreground'
-              : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-            }`}
-          aria-disabled={questions.length === 0}
-        >
-          Save Template
-        </button>
+      {/* Start Game */}
+      <div className="pt-2">
         <button
           type="button"
           onClick={onStartGame}
           disabled={!canStart}
-          className={`flex-1 px-6 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]
+          className={`w-full px-6 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]
             ${canStart
               ? 'bg-success hover:bg-success/90 text-success-foreground'
               : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'

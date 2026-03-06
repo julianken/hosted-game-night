@@ -33,21 +33,13 @@ import type { Team, Question } from '@/types';
 export interface SetupWizardProps {
   // Questions
   questions: Question[];
-  onSaveQuestionSet: () => void;
 
   // Settings
   roundsCount: number;
   questionsPerRound: number;
-  timerDuration: number;
-  timerAutoStart: boolean;
-  timerVisible: boolean;
-  ttsEnabled: boolean;
   lastTeamSetup: TeamSetup | null;
   currentTeams: Team[];
   onUpdateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-  onLoadTeams: (teamSetup: TeamSetup) => void;
-  onSaveTeams: () => void;
-  onSavePreset: () => void;
 
   // Validation & launch
   validation: GameSetupValidation;
@@ -56,7 +48,6 @@ export interface SetupWizardProps {
   onRemoveTeam: (teamId: string) => void;
   onRenameTeam: (teamId: string, name: string) => void;
   onLoadTeamsFromSetup: (names: string[]) => void;
-  onSaveTemplate: () => void;
   onStartGame: () => void;
 }
 
@@ -70,21 +61,13 @@ const STEPS = [
 export function SetupWizard({
   // Questions
   questions,
-  onSaveQuestionSet,
 
   // Settings
   roundsCount,
   questionsPerRound,
-  timerDuration,
-  timerAutoStart,
-  timerVisible,
-  ttsEnabled,
   lastTeamSetup,
   currentTeams,
   onUpdateSetting,
-  onLoadTeams,
-  onSaveTeams,
-  onSavePreset,
 
   // Validation & launch
   validation,
@@ -93,7 +76,6 @@ export function SetupWizard({
   onRemoveTeam,
   onRenameTeam,
   onLoadTeamsFromSetup,
-  onSaveTemplate,
   onStartGame,
 }: SetupWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -141,7 +123,7 @@ export function SetupWizard({
               key={index}
               data-testid={`wizard-step-${index}`}
               type="button"
-              onClick={() => setCurrentStep(index)}
+              onClick={() => goToStep(index)}
               aria-current={isActive ? 'step' : undefined}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
                 transition-all min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary/50
@@ -193,7 +175,6 @@ export function SetupWizard({
             {currentStep === 0 && (
               <WizardStepQuestions
                 questions={questions}
-                onSaveQuestionSet={onSaveQuestionSet}
               />
             )}
 
@@ -201,16 +182,7 @@ export function SetupWizard({
               <WizardStepSettings
                 roundsCount={roundsCount}
                 questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
-                timerAutoStart={timerAutoStart}
-                timerVisible={timerVisible}
-                ttsEnabled={ttsEnabled}
-                lastTeamSetup={lastTeamSetup}
-                currentTeams={currentTeams}
                 onUpdateSetting={onUpdateSetting}
-                onLoadTeams={onLoadTeams}
-                onSaveTeams={onSaveTeams}
-                onSavePreset={onSavePreset}
               />
             )}
 
@@ -224,7 +196,6 @@ export function SetupWizard({
                 onRemoveTeam={onRemoveTeam}
                 onRenameTeam={onRenameTeam}
                 onLoadTeamsFromSetup={onLoadTeamsFromSetup}
-                onSaveTeams={onSaveTeams}
               />
             )}
 
@@ -236,9 +207,7 @@ export function SetupWizard({
                 teams={currentTeams}
                 roundsCount={roundsCount}
                 questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
                 onGoToStep={goToStep}
-                onSaveTemplate={onSaveTemplate}
                 onStartGame={onStartGame}
               />
             )}

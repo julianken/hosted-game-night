@@ -2,25 +2,19 @@
 
 import { useState, useCallback } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
-import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { SetupWizard } from '@/components/presenter/SetupWizard';
 
 interface SetupGateProps {
   isConnected: boolean;
   onOpenDisplay: () => void;
   onStartGame: () => void;
-  onSaveTemplate: () => void;
-  onSavePreset: () => void;
-  onSaveQuestionSet: () => void;
 }
 
 export function SetupGate({
   isConnected,
   onOpenDisplay,
   onStartGame,
-  onSaveTemplate,
-  onSavePreset,
-  onSaveQuestionSet,
 }: SetupGateProps) {
   const [isExiting, setIsExiting] = useState(false);
 
@@ -39,26 +33,9 @@ export function SetupGate({
   const {
     roundsCount,
     questionsPerRound,
-    timerDuration,
-    timerAutoStart,
-    timerVisible,
-    ttsEnabled,
     lastTeamSetup,
     updateSetting,
-    saveTeamSetup,
   } = useSettingsStore();
-
-  // Team handlers
-  const handleSaveTeams = useCallback(() => {
-    saveTeamSetup(teams);
-  }, [saveTeamSetup, teams]);
-
-  const handleLoadTeams = useCallback(
-    (teamSetup: TeamSetup) => {
-      loadTeamsFromSetup(teamSetup.names);
-    },
-    [loadTeamsFromSetup]
-  );
 
   // Two-phase exit: fade out then call onStartGame
   const handleStartGame = useCallback(() => {
@@ -108,26 +85,17 @@ export function SetupGate({
         <div className="max-w-2xl mx-auto p-4">
           <SetupWizard
             questions={questions}
-            onSaveQuestionSet={onSaveQuestionSet}
             roundsCount={roundsCount}
             questionsPerRound={questionsPerRound}
-            timerDuration={timerDuration}
-            timerAutoStart={timerAutoStart}
-            timerVisible={timerVisible}
-            ttsEnabled={ttsEnabled}
             lastTeamSetup={lastTeamSetup}
             currentTeams={teams}
             onUpdateSetting={updateSetting}
-            onLoadTeams={handleLoadTeams}
-            onSaveTeams={handleSaveTeams}
-            onSavePreset={onSavePreset}
             validation={validation}
             canStart={canStart}
             onAddTeam={addTeam}
             onRemoveTeam={removeTeam}
             onRenameTeam={renameTeam}
             onLoadTeamsFromSetup={loadTeamsFromSetup}
-            onSaveTemplate={onSaveTemplate}
             onStartGame={handleStartGame}
           />
         </div>

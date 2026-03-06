@@ -22,7 +22,6 @@ export interface WizardStepTeamsProps {
   onRemoveTeam: (teamId: string) => void;
   onRenameTeam: (teamId: string, name: string) => void;
   onLoadTeamsFromSetup: (names: string[]) => void;
-  onSaveTeams: () => void;
 }
 
 const QUICK_FILL_OPTIONS = [
@@ -44,7 +43,6 @@ export function WizardStepTeams({
   onRemoveTeam,
   onRenameTeam,
   onLoadTeamsFromSetup,
-  onSaveTeams,
 }: WizardStepTeamsProps) {
   return (
     <div className="space-y-4">
@@ -135,19 +133,6 @@ export function WizardStepTeams({
           onRenameTeam={onRenameTeam}
         />
       </div>
-
-      {/* Save current teams */}
-      {teams.length > 0 && (
-        <button
-          type="button"
-          onClick={onSaveTeams}
-          className="w-full px-4 py-3 rounded-xl text-sm font-medium
-            bg-surface-elevated hover:bg-surface-hover text-foreground
-            border border-border transition-colors min-h-[44px]"
-        >
-          Save Current Team Setup
-        </button>
-      )}
 
     </div>
   );
