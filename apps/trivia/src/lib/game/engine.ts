@@ -5,7 +5,7 @@
  * Implementation is split across focused modules:
  *   - lifecycle.ts   — startGame, endGame, resetGame, updateSettings, createInitialState
  *   - teams.ts       — addTeam, removeTeam, renameTeam, updateTeamOrder
- *   - questions.ts   — selectQuestion, setDisplayQuestion, importQuestions, exportQuestionsFromState, clearQuestions, addQuestion, removeQuestion, updateQuestion
+ *   - questions.ts   — selectQuestion, setDisplayQuestion, importQuestions, exportQuestionsFromState, clearQuestions, redistributeQuestions, addQuestion, removeQuestion, updateQuestion
  *   - scoring.ts     — adjustTeamScore, setTeamScore, setTeamRoundScore, amendCorrectAnswers, recordTeamAnswer
  *   - rounds.ts      — completeRound, nextRound, getRoundWinners
  *   - timer.ts       — tickTimer, resetTimer, startTimer, stopTimer, toggleTimerAutoStart
@@ -41,6 +41,7 @@ export {
   importQuestions,
   exportQuestionsFromState,
   clearQuestions,
+  redistributeQuestions,
   addQuestion,
   removeQuestion,
   updateQuestion,

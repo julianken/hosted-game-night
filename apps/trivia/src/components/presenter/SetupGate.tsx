@@ -1,34 +1,28 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
-import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
+import { useSettingsStore, SETTINGS_RANGES } from '@/stores/settings-store';
+import { getUniqueCategories } from '@/lib/categories';
 import { SetupWizard } from '@/components/presenter/SetupWizard';
-import type { QuestionCategory } from '@/types';
+import { derivePerRoundBreakdown } from '@/lib/game/selectors';
+import type { PerRoundBreakdown } from '@/types';
 
 interface SetupGateProps {
   isConnected: boolean;
   onOpenDisplay: () => void;
   onStartGame: () => void;
-  onSaveTemplate: () => void;
-  onSavePreset: () => void;
-  onSaveQuestionSet: () => void;
 }
 
 export function SetupGate({
   isConnected,
   onOpenDisplay,
   onStartGame,
-  onSaveTemplate,
-  onSavePreset,
-  onSaveQuestionSet,
 }: SetupGateProps) {
   const [isExiting, setIsExiting] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<QuestionCategory[]>([]);
 
   // Game store selectors
   const questions = useGameStore((state) => state.questions);
-  const importQuestions = useGameStore((state) => state.importQuestions);
   const teams = useGameStore((state) => state.teams);
   const addTeam = useGameStore((state) => state.addTeam);
   const removeTeam = useGameStore((state) => state.removeTeam);
@@ -41,26 +35,68 @@ export function SetupGate({
   // Settings store
   const {
     roundsCount,
-    questionsPerRound,
-    timerDuration,
-    timerAutoStart,
-    timerVisible,
-    ttsEnabled,
     lastTeamSetup,
     updateSetting,
-    saveTeamSetup,
   } = useSettingsStore();
+  const isByCategory = useSettingsStore((s) => s.isByCategory);
 
-  // Team handlers
-  const handleSaveTeams = useCallback(() => {
-    saveTeamSetup(teams);
-  }, [saveTeamSetup, teams]);
+  // Game store actions
+  const redistributeQuestions = useGameStore((s) => s.redistributeQuestions);
+  const updateGameSettings = useGameStore((s) => s.updateSettings);
 
-  const handleLoadTeams = useCallback(
-    (teamSetup: TeamSetup) => {
-      loadTeamsFromSetup(teamSetup.names);
-    },
-    [loadTeamsFromSetup]
+  // Sync settings store → game store so validation reads the current roundsCount.
+  // The settings store is the source of truth during setup; the game store needs
+  // its copy updated for validateGameSetup to work correctly.
+  useEffect(() => {
+    updateGameSettings({ roundsCount });
+  }, [roundsCount, updateGameSettings]);
+
+  // Redistribute questions whenever the question list or distribution settings change.
+  // redistributeQuestions is a Zustand action (stable reference).
+  // The engine's idempotency contract (same-reference return) prevents feedback loops.
+  useEffect(() => {
+    redistributeQuestions(
+      roundsCount,
+      isByCategory ? 'by_category' : 'by_count'
+    );
+  }, [questions, roundsCount, isByCategory, redistributeQuestions]);
+
+  // Derive per-round breakdown for display in settings and review steps.
+  const perRoundBreakdown: PerRoundBreakdown[] = useMemo(
+    () => derivePerRoundBreakdown(questions, roundsCount, isByCategory),
+    [questions, roundsCount, isByCategory]
+  );
+
+  // Count unique categories (stable: doesn't change when only roundIndex changes)
+  const uniqueCategoryCount = useMemo(
+    () => (questions.length > 0 ? getUniqueCategories(questions).length : 0),
+    [questions]
+  );
+
+  // By-category mode is only available with ≤ 4 unique categories.
+  // Auto-disable if questions change and now have too many categories.
+  const canUseByCategory = uniqueCategoryCount > 0 && uniqueCategoryCount <= 4;
+
+  useEffect(() => {
+    if (isByCategory && !canUseByCategory) {
+      updateSetting('isByCategory', false);
+    }
+  }, [isByCategory, canUseByCategory, updateSetting]);
+
+  // Auto-default roundsCount to category count when in by-category mode.
+  // Fires when toggle changes or question set changes (new import).
+  // Does NOT fire on redistribution (uniqueCategoryCount is stable across roundIndex changes).
+  useEffect(() => {
+    if (isByCategory && uniqueCategoryCount > 0) {
+      const target = Math.min(uniqueCategoryCount, SETTINGS_RANGES.roundsCount.max);
+      updateSetting('roundsCount', target);
+    }
+  }, [isByCategory, uniqueCategoryCount, updateSetting]);
+
+  // Toggle the isByCategory setting
+  const handleToggleByCategory = useCallback(
+    (value: boolean) => updateSetting('isByCategory', value),
+    [updateSetting]
   );
 
   // Two-phase exit: fade out then call onStartGame
@@ -111,30 +147,21 @@ export function SetupGate({
         <div className="max-w-2xl mx-auto p-4">
           <SetupWizard
             questions={questions}
-            onImport={importQuestions}
-            selectedCategories={selectedCategories}
-            onCategoryChange={setSelectedCategories}
-            onSaveQuestionSet={onSaveQuestionSet}
             roundsCount={roundsCount}
-            questionsPerRound={questionsPerRound}
-            timerDuration={timerDuration}
-            timerAutoStart={timerAutoStart}
-            timerVisible={timerVisible}
-            ttsEnabled={ttsEnabled}
             lastTeamSetup={lastTeamSetup}
             currentTeams={teams}
             onUpdateSetting={updateSetting}
-            onLoadTeams={handleLoadTeams}
-            onSaveTeams={handleSaveTeams}
-            onSavePreset={onSavePreset}
             validation={validation}
             canStart={canStart}
             onAddTeam={addTeam}
             onRemoveTeam={removeTeam}
             onRenameTeam={renameTeam}
             onLoadTeamsFromSetup={loadTeamsFromSetup}
-            onSaveTemplate={onSaveTemplate}
             onStartGame={handleStartGame}
+            isByCategory={isByCategory}
+            canUseByCategory={canUseByCategory}
+            perRoundBreakdown={perRoundBreakdown}
+            onToggleByCategory={handleToggleByCategory}
           />
         </div>
       </div>

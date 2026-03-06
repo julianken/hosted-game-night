@@ -266,10 +266,10 @@ export async function waitForCondition(condition: () => Promise<void>, timeout =
  * skipSetupDismissal: true to keep it visible.
  *
  * @param page - Playwright page instance
- * @param teamCount - Number of teams to add (default: 1)
+ * @param teamCount - Number of teams to add (default: 2 — step 2 gating requires teams >= 2)
  * @param timeout - Maximum time to wait for transitions (default: 15000ms)
  */
-export async function startGameViaWizard(page: Page, teamCount = 1, timeout = 15000): Promise<void> {
+export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15000): Promise<void> {
   const gate = page.locator('[data-testid="setup-gate"]');
 
   // Check if the setup gate is visible — if not, game may already be started

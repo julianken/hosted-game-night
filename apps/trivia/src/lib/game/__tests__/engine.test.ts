@@ -1289,24 +1289,17 @@ describe('Trivia Game Engine', () => {
       expect(result.questions).toHaveLength(originalLength + 2);
     });
 
-    it('should update totalRounds based on max roundIndex', () => {
+    it('should NOT override totalRounds or settings.roundsCount (managed by settings store sync)', () => {
       let state = createInitialState();
       const questionsWithHighRound = [
         { ...testQuestions[0], roundIndex: 4 },
       ];
       const result = importQuestions(state, questionsWithHighRound, 'replace');
 
-      expect(result.totalRounds).toBe(5); // 0-indexed, so roundIndex 4 = 5 rounds
-    });
-
-    it('should update settings.roundsCount to match totalRounds', () => {
-      let state = createInitialState();
-      const questionsWithHighRound = [
-        { ...testQuestions[0], roundIndex: 3 },
-      ];
-      const result = importQuestions(state, questionsWithHighRound, 'replace');
-
-      expect(result.settings.roundsCount).toBe(4);
+      // importQuestions no longer derives roundsCount from question data;
+      // the settings store → game store sync effect handles this.
+      expect(result.totalRounds).toBe(state.totalRounds);
+      expect(result.settings.roundsCount).toBe(state.settings.roundsCount);
     });
 
     it('should reset selectedQuestionIndex to 0', () => {
@@ -1431,21 +1424,15 @@ describe('Trivia Game Engine', () => {
       expect(result.questions[result.questions.length - 1]).toEqual(newQuestion);
     });
 
-    it('should update totalRounds if question has higher roundIndex', () => {
+    it('should not modify totalRounds or settings.roundsCount (redistribution is handled separately)', () => {
       let state = createInitialState();
       const highRoundQuestion = { ...newQuestion, roundIndex: 10 };
       const result = addQuestion(state, highRoundQuestion);
 
-      expect(result.totalRounds).toBe(11);
-      expect(result.settings.roundsCount).toBe(11);
-    });
-
-    it('should not decrease totalRounds', () => {
-      let state = createInitialState();
-      state = { ...state, totalRounds: 10, settings: { ...state.settings, roundsCount: 10 } };
-      const result = addQuestion(state, newQuestion);
-
-      expect(result.totalRounds).toBe(10);
+      // addQuestion no longer auto-updates totalRounds or roundsCount;
+      // call redistributeQuestions separately to reassign roundIndex values.
+      expect(result.totalRounds).toBe(state.totalRounds);
+      expect(result.settings.roundsCount).toBe(state.settings.roundsCount);
     });
 
     it('should return unchanged if not in setup mode', () => {
@@ -1521,11 +1508,14 @@ describe('Trivia Game Engine', () => {
       expect(result.questions[0]).toEqual(updatedQuestion);
     });
 
-    it('should update totalRounds if new question has higher roundIndex', () => {
+    it('should not modify totalRounds or settings.roundsCount (redistribution is handled separately)', () => {
       let state = createInitialState();
       const result = updateQuestion(state, 0, updatedQuestion);
 
-      expect(result.totalRounds).toBeGreaterThanOrEqual(6);
+      // updateQuestion no longer auto-updates totalRounds or roundsCount;
+      // call redistributeQuestions separately to reassign roundIndex values.
+      expect(result.totalRounds).toBe(state.totalRounds);
+      expect(result.settings.roundsCount).toBe(state.settings.roundsCount);
     });
 
     it('should not affect other questions', () => {
@@ -1640,23 +1630,6 @@ describe('Trivia Game Engine', () => {
       );
     });
 
-    it('V6: should warn when round question count mismatches questionsPerRound', () => {
-      let state = createInitialState();
-      state = addTeam(state, 'Team A');
-      state = addTeam(state, 'Team B');
-      // Default has 5 questions per round and questionsPerRound=5
-      // Change questionsPerRound to 3 to trigger mismatch
-      state = updateSettings(state, { questionsPerRound: 3 });
-      const result = validateGameSetup(state);
-
-      const v6Issues = result.issues.filter(i => i.id === 'V6');
-      expect(v6Issues.length).toBeGreaterThan(0);
-      expect(v6Issues[0]).toMatchObject({
-        severity: 'warn',
-        message: expect.stringContaining('has 5 questions but 3 are configured'),
-      });
-    });
-
     it('V7: should warn when only one team', () => {
       let state = createInitialState();
       state = addTeam(state, 'Team A');
@@ -1753,11 +1726,11 @@ describe('Trivia Game Engine', () => {
     it('should report correct warnCount for full state with warnings', () => {
       let state = createInitialState();
       state = addTeam(state, 'Solo Team');
-      state = updateSettings(state, { timerDuration: 5, questionsPerRound: 3 });
+      state = updateSettings(state, { timerDuration: 5 });
       const result = validateGameSetup(state);
 
-      // V5 (short timer) + V7 (single team) + V6 (mismatch per round)
-      expect(result.warnCount).toBeGreaterThanOrEqual(3);
+      // V5 (short timer) + V7 (single team)
+      expect(result.warnCount).toBeGreaterThanOrEqual(2);
       expect(result.canStart).toBe(true); // All are warns, no blocks
     });
   });

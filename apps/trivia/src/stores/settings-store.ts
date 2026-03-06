@@ -20,6 +20,7 @@ export interface SettingsState {
   timerVisible: boolean; // default true
   timerAutoReveal: boolean; // default true - auto-reveal answer when timer reaches 0
   ttsEnabled: boolean; // default false
+  isByCategory: boolean; // default true - group questions by category within a round
 
   // Team persistence
   lastTeamSetup: TeamSetup | null;
@@ -49,6 +50,7 @@ export const SETTINGS_DEFAULTS: SettingsState = {
   timerVisible: true,
   timerAutoReveal: true,
   ttsEnabled: false,
+  isByCategory: true,
   lastTeamSetup: null,
 };
 
@@ -114,7 +116,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'trivia-settings',
-      version: 3,  // BUMPED from 2 -- removed revealMode (BEA-582)
+      version: 4,  // BUMPED from 3 -- added isByCategory (BEA-665)
       // Only persist certain fields, excluding methods
       partialize: (state) => ({
         roundsCount: state.roundsCount,
@@ -124,6 +126,7 @@ export const useSettingsStore = create<SettingsStore>()(
         timerVisible: state.timerVisible,
         timerAutoReveal: state.timerAutoReveal,
         ttsEnabled: state.ttsEnabled,
+        isByCategory: state.isByCategory,
         lastTeamSetup: state.lastTeamSetup,
       }),
       // Zustand persist calls migrate(storedData, storedVersion) when
@@ -135,6 +138,12 @@ export const useSettingsStore = create<SettingsStore>()(
           // v1 had no revealMode; v2 added it. Either way, strip it out.
           const { revealMode: _rm, ...rest } = stored;
           return rest;
+        }
+
+        if (fromVersion <= 3) {
+          // v4 adds isByCategory. Not present in stored v3 data.
+          // Return stored as-is; Zustand merge with SETTINGS_DEFAULTS supplies isByCategory: true.
+          return stored;
         }
 
         // Unknown version: return as-is and let Zustand merge with SETTINGS_DEFAULTS.

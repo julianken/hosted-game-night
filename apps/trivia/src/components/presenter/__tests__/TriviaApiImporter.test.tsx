@@ -88,6 +88,7 @@ const MOCK_API_RESPONSE = {
 const originalFetch = global.fetch;
 
 function mockFetchSuccess(data = MOCK_API_RESPONSE) {
+  // Default tests use no category selection → single mixed call → mockResolvedValueOnce
   global.fetch = vi.fn().mockResolvedValueOnce({
     ok: true,
     status: 200,

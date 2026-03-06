@@ -380,6 +380,7 @@ describe('TemplateSelector', () => {
         setRevealPhase: vi.fn(),
         setScoreDeltasBatch: vi.fn(),
         updateRoundScoringProgress: vi.fn(),
+        redistributeQuestions: vi.fn(),
       };
       return selector ? selector(store) : store;
     });

@@ -14,7 +14,7 @@
  */
 
 import type { GameSetupValidation } from '@/lib/game/selectors';
-import type { Team, Question } from '@/types';
+import type { Team, Question, PerRoundBreakdown } from '@/types';
 
 export interface WizardStepReviewProps {
   validation: GameSetupValidation;
@@ -22,11 +22,10 @@ export interface WizardStepReviewProps {
   questions: Question[];
   teams: Team[];
   roundsCount: number;
-  questionsPerRound: number;
-  timerDuration: number;
   onGoToStep: (step: number) => void;
-  onSaveTemplate: () => void;
   onStartGame: () => void;
+  isByCategory?: boolean;
+  perRoundBreakdown?: PerRoundBreakdown[];
 }
 
 export function WizardStepReview({
@@ -35,11 +34,10 @@ export function WizardStepReview({
   questions,
   teams,
   roundsCount,
-  questionsPerRound,
-  timerDuration,
   onGoToStep,
-  onSaveTemplate,
   onStartGame,
+  isByCategory,
+  perRoundBreakdown,
 }: WizardStepReviewProps) {
   return (
     <div className="space-y-4" data-testid="wizard-step-review">
@@ -97,8 +95,9 @@ export function WizardStepReview({
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {Array.from({ length: roundsCount }, (_, i) => {
-            const count = questions.filter((q) => q.roundIndex === i).length;
-            const isMatch = count === questionsPerRound;
+            const bd = perRoundBreakdown?.[i];
+            const count = bd?.totalCount ?? questions.filter((q) => q.roundIndex === i).length;
+            const isMatch = bd ? bd.isMatch : count > 0;
             return (
               <div
                 key={i}
@@ -109,6 +108,9 @@ export function WizardStepReview({
                 }`}
               >
                 Round {i + 1}: {count} question{count !== 1 ? 's' : ''}
+                {isByCategory && !isMatch && bd && bd.expectedCount > 0 && (
+                  <span className="text-xs opacity-70 ml-1">(expected {bd.expectedCount})</span>
+                )}
               </div>
             );
           })}
@@ -130,14 +132,13 @@ export function WizardStepReview({
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground-secondary">
           <span>
-            <span className="font-medium text-foreground">{timerDuration}s</span> timer
-          </span>
-          <span>
             <span className="font-medium text-foreground">{roundsCount}</span> round{roundsCount !== 1 ? 's' : ''}
           </span>
-          <span>
-            <span className="font-medium text-foreground">{questionsPerRound}</span> questions/round
-          </span>
+          {questions.length > 0 && (
+            <span>
+              ~<span className="font-medium text-foreground">{Math.ceil(questions.length / roundsCount)}</span> questions/round
+            </span>
+          )}
         </div>
       </div>
 
@@ -170,26 +171,13 @@ export function WizardStepReview({
         )}
       </div>
 
-      {/* Bottom action row: Save Template + Start Game */}
-      <div className="flex flex-col sm:flex-row gap-2 pt-2">
-        <button
-          type="button"
-          onClick={onSaveTemplate}
-          disabled={questions.length === 0}
-          className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px]
-            ${questions.length > 0
-              ? 'bg-secondary hover:bg-secondary-hover text-secondary-foreground'
-              : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-            }`}
-          aria-disabled={questions.length === 0}
-        >
-          Save Template
-        </button>
+      {/* Start Game */}
+      <div className="pt-2">
         <button
           type="button"
           onClick={onStartGame}
           disabled={!canStart}
-          className={`flex-1 px-6 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]
+          className={`w-full px-6 py-3 rounded-xl text-sm font-semibold transition-colors min-h-[44px]
             ${canStart
               ? 'bg-success hover:bg-success/90 text-success-foreground'
               : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'

@@ -263,6 +263,7 @@ describe('useSettingsStore', () => {
         'timerVisible',
         'timerAutoReveal',
         'ttsEnabled',
+        'isByCategory',
         'lastTeamSetup',
       ];
 
@@ -294,7 +295,7 @@ describe('useSettingsStore', () => {
       // Verify persist middleware is properly configured
       expect(useSettingsStore.persist).toBeDefined();
       expect(useSettingsStore.persist.getOptions().name).toBe('trivia-settings');
-      expect(useSettingsStore.persist.getOptions().version).toBe(3);
+      expect(useSettingsStore.persist.getOptions().version).toBe(4);
     });
   });
 

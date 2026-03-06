@@ -26,32 +26,25 @@ import { WizardStepQuestions } from '@/components/presenter/WizardStepQuestions'
 import { WizardStepSettings } from '@/components/presenter/WizardStepSettings';
 import { WizardStepTeams } from '@/components/presenter/WizardStepTeams';
 import { WizardStepReview } from '@/components/presenter/WizardStepReview';
-import { useAutoLoadDefaultTemplate } from '@/hooks/use-auto-load-default-template';
 import type { GameSetupValidation } from '@/lib/game/selectors';
 import type { TeamSetup, SettingsState } from '@/stores/settings-store';
-import type { Team, Question, QuestionCategory } from '@/types';
+import type { Team, Question, PerRoundBreakdown } from '@/types';
 
 export interface SetupWizardProps {
   // Questions
   questions: Question[];
-  onImport: (questions: Question[], mode?: 'replace' | 'append') => void;
-  selectedCategories: QuestionCategory[];
-  onCategoryChange: (categories: QuestionCategory[]) => void;
-  onSaveQuestionSet: () => void;
 
   // Settings
   roundsCount: number;
-  questionsPerRound: number;
-  timerDuration: number;
-  timerAutoStart: boolean;
-  timerVisible: boolean;
-  ttsEnabled: boolean;
   lastTeamSetup: TeamSetup | null;
   currentTeams: Team[];
   onUpdateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-  onLoadTeams: (teamSetup: TeamSetup) => void;
-  onSaveTeams: () => void;
-  onSavePreset: () => void;
+
+  // Round distribution (WU-4: computed by SetupGate, consumed by WU-5/WU-6 steps)
+  isByCategory: boolean;
+  canUseByCategory: boolean;
+  perRoundBreakdown: PerRoundBreakdown[];
+  onToggleByCategory: (value: boolean) => void;
 
   // Validation & launch
   validation: GameSetupValidation;
@@ -60,7 +53,6 @@ export interface SetupWizardProps {
   onRemoveTeam: (teamId: string) => void;
   onRenameTeam: (teamId: string, name: string) => void;
   onLoadTeamsFromSetup: (names: string[]) => void;
-  onSaveTemplate: () => void;
   onStartGame: () => void;
 }
 
@@ -74,24 +66,18 @@ const STEPS = [
 export function SetupWizard({
   // Questions
   questions,
-  onImport,
-  selectedCategories,
-  onCategoryChange,
-  onSaveQuestionSet,
 
   // Settings
   roundsCount,
-  questionsPerRound,
-  timerDuration,
-  timerAutoStart,
-  timerVisible,
-  ttsEnabled,
   lastTeamSetup,
   currentTeams,
   onUpdateSetting,
-  onLoadTeams,
-  onSaveTeams,
-  onSavePreset,
+
+  // Round distribution
+  isByCategory,
+  canUseByCategory,
+  perRoundBreakdown,
+  onToggleByCategory,
 
   // Validation & launch
   validation,
@@ -100,17 +86,39 @@ export function SetupWizard({
   onRemoveTeam,
   onRenameTeam,
   onLoadTeamsFromSetup,
-  onSaveTemplate,
   onStartGame,
 }: SetupWizardProps) {
-  useAutoLoadDefaultTemplate();
-
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = STEPS.length;
 
-  const goNext = () => setCurrentStep((s) => Math.min(s + 1, totalSteps - 1));
+  /** Whether a step's requirements are met (gates forward navigation). */
+  const isStepComplete = (step: number): boolean => {
+    switch (step) {
+      case 0: return questions.length > 0;
+      case 2: return currentTeams.length >= 2;
+      default: return true;
+    }
+  };
+
+  /** Can the user advance past the current step? */
+  const canAdvance = isStepComplete(currentStep);
+
+  const goNext = () => {
+    if (!canAdvance) return;
+    setCurrentStep((s) => Math.min(s + 1, totalSteps - 1));
+  };
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
-  const goToStep = (step: number) => setCurrentStep(step);
+  const goToStep = (step: number) => {
+    // Allow going backwards freely; forwards only if all intermediate steps are complete
+    if (step <= currentStep) {
+      setCurrentStep(step);
+    } else {
+      for (let i = currentStep; i < step; i++) {
+        if (!isStepComplete(i)) return;
+      }
+      setCurrentStep(step);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -125,7 +133,7 @@ export function SetupWizard({
               key={index}
               data-testid={`wizard-step-${index}`}
               type="button"
-              onClick={() => setCurrentStep(index)}
+              onClick={() => goToStep(index)}
               aria-current={isActive ? 'step' : undefined}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
                 transition-all min-h-[44px] focus:outline-none focus:ring-2 focus:ring-primary/50
@@ -177,27 +185,17 @@ export function SetupWizard({
             {currentStep === 0 && (
               <WizardStepQuestions
                 questions={questions}
-                onImport={onImport}
-                selectedCategories={selectedCategories}
-                onCategoryChange={onCategoryChange}
-                onSaveQuestionSet={onSaveQuestionSet}
               />
             )}
 
             {currentStep === 1 && (
               <WizardStepSettings
                 roundsCount={roundsCount}
-                questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
-                timerAutoStart={timerAutoStart}
-                timerVisible={timerVisible}
-                ttsEnabled={ttsEnabled}
-                lastTeamSetup={lastTeamSetup}
-                currentTeams={currentTeams}
+                isByCategory={isByCategory}
+                canUseByCategory={canUseByCategory}
+                perRoundBreakdown={perRoundBreakdown}
                 onUpdateSetting={onUpdateSetting}
-                onLoadTeams={onLoadTeams}
-                onSaveTeams={onSaveTeams}
-                onSavePreset={onSavePreset}
+                onToggleByCategory={onToggleByCategory}
               />
             )}
 
@@ -211,7 +209,6 @@ export function SetupWizard({
                 onRemoveTeam={onRemoveTeam}
                 onRenameTeam={onRenameTeam}
                 onLoadTeamsFromSetup={onLoadTeamsFromSetup}
-                onSaveTeams={onSaveTeams}
               />
             )}
 
@@ -222,10 +219,9 @@ export function SetupWizard({
                 questions={questions}
                 teams={currentTeams}
                 roundsCount={roundsCount}
-                questionsPerRound={questionsPerRound}
-                timerDuration={timerDuration}
+                isByCategory={isByCategory}
+                perRoundBreakdown={perRoundBreakdown}
                 onGoToStep={goToStep}
-                onSaveTemplate={onSaveTemplate}
                 onStartGame={onStartGame}
               />
             )}
@@ -254,10 +250,14 @@ export function SetupWizard({
           <button
             type="button"
             onClick={goNext}
-            className="px-6 py-2.5 rounded-lg text-sm font-semibold
-              bg-primary hover:bg-primary-hover text-primary-foreground
+            disabled={!canAdvance}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold
               transition-colors min-h-[44px]
-              focus:outline-none focus:ring-2 focus:ring-primary/50"
+              focus:outline-none focus:ring-2 focus:ring-primary/50
+              ${canAdvance
+                ? 'bg-primary hover:bg-primary-hover text-primary-foreground'
+                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+              }`}
           >
             Next: {STEPS[currentStep + 1].label}
           </button>

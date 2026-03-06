@@ -159,6 +159,26 @@ export interface GameSettings {
 }
 
 // =============================================================================
+// ROUND BREAKDOWN
+// =============================================================================
+
+export interface RoundCategoryEntry {
+  categoryId: QuestionCategory;
+  questionCount: number;
+}
+
+/** Per-round distribution breakdown used by both WizardStepSettings (badge pills) and WizardStepReview (grid coloring).
+ * Array length always equals `roundsCount`. 0-based `roundIndex`. Empty rounds included, not omitted.
+ * `isMatch` is precomputed — consumers read it directly without recalculating. */
+export interface PerRoundBreakdown {
+  roundIndex: number;
+  totalCount: number;
+  expectedCount: number;
+  isMatch: boolean;
+  categories: RoundCategoryEntry[];
+}
+
+// =============================================================================
 // TEAM ANSWER
 // =============================================================================
 

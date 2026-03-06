@@ -6,8 +6,13 @@ export default async function QuestionSetsLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // E2E mode bypasses auth
+  if (process.env.E2E_TESTING === 'true') {
+    return <>{children}</>;
+  }
+
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get('sb-access-token');
+  const accessToken = cookieStore.get('jb_access_token');
   const isAuthenticated = !!accessToken?.value;
 
   if (!isAuthenticated) {

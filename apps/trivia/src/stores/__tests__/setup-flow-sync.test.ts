@@ -64,6 +64,9 @@ describe('setup-flow-sync', () => {
 
     act(() => {
       const store = useGameStore.getState();
+      // importQuestions no longer overrides roundsCount; set it explicitly
+      // (in the real app, SetupGate syncs settings store → game store)
+      store.updateSettings({ roundsCount: 1 });
       store.importQuestions([
         {
           id: 'q1' as import('@/types').QuestionId,

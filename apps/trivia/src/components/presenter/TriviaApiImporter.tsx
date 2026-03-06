@@ -67,7 +67,6 @@ export function TriviaApiImporter({
   // Granular store subscriptions -- same pattern as QuestionSetSelector
   const importQuestions = useGameStore((state) => state.importQuestions);
   const gameStatus = useGameStore((state) => state.status);
-  const questionsPerRound = useGameStore((state) => state.settings.questionsPerRound);
 
   // State machine
   const [state, setState] = useState<ImporterState>('idle');
@@ -113,34 +112,80 @@ export function TriviaApiImporter({
     setSaveError(null);
 
     try {
-      const params = new URLSearchParams();
-      params.set('limit', String(count));
-      if (selectedCategories.length > 0) {
-        const apiCategories = selectedCategories.flatMap(getApiCategoriesForInternal);
-        if (apiCategories.length > 0) {
-          params.set('categories', apiCategories.join(','));
+      let allQuestions: Question[];
+
+      // Per-category fetching (equal distribution) only for ≤ 4 selected categories.
+      // With more categories the API spread is acceptable — use a single mixed call.
+      const usePerCategory =
+        selectedCategories.length > 0 && selectedCategories.length <= 4;
+
+      if (usePerCategory) {
+        // Exact distribution: first `remainder` categories get one extra question
+        const base = Math.floor(count / selectedCategories.length);
+        const remainder = count % selectedCategories.length;
+
+        const commonParams: Record<string, string> = {};
+        if (difficulty !== 'mixed') {
+          commonParams.difficulties = difficulty;
         }
-      }
-      if (difficulty !== 'mixed') {
-        params.set('difficulties', difficulty);
-      }
-      if (excludeNiche) {
-        params.set('excludeNiche', 'true');
-      }
+        if (excludeNiche) {
+          commonParams.excludeNiche = 'true';
+        }
 
-      const response = await fetch(`/api/trivia-api/questions?${params.toString()}`);
+        const results = await Promise.all(
+          selectedCategories.map(async (catId, catIndex) => {
+            const perCatCount = base + (catIndex < remainder ? 1 : 0);
+            const params = new URLSearchParams(commonParams);
+            params.set('limit', String(perCatCount));
+            const apiCats = getApiCategoriesForInternal(catId);
+            if (apiCats.length > 0) {
+              params.set('categories', apiCats.join(','));
+            }
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error ??
-            `Failed to fetch questions (${response.status})`
+            const response = await fetch(`/api/trivia-api/questions?${params.toString()}`);
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              throw new Error(
+                (errData as { error?: string }).error ??
+                  `Failed to fetch ${getCategoryName(catId)} questions (${response.status})`
+              );
+            }
+            const data = (await response.json()) as { questions: Question[] };
+            return data.questions ?? [];
+          })
         );
+
+        allQuestions = results.flat();
+      } else {
+        // Single mixed call — no equal-distribution guarantee
+        const params = new URLSearchParams();
+        params.set('limit', String(count));
+        if (selectedCategories.length > 0) {
+          const apiCategories = selectedCategories.flatMap(getApiCategoriesForInternal);
+          if (apiCategories.length > 0) {
+            params.set('categories', apiCategories.join(','));
+          }
+        }
+        if (difficulty !== 'mixed') {
+          params.set('difficulties', difficulty);
+        }
+        if (excludeNiche) {
+          params.set('excludeNiche', 'true');
+        }
+
+        const response = await fetch(`/api/trivia-api/questions?${params.toString()}`);
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(
+            (data as { error?: string }).error ??
+              `Failed to fetch questions (${response.status})`
+          );
+        }
+        const data = (await response.json()) as { questions: Question[] };
+        allQuestions = data.questions ?? [];
       }
 
-      const data = (await response.json()) as { questions: Question[] };
-
-      if (!data.questions || data.questions.length === 0) {
+      if (allQuestions.length === 0) {
         throw new Error(
           'No questions found for the selected filters. Try different categories or a lower count.'
         );
@@ -158,10 +203,10 @@ export function TriviaApiImporter({
           ? ''
           : ` (${DIFFICULTY_OPTIONS.find((d) => d.value === difficulty)?.label ?? ''})`;
       setSaveName(
-        `${categoryLabel} Trivia${difficultyLabel} — ${data.questions.length} Questions`
+        `${categoryLabel} Trivia${difficultyLabel} — ${allQuestions.length} Questions`
       );
 
-      setQuestions(data.questions);
+      setQuestions(allQuestions);
       setState('preview');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -173,10 +218,11 @@ export function TriviaApiImporter({
     if (questions.length === 0) return;
 
     try {
-      // Assign round indices using questionsPerRound -- same pattern as QuestionSetSelector
-      const questionsWithRounds: Question[] = questions.map((q, index) => ({
+      // Import with roundIndex=0; the redistributeQuestions effect in SetupGate
+      // will assign proper round indices based on settings store config.
+      const questionsWithRounds: Question[] = questions.map((q) => ({
         ...q,
-        roundIndex: Math.floor(index / questionsPerRound),
+        roundIndex: 0,
       }));
 
       importQuestions(questionsWithRounds, 'replace');
@@ -185,7 +231,7 @@ export function TriviaApiImporter({
     } catch {
       errorToast('Failed to load questions into game');
     }
-  }, [questions, questionsPerRound, importQuestions, success, errorToast, handleReset]);
+  }, [questions, importQuestions, success, errorToast, handleReset]);
 
   const handleSaveToQuestionSets = useCallback(async () => {
     if (questions.length === 0) return;

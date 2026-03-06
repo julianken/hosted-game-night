@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { WizardStepReview } from '../WizardStepReview';
 import type { GameSetupValidation } from '@/lib/game/selectors';
-import type { Team, Question, QuestionId, TeamId } from '@/types';
+import type { Team, Question, QuestionId, TeamId, PerRoundBreakdown } from '@/types';
 
 // ---------------------------------------------------------------------------
 // Factories
@@ -45,10 +45,7 @@ const defaultProps = () => ({
   questions: [mockQuestion(0), mockQuestion(0), mockQuestion(1)],
   teams: [mockTeam('t1', 'Table 1'), mockTeam('t2', 'Table 2')],
   roundsCount: 2,
-  questionsPerRound: 2,
-  timerDuration: 30,
   onGoToStep: vi.fn(),
-  onSaveTemplate: vi.fn(),
   onStartGame: vi.fn(),
 });
 
@@ -145,5 +142,130 @@ describe('WizardStepReview', () => {
     props.teams = [];
     render(<WizardStepReview {...props} />);
     expect(screen.getByText('No teams added')).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// perRoundBreakdown + isByCategory tests
+// ---------------------------------------------------------------------------
+
+const makeBreakdown = (
+  overrides: Partial<PerRoundBreakdown> = {},
+): PerRoundBreakdown => ({
+  roundIndex: 0,
+  totalCount: 2,
+  expectedCount: 2,
+  isMatch: true,
+  categories: [],
+  ...overrides,
+});
+
+describe('WizardStepReview — perRoundBreakdown prop', () => {
+  it('backward compat: without perRoundBreakdown uses question filter for count', () => {
+    const props = {
+      ...defaultProps(),
+      perRoundBreakdown: undefined,
+    };
+    render(<WizardStepReview {...props} />);
+    // Round 1 has 2 questions (roundIndex 0), Round 2 has 1 question (roundIndex 1)
+    expect(screen.getByText('Round 1: 2 questions')).toBeInTheDocument();
+    expect(screen.getByText('Round 2: 1 question')).toBeInTheDocument();
+  });
+
+  it('without perRoundBreakdown: isMatch falls back to count > 0', () => {
+    const props = {
+      ...defaultProps(),
+      perRoundBreakdown: undefined,
+      isByCategory: true,
+    };
+    render(<WizardStepReview {...props} />);
+    // Without breakdown, hint span never renders (bd is undefined)
+    expect(screen.queryByText(/expected/)).not.toBeInTheDocument();
+  });
+
+  it('with perRoundBreakdown: uses breakdown totalCount instead of question filter', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 4, expectedCount: 4, isMatch: true }),
+      makeBreakdown({ roundIndex: 1, totalCount: 3, expectedCount: 4, isMatch: false }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 2,
+      perRoundBreakdown: breakdown,
+    };
+    render(<WizardStepReview {...props} />);
+    expect(screen.getByText('Round 1: 4 questions')).toBeInTheDocument();
+    expect(screen.getByText('Round 2: 3 questions')).toBeInTheDocument();
+  });
+
+  it('with perRoundBreakdown: uses breakdown isMatch (By Count mode, no hint span)', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 3, expectedCount: 5, isMatch: false }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 1,
+      perRoundBreakdown: breakdown,
+      isByCategory: false,
+    };
+    render(<WizardStepReview {...props} />);
+    // isByCategory false — hint span must NOT appear even when !isMatch
+    expect(screen.queryByText(/expected/)).not.toBeInTheDocument();
+  });
+
+  it('By Category mode: hint span renders when !isMatch && expected > 0', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 3, expectedCount: 5, isMatch: false }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 1,
+      perRoundBreakdown: breakdown,
+      isByCategory: true,
+    };
+    render(<WizardStepReview {...props} />);
+    expect(screen.getByText('(expected 5)')).toBeInTheDocument();
+  });
+
+  it('hint span NOT rendered when isMatch is true', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 5, expectedCount: 5, isMatch: true }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 1,
+      perRoundBreakdown: breakdown,
+      isByCategory: true,
+    };
+    render(<WizardStepReview {...props} />);
+    expect(screen.queryByText(/expected/)).not.toBeInTheDocument();
+  });
+
+  it('hint span NOT rendered when isByCategory is false', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 2, expectedCount: 5, isMatch: false }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 1,
+      perRoundBreakdown: breakdown,
+      isByCategory: false,
+    };
+    render(<WizardStepReview {...props} />);
+    expect(screen.queryByText(/expected/)).not.toBeInTheDocument();
+  });
+
+  it('hint span NOT rendered when expected === 0', () => {
+    const breakdown: PerRoundBreakdown[] = [
+      makeBreakdown({ roundIndex: 0, totalCount: 0, expectedCount: 0, isMatch: false }),
+    ];
+    const props = {
+      ...defaultProps(),
+      roundsCount: 1,
+      perRoundBreakdown: breakdown,
+      isByCategory: true,
+    };
+    render(<WizardStepReview {...props} />);
+    expect(screen.queryByText(/expected/)).not.toBeInTheDocument();
   });
 });

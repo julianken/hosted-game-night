@@ -29,7 +29,6 @@ export function QuestionSetSelector({
   // Store actions
   const importQuestions = useGameStore((state) => state.importQuestions);
   const gameStatus = useGameStore((state) => state.status);
-  const questionsPerRound = useGameStore((state) => state.settings.questionsPerRound);
 
   // Component state
   const [questionSets, setQuestionSets] = useState<QuestionSetListItem[]>([]);
@@ -77,12 +76,11 @@ export function QuestionSetSelector({
       const data = await response.json();
       const questionSet: TriviaQuestionSet = data.questionSet;
 
-      const convertedQuestions: Question[] = [];
-
-      questionSet.questions.forEach((dbQuestion, index) => {
-        const roundIndex = Math.floor(index / questionsPerRound);
-        convertedQuestions.push(triviaQuestionToQuestion(dbQuestion, roundIndex));
-      });
+      // Import with roundIndex=0; the redistributeQuestions effect in SetupGate
+      // will assign proper round indices based on settings store config.
+      const convertedQuestions: Question[] = questionSet.questions.map(
+        (dbQuestion) => triviaQuestionToQuestion(dbQuestion, 0)
+      );
 
       importQuestions(convertedQuestions, 'replace');
 
@@ -92,7 +90,7 @@ export function QuestionSetSelector({
       console.error('Error loading question set:', err);
       errorToast('Failed to load question set');
     }
-  }, [importQuestions, questionsPerRound, success, errorToast, onQuestionSetLoad]);
+  }, [importQuestions, success, errorToast, onQuestionSetLoad]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const setId = e.target.value;
