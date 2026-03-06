@@ -288,6 +288,17 @@ function applyTransitionSideEffects(
         recapShowingAnswer: true,
       };
     }
+    // Backward entry from round_scoring — show last question with answer face.
+    if (state.audienceScene === 'round_scoring') {
+      const lastQ = roundQuestions[roundQuestions.length - 1];
+      const globalIndex = lastQ ? state.questions.indexOf(lastQ) : 0;
+      return {
+        ...buildSceneUpdate(nextScene),
+        displayQuestionIndex: globalIndex,
+        selectedQuestionIndex: globalIndex,
+        recapShowingAnswer: true,
+      };
+    }
     // Forward entry from recap_title — start on question face.
     return {
       ...buildSceneUpdate(nextScene),

@@ -497,6 +497,30 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
+  describe('round_scoring -> recap_qa (back)', () => {
+    it('should set recapShowingAnswer to true on backward entry', () => {
+      const state = createBetweenRoundsState('round_scoring');
+
+      const result = orchestrateSceneTransition(state, 'back');
+
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('recap_qa');
+      expect(result!.recapShowingAnswer).toBe(true);
+    });
+
+    it('should set displayQuestionIndex to last question of round', () => {
+      const state = createBetweenRoundsState('round_scoring');
+      const indices = getRoundQuestionIndices(state, 0);
+      const lastGlobalIndex = indices[indices.length - 1];
+
+      const result = orchestrateSceneTransition(state, 'back');
+
+      expect(result).not.toBeNull();
+      expect(result!.displayQuestionIndex).toBe(lastGlobalIndex);
+      expect(result!.selectedQuestionIndex).toBe(lastGlobalIndex);
+    });
+  });
+
   describe('round_summary -> answer_reveal', () => {
     it('should not transition on advance (advance goes to recap_title)', () => {
       const state = createBetweenRoundsState('round_summary');

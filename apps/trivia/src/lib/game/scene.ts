@@ -268,6 +268,8 @@ export function getNextScene(
       return null;
 
     case 'round_scoring':
+      // Left Arrow: back to Q/A review
+      if (trigger === 'back') return 'recap_qa';
       // Right Arrow / advance / Enter (skip): proceed to recap_scores (show updated leaderboard)
       if (trigger === 'advance' || trigger === 'skip') return 'recap_scores';
       // N key: skip scores display, go directly to next round

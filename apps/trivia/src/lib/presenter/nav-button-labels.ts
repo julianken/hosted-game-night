@@ -117,6 +117,8 @@ function getBackLabel(scene: AudienceScene): string | null {
       return 'Scores';
     case 'recap_qa':
       return 'Previous';
+    case 'round_scoring':
+      return 'Q&A Review';
     case 'recap_scores':
       return 'Q&A Review';
     default:

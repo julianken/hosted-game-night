@@ -169,11 +169,11 @@ export function useGameKeyboard() {
           }
           break;
 
-        // Left Arrow -- recap backward navigation (all recap scenes)
+        // Left Arrow -- recap backward navigation (all recap scenes + round_scoring)
         case 'ArrowLeft':
           if (
             store.status === 'between_rounds' &&
-            (currentScene === 'recap_qa' || currentScene === 'recap_title' || currentScene === 'recap_scores')
+            (currentScene === 'recap_qa' || currentScene === 'recap_title' || currentScene === 'round_scoring' || currentScene === 'recap_scores')
           ) {
             event.preventDefault();
             store.advanceScene(SCENE_TRIGGERS.BACK);

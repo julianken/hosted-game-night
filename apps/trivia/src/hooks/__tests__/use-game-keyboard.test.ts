@@ -319,6 +319,32 @@ describe('useGameKeyboard', () => {
       expect(advanceSceneSpy).toHaveBeenCalledWith('back');
     });
 
+    it('should call advanceScene(BACK) when in round_scoring during between_rounds', () => {
+      const { result } = renderHook(() => useGameKeyboard());
+
+      act(() => {
+        result.current.addTeam('Team A');
+      });
+      act(() => {
+        result.current.startGame();
+      });
+      act(() => {
+        result.current.completeRound();
+        useGameStore.getState().setAudienceScene('round_scoring');
+      });
+
+      expect(useGameStore.getState().status).toBe('between_rounds');
+      expect(useGameStore.getState().audienceScene).toBe('round_scoring');
+
+      const advanceSceneSpy = vi.spyOn(useGameStore.getState(), 'advanceScene');
+
+      act(() => {
+        dispatchKeyDown('ArrowLeft');
+      });
+
+      expect(advanceSceneSpy).toHaveBeenCalledWith('back');
+    });
+
     it('should not call advanceScene when ArrowLeft is pressed outside recap scenes', () => {
       const { result } = renderHook(() => useGameKeyboard());
 

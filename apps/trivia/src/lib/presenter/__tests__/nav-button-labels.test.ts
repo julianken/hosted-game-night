@@ -139,6 +139,7 @@ describe('getNavButtonLabels', () => {
     it.each<[AudienceScene, string | null]>([
       ['recap_title', 'Scores'],
       ['recap_qa', 'Previous'],
+      ['round_scoring', 'Q&A Review'],
       ['recap_scores', 'Q&A Review'],
       // All other scenes return null for back
       ['waiting', null],
