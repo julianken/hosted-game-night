@@ -70,6 +70,11 @@ export function SceneNavButtons() {
       case 'emergency_blank':
       case 'paused':
         break;
+
+      default: {
+        const _exhaustive: never = scene;
+        void _exhaustive;
+      }
     }
   };
 
