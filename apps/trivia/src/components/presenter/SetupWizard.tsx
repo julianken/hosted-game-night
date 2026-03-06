@@ -26,7 +26,6 @@ import { WizardStepQuestions } from '@/components/presenter/WizardStepQuestions'
 import { WizardStepSettings } from '@/components/presenter/WizardStepSettings';
 import { WizardStepTeams } from '@/components/presenter/WizardStepTeams';
 import { WizardStepReview } from '@/components/presenter/WizardStepReview';
-import { useAutoLoadDefaultTemplate } from '@/hooks/use-auto-load-default-template';
 import type { GameSetupValidation } from '@/lib/game/selectors';
 import type { TeamSetup, SettingsState } from '@/stores/settings-store';
 import type { Team, Question } from '@/types';
@@ -97,8 +96,6 @@ export function SetupWizard({
   onSaveTemplate,
   onStartGame,
 }: SetupWizardProps) {
-  useAutoLoadDefaultTemplate();
-
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = STEPS.length;
 
