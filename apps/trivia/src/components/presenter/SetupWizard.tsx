@@ -102,9 +102,34 @@ export function SetupWizard({
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = STEPS.length;
 
-  const goNext = () => setCurrentStep((s) => Math.min(s + 1, totalSteps - 1));
+  /** Whether a step's requirements are met (gates forward navigation). */
+  const isStepComplete = (step: number): boolean => {
+    switch (step) {
+      case 0: return questions.length > 0;
+      case 2: return currentTeams.length >= 2;
+      default: return true;
+    }
+  };
+
+  /** Can the user advance past the current step? */
+  const canAdvance = isStepComplete(currentStep);
+
+  const goNext = () => {
+    if (!canAdvance) return;
+    setCurrentStep((s) => Math.min(s + 1, totalSteps - 1));
+  };
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
-  const goToStep = (step: number) => setCurrentStep(step);
+  const goToStep = (step: number) => {
+    // Allow going backwards freely; forwards only if all intermediate steps are complete
+    if (step <= currentStep) {
+      setCurrentStep(step);
+    } else {
+      for (let i = currentStep; i < step; i++) {
+        if (!isStepComplete(i)) return;
+      }
+      setCurrentStep(step);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -245,10 +270,14 @@ export function SetupWizard({
           <button
             type="button"
             onClick={goNext}
-            className="px-6 py-2.5 rounded-lg text-sm font-semibold
-              bg-primary hover:bg-primary-hover text-primary-foreground
+            disabled={!canAdvance}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold
               transition-colors min-h-[44px]
-              focus:outline-none focus:ring-2 focus:ring-primary/50"
+              focus:outline-none focus:ring-2 focus:ring-primary/50
+              ${canAdvance
+                ? 'bg-primary hover:bg-primary-hover text-primary-foreground'
+                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+              }`}
           >
             Next: {STEPS[currentStep + 1].label}
           </button>
