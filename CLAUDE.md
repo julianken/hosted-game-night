@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **E2E Testing:** All code must pass E2E tests locally before committing (GitHub Actions are disabled). Run `pnpm test:e2e` and check `pnpm test:e2e:summary`. See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md).
 
-**Manual Testing:** Use Playwright MCP browser tools for visual, audio, cross-app, and interactive verification. The canonical guide is [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md) — it has 193 test cases organized by app and feature. Always launch Playwright MCP in dark mode (`page.emulateMedia({ colorScheme: 'dark' })`). Start servers with `pnpm dev:e2e` for E2E auth mode.
+**Manual Testing:** Use Playwright MCP browser tools for visual, audio, cross-app, and interactive verification. The canonical guide is [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md) — it has 193 test cases organized by app and feature. Always launch Playwright MCP in dark mode (`page.emulateMedia({ colorScheme: 'dark' })`). Start servers with `pnpm dev` (real auth). **NEVER use `pnpm dev:e2e` or `E2E_TESTING=true` for manual/Playwright MCP testing** — authenticate via Supabase MCP or log in through Platform Hub.
 
 **Development Model:** This project is developed exclusively with AI agents. Never include time estimates, effort estimates, team size assumptions, or timeline projections. Focus on dependencies, complexity, scope, and completion status.
 

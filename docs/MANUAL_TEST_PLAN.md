@@ -26,8 +26,10 @@ For automated E2E tests, see [docs/E2E_TESTING_GUIDE.md](E2E_TESTING_GUIDE.md).
 ### 1. Start dev servers
 
 ```bash
-pnpm dev:e2e    # Starts all 3 apps with E2E_TESTING=true
+pnpm dev    # Starts all 3 apps with real auth
 ```
+
+> **NEVER use `pnpm dev:e2e` or `E2E_TESTING=true` for manual testing.** That mode is only for automated E2E test suites (`pnpm test:e2e`). Manual/Playwright MCP testing uses real auth.
 
 | App | Default Port | URL |
 |-----|-------------|-----|
@@ -48,10 +50,9 @@ browser_evaluate: page.emulateMedia({ colorScheme: 'dark' })
 
 ### 3. Authentication
 
-`pnpm dev:e2e` sets `E2E_TESTING=true`, which enables:
-- **Platform Hub** login with E2E credentials: `e2e-test@joolie-boolie.test` / `TestPassword123!`
-- **Bingo/Trivia** middleware accepts E2E JWT tokens automatically
-- Cookies are shared across all `localhost` ports — log in once on Platform Hub, then navigate to game apps
+Manual testing uses **real auth** — authenticate via one of:
+- **Supabase MCP** — Use `mcp__supabase__execute_sql` to create/query auth sessions directly
+- **Platform Hub login** — Navigate to `http://localhost:3002`, sign in with real credentials, cookies propagate to game apps on `localhost`
 
 For **unauthenticated flows** (guest mode, public pages), no login is needed.
 

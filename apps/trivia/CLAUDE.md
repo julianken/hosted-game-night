@@ -169,7 +169,7 @@ pnpm test:coverage     # Run tests with coverage
 | P | Peek answer (local only) | Always |
 | N | Next round | `between_rounds`: `round_summary`, `answer_reveal`, `recap_title`, `recap_qa`, `round_scoring`, `recap_scores` |
 | E | Toggle emergency blank (visual only) | `playing` or `between_rounds` |
-| R | Reset game | Always |
+| R | New game (with confirmation) | `playing`, `between_rounds`, `ended` (no-op during `setup`) |
 | M | Mute/unmute TTS | Always |
 | T | Start timer / Toggle scoreboard | `question_display`: starts timer; `question_anticipation`: starts timer + advances to `question_display`; otherwise: toggle scoreboard |
 | S | Close question | `question_display` or `question_closed` |

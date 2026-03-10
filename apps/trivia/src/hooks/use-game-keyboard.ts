@@ -79,7 +79,11 @@ const DIGIT_TO_TEAM_INDEX: Record<string, number> = {
   Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Digit0: 9,
 };
 
-export function useGameKeyboard() {
+interface UseGameKeyboardOptions {
+  onResetRequest?: () => void;
+}
+
+export function useGameKeyboard(options: UseGameKeyboardOptions = {}) {
   const game = useGame();
   const fullscreen = useFullscreen();
   const [peekAnswer, setPeekAnswer] = useState(false);
@@ -206,11 +210,15 @@ export function useGameKeyboard() {
           store.toggleEmergencyBlank();
           break;
 
-        // Reset game (bypasses advanceScene -- unconditional return to waiting)
+        // Reset game — shows confirmation if callback provided, otherwise resets directly
         case 'KeyR':
-          game.resetGame();
-          setPeekAnswer(false);
-          store.setAudienceScene('waiting');
+          if (options.onResetRequest && game.status !== 'setup') {
+            options.onResetRequest();
+          } else {
+            game.resetGame();
+            setPeekAnswer(false);
+            store.setAudienceScene('waiting');
+          }
           break;
 
         // Next round (advanceScene handles both scene change and nextRound side effect)
@@ -303,7 +311,7 @@ export function useGameKeyboard() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [game, fullscreen, toggleScoreboard, toggleTTS, quickScore]);
+  }, [game, fullscreen, toggleScoreboard, toggleTTS, quickScore, options.onResetRequest]);
 
   return {
     ...game,

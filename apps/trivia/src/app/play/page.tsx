@@ -7,7 +7,7 @@ import { generateSessionId } from '@/lib/sync/session';
 import { useApplyTheme } from '@/hooks/use-theme';
 import { useThemeStore } from '@/stores/theme-store';
 import { useGameStore } from '@/stores/game-store';
-import { useSettingsStore, type TeamSetup } from '@/stores/settings-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { QuestionList } from '@/components/presenter/QuestionList';
 import { QuestionDisplay } from '@/components/presenter/QuestionDisplay';
 import { TeamScoreInput } from '@/components/presenter/TeamScoreInput';
@@ -22,16 +22,19 @@ import { useRevealSequence } from '@/hooks/use-reveal-sequence';
 import { RoundSummary } from '@/components/presenter/RoundSummary';
 import { RoundScoringView } from '@/components/presenter/RoundScoringView';
 import { ThemeSelector } from '@joolie-boolie/ui';
-import { SettingsPanel } from '@/components/presenter/SettingsPanel';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
 import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
-import { Button } from '@joolie-boolie/ui';
+import { Button, Modal } from '@joolie-boolie/ui';
 import { SetupGate } from '@/components/presenter/SetupGate';
 
 export default function PlayPage() {
-  const game = useGameKeyboard();
+  const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
+
+  const game = useGameKeyboard({
+    onResetRequest: useCallback(() => setShowNewGameConfirm(true), []),
+  });
 
   // Theme store selectors
   const presenterTheme = useThemeStore((state) => state.presenterTheme);
@@ -90,7 +93,6 @@ export default function PlayPage() {
     useGameStore.getState().setAudienceScene('round_intro');
   };
 
-  const [showSettings, setShowSettings] = useState(false);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showSavePresetModal, setShowSavePresetModal] = useState(false);
   const [showSaveQuestionSetModal, setShowSaveQuestionSetModal] = useState(false);
@@ -101,9 +103,6 @@ export default function PlayPage() {
     timerAutoStart,
     timerVisible,
     ttsEnabled,
-    lastTeamSetup,
-    updateSetting,
-    saveTeamSetup,
   } = useSettingsStore();
 
   useEffect(() => {
@@ -119,16 +118,23 @@ export default function PlayPage() {
     }
   }, [game.status, roundsCount, questionsPerRound, timerDuration, timerAutoStart, timerVisible, ttsEnabled]);
 
-  const handleSaveTeams = useCallback(() => {
-    saveTeamSetup(game.teams);
-  }, [saveTeamSetup, game.teams]);
+  /** Handle new game with confirmation */
+  const handleNewGame = useCallback(() => {
+    if (game.status === 'setup') return; // Already in setup
+    setShowNewGameConfirm(true);
+  }, [game.status]);
 
-  const handleLoadTeams = useCallback(
-    (teamSetup: TeamSetup) => {
-      game.loadTeamsFromSetup(teamSetup.names);
-    },
-    [game]
-  );
+  const confirmNewGame = useCallback(() => {
+    setShowNewGameConfirm(false);
+    // Full reset: clear teams, scores, questions — back to a fresh setup
+    const store = useGameStore.getState();
+    store.resetGame();
+    // Clear teams that resetGame preserves
+    for (const team of useGameStore.getState().teams) {
+      store.removeTeam(team.id);
+    }
+    store.setAudienceScene('waiting');
+  }, []);
 
   /** Read revealPhase for sound triggers (T3.1) */
   const revealPhase = useGameStore((state) => state.revealPhase);
@@ -318,24 +324,21 @@ export default function PlayPage() {
               )}
             </button>
 
-            {/* Settings */}
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
-                transition-colors focus:outline-none focus:ring-2 focus:ring-primary
-                ${showSettings
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-foreground-secondary hover:text-foreground hover:bg-surface-hover'
-                }`}
-              title={showSettings ? 'Hide settings' : 'Show settings'}
-              aria-label={showSettings ? 'Hide settings panel' : 'Show settings panel'}
-              aria-expanded={showSettings}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+            {/* New Game */}
+            {game.status !== 'setup' && (
+              <button
+                onClick={handleNewGame}
+                className="min-w-[var(--size-touch)] min-h-[var(--size-touch)] flex items-center justify-center rounded-lg
+                  text-foreground-secondary hover:text-destructive hover:bg-destructive/10
+                  transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                title="New Game (R)"
+                aria-label="Start new game"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M20.015 4.356v4.992" />
+                </svg>
+              </button>
+            )}
 
             {/* Help */}
             <button
@@ -455,26 +458,6 @@ export default function PlayPage() {
                 onDisplayThemeChange={setDisplayTheme}
               />
             </div>
-
-            {/* Settings panel */}
-            {showSettings && (
-              <div className="bg-surface border border-border rounded-xl p-3 shadow-sm mb-4">
-                <SettingsPanel
-                  status={game.status}
-                  roundsCount={roundsCount}
-                  questionsPerRound={questionsPerRound}
-                  timerDuration={timerDuration}
-                  timerAutoStart={timerAutoStart}
-                  timerVisible={timerVisible}
-                  ttsEnabled={ttsEnabled}
-                  lastTeamSetup={lastTeamSetup}
-                  currentTeams={game.teams}
-                  onUpdateSetting={updateSetting}
-                  onLoadTeams={handleLoadTeams}
-                  onSaveTeams={handleSaveTeams}
-                />
-              </div>
-            )}
 
             {/* Round summary */}
             {showRoundSummary && (
@@ -603,6 +586,19 @@ export default function PlayPage() {
         isOpen={showSaveQuestionSetModal}
         onClose={() => setShowSaveQuestionSetModal(false)}
       />
+      <Modal
+        isOpen={showNewGameConfirm}
+        onClose={() => setShowNewGameConfirm(false)}
+        title="Start New Game?"
+        variant="danger"
+        confirmLabel="New Game"
+        onConfirm={confirmNewGame}
+        size="sm"
+      >
+        <p className="text-sm text-foreground-secondary">
+          This will end the current game and return to setup. All scores and progress will be lost.
+        </p>
+      </Modal>
     </>
   );
 }

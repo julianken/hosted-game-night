@@ -83,7 +83,7 @@ export function Toggle({
           !disabled
             ? 'hover:shadow-[0_0_0_3px_var(--ring)] focus-visible:shadow-[0_0_0_3px_var(--ring)]'
             : '',
-          'focus:outline-none',
+          'outline-none',
           'disabled:cursor-not-allowed',
         ]
           .filter(Boolean)
