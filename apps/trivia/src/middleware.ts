@@ -4,12 +4,12 @@ import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 /**
  * Trivia Middleware — thin wrapper around the shared game middleware factory.
  *
- * Guest mode is disabled: unauthenticated users on /play are redirected to the
- * home page with a `jb_return_to` cookie for post-auth redirect.
+ * Guest mode is enabled: unauthenticated users can access /play without signing in.
+ * Signed-in users get full functionality (saved templates, presets, question sets).
  */
 const { middleware } = createGameMiddleware({
   gameType: 'trivia',
-  guestModeEnabled: false,
+  guestModeEnabled: true,
   protectedPaths: ['/play'],
   logger: createLogger({ service: 'trivia-middleware' }),
 });
@@ -20,7 +20,7 @@ export { middleware };
  * Configure which paths the middleware runs on.
  *
  * Match:
- * - /play (presenter view — requires auth)
+ * - /play (presenter view — guest mode enabled, auth optional)
  *
  * Skip:
  * - / (home page — public)
