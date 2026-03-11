@@ -152,7 +152,7 @@ pnpm test:coverage     # Run tests with coverage
 | `/api/presets` | GET, POST | Preset CRUD |
 | `/api/presets/[id]` | GET, PUT, DELETE | Preset by ID |
 | `/api/question-sets` | GET, POST | Question set CRUD |
-| `/api/question-sets/[id]` | GET, PUT, DELETE | Question set by ID |
+| `/api/question-sets/[id]` | GET, PATCH, DELETE | Question set by ID |
 | `/api/question-sets/import` | POST | Import questions (CSV/JSON) |
 | `/api/trivia-api/categories` | GET | List trivia question categories |
 | `/api/trivia-api/questions` | GET | Fetch trivia questions |

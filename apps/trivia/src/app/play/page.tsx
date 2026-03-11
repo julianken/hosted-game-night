@@ -25,7 +25,6 @@ import { ThemeSelector } from '@joolie-boolie/ui';
 import { KeyboardShortcutsModal } from '@/components/ui/KeyboardShortcutsModal';
 import { SaveTemplateModal } from '@/components/presenter/SaveTemplateModal';
 import { SavePresetModal } from '@/components/presenter/SavePresetModal';
-import { SaveQuestionSetModal } from '@/components/presenter/SaveQuestionSetModal';
 import { Button, Modal } from '@joolie-boolie/ui';
 import { SetupGate } from '@/components/presenter/SetupGate';
 
@@ -95,7 +94,6 @@ export default function PlayPage() {
 
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showSavePresetModal, setShowSavePresetModal] = useState(false);
-  const [showSaveQuestionSetModal, setShowSaveQuestionSetModal] = useState(false);
   const {
     roundsCount,
     questionsPerRound,
@@ -581,10 +579,6 @@ export default function PlayPage() {
       <SavePresetModal
         isOpen={showSavePresetModal}
         onClose={() => setShowSavePresetModal(false)}
-      />
-      <SaveQuestionSetModal
-        isOpen={showSaveQuestionSetModal}
-        onClose={() => setShowSaveQuestionSetModal(false)}
       />
       <Modal
         isOpen={showNewGameConfirm}
