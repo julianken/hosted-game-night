@@ -250,6 +250,51 @@ describe('RoundScoringPanel', () => {
   });
 
   // =========================================================================
+  // hideHeader prop
+  // =========================================================================
+
+  describe('hideHeader prop', () => {
+    it('hides visible heading when hideHeader is true', () => {
+      render(
+        <RoundScoringPanel
+          teams={mockTeams}
+          currentRound={1}
+          onSubmitScores={vi.fn()}
+          hideHeader
+        />,
+      );
+
+      expect(screen.queryByText('Round 2 Scoring')).toBeNull();
+    });
+
+    it('preserves sr-only aria-live counter when hideHeader is true', () => {
+      render(
+        <RoundScoringPanel
+          teams={mockTeams}
+          currentRound={1}
+          onSubmitScores={vi.fn()}
+          hideHeader
+        />,
+      );
+
+      const liveRegion = document.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toBeTruthy();
+    });
+
+    it('shows visible heading when hideHeader is false (default)', () => {
+      render(
+        <RoundScoringPanel
+          teams={mockTeams}
+          currentRound={1}
+          onSubmitScores={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText('Round 2 Scoring')).toBeTruthy();
+    });
+  });
+
+  // =========================================================================
   // Pre-fill with quick-score values (BEA-666)
   // =========================================================================
 

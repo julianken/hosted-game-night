@@ -234,12 +234,6 @@ export default function PlayPage() {
       >
         Skip to main content
       </a>
-      <a
-        href="#game-controls"
-        className="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-48 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-medium"
-      >
-        Skip to game controls
-      </a>
 
       {/*
         Fixed-viewport 3-column layout during gameplay (Issue 6.5).
@@ -383,15 +377,36 @@ export default function PlayPage() {
           <main
             ref={mainRef}
             id="main-content"
-            className="flex-1 overflow-y-auto p-4"
+            className={`flex-1 ${isRoundScoringScene ? 'overflow-hidden p-4' : 'overflow-y-auto p-4'}`}
             aria-label="Current question"
             tabIndex={-1}
           >
-            {/* Question display / Round scoring view */}
+            {/* Round scoring: side-by-side layout (scoring form left, Q&A reference right) */}
+            {isRoundScoringScene ? (
+              <div className="flex gap-4 h-full">
+                {/* Scoring form — fixed width left column */}
+                <div className="w-[400px] shrink-0 overflow-y-auto">
+                  <div className="bg-surface border border-border rounded-xl p-4 shadow-md">
+                    <RoundScoringPanel
+                      hideHeader
+                      teams={game.teams}
+                      currentRound={game.currentRound}
+                      onSubmitScores={handleRoundScoresSubmitted}
+                      onProgressChange={handleRoundScoringProgress}
+                    />
+                  </div>
+                </div>
+                {/* Q&A reference — flexible right column */}
+                <div className="flex-1 min-w-0 overflow-y-auto">
+                  <div className="bg-surface border border-border rounded-xl p-4 shadow-md">
+                    <RoundScoringView />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+            {/* Question display */}
             <div className="bg-surface border border-border rounded-xl p-4 shadow-md mb-3">
-              {isRoundScoringScene ? (
-                <RoundScoringView />
-              ) : (
                 <QuestionDisplay
                   question={game.selectedQuestion}
                   peekAnswer={game.peekAnswer}
@@ -404,7 +419,6 @@ export default function PlayPage() {
                   roundProgress={game.roundProgress}
                   isOnDisplay={game.displayQuestionIndex === game.selectedQuestionIndex}
                 />
-              )}
             </div>
 
             {/* Scene navigation buttons (WU-03) + contextual action hint */}
@@ -475,9 +489,12 @@ export default function PlayPage() {
                 />
               </div>
             )}
+              </>
+            )}
           </main>
 
-          {/* RIGHT SIDEBAR: Leaderboard + Team Controls (w-80) */}
+          {/* RIGHT SIDEBAR: Leaderboard + Team Controls (w-80) — suppressed during round_scoring */}
+          {!isRoundScoringScene && (
           <aside
             id="game-controls"
             className="w-80 flex-shrink-0 border-l border-border overflow-y-auto bg-surface/40"
@@ -501,18 +518,6 @@ export default function PlayPage() {
                   <QuickScoreGrid
                     teams={game.teams}
                     quickScore={quickScore}
-                  />
-                </div>
-              )}
-
-              {/* Round Scoring Panel (BEA-662) — shown during round_scoring scene */}
-              {isRoundScoringScene && (
-                <div className="bg-surface border border-border rounded-xl p-3 shadow-sm">
-                  <RoundScoringPanel
-                    teams={game.teams}
-                    currentRound={game.currentRound}
-                    onSubmitScores={handleRoundScoresSubmitted}
-                    onProgressChange={handleRoundScoringProgress}
                   />
                 </div>
               )}
@@ -555,6 +560,7 @@ export default function PlayPage() {
               )}
             </div>
           </aside>
+          )}
         </div>
       </div>
 

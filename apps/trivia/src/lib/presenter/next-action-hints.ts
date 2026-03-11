@@ -26,7 +26,7 @@ export const NEXT_ACTION_HINTS: Record<AudienceScene, string> = {
   answer_reveal: 'Reviewing answers. Right Arrow for next answer. N for next round.',
   // Recap scenes (BEA-587)
   recap_title: 'Round recap starting. Right Arrow to continue.',
-  recap_qa: 'Right Arrow to reveal answer. A to toggle answer. Left Arrow for previous. N for next round.',
+  recap_qa: 'Right Arrow to reveal answer. Left Arrow for previous. N for next round.',
   round_scoring: 'Enter scores and press Done. Right Arrow to review answers, Left Arrow to go back.',
   recap_scores: 'Recap scores displayed. Left Arrow to review Q&A. Right Arrow or N for next round.',
 };

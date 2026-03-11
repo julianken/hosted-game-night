@@ -101,7 +101,7 @@ export function RoundScoringView() {
           Questions &amp; Answers
         </h3>
         <div
-          className="space-y-3 max-h-[calc(100vh-400px)] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted"
+          className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted"
           role="list"
           aria-label="Questions with correct answers"
         >

@@ -9,6 +9,8 @@ export interface RoundScoringPanelProps {
   currentRound: number;
   onSubmitScores: (scores: Record<string, number>) => void;
   onProgressChange?: (entries: Record<string, number>) => void;
+  /** When true, suppresses the visual header (h3 title). The aria-live counter is preserved as sr-only. */
+  hideHeader?: boolean;
 }
 
 interface UndoEntry {
@@ -33,6 +35,7 @@ export function RoundScoringPanel({
   currentRound,
   onSubmitScores,
   onProgressChange,
+  hideHeader = false,
 }: RoundScoringPanelProps) {
   const [entries, setEntries] = useState<Record<string, number | null>>(() => {
     const initial: Record<string, number | null> = {};
@@ -127,26 +130,38 @@ export function RoundScoringPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3
-          className="font-bold text-foreground"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)',
-          }}
-        >
-          Round {roundNumber} Scoring
-        </h3>
+      {/* Header — hidden when hideHeader is true (e.g. when panel lives in center panel alongside RoundScoringView) */}
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <h3
+            className="font-bold text-foreground"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(0.875rem, 1.5vw, 1.25rem)',
+            }}
+          >
+            Round {roundNumber} Scoring
+          </h3>
+          <span
+            className="text-foreground-secondary tabular-nums"
+            style={{ fontSize: 'clamp(0.75rem, 1.2vw, 1rem)' }}
+            aria-live="polite"
+            aria-label={`${enteredCount} of ${teams.length} teams entered`}
+          >
+            {enteredCount}/{teams.length} entered
+          </span>
+        </div>
+      )}
+      {/* Preserve aria-live counter for screen readers when header is hidden */}
+      {hideHeader && (
         <span
-          className="text-foreground-secondary tabular-nums"
-          style={{ fontSize: 'clamp(0.75rem, 1.2vw, 1rem)' }}
+          className="sr-only"
           aria-live="polite"
           aria-label={`${enteredCount} of ${teams.length} teams entered`}
         >
           {enteredCount}/{teams.length} entered
         </span>
-      </div>
+      )}
 
       {/* Instruction */}
       <p
