@@ -40,7 +40,15 @@ export default async function Home() {
             )}
           </>
         ) : (
-          <LoginButton returnTo={returnTo} />
+          <>
+            <LoginButton returnTo={returnTo} />
+            <Link
+              href="/play"
+              className="inline-flex items-center justify-center min-h-[56px] px-8 py-4 text-xl font-semibold rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors focus:outline-none focus:ring-4 focus:ring-muted/50"
+            >
+              Play as Guest
+            </Link>
+          </>
         )}
       </div>
 
