@@ -165,7 +165,7 @@ describe('QuestionList', () => {
       render(<QuestionList {...defaultProps} />);
 
       // All mock questions have 'history' category
-      const categoryIndicators = screen.getAllByText(/history/);
+      const categoryIndicators = screen.getAllByText(/history/i);
       expect(categoryIndicators).toHaveLength(6);
     });
   });

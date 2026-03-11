@@ -1,6 +1,7 @@
 'use client';
 
 import type { Question } from '@/types';
+import { getCategoryName } from '@/lib/categories';
 
 interface QuestionListProps {
   questions: Question[];
@@ -78,7 +79,7 @@ export function QuestionList({
                       key={question.id}
                       role="option"
                       aria-selected={isSelected}
-                      aria-label={`Question ${qIndex + 1}: ${question.text}. ${question.type === 'multiple_choice' ? 'Multiple choice' : 'True or false'}. Category: ${question.category}`}
+                      aria-label={`Question ${qIndex + 1}: ${question.text}. ${question.type === 'multiple_choice' ? 'Multiple choice' : 'True or false'}. Category: ${getCategoryName(question.category)}`}
                       tabIndex={0}
                       className={`
                         flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer
@@ -115,7 +116,7 @@ export function QuestionList({
                           {question.text}
                         </p>
                         <p className="text-base text-muted-foreground">
-                          {question.type === 'multiple_choice' ? 'MC' : 'T/F'} • {question.category}
+                          {question.type === 'multiple_choice' ? 'MC' : 'T/F'} • {getCategoryName(question.category)}
                         </p>
                       </div>
 
