@@ -3,6 +3,7 @@
 import { useId, useState, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useToast } from "@joolie-boolie/ui";
+import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 import type { Question, QuestionCategory } from '@/types';
 import { questionsToTriviaQuestions } from '@/lib/questions/conversion';
 import {
@@ -546,7 +547,7 @@ export function TriviaApiImporter({
               {questions.length} question{questions.length !== 1 ? 's' : ''} fetched
             </p>
             <p className="text-base text-muted-foreground mt-1">
-              Review below, then load into game or save to your library.
+              Review below, then load into game{QUESTION_SETS_ENABLED ? ' or save to your library' : ''}.
             </p>
           </div>
 
@@ -604,36 +605,40 @@ export function TriviaApiImporter({
             </div>
           </div>
 
-          {/* Save form -- name + description */}
-          <div className="space-y-2">
-            <label htmlFor={saveNameId} className="text-lg font-medium block">
-              Name <span className="text-error">*</span>
-            </label>
-            <input
-              id={saveNameId}
-              type="text"
-              value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              maxLength={100}
-              placeholder="e.g. Science Mix — 20 Questions"
-              className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
-            />
-          </div>
+          {/* Save form -- name + description (hidden when question sets feature is disabled) */}
+          {QUESTION_SETS_ENABLED && (
+            <>
+              <div className="space-y-2">
+                <label htmlFor={saveNameId} className="text-lg font-medium block">
+                  Name <span className="text-error">*</span>
+                </label>
+                <input
+                  id={saveNameId}
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  maxLength={100}
+                  placeholder="e.g. Science Mix — 20 Questions"
+                  className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label htmlFor={saveDescriptionId} className="text-lg font-medium block">
-              Description
-            </label>
-            <input
-              id={saveDescriptionId}
-              type="text"
-              value={saveDescription}
-              onChange={(e) => setSaveDescription(e.target.value)}
-              maxLength={250}
-              placeholder="Optional description"
-              className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
-            />
-          </div>
+              <div className="space-y-2">
+                <label htmlFor={saveDescriptionId} className="text-lg font-medium block">
+                  Description
+                </label>
+                <input
+                  id={saveDescriptionId}
+                  type="text"
+                  value={saveDescription}
+                  onChange={(e) => setSaveDescription(e.target.value)}
+                  maxLength={250}
+                  placeholder="Optional description"
+                  className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
+                />
+              </div>
+            </>
+          )}
 
           {/* Action buttons */}
           <div className="flex gap-3">
@@ -667,27 +672,29 @@ export function TriviaApiImporter({
               </button>
             )}
 
-            {/* Save to My Question Sets */}
-            <button
-              type="button"
-              onClick={handleSaveToQuestionSets}
-              disabled={!saveName.trim()}
-              className={`
-                flex-1 px-4 min-h-[48px] py-2 rounded-lg
-                text-base font-medium transition-colors
-                focus:outline-none focus:ring-2 focus:ring-primary/50
-                ${saveName.trim()
-                  ? 'bg-success text-white hover:bg-success/90'
-                  : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }
-              `}
-            >
-              Save to My Question Sets
-            </button>
+            {/* Save to My Question Sets (hidden when question sets feature is disabled) */}
+            {QUESTION_SETS_ENABLED && (
+              <button
+                type="button"
+                onClick={handleSaveToQuestionSets}
+                disabled={!saveName.trim()}
+                className={`
+                  flex-1 px-4 min-h-[48px] py-2 rounded-lg
+                  text-base font-medium transition-colors
+                  focus:outline-none focus:ring-2 focus:ring-primary/50
+                  ${saveName.trim()
+                    ? 'bg-success text-white hover:bg-success/90'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  }
+                `}
+              >
+                Save to My Question Sets
+              </button>
+            )}
           </div>
 
-          {/* Warning when game is not in setup (Load into Game disabled) -- hidden in management context */}
-          {!isManagement && !isGameSetup && (
+          {/* Warning when game is not in setup (Load into Game disabled) -- hidden in management context and when QS disabled */}
+          {QUESTION_SETS_ENABLED && !isManagement && !isGameSetup && (
             <p className="text-base text-warning" role="alert">
               &quot;Load into Game&quot; is only available during game setup. You can still save to your library.
             </p>

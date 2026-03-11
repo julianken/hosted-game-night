@@ -180,6 +180,10 @@ pnpm test:coverage     # Run tests with coverage
 | Ctrl/Cmd+Z | Undo last score action | Scoring phases except `round_scoring` (panel owns undo in that scene) |
 | ? | Show help modal | Always |
 
+### Feature Flags
+- `NEXT_PUBLIC_FEATURE_QUESTION_SETS` — Controls question sets feature visibility. Set to `'false'` to disable. Default: enabled (opt-out pattern).
+- Config module: `lib/feature-flags.ts`
+
 ## Architecture Notes
 
 - **BFF Pattern:** Frontend never talks directly to Supabase. All requests go through API routes.

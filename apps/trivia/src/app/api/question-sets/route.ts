@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
+import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 import {
   listTriviaQuestionSets,
   createTriviaQuestionSet,
@@ -63,6 +64,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!QUESTION_SETS_ENABLED) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const paginationParams = parsePaginationParams(searchParams);
     const search = searchParams.get('search') || undefined;
@@ -106,6 +111,10 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    if (!QUESTION_SETS_ENABLED) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const supabase = createAuthenticatedClient();

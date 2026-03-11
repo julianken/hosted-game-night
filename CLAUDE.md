@@ -106,6 +106,9 @@ E2E_JWT_SECRET=your-e2e-jwt-secret
 COOKIE_DOMAIN=.joolie-boolie.com                   # Cross-app SSO cookies
 # Optional (platform-hub only): REDIS_URL, REDIS_TOKEN (Upstash, for production rate limiting)
 # Optional (platform-hub only): CRON_SECRET (for Vercel Cron job authentication)
+
+# Feature flags (trivia)
+NEXT_PUBLIC_FEATURE_QUESTION_SETS=false  # Set to 'false' to disable question sets (default: enabled)
 ```
 
 ### API Response Envelopes

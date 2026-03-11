@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiUser, createAuthenticatedClient } from '@joolie-boolie/auth';
+import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 import {
   getTriviaQuestionSet,
   updateTriviaQuestionSet,
@@ -62,6 +63,10 @@ export async function GET(
       );
     }
 
+    if (!QUESTION_SETS_ENABLED) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     const supabase = createAuthenticatedClient();
     const { id } = await params;
 
@@ -109,6 +114,10 @@ export async function PATCH(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    if (!QUESTION_SETS_ENABLED) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const supabase = createAuthenticatedClient();
@@ -183,6 +192,10 @@ export async function DELETE(
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    if (!QUESTION_SETS_ENABLED) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const supabase = createAuthenticatedClient();

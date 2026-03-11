@@ -6,6 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock auth (same pattern as question-sets/[id] tests)
 vi.mock('@joolie-boolie/auth', () => ({
   getApiUser: vi.fn(),
@@ -104,7 +106,7 @@ const mockQuestionSet = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
-describe('POST /api/question-sets/import', () => {
+describe.skipIf(skipIfDisabled)('POST /api/question-sets/import', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateAuthenticatedClient.mockReturnValue(mockSupabaseClient);

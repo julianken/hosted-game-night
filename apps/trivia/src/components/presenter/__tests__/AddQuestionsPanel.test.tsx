@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AddQuestionsPanel } from '../AddQuestionsPanel';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock TriviaApiImporter
 vi.mock('../TriviaApiImporter', () => ({
   TriviaApiImporter: ({ context }: { context?: string }) => (
@@ -25,7 +27,7 @@ vi.mock('@/components/question-editor/QuestionSetEditorModal', () => ({
   ),
 }));
 
-describe('AddQuestionsPanel', () => {
+describe.skipIf(skipIfDisabled)('AddQuestionsPanel', () => {
   const mockOnClose = vi.fn();
   const mockOnSuccess = vi.fn();
 

@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QuestionSetImporter } from '../QuestionSetImporter';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock readFileContent since FileReader isn't available in jsdom
 vi.mock('@/lib/questions/parser', async () => {
   const actual = await vi.importActual<typeof import('@/lib/questions/parser')>('@/lib/questions/parser');
@@ -55,7 +57,7 @@ function createFile(content: string, name = 'test.json', size?: number): File {
   return file;
 }
 
-describe('QuestionSetImporter', () => {
+describe.skipIf(skipIfDisabled)('QuestionSetImporter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

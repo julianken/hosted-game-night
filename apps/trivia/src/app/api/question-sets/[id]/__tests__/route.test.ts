@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, PATCH, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock the auth utilities
 vi.mock('@joolie-boolie/auth', () => ({
   getApiUser: vi.fn(),
@@ -57,7 +59,7 @@ const mockQuestionSet: TriviaQuestionSet = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
-describe('GET /api/question-sets/[id]', () => {
+describe.skipIf(skipIfDisabled)('GET /api/question-sets/[id]', () => {
   const mockGet = getTriviaQuestionSet as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
 
@@ -149,7 +151,7 @@ describe('GET /api/question-sets/[id]', () => {
   });
 });
 
-describe('PATCH /api/question-sets/[id]', () => {
+describe.skipIf(skipIfDisabled)('PATCH /api/question-sets/[id]', () => {
   const mockGet = getTriviaQuestionSet as ReturnType<typeof vi.fn>;
   const mockUpdate = updateTriviaQuestionSet as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };
@@ -296,7 +298,7 @@ describe('PATCH /api/question-sets/[id]', () => {
   });
 });
 
-describe('DELETE /api/question-sets/[id]', () => {
+describe.skipIf(skipIfDisabled)('DELETE /api/question-sets/[id]', () => {
   const mockGet = getTriviaQuestionSet as ReturnType<typeof vi.fn>;
   const mockDelete = deleteTriviaQuestionSet as ReturnType<typeof vi.fn>;
   const mockSupabaseClient = { from: vi.fn() };

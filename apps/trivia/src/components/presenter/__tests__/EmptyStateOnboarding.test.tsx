@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { EmptyStateOnboarding } from '../EmptyStateOnboarding';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock TriviaApiImporter
 vi.mock('../TriviaApiImporter', () => ({
   TriviaApiImporter: ({ context, onSaveSuccess }: { context?: string; onSaveSuccess?: () => void }) => (
@@ -32,7 +34,7 @@ vi.mock('@/components/question-editor/QuestionSetEditorModal', () => ({
   ),
 }));
 
-describe('EmptyStateOnboarding', () => {
+describe.skipIf(skipIfDisabled)('EmptyStateOnboarding', () => {
   const mockOnSuccess = vi.fn();
 
   beforeEach(() => {

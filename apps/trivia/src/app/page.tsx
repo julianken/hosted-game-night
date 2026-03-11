@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { StatsDisplay } from '@/components/stats';
 import { LoginButton } from '@joolie-boolie/ui';
+import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 
 export default async function Home() {
   // Server-side auth check via cross-app SSO cookie
@@ -29,12 +30,14 @@ export default async function Home() {
             >
               Play
             </Link>
-            <Link
-              href="/question-sets"
-              className="inline-flex items-center justify-center min-h-[56px] px-8 py-4 text-xl font-semibold rounded-lg border-2 border-primary text-primary hover:bg-primary/10 transition-colors"
-            >
-              Question Sets
-            </Link>
+            {QUESTION_SETS_ENABLED && (
+              <Link
+                href="/question-sets"
+                className="inline-flex items-center justify-center min-h-[56px] px-8 py-4 text-xl font-semibold rounded-lg border-2 border-primary text-primary hover:bg-primary/10 transition-colors"
+              >
+                Question Sets
+              </Link>
+            )}
           </>
         ) : (
           <LoginButton returnTo={returnTo} />

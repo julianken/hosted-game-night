@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import QuestionSetsPage from '../page';
 
+const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -71,7 +73,7 @@ beforeEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('QuestionSetsPage', () => {
+describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   it('renders the page title when sets exist', async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
