@@ -17,7 +17,7 @@ For automated E2E tests, see [docs/E2E_TESTING_GUIDE.md](E2E_TESTING_GUIDE.md).
 | Report results | Update the Result column: `**PASS**`, `NOT TESTED`, or `**BUG** — description` |
 | Log a new bug | Add to Bugs Found table below, file a Linear issue (BEA-###) |
 
-**Current status:** 168 PASS, 0 BUGS, 24 NOT TESTED (192 total test cases)
+**Current status:** 183 PASS, 0 BUGS, 20 NOT TESTED (203 total test cases)
 
 ---
 
@@ -554,24 +554,49 @@ For **unauthenticated flows** (guest mode, public pages), no login is needed.
 |---|-----------|-------|--------|
 | 1 | Complete a round | Navigate through all questions in Round 1. After the last question, verify round recap/summary appears with round scores. | **PASS** — "Complete Round" on Q5 → "Round 1 Complete" with team rankings |
 | 2 | Round recap on display | With `/display` open, complete Round 1. Verify audience display shows round_recap scene with standings. | **PASS** — Display shows round_summary scene with 1st-4th place standings |
-| 3 | Advance to next round | From round recap, click "Next Round" or equivalent. Verify Round 2 starts. Verify question list shows Round 2 questions. Verify display shows round_intro scene. | **PASS** — N key → "Playing - Round 2 of 3", display shows round_intro scene |
+| 3 | Advance to next round | From round recap, click "Next Round" or equivalent. Verify Round 2 starts. Verify question list shows Round 2 questions. Verify display shows round_intro scene. | **PASS** — N key → "Playing - Round 2 of 3", display shows round_intro scene. Re-confirmed after BEA-672/673 flow reorder (round_summary → round_scoring → recap_qa → recap_scores). |
 | 4 | Complete all rounds | Progress through all configured rounds. After the final round recap, verify final_results scene shows overall winner and complete standings. | **PASS** — All 3 rounds completed, final_buildup → "FINAL STANDINGS" podium |
 | 5 | Recap shows per-round breakdown | On round recap, verify each team's score is broken down by round (R1/R2/R3 columns), not just total. | **PASS** — Per-round breakdown visible in round summary standings |
 
-### Story 3.20: Scene Navigation Buttons — **NOT TESTED**
+### Story 3.20: Scene Navigation Buttons — **4 PASS, 4 NOT TESTED**
 
 **As a presenter**, I want always-visible ← → navigation buttons that mirror ArrowLeft/ArrowRight keyboard behavior.
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Both buttons always visible | Navigate to `/play`. Create offline game, add a team. Verify both ← (Back) and → (Forward) buttons are visible. Start game. Verify buttons remain visible on every scene throughout the game flow. | NOT TESTED |
-| 2 | Forward button advances scenes | Click → button on `waiting` scene. Verify no-op (ArrowRight does nothing on waiting). Start game via Start Game button. On `game_intro`, click →. Verify it advances to next scene. Continue clicking → through: round_intro → question_anticipation → question_display. Verify display updates. | NOT TESTED |
-| 3 | Forward on question lifecycle | On `question_display`, click →. Verify no-op (advanceScene returns null for question_display + advance). Press S to close question. On `question_closed`, click →. Verify advances to next question or round_summary. | NOT TESTED |
-| 4 | Back button on recap flow | Complete a round. On `round_summary`, click → to enter recap_title. Click ← (Back). Verify returns to round_summary. Advance to recap_qa. Click ←. Verify goes back. Advance to recap_scores. Click ←. Verify returns to recap_qa. | NOT TESTED |
+| 1 | Both buttons always visible | Navigate to `/play`. Create offline game, add a team. Verify both ← (Back) and → (Forward) buttons are visible. Start game. Verify buttons remain visible on every scene throughout the game flow. | **PASS** — Both buttons visible on game start. ← disabled, → shows "Skip Intro". Buttons present on all non-round_scoring scenes. During round_scoring, "Done →" button replaces nav buttons (by design, BEA-673). |
+| 2 | Forward button advances scenes | Click → button on `waiting` scene. Verify no-op (ArrowRight does nothing on waiting). Start game via Start Game button. On `game_intro`, click →. Verify it advances to next scene. Continue clicking → through: round_intro → question_anticipation → question_display. Verify display updates. | **PASS** — → on game_intro skips through to question_anticipation. Scenes advance correctly through the flow. |
+| 3 | Forward on question lifecycle | On `question_display`, click →. Verify advances to next question (→ dispatches skip trigger). Press S to close question. On `question_closed`, click →. Verify advances to next question or round_summary. | **PASS** — → on question_display labeled "Next Question" advances to next Q. S closes question. On last Q, → labeled "End Round" advances to round_summary. |
+| 4 | Back button on recap flow | Complete a round. On `round_summary`, click → to enter `round_scoring` (new flow). Click ← (Back). Verify returns to round_summary. Submit scores via Done. Advance to `recap_qa`. Click ←. Verify goes back to `round_scoring`. | **PASS** — New flow: round_summary → round_scoring → recap_qa → recap_scores. ← works at each step. |
 | 5 | Reveal lock disables forward | Advance to `answer_reveal` scene. Verify → button is disabled (reduced opacity). Wait for reveal to complete. Verify → becomes enabled. | NOT TESTED |
 | 6 | Buttons visible on emergency_blank | Press E for emergency blank. Verify both ← → buttons are still visible. Press E to restore. Verify buttons still work. | NOT TESTED |
 | 7 | Button touch targets | Inspect nav buttons. Verify minimum 44x44px dimensions. Verify → has primary color background. Verify ← has subtle/elevated background. | NOT TESTED |
 | 8 | Full game walkthrough with buttons only | Play an entire game using only the → button and S key (to close questions). Verify the game progresses through all scenes to final_podium. | NOT TESTED |
+
+### Story 3.21: Round Scoring Submission Gate (BEA-672) — **ALL PASS**
+
+**As a presenter**, I want forward navigation blocked during round_scoring until scores are submitted.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | ArrowRight blocked before submission | Enter round_scoring scene. Press ArrowRight. Verify scene does not change. | **PASS** — Stayed on round_scoring. Orchestrator guard blocks advance trigger. |
+| 2 | Enter blocked before submission | On round_scoring, press Enter. Verify scene does not change. | **PASS** — Stayed on round_scoring. Enter key blocked per BEA-494. |
+| 3 | ArrowLeft works before submission | On round_scoring, press ArrowLeft. Verify returns to round_summary. | **PASS** — Backward navigation unaffected by submission gate. |
+| 4 | Done button submits and advances | Enter scores for all teams. Click "Done →". Verify scores saved and scene advances to recap_qa. | **PASS** — Scores persisted (3,2,1,4), advanced to recap_qa. |
+| 5 | Flag preserved on backward re-entry | From recap_qa, press ← to return to round_scoring. Verify ArrowRight now works (flag preserved). | **PASS** — ArrowRight advanced to recap_qa. Asymmetric lifecycle confirmed. |
+
+### Story 3.22: Round Scoring Layout (BEA-673) — **ALL PASS**
+
+**As a presenter**, I want the scoring form in the center panel with Q&A reference during round_scoring.
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Scoring form in center panel | Enter round_scoring. Verify scoring form with team spinbuttons appears in center panel left column (~400px). | **PASS** — Spinbuttons for all 4 teams visible in left column. |
+| 2 | Q&A reference in right column | Verify standings and questions/answers reference panel appears in right column. | **PASS** — "Round 1 Scoring" heading, standings list, 7 Q&A items visible. |
+| 3 | Sidebar hidden during round_scoring | Verify right sidebar (Teams, Team Scores) is not visible. | **PASS** — No complementary "Game controls" region in DOM. |
+| 4 | Sidebar restored after round_scoring | Submit scores and advance to recap_qa. Verify sidebar returns with Teams and Team Scores. | **PASS** — Teams + Team Scores sidebar visible. Scores match (3,2,1,4). |
+| 5 | Skip link removed | Verify no "Skip to game controls" link exists in the page. | **PASS** — No `#game-controls` anchor in DOM (co-deleted per BEA-673). |
+| 6 | hideHeader active | Verify no visual "Round Scoring" heading in the scoring form panel (header hidden). | **PASS** — No heading element in scoring form; aria-live counter preserved as sr-only. |
 
 ---
 

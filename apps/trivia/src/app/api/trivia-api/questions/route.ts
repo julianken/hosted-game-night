@@ -1,9 +1,10 @@
 /**
  * BFF Proxy -- GET /api/trivia-api/questions
  *
- * Authenticates the user, validates query parameters, checks the in-process
- * cache, fetches from the-trivia-api.com on cache miss, converts via adapter,
- * caches the result, and returns adapted questions.
+ * Public endpoint (no auth required — supports guest mode).
+ * Validates query parameters, checks the in-process cache, fetches from
+ * the-trivia-api.com on cache miss, converts via adapter, caches the result,
+ * and returns adapted questions.
  *
  * Query parameters:
  *   limit        integer 1-50 (default: 10)
@@ -13,7 +14,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiUser } from '@joolie-boolie/auth';
 import { createLogger } from '@joolie-boolie/error-tracking/server-logger';
 import { fetchTriviaApiQuestions } from '@/lib/trivia-api/client';
 import type { TriviaApiCategory, TriviaApiDifficulty, TriviaApiParams } from '@/lib/trivia-api/client';
@@ -90,13 +90,7 @@ function parseExcludeNiche(value: string | null): boolean {
 
 export async function GET(request: NextRequest) {
   try {
-    // Step 1: Authentication
-    const user = await getApiUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Step 2: Parse and validate query parameters
+    // Step 1: Parse and validate query parameters
     const sp = request.nextUrl.searchParams;
 
     const limitResult = parseLimit(sp.get('limit'));
@@ -124,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     const excludeNiche = parseExcludeNiche(sp.get('excludeNiche'));
 
-    // Step 3: Assemble the TriviaApiParams object used for BOTH cache key and fetch.
+    // Step 2: Assemble the TriviaApiParams object used for BOTH cache key and fetch.
     // This guarantees cache key always matches the actual fetch that would be made.
     const apiParams: TriviaApiParams = {
       limit: limitResult.limit,
@@ -132,7 +126,7 @@ export async function GET(request: NextRequest) {
       ...(difficultiesResult.values.length > 0 && { difficulties: difficultiesResult.values }),
     };
 
-    // Step 4: Cache check (cache stores raw TriviaApiQuestion[] for flexibility)
+    // Step 3: Cache check (cache stores raw TriviaApiQuestion[] for flexibility)
     const cachedQuestions = getCached(apiParams);
 
     if (cachedQuestions !== null) {
@@ -154,7 +148,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Step 5: Fetch from external API
+    // Step 4: Fetch from external API
     logger.info('Cache miss -- fetching from trivia API', {
       event: 'trivia_api_cache_miss',
       cacheKey: buildCacheKey(apiParams),
@@ -190,13 +184,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Step 6: Cache the raw API questions (before filtering/adapting)
+    // Step 5: Cache the raw API questions (before filtering/adapting)
     // Caching raw allows different excludeNiche values to be served from the same cache entry.
     setCached(apiParams, result.questions);
 
     const fetchedAt = new Date().toISOString();
 
-    // Step 7: Convert to app Question type (adapter handles niche filtering)
+    // Step 6: Convert to app Question type (adapter handles niche filtering)
     const questions = triviaApiQuestionsToQuestions(result.questions, { excludeNiche });
 
     logger.info('Trivia API questions adapted and returned', {
@@ -206,7 +200,7 @@ export async function GET(request: NextRequest) {
       excludeNiche: String(excludeNiche),
     });
 
-    // Step 8: Return
+    // Step 7: Return
     return NextResponse.json({
       questions,
       meta: {
