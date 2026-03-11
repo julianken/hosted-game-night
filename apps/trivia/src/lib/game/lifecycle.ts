@@ -50,6 +50,7 @@ export function createInitialState(): TriviaGameState {
     recapShowingAnswer: null,
     questionStartScores: {},
     roundScoringEntries: {},
+    roundScoringSubmitted: false,
   });
 }
 

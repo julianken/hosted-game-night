@@ -176,7 +176,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
       expect(result!.recapShowingAnswer).toBe(false);
     });
 
-    it('should transition to recap_title at the first question (Path B)', () => {
+    it('should transition to round_scoring at the first question', () => {
       const state = setupRecapQa({
         displayAtRoundQIndex: 0,
         recapShowingAnswer: false,
@@ -185,7 +185,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
       const result = orchestrateSceneTransition(state, 'back');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_title');
+      expect(result!.audienceScene).toBe('round_scoring');
       expect(result!.recapShowingAnswer).toBeNull();
       expect(result!.sceneTimestamp).toBeGreaterThan(0);
     });
@@ -236,7 +236,7 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
   });
 
   describe('ADVANCE — answer face, last question', () => {
-    it('should transition to round_scoring', () => {
+    it('should transition to recap_scores (non-last round)', () => {
       const state = setupRecapQa({
         displayAtRoundQIndex: 4, // last question (0-based, 5 questions)
         recapShowingAnswer: true,
@@ -245,8 +245,30 @@ describe('orchestrateSceneTransition() — recap_qa cycling', () => {
       const result = orchestrateSceneTransition(state, 'advance');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('round_scoring');
+      expect(result!.audienceScene).toBe('recap_scores');
       expect(result!.recapShowingAnswer).toBeNull();
+    });
+
+    it('should transition to final_buildup (last round)', () => {
+      let state = setupRecapQa({
+        displayAtRoundQIndex: 4,
+        recapShowingAnswer: true,
+      });
+      const lastRound = state.totalRounds - 1;
+      const roundQs = state.questions.filter((q) => q.roundIndex === lastRound);
+      const lastQIdx = state.questions.indexOf(roundQs[roundQs.length - 1]);
+      state = {
+        ...state,
+        currentRound: lastRound,
+        displayQuestionIndex: lastQIdx,
+        selectedQuestionIndex: lastQIdx,
+      };
+
+      const result = orchestrateSceneTransition(state, 'advance');
+
+      expect(result).not.toBeNull();
+      expect(result!.audienceScene).toBe('final_buildup');
+      expect(result!.status).toBe('ended');
     });
   });
 });
@@ -390,53 +412,63 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
-  describe('round_summary -> recap_title', () => {
-    it('should seed recap_title with first question of round', () => {
+  describe('round_summary -> round_scoring', () => {
+    it('should enter round_scoring and clear entries, resetting submission gate', () => {
       const state = createBetweenRoundsState('round_summary');
-      const indices = getRoundQuestionIndices(state, 0);
 
       const result = orchestrateSceneTransition(state, 'advance');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_title');
-      expect(result!.displayQuestionIndex).toBe(indices[0]);
-      expect(result!.selectedQuestionIndex).toBe(indices[0]);
+      expect(result!.audienceScene).toBe('round_scoring');
+      expect(result!.roundScoringEntries).toEqual({});
+      expect(result!.roundScoringSubmitted).toBe(false);
       expect(result!.recapShowingAnswer).toBeNull();
     });
   });
 
-  describe('recap_title -> recap_qa', () => {
-    it('should set recapShowingAnswer to false on entry', () => {
-      const state = createBetweenRoundsState('recap_title');
+  describe('round_scoring -> recap_qa', () => {
+    it('should block advance when roundScoringSubmitted is false', () => {
+      const state = createBetweenRoundsState('round_scoring');
+      // roundScoringSubmitted defaults to false from createInitialState
+
+      const result = orchestrateSceneTransition(state, 'advance');
+
+      expect(result).toBeNull(); // Submission gate blocks advancement
+    });
+
+    it('should also block skip and next_round triggers when roundScoringSubmitted is false', () => {
+      const state = createBetweenRoundsState('round_scoring');
+
+      const resultSkip = orchestrateSceneTransition(state, 'skip');
+      expect(resultSkip).toBeNull(); // skip is in ADVANCEMENT_TRIGGERS
+
+      const resultNextRound = orchestrateSceneTransition(state, 'next_round');
+      expect(resultNextRound).toBeNull(); // next_round is in ADVANCEMENT_TRIGGERS
+    });
+
+    it('should allow back trigger even when roundScoringSubmitted is false', () => {
+      const state = createBetweenRoundsState('round_scoring');
+
+      const result = orchestrateSceneTransition(state, 'back');
+
+      expect(result).not.toBeNull(); // back is NOT in ADVANCEMENT_TRIGGERS
+      expect(result!.audienceScene).toBe('round_summary');
+    });
+
+    it('should seed recap_qa with first question on forward entry when roundScoringSubmitted is true', () => {
+      const state: TriviaGameState = {
+        ...createBetweenRoundsState('round_scoring'),
+        roundScoringSubmitted: true,
+      };
+      const indices = getRoundQuestionIndices(state, 0);
 
       const result = orchestrateSceneTransition(state, 'advance');
 
       expect(result).not.toBeNull();
       expect(result!.audienceScene).toBe('recap_qa');
+      expect(result!.displayQuestionIndex).toBe(indices[0]);
+      expect(result!.selectedQuestionIndex).toBe(indices[0]);
       expect(result!.recapShowingAnswer).toBe(false);
-    });
-  });
-
-  describe('-> round_scoring (from recap_qa last question)', () => {
-    it('should enter round_scoring and clear recapShowingAnswer', () => {
-      // recap_qa + advance + last question + answer face -> round_scoring
-      const state = createBetweenRoundsState('recap_qa');
-      const indices = getRoundQuestionIndices(state, 0);
-      const lastQIdx = indices[indices.length - 1];
-
-      const modState: TriviaGameState = {
-        ...state,
-        displayQuestionIndex: lastQIdx,
-        selectedQuestionIndex: lastQIdx,
-        recapShowingAnswer: true,
-      };
-
-      const result = orchestrateSceneTransition(modState, 'advance');
-
-      expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('round_scoring');
-      expect(result!.recapShowingAnswer).toBeNull();
-      expect(result!.roundScoringEntries).toEqual({});
     });
   });
 
@@ -467,16 +499,16 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
-  describe('Path A: recap_title -> round_summary (back)', () => {
-    it('should clear recapShowingAnswer when going back to round_summary', () => {
-      const state = createBetweenRoundsState('recap_title');
+  describe('round_scoring -> round_summary (back)', () => {
+    it('should go back to round_summary and preserve scoring entries', () => {
+      const state = createBetweenRoundsState('round_scoring');
 
       const result = orchestrateSceneTransition(state, 'back');
 
       expect(result).not.toBeNull();
       expect(result!.audienceScene).toBe('round_summary');
-      expect(result!.recapShowingAnswer).toBeNull();
-      expect(result!.sceneTimestamp).toBeGreaterThan(0);
+      // Should NOT clear roundScoringEntries on backward nav
+      expect(result!.roundScoringEntries).toBeUndefined();
     });
   });
 
@@ -496,39 +528,46 @@ describe('orchestrateSceneTransition() — state machine transitions', () => {
     });
   });
 
-  describe('round_scoring -> recap_qa (back)', () => {
-    it('should set recapShowingAnswer to true on backward entry', () => {
-      const state = createBetweenRoundsState('round_scoring');
-
-      const result = orchestrateSceneTransition(state, 'back');
-
-      expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_qa');
-      expect(result!.recapShowingAnswer).toBe(true);
-    });
-
-    it('should set displayQuestionIndex to last question of round', () => {
-      const state = createBetweenRoundsState('round_scoring');
+  describe('recap_qa -> round_scoring (back from Q1)', () => {
+    it('should preserve scoring entries on backward entry from recap_qa', () => {
+      const state = createBetweenRoundsState('recap_qa');
       const indices = getRoundQuestionIndices(state, 0);
-      const lastGlobalIndex = indices[indices.length - 1];
 
-      const result = orchestrateSceneTransition(state, 'back');
+      const modState: TriviaGameState = {
+        ...state,
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+        recapShowingAnswer: false,
+      };
+
+      const result = orchestrateSceneTransition(modState, 'back');
 
       expect(result).not.toBeNull();
-      expect(result!.displayQuestionIndex).toBe(lastGlobalIndex);
-      expect(result!.selectedQuestionIndex).toBe(lastGlobalIndex);
+      expect(result!.audienceScene).toBe('round_scoring');
+      expect(result!.recapShowingAnswer).toBeNull();
+      // Should NOT clear roundScoringEntries on backward entry
+      expect(result!.roundScoringEntries).toBeUndefined();
     });
-  });
 
-  describe('round_summary -> answer_reveal', () => {
-    it('should not transition on advance (advance goes to recap_title)', () => {
-      const state = createBetweenRoundsState('round_summary');
+    it('should not include roundScoringSubmitted in the partial update, preserving its true value', () => {
+      const state = createBetweenRoundsState('recap_qa');
+      const indices = getRoundQuestionIndices(state, 0);
 
-      // advance from round_summary goes to recap_title, not answer_reveal
-      const result = orchestrateSceneTransition(state, 'advance');
+      const modState: TriviaGameState = {
+        ...state,
+        displayQuestionIndex: indices[0],
+        selectedQuestionIndex: indices[0],
+        recapShowingAnswer: false,
+        roundScoringSubmitted: true,
+      };
+
+      const result = orchestrateSceneTransition(modState, 'back');
 
       expect(result).not.toBeNull();
-      expect(result!.audienceScene).toBe('recap_title');
+      expect(result!.audienceScene).toBe('round_scoring');
+      // The partial update must NOT include roundScoringSubmitted — the existing
+      // true value must be left intact so the gate stays open on re-entry.
+      expect(result!.roundScoringSubmitted).toBeUndefined();
     });
   });
 
@@ -645,13 +684,12 @@ describe('orchestrateSceneTransition() — next_round trigger', () => {
     expect(result!.status).toBe('ended');
   });
 
-  it('should go to round_intro from recap_title (non-last round)', () => {
+  it('should return null from recap_title (dead scene)', () => {
     const state = createBetweenRoundsState('recap_title');
 
     const result = orchestrateSceneTransition(state, 'next_round');
 
-    expect(result).not.toBeNull();
-    expect(result!.audienceScene).toBe('round_intro');
+    expect(result).toBeNull();
   });
 
   it('should go to round_intro from recap_qa (non-last round)', () => {

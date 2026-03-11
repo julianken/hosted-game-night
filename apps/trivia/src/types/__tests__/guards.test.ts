@@ -61,6 +61,7 @@ function createMockState(overrides?: Partial<TriviaGameState>): TriviaGameState 
     questionStartScores: {},
     // Per-round scoring (BEA-662)
     roundScoringEntries: {},
+    roundScoringSubmitted: false,
     ...overrides,
   };
 }

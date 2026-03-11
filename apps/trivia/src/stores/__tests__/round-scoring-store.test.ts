@@ -121,6 +121,22 @@ describe('setRoundScores store action', () => {
     expect(state.roundScoringEntries).toEqual({});
   });
 
+  it('should set roundScoringSubmitted to true', () => {
+    const teams = setupGameInRoundScoring();
+
+    // Verify gate starts false
+    expect(useGameStore.getState().roundScoringSubmitted).toBe(false);
+
+    const scoresMap: Record<string, number> = {};
+    for (const t of teams) {
+      scoresMap[t.id] = 1;
+    }
+
+    useGameStore.getState().setRoundScores(scoresMap);
+
+    expect(useGameStore.getState().roundScoringSubmitted).toBe(true);
+  });
+
   it('should handle zero scores', () => {
     const teams = setupGameInRoundScoring();
 

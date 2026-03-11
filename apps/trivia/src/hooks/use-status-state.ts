@@ -53,6 +53,7 @@ function useGameStateSnapshot(): TriviaGameState {
   const questionStartScores = useGameStore((s) => s.questionStartScores);
   // Per-round scoring (BEA-662)
   const roundScoringEntries = useGameStore((s) => s.roundScoringEntries);
+  const roundScoringSubmitted = useGameStore((s) => s.roundScoringSubmitted);
 
   return useMemo<TriviaGameState>(() => ({
     status,
@@ -80,6 +81,7 @@ function useGameStateSnapshot(): TriviaGameState {
     questionStartScores,
     // Per-round scoring (BEA-662)
     roundScoringEntries,
+    roundScoringSubmitted,
   }), [
     status,
     questions,
@@ -106,6 +108,7 @@ function useGameStateSnapshot(): TriviaGameState {
     questionStartScores,
     // Per-round scoring (BEA-662)
     roundScoringEntries,
+    roundScoringSubmitted,
   ]);
 }
 

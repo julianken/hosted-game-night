@@ -60,6 +60,7 @@ vi.mock('@/stores/game-store', () => ({
       // Round start score snapshot (BEA-601)
       questionStartScores: {},
       roundScoringEntries: {},
+      roundScoringSubmitted: false,
       startGame: vi.fn(),
       endGame: vi.fn(),
       resetGame: vi.fn(),
@@ -350,6 +351,7 @@ describe('TemplateSelector', () => {
         // Round start score snapshot (BEA-601)
         questionStartScores: {},
         roundScoringEntries: {},
+        roundScoringSubmitted: false,
         startGame: vi.fn(),
         endGame: vi.fn(),
         resetGame: vi.fn(),

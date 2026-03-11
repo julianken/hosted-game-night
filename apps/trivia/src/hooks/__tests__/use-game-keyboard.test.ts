@@ -267,7 +267,7 @@ describe('useGameKeyboard', () => {
       expect(advanceSceneSpy).toHaveBeenCalledWith('back');
     });
 
-    it('should call advanceScene(BACK) when in recap_title during between_rounds', () => {
+    it('should not call advanceScene(BACK) when in recap_title (dead scene)', () => {
       const { result } = renderHook(() => useGameKeyboard());
 
       act(() => {
@@ -290,7 +290,7 @@ describe('useGameKeyboard', () => {
         dispatchKeyDown('ArrowLeft');
       });
 
-      expect(advanceSceneSpy).toHaveBeenCalledWith('back');
+      expect(advanceSceneSpy).not.toHaveBeenCalled();
     });
 
     it('should call advanceScene(BACK) when in recap_scores during between_rounds', () => {

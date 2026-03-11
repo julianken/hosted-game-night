@@ -131,9 +131,9 @@ function handleRecapQaCycling(
         sceneTimestamp: Date.now(),
       };
     }
-    // At Q1, back goes to recap_title
+    // At Q1, back goes to round_scoring (previous step in flow)
     return {
-      ...buildSceneUpdate('recap_title'),
+      ...buildSceneUpdate('round_scoring'),
       recapShowingAnswer: null,
     };
   }
@@ -239,45 +239,9 @@ function applyTransitionSideEffects(
     };
   }
 
-  // Side effect: start answer review when round_summary -> answer_reveal.
-  if (
-    state.audienceScene === 'round_summary' &&
-    nextScene === 'answer_reveal'
-  ) {
-    const firstQ = roundQuestions[0];
-    const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
-    armRevealLock();
-    return {
-      ...buildSceneUpdate(nextScene),
-      displayQuestionIndex: globalIndex,
-      selectedQuestionIndex: globalIndex,
-      revealPhase: null,
-    };
-  }
-
-  // Side effect: Path A backward — recap_title -> round_summary, clear recap state.
-  if (state.audienceScene === 'recap_title' && nextScene === 'round_summary') {
-    return {
-      ...buildSceneUpdate(nextScene),
-      recapShowingAnswer: null,
-    };
-  }
-
-  // Side effect: seed recap_title — point displayQuestionIndex at first round Q.
-  if (nextScene === 'recap_title') {
-    const firstQ = roundQuestions[0];
-    const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
-    return {
-      ...buildSceneUpdate(nextScene),
-      displayQuestionIndex: globalIndex,
-      selectedQuestionIndex: globalIndex,
-      recapShowingAnswer: null,
-    };
-  }
-
   // Side effect: seed recap_qa — origin-aware entry.
   if (nextScene === 'recap_qa') {
-    // Path C: backward entry from recap_scores — show last question with answer face.
+    // Backward entry from recap_scores — show last question with answer face.
     if (state.audienceScene === 'recap_scores') {
       const lastQ = roundQuestions[roundQuestions.length - 1];
       const globalIndex = lastQ ? state.questions.indexOf(lastQ) : 0;
@@ -288,29 +252,39 @@ function applyTransitionSideEffects(
         recapShowingAnswer: true,
       };
     }
-    // Backward entry from round_scoring — show last question with answer face.
+    // Forward entry from round_scoring — start on first question, question face.
     if (state.audienceScene === 'round_scoring') {
-      const lastQ = roundQuestions[roundQuestions.length - 1];
-      const globalIndex = lastQ ? state.questions.indexOf(lastQ) : 0;
+      const firstQ = roundQuestions[0];
+      const globalIndex = firstQ ? state.questions.indexOf(firstQ) : 0;
       return {
         ...buildSceneUpdate(nextScene),
         displayQuestionIndex: globalIndex,
         selectedQuestionIndex: globalIndex,
-        recapShowingAnswer: true,
+        recapShowingAnswer: false,
       };
     }
-    // Forward entry from recap_title — start on question face.
+    // Default forward entry — start on question face.
     return {
       ...buildSceneUpdate(nextScene),
       recapShowingAnswer: false,
     };
   }
 
-  // Side effect: entering round_scoring — clear entries.
+  // Side effect: entering round_scoring.
   if (nextScene === 'round_scoring') {
+    // Forward entry from round_summary: clear entries for fresh scoring, reset gate.
+    if (state.audienceScene === 'round_summary') {
+      return {
+        ...buildSceneUpdate(nextScene),
+        roundScoringEntries: {},
+        roundScoringSubmitted: false,
+        recapShowingAnswer: null,
+      };
+    }
+    // Backward entry from recap_qa: preserve existing scores.
+    // roundScoringSubmitted is intentionally NOT reset here — preserves true from prior submission.
     return {
       ...buildSceneUpdate(nextScene),
-      roundScoringEntries: {},
       recapShowingAnswer: null,
     };
   }
@@ -392,6 +366,11 @@ export function orchestrateSceneTransition(
   // Reveal lock guard: block advancement triggers during the 1.1s reveal choreography.
   if (isRevealLocked() && ADVANCEMENT_TRIGGERS.has(trigger)) {
     return null; // Silent rejection
+  }
+
+  // Submission gate: block advancement during round_scoring until scores are submitted.
+  if (state.audienceScene === 'round_scoring' && !state.roundScoringSubmitted && ADVANCEMENT_TRIGGERS.has(trigger)) {
+    return null; // Silent rejection — forward button is disabled in UI
   }
 
   const ctx = deriveTransitionContext(state);
