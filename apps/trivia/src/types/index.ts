@@ -293,6 +293,14 @@ export interface TriviaGameState {
    */
   roundScoringEntries: Record<string, number>;
 
+  /**
+   * Whether scores have been submitted via Done during the current round_scoring scene.
+   * Gate: forward navigation is blocked until this is true.
+   * Reset to false on forward entry to round_scoring (from round_summary).
+   * Preserved as true on backward re-entry (from recap_qa).
+   */
+  roundScoringSubmitted: boolean;
+
 }
 
 // =============================================================================

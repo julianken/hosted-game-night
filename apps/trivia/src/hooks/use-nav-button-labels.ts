@@ -41,13 +41,14 @@ export interface NavButtonLabelsResult {
  *
  * - forward.text changes per scene
  * - forward.disabled is true when structurally disabled (null) OR during reveal lock
+ *   OR during round_scoring when scores have not been submitted yet (submission gate)
  * - back is null (disabled, icon-only) outside recap scenes
  * - back.text is set in recap scenes (recap_title, recap_qa, recap_scores)
  *
  * Do NOT subscribe to timer state here — no label depends on timer.
  */
 export function useNavButtonLabels(): NavButtonLabelsResult {
-  const { audienceScene, revealPhase, recapShowingAnswer, isLastQuestion, isLastRound } =
+  const { audienceScene, revealPhase, recapShowingAnswer, isLastQuestion, isLastRound, roundScoringSubmitted } =
     useGameStore(
       useShallow((state) => {
         const ctx = deriveTransitionContext(state);
@@ -57,6 +58,7 @@ export function useNavButtonLabels(): NavButtonLabelsResult {
           recapShowingAnswer: state.recapShowingAnswer,
           isLastQuestion: ctx.isLastQuestion,
           isLastRound: ctx.isLastRound,
+          roundScoringSubmitted: state.roundScoringSubmitted,
         };
       })
     );
@@ -70,12 +72,15 @@ export function useNavButtonLabels(): NavButtonLabelsResult {
   // Transient disable: reveal animation lock on answer_reveal (1.1s)
   const isRevealLocked = revealPhase !== null && audienceScene === 'answer_reveal';
 
+  // Submission gate: forward is disabled during round_scoring until scores submitted
+  const isSubmissionGated = audienceScene === 'round_scoring' && !roundScoringSubmitted;
+
   const forward: NavButtonLabelsResult['forward'] =
     labels.forward === null
       ? null
       : {
           text: labels.forward,
-          disabled: isRevealLocked,
+          disabled: isRevealLocked || isSubmissionGated,
         };
 
   const back: NavButtonLabelsResult['back'] =

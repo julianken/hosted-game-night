@@ -11,51 +11,47 @@ import { VALID_SCENES_BY_STATUS } from '@/types/audience-scene';
 // RECAP SCENE TRANSITIONS (WU-02)
 // =============================================================================
 
-describe('getNextScene — recap flow transitions', () => {
+describe('getNextScene — between-rounds flow transitions', () => {
   // -------------------------------------------------------------------------
-  // round_summary -> recap_title (changed from answer_reveal)
+  // round_summary -> round_scoring
   // -------------------------------------------------------------------------
 
-  it('round_summary + advance -> recap_title', () => {
+  it('round_summary + advance -> round_scoring', () => {
     const result = getNextScene('round_summary', SCENE_TRIGGERS.ADVANCE, {});
-    expect(result).toBe('recap_title');
+    expect(result).toBe('round_scoring');
   });
 
   // -------------------------------------------------------------------------
-  // recap_title transitions
+  // recap_title (dead scene — no transitions)
   // -------------------------------------------------------------------------
 
-  it('recap_title + advance -> recap_qa', () => {
+  it('recap_title + advance -> null (dead scene)', () => {
     const result = getNextScene('recap_title', SCENE_TRIGGERS.ADVANCE, {});
-    expect(result).toBe('recap_qa');
+    expect(result).toBeNull();
   });
 
-  it('recap_title + next_round -> round_intro (not last round)', () => {
-    const result = getNextScene('recap_title', SCENE_TRIGGERS.NEXT_ROUND, {
-      isLastRound: false,
-    });
-    expect(result).toBe('round_intro');
+  it('recap_title + next_round -> null (dead scene)', () => {
+    const result = getNextScene('recap_title', SCENE_TRIGGERS.NEXT_ROUND, {});
+    expect(result).toBeNull();
   });
 
-  it('recap_title + next_round -> final_buildup (last round)', () => {
-    const result = getNextScene('recap_title', SCENE_TRIGGERS.NEXT_ROUND, {
-      isLastRound: true,
-    });
+  // -------------------------------------------------------------------------
+  // recap_qa transitions (terminal: last Q answer shown → recap_scores or final)
+  // -------------------------------------------------------------------------
+
+  it('recap_qa + advance -> recap_scores (not last round)', () => {
+    const result = getNextScene('recap_qa', SCENE_TRIGGERS.ADVANCE, { isLastRound: false });
+    expect(result).toBe('recap_scores');
+  });
+
+  it('recap_qa + advance -> final_buildup (last round)', () => {
+    const result = getNextScene('recap_qa', SCENE_TRIGGERS.ADVANCE, { isLastRound: true });
     expect(result).toBe('final_buildup');
   });
 
-  // -------------------------------------------------------------------------
-  // recap_qa transitions
-  // -------------------------------------------------------------------------
-
-  it('recap_qa + advance -> round_scoring', () => {
-    const result = getNextScene('recap_qa', SCENE_TRIGGERS.ADVANCE, {});
-    expect(result).toBe('round_scoring');
-  });
-
-  it('recap_qa + skip -> round_scoring', () => {
-    const result = getNextScene('recap_qa', SCENE_TRIGGERS.SKIP, {});
-    expect(result).toBe('round_scoring');
+  it('recap_qa + skip -> recap_scores (not last round)', () => {
+    const result = getNextScene('recap_qa', SCENE_TRIGGERS.SKIP, { isLastRound: false });
+    expect(result).toBe('recap_scores');
   });
 
   it('recap_qa + next_round -> round_intro (not last round)', () => {
@@ -133,14 +129,19 @@ describe('SCENE_TRIGGERS.BACK', () => {
     expect(SCENE_TRIGGERS.BACK).toBe('back');
   });
 
-  it('recap_title + back -> round_summary', () => {
-    const result = getNextScene('recap_title', SCENE_TRIGGERS.BACK, {});
+  it('round_scoring + back -> round_summary', () => {
+    const result = getNextScene('round_scoring', SCENE_TRIGGERS.BACK, {});
     expect(result).toBe('round_summary');
   });
 
   it('recap_scores + back -> recap_qa', () => {
     const result = getNextScene('recap_scores', SCENE_TRIGGERS.BACK, {});
     expect(result).toBe('recap_qa');
+  });
+
+  it('recap_title + back -> null (dead scene)', () => {
+    const result = getNextScene('recap_title', SCENE_TRIGGERS.BACK, {});
+    expect(result).toBeNull();
   });
 });
 

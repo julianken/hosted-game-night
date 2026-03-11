@@ -236,50 +236,46 @@ export function getNextScene(
       }
       return null;
 
-    // -- Round summary (scoring wait screen) --------------------------------
+    // -- Between-rounds flow: round_summary → round_scoring → recap_qa → recap_scores
+    // Final round: round_summary → round_scoring → recap_qa → final_buildup → final_podium
+
     case 'round_summary':
-      // Right Arrow: start recap flow
-      if (trigger === 'advance') return 'recap_title';
+      // Right Arrow: enter scoring
+      if (trigger === 'advance') return 'round_scoring';
+      // N key: skip everything, go directly to next round
+      if (trigger === 'next_round') {
+        return isLastRound ? 'final_buildup' : 'round_intro';
+      }
+      return null;
+
+    case 'recap_title':
+      // No longer in the main flow — kept for type safety
+      return null;
+
+    case 'round_scoring':
+      // Left Arrow: back to round summary
+      if (trigger === 'back') return 'round_summary';
+      // Right Arrow / advance: proceed to Q&A review
+      if (trigger === 'advance' || trigger === 'skip') return 'recap_qa';
       // N key: skip recap, go directly to next round
       if (trigger === 'next_round') {
         return isLastRound ? 'final_buildup' : 'round_intro';
       }
       return null;
 
-    // -- Recap flow (between-rounds answer review) -------------------------
-    case 'recap_title':
-      // Left Arrow: back to round summary
-      if (trigger === 'back') return 'round_summary';
-      // Right Arrow: begin Q/A review
-      if (trigger === 'advance') return 'recap_qa';
-      // N key: skip recap entirely, go to next round
-      if (trigger === 'next_round') {
-        return isLastRound ? 'final_buildup' : 'round_intro';
-      }
-      return null;
-
     case 'recap_qa':
-      // Right Arrow / skip: advance to round_scoring (facilitator enters per-team round scores)
-      if (trigger === 'advance' || trigger === 'skip') return 'round_scoring';
+      // Right Arrow / skip: terminal case (last Q answer shown) → recap_scores or final
+      if (trigger === 'advance' || trigger === 'skip') {
+        return isLastRound ? 'final_buildup' : 'recap_scores';
+      }
       // N key: skip remaining recap, go to next round
       if (trigger === 'next_round') {
         return isLastRound ? 'final_buildup' : 'round_intro';
       }
       return null;
 
-    case 'round_scoring':
-      // Left Arrow: back to Q/A review
-      if (trigger === 'back') return 'recap_qa';
-      // Right Arrow / advance / Enter (skip): proceed to recap_scores (show updated leaderboard)
-      if (trigger === 'advance' || trigger === 'skip') return 'recap_scores';
-      // N key: skip scores display, go directly to next round
-      if (trigger === 'next_round') {
-        return isLastRound ? 'final_buildup' : 'round_intro';
-      }
-      return null;
-
     case 'recap_scores':
-      // Left Arrow: back to Q/A review
+      // Left Arrow: back to Q&A review
       if (trigger === 'back') return 'recap_qa';
       // Right Arrow / Enter / N: proceed to next round
       if (trigger === 'advance' || trigger === 'next_round') {

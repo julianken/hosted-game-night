@@ -44,6 +44,7 @@ export function RoundScoringView() {
     recapShowingAnswer: null,
     questionStartScores: {},
     roundScoringEntries: {},
+    roundScoringSubmitted: false,
   };
 
   const teamsSorted = getTeamsSortedByScore(stateForSelectors);

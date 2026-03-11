@@ -189,7 +189,7 @@ describe('SceneNavButtons', () => {
     });
 
     it('calls advanceScene with ADVANCE on results scenes', () => {
-      // Not last question: forward = "Review Answers" on round_summary
+      // round_summary forward = "Enter Scores"
       setSceneState('round_summary');
       const advanceSceneMock = vi.fn().mockReturnValue(true);
       vi.spyOn(useGameStore, 'getState').mockReturnValue({
@@ -199,7 +199,7 @@ describe('SceneNavButtons', () => {
       });
 
       render(<SceneNavButtons />);
-      fireEvent.click(screen.getByRole('button', { name: 'Review Answers' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Enter Scores' }));
 
       expect(advanceSceneMock).toHaveBeenCalledWith('advance');
     });
@@ -219,18 +219,32 @@ describe('SceneNavButtons', () => {
       expect(screen.getByRole('button', { name: 'Next Answer' })).not.toBeDisabled();
     });
 
+    it('is disabled during round_scoring when roundScoringSubmitted is false', () => {
+      setSceneState('round_scoring', { roundScoringSubmitted: false });
+      render(<SceneNavButtons />);
+
+      expect(screen.getByTestId('nav-forward')).toBeDisabled();
+    });
+
+    it('is enabled during round_scoring when roundScoringSubmitted is true', () => {
+      setSceneState('round_scoring', { roundScoringSubmitted: true });
+      render(<SceneNavButtons />);
+
+      expect(screen.getByRole('button', { name: 'Review Answers' })).not.toBeDisabled();
+    });
+
     it('is not disabled on other scenes even when revealPhase is set', () => {
       setSceneState('round_summary', { revealPhase: 'freeze' });
       render(<SceneNavButtons />);
 
-      expect(screen.getByRole('button', { name: 'Review Answers' })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Enter Scores' })).not.toBeDisabled();
     });
   });
 
   describe('back button', () => {
     it('calls advanceScene with "back" trigger', () => {
-      // recap_title has back label "Scores"
-      setSceneState('recap_title');
+      // round_scoring has back label "Round Summary"
+      setSceneState('round_scoring');
       const advanceSceneMock = vi.fn().mockReturnValue(true);
       vi.spyOn(useGameStore, 'getState').mockReturnValue({
         ...useGameStore.getState(),
@@ -238,7 +252,7 @@ describe('SceneNavButtons', () => {
       });
 
       render(<SceneNavButtons />);
-      fireEvent.click(screen.getByRole('button', { name: 'Scores' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Round Summary' }));
 
       expect(advanceSceneMock).toHaveBeenCalledWith('back');
     });
@@ -250,11 +264,11 @@ describe('SceneNavButtons', () => {
       expect(screen.getByTestId('nav-back')).toBeDisabled();
     });
 
-    it('is enabled on recap_title with label "Scores"', () => {
-      setSceneState('recap_title');
+    it('is enabled on round_scoring with label "Round Summary"', () => {
+      setSceneState('round_scoring');
       render(<SceneNavButtons />);
 
-      expect(screen.getByRole('button', { name: 'Scores' })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Round Summary' })).not.toBeDisabled();
     });
 
     it('is enabled on recap_qa with label "Previous"', () => {

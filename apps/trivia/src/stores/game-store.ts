@@ -235,6 +235,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         recapShowingAnswer: state.recapShowingAnswer,
         questionStartScores: state.questionStartScores,
         roundScoringEntries: state.roundScoringEntries,
+        roundScoringSubmitted: state.roundScoringSubmitted,
       };
       for (const [teamId, score] of Object.entries(teamScoresMap)) {
         newState = setTeamRoundScoreEngine(newState, teamId, state.currentRound, score);
@@ -245,6 +246,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         ...newState,
         scoreDeltas: [...deltas],
         roundScoringEntries: {},
+        roundScoringSubmitted: true,
       };
     });
   },
@@ -369,6 +371,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
         recapShowingAnswer: null,    // Not in recap during setup
         questionStartScores: {},     // No round started yet during setup
         roundScoringEntries: {},
+        roundScoringSubmitted: false,
       };
 
       for (const name of names) {
@@ -474,6 +477,7 @@ export function useGameSelectors() {
     recapShowingAnswer: null,        // Not used for selector computation
     questionStartScores: {},         // Not used for selector computation
     roundScoringEntries: {},         // Not used for selector computation
+    roundScoringSubmitted: false,    // Not used for selector computation
   };
 
   return {

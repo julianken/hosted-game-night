@@ -80,6 +80,7 @@ function storeToGameState(state: import('@/stores/game-store').GameStore): Trivi
     questionStartScores: state.questionStartScores,
     // Per-round scoring (BEA-662)
     roundScoringEntries: state.roundScoringEntries,
+    roundScoringSubmitted: state.roundScoringSubmitted,
   };
 }
 

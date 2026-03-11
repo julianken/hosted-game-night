@@ -177,7 +177,7 @@ export function useGameKeyboard(options: UseGameKeyboardOptions = {}) {
         case 'ArrowLeft':
           if (
             store.status === 'between_rounds' &&
-            (currentScene === 'recap_qa' || currentScene === 'recap_title' || currentScene === 'round_scoring' || currentScene === 'recap_scores')
+            (currentScene === 'recap_qa' || currentScene === 'round_scoring' || currentScene === 'recap_scores')
           ) {
             event.preventDefault();
             store.advanceScene(SCENE_TRIGGERS.BACK);
@@ -227,8 +227,6 @@ export function useGameKeyboard(options: UseGameKeyboardOptions = {}) {
             game.status === 'between_rounds' &&
             (
               currentScene === 'round_summary' ||
-              currentScene === 'answer_reveal' ||
-              currentScene === 'recap_title' ||
               currentScene === 'recap_qa' ||
               currentScene === 'round_scoring' ||
               currentScene === 'recap_scores'

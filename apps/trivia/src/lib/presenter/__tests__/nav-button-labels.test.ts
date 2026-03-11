@@ -42,8 +42,8 @@ describe('getNavButtonLabels', () => {
       ['round_intro', 'Skip Intro'],
       ['question_anticipation', 'Skip'],
       ['question_display', 'Next Question'],
-      ['round_summary', 'Review Answers'],
-      ['recap_title', 'Start Review'],
+      ['round_summary', 'Enter Scores'],
+      ['recap_title', null],
       ['final_buildup', 'Skip'],
       ['final_podium', null],
       ['paused', null],
@@ -112,7 +112,7 @@ describe('getNavButtonLabels', () => {
       expect(result.forward).toBe('Next Question');
     });
 
-    it('returns "View Scores" when recapShowingAnswer && isLastQuestion', () => {
+    it('returns "View Scores" when recapShowingAnswer && isLastQuestion && !isLastRound', () => {
       const ctx: NavLabelContext = {
         isLastQuestion: true,
         isLastRound: false,
@@ -120,6 +120,16 @@ describe('getNavButtonLabels', () => {
       };
       const result = getNavButtonLabels('recap_qa', ctx);
       expect(result.forward).toBe('View Scores');
+    });
+
+    it('returns "Final Results" when recapShowingAnswer && isLastQuestion && isLastRound', () => {
+      const ctx: NavLabelContext = {
+        isLastQuestion: true,
+        isLastRound: true,
+        recapShowingAnswer: true,
+      };
+      const result = getNavButtonLabels('recap_qa', ctx);
+      expect(result.forward).toBe('Final Results');
     });
   });
 
@@ -137,9 +147,9 @@ describe('getNavButtonLabels', () => {
 
   describe('back labels', () => {
     it.each<[AudienceScene, string | null]>([
-      ['recap_title', 'Scores'],
+      ['recap_title', null],
       ['recap_qa', 'Previous'],
-      ['round_scoring', 'Q&A Review'],
+      ['round_scoring', 'Round Summary'],
       ['recap_scores', 'Q&A Review'],
       // All other scenes return null for back
       ['waiting', null],

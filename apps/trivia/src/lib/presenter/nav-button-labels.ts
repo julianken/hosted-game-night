@@ -82,18 +82,18 @@ function getForwardLabel(
       return 'End Game';
 
     case 'round_summary':
-      return 'Review Answers';
+      return 'Enter Scores';
 
     case 'recap_title':
-      return 'Start Review';
+      return null; // No longer in main flow
 
     case 'recap_qa':
       if (!recapShowingAnswer) return 'Show Answer';
       if (!isLastQuestion) return 'Next Question';
-      return 'View Scores';
+      return isLastRound ? 'Final Results' : 'View Scores';
 
     case 'round_scoring':
-      return 'View Scores';
+      return 'Review Answers';
 
     case 'recap_scores':
       return isLastRound ? 'End Game' : 'Next Round';
@@ -113,12 +113,10 @@ function getForwardLabel(
 
 function getBackLabel(scene: AudienceScene): string | null {
   switch (scene) {
-    case 'recap_title':
-      return 'Scores';
     case 'recap_qa':
       return 'Previous';
     case 'round_scoring':
-      return 'Q&A Review';
+      return 'Round Summary';
     case 'recap_scores':
       return 'Q&A Review';
     default:
