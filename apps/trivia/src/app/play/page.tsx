@@ -81,15 +81,33 @@ export default function PlayPage() {
     }
   }, [audienceScene, game.status]);
 
+  // Auto-show RoundSummary (as Final Results) when game ends.
+  // Fires exactly once per game: status can only reach 'ended' once before
+  // resetGame() resets it to 'setup', which the existing auto-hide handles.
+  // Does NOT use a ref — no risk of double-fire across the status lifecycle.
+  useEffect(() => {
+    if (game.status === 'ended') {
+      setShowRoundSummary(true);
+    }
+  }, [game.status]);
+
   const openDisplay = useCallback(() => {
     const displayUrl = `${window.location.origin}/display?session=${sessionId}`;
     window.open(displayUrl, `trivia-display-${sessionId}`, 'popup');
   }, [sessionId]);
 
+  // between_rounds only: advance to next round and reset scene.
   const handleNextRound = () => {
+    if (game.status !== 'between_rounds') return;
     game.nextRound();
     setShowRoundSummary(false);
     useGameStore.getState().setAudienceScene('round_intro');
+  };
+
+  // ended only: dismiss the final results overlay.
+  // Does NOT touch audienceScene — final_podium must remain stable.
+  const handleEndGameDismiss = () => {
+    setShowRoundSummary(false);
   };
 
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -471,6 +489,20 @@ export default function PlayPage() {
               />
             </div>
 
+            {/* Re-open final results: shown when ended and overlay is dismissed */}
+            {!showRoundSummary && game.status === 'ended' && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowRoundSummary(true)}
+                  className="w-full px-4 py-3 rounded-xl text-sm font-medium
+                    bg-surface-elevated hover:bg-surface-hover text-foreground
+                    border border-border transition-colors min-h-[44px]"
+                >
+                  View Final Results
+                </button>
+              </div>
+            )}
+
             {/* Round summary */}
             {showRoundSummary && (
               <div className="mt-4">
@@ -480,7 +512,7 @@ export default function PlayPage() {
                   roundWinners={(game.isLastRound || game.status === 'ended') ? game.overallLeaders : game.roundWinners}
                   teamsSortedByScore={game.teamsSortedByScore}
                   isLastRound={game.isLastRound || game.status === 'ended'}
-                  onNextRound={handleNextRound}
+                  onNextRound={game.status === 'ended' ? handleEndGameDismiss : handleNextRound}
                   onReviewAnswers={game.status === 'between_rounds' ? () => {
                     setShowRoundSummary(false);
                     useGameStore.getState().advanceScene('advance');

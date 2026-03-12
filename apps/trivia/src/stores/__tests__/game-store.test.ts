@@ -161,6 +161,31 @@ describe('useGameStore', () => {
       expect(useGameStore.getState().currentRound).toBe(1);
       expect(useGameStore.getState().status).toBe('playing');
     });
+
+    it('should be a no-op when status is ended (handleNextRound guard)', () => {
+      // Simulates the BEA-675 bug path: handleNextRound guard must prevent
+      // audienceScene corruption when called during ended state.
+      useGameStore.getState().addTeam('Team A');
+      useGameStore.getState().startGame();
+      useGameStore.getState().endGame();
+
+      // Verify ended state with final_podium scene
+      useGameStore.setState({ audienceScene: 'final_podium' });
+      const beforeState = useGameStore.getState();
+
+      expect(beforeState.status).toBe('ended');
+      expect(beforeState.audienceScene).toBe('final_podium');
+
+      // nextRound() called during ended state should be a no-op
+      useGameStore.getState().nextRound();
+
+      const afterState = useGameStore.getState();
+      // Status must not change
+      expect(afterState.status).toBe('ended');
+      // audienceScene must NOT be corrupted to round_intro
+      expect(afterState.audienceScene).toBe('final_podium');
+      expect(afterState.audienceScene).not.toBe('round_intro');
+    });
   });
 
   describe('_hydrate', () => {
