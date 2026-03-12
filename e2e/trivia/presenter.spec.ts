@@ -309,7 +309,7 @@ test.describe('Trivia Presenter View', () => {
   });
 
   test.describe('Keyboard Scoring', () => {
-    test('keyboard 1-key scores team 1 via useQuickScore (Instance 1) @high', async ({ authenticatedTriviaPage: page }) => {
+    test('keyboard 1-key during scoring phase does not crash @high', async ({ authenticatedTriviaPage: page }) => {
       // Close a question to enter question_closed scene (a scoring phase)
       await pressKey(page, 'KeyS');
 
@@ -320,14 +320,11 @@ test.describe('Trivia Presenter View', () => {
       }).toPass({ timeout: 5000 });
 
       // Press '1' to quick-score team 1 via keyboard (Instance 1 in use-game-keyboard.ts)
-      // The game fixture adds 2 teams (Table 1, Table 2). Pressing '1' should toggle
-      // Table 1's score for the current question.
+      // Verifies the keyboard handler doesn't crash after sidebar removal
+      // (Instance 2 of useQuickScore was deleted, Instance 1 must survive)
       await page.keyboard.press('Digit1');
 
-      // Verify the presenter view is still intact (no crash, no navigation)
-      await expect(page.getByText(/presenter view/i)).toBeVisible();
-
-      // The status should remain playing (scoring doesn't change game status)
+      // The status should remain playing (no crash, no navigation away)
       await expect(
         page.locator('span').filter({ hasText: /^Playing/i })
       ).toBeVisible();
