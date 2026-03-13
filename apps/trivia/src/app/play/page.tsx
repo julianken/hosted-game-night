@@ -242,10 +242,11 @@ export default function PlayPage() {
       {/*
         Fixed-viewport 2-column layout during gameplay (Issue 6.5).
         Left rail: question navigator (w-64)
-        Center: hero question panel (flex-1, max-w-3xl when not round_scoring)
+        Center: hero question panel (flex-1, max-w 64rem when not round_scoring)
         No viewport scrolling during gameplay.
-        The center panel uses max-w-3xl mx-auto for non-scoring content to
-        prevent line lengths from becoming unreadable on wide monitors (1920px+).
+        The center panel uses viewport-centered max-width (64rem) with asymmetric
+        margins to appear centered on screen despite the left-only aside (w-64).
+        Margins clamp to 0 on narrow screens so content fills available space.
         The round_scoring scene renders full-width (no max-w wrapper) so the
         side-by-side scoring form + Q&A reference layout has full space.
       */}
@@ -411,7 +412,14 @@ export default function PlayPage() {
                 </div>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto w-full">
+              <div
+                className="w-full"
+                style={{
+                  maxWidth: '64rem',
+                  marginLeft: 'max(0px, calc(50% - 32rem - 8rem))',
+                  marginRight: 'auto',
+                }}
+              >
             {/* Question display */}
             <div className="bg-surface border border-border rounded-xl p-4 shadow-md mb-3">
                 <QuestionDisplay
@@ -455,11 +463,11 @@ export default function PlayPage() {
                 </li>
                 <li className="flex justify-between">
                   <span className="text-foreground-secondary">Peek answer</span>
-                  <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-border rounded font-mono text-xs">Space</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-border rounded font-mono text-xs">P</kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-foreground-secondary">Toggle display</span>
-                  <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-border rounded font-mono text-xs">D</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-surface-elevated border border-border rounded font-mono text-xs">Space</kbd>
                 </li>
                 <li className="flex justify-between">
                   <span className="text-foreground-secondary">Fullscreen</span>

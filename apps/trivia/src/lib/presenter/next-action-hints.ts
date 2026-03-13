@@ -16,7 +16,7 @@ export const NEXT_ACTION_HINTS: Record<AudienceScene, string> = {
   game_intro: 'Game intro is playing. Press Enter to begin Round 1.',
   round_intro: 'Round intro is playing. Press Enter to show the first question.',
   question_anticipation: 'Category is appearing on the audience display...',
-  question_display: 'Press T to start timer, or S to close question.',
+  question_display: 'Press S to close question, or Right Arrow to advance.',
   question_closed: 'Score teams with 1-9, then S for next question.',
   round_summary: 'Round complete. Right Arrow to enter scores. N to skip to next round.',
   final_buildup: 'Final sequence playing. Press Enter to skip to podium.',
