@@ -50,11 +50,9 @@ const serwist = new Serwist({
       }),
     },
     // API responses - NetworkFirst to get fresh data when online
-    // IMPORTANT: Exclude /api/auth/ routes — service worker responses strip
-    // Set-Cookie headers (per Fetch spec), which breaks OAuth token storage.
     {
       matcher: ({ url }) =>
-        url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/auth/'),
+        url.pathname.startsWith('/api/'),
       handler: new NetworkFirst({
         cacheName: API_CACHE_NAME,
         plugins: [
@@ -147,20 +145,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
         });
       })
     );
-  }
-});
-
-// Auth API routes MUST bypass the service worker entirely.
-// When a service worker handles a fetch via respondWith(), browsers strip
-// Set-Cookie headers from the response (per the Fetch spec). This breaks
-// OAuth token storage since /api/auth/token sets httpOnly cookies.
-// By stopping propagation before Serwist's listener, no respondWith() is
-// called, so the browser handles the request natively and preserves cookies.
-self.addEventListener('fetch', (event: FetchEvent) => {
-  const url = new URL(event.request.url);
-  if (url.origin === self.location.origin && url.pathname.startsWith('/api/auth/')) {
-    event.stopImmediatePropagation();
-    return; // Browser handles natively — Set-Cookie headers preserved
   }
 });
 
