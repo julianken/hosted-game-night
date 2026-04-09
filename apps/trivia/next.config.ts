@@ -17,14 +17,7 @@ const nextConfig: NextConfig = {
     '@joolie-boolie/sync',
     '@joolie-boolie/ui',
     '@joolie-boolie/theme',
-    '@joolie-boolie/auth',
-    '@joolie-boolie/database',
   ],
-  turbopack: {
-    resolveAlias: {
-      '@joolie-boolie/database/tables': '../../packages/database/src/tables/index.ts',
-    },
-  },
 async rewrites() {
     return [
       { source: '/sw.js', destination: '/serwist/sw.js' },

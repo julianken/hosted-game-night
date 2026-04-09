@@ -1,23 +1,22 @@
 'use client';
 
-import { useId, useState, useEffect, useCallback } from 'react';
+import { useId, useState, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useToast } from "@joolie-boolie/ui";
-import type { TriviaTemplate, TriviaQuestion } from '@joolie-boolie/database/types';
+import { useTriviaTemplateStore } from '@/stores/template-store';
+import type { TriviaTemplateItem } from '@/stores/template-store';
+import type { TriviaQuestion } from '@/types/trivia-question';
 import type { Question, QuestionId } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
-/** List item type (questions JSONB stripped from list response) */
-type TemplateListItem = Omit<TriviaTemplate, 'questions'>;
-
 export interface TemplateSelectorProps {
   disabled?: boolean;
-  onTemplateLoad?: (template: TriviaTemplate) => void;
+  onTemplateLoad?: (template: TriviaTemplateItem) => void;
 }
 
 /**
- * Convert database TriviaQuestion to app Question format
+ * Convert TriviaQuestion to app Question format
  */
 export function convertTemplateQuestion(
   dbQuestion: TriviaQuestion,
@@ -58,54 +57,22 @@ export function TemplateSelector({
   const updateSettings = useGameStore((state) => state.updateSettings);
   const gameStatus = useGameStore((state) => state.status);
 
+  // Read templates from localStorage store
+  const templates = useTriviaTemplateStore((state) => state.items);
+
   // Component state
-  const [templates, setTemplates] = useState<TemplateListItem[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch templates on mount
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setIsLoading(true);
-      setError(null);
+  // Load template into stores
+  const loadTemplate = useCallback((templateId: string) => {
+    const template = templates.find((t) => t.id === templateId);
 
-      try {
-        const response = await fetch('/api/templates');
+    if (!template) {
+      errorToast('Template not found');
+      return;
+    }
 
-        if (!response.ok) {
-          // Gracefully handle missing/unavailable template API (BEA-420)
-          console.warn('Templates unavailable:', response.status);
-          setTemplates([]);
-          return;
-        }
-
-        const data = await response.json();
-        setTemplates(data.data || []);
-      } catch (err) {
-        console.error('Error fetching templates:', err);
-        setError('Failed to load templates');
-        // Toast removed - inline error message is sufficient (BEA-347)
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTemplates();
-  }, [errorToast]);
-
-  // Load template into stores (fetches full data including questions from detail endpoint)
-  const loadTemplate = useCallback(async (templateId: string) => {
     try {
-      const response = await fetch(`/api/templates/${templateId}`);
-      if (!response.ok) {
-        errorToast('Failed to load template');
-        return;
-      }
-
-      const data = await response.json();
-      const template: TriviaTemplate = data.template;
-
       // Convert template questions to app Question format
       const convertedQuestions: Question[] = [];
       const questionsPerRound = template.questions_per_round;
@@ -139,18 +106,18 @@ export function TemplateSelector({
       console.error('Error loading template:', err);
       errorToast('Failed to apply template settings');
     }
-  }, [importQuestions, updateSettings, success, errorToast, onTemplateLoad]);
+  }, [templates, importQuestions, updateSettings, success, errorToast, onTemplateLoad]);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const templateId = e.target.value;
     setSelectedTemplateId(templateId);
 
     if (templateId) {
-      await loadTemplate(templateId);
+      loadTemplate(templateId);
     }
   };
 
-  const isDisabled = disabled || isLoading || gameStatus !== 'setup';
+  const isDisabled = disabled || gameStatus !== 'setup';
 
   return (
     <div className="flex flex-col gap-2">
@@ -175,7 +142,7 @@ export function TemplateSelector({
         `}
       >
         <option value="">
-          {isLoading ? 'Loading templates...' : 'Select a template...'}
+          Select a template...
         </option>
         {templates.map((template) => (
           <option key={template.id} value={template.id}>
@@ -184,12 +151,7 @@ export function TemplateSelector({
           </option>
         ))}
       </select>
-      {error && (
-        <p className="text-base text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      {templates.length === 0 && !isLoading && !error && (
+      {templates.length === 0 && (
         <p className="text-base text-muted-foreground">
           No saved question sets. Save your first set below.
         </p>

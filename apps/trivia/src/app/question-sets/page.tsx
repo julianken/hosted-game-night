@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import type { TriviaQuestionSet, TriviaQuestion } from '@joolie-boolie/database/types';
+import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
+import type { TriviaQuestionSetItem } from '@/stores/question-set-store';
+import type { TriviaQuestion } from '@/types/trivia-question';
 import { EmptyStateOnboarding } from '@/components/presenter/EmptyStateOnboarding';
 import { AddQuestionsPanel } from '@/components/presenter/AddQuestionsPanel';
 import { QuestionSetEditorModal } from '@/components/question-editor/QuestionSetEditorModal';
@@ -13,9 +15,10 @@ import {
 import { triviaQuestionsToQuestions } from '@/lib/questions/conversion';
 
 export default function QuestionSetsPage() {
-  const [questionSets, setQuestionSets] = useState<TriviaQuestionSet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const questionSets = useTriviaQuestionSetStore((state) => state.items);
+  const removeQuestionSet = useTriviaQuestionSetStore((state) => state.remove);
+  const updateQuestionSet = useTriviaQuestionSetStore((state) => state.update);
+
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestionSetId, setEditingQuestionSetId] = useState<string | null>(null);
@@ -24,69 +27,19 @@ export default function QuestionSetsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const fetchQuestionSets = useCallback(async () => {
-    try {
-      setError(null);
-      const response = await fetch('/api/question-sets?fields=full&pageSize=100');
-      if (!response.ok) {
-        throw new Error('Failed to load question sets');
-      }
-      const data = await response.json();
-      setQuestionSets(data.data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load question sets');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchQuestionSets();
-  }, [fetchQuestionSets]);
-
-  const handleRename = async (id: string) => {
+  const handleRename = (id: string) => {
     if (!editingName.trim()) {
       setEditingId(null);
       return;
     }
 
-    try {
-      const response = await fetch(`/api/question-sets/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingName.trim() }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to rename');
-      }
-
-      setQuestionSets((prev) =>
-        prev.map((qs) => (qs.id === id ? { ...qs, name: editingName.trim() } : qs))
-      );
-    } catch {
-      setError('Failed to rename question set');
-    } finally {
-      setEditingId(null);
-    }
+    updateQuestionSet(id, { name: editingName.trim() });
+    setEditingId(null);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await fetch(`/api/question-sets/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete');
-      }
-
-      setQuestionSets((prev) => prev.filter((qs) => qs.id !== id));
-    } catch {
-      setError('Failed to delete question set');
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDelete = (id: string) => {
+    removeQuestionSet(id);
+    setDeletingId(null);
   };
 
   const handleEdit = (id: string) => {
@@ -95,12 +48,11 @@ export default function QuestionSetsPage() {
   };
 
   const handleEditorSuccess = () => {
-    fetchQuestionSets();
     setToast({ message: 'Question set saved successfully', type: 'success' });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleExport = (qs: TriviaQuestionSet) => {
+  const handleExport = (qs: TriviaQuestionSetItem) => {
     const exportData = {
       name: qs.name,
       description: qs.description ?? '',
@@ -140,8 +92,8 @@ export default function QuestionSetsPage() {
     });
   };
 
-  const hasQuestionSets = !loading && questionSets.length > 0;
-  const isEmpty = !loading && questionSets.length === 0;
+  const hasQuestionSets = questionSets.length > 0;
+  const isEmpty = questionSets.length === 0;
 
   return (
     <main className="min-h-screen p-6 max-w-4xl mx-auto">
@@ -176,25 +128,10 @@ export default function QuestionSetsPage() {
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg" role="alert">
-          <p className="text-error font-medium">{error}</p>
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="flex justify-center py-16">
-          <p className="text-lg text-muted-foreground">Loading question sets...</p>
-        </div>
-      )}
-
       {/* Empty state -- guided onboarding */}
       {isEmpty && (
         <EmptyStateOnboarding
           onSuccess={() => {
-            fetchQuestionSets();
             setToast({ message: 'Question set saved successfully', type: 'success' });
             setTimeout(() => setToast(null), 3000);
           }}
@@ -209,7 +146,6 @@ export default function QuestionSetsPage() {
             <AddQuestionsPanel
               onClose={() => setShowAddPanel(false)}
               onSuccess={() => {
-                fetchQuestionSets();
                 setToast({ message: 'Question set saved successfully', type: 'success' });
                 setTimeout(() => setToast(null), 3000);
               }}

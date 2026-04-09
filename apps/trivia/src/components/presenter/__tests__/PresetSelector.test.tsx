@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PresetSelector } from '../PresetSelector';
 import { ToastProvider } from "@joolie-boolie/ui";
-import type { TriviaPreset } from '@joolie-boolie/database/types';
-
-global.fetch = vi.fn();
+import type { TriviaPresetItem } from '@/stores/preset-store';
 
 const mockUpdateSetting = vi.fn();
 vi.mock('@/stores/settings-store', () => ({
@@ -27,10 +25,9 @@ vi.mock('@/stores/game-store', () => ({
   }),
 }));
 
-const mockPresets: TriviaPreset[] = [
+const mockPresets: TriviaPresetItem[] = [
   {
     id: 'preset-1',
-    user_id: 'user-1',
     name: 'Quick Game',
     rounds_count: 2,
     questions_per_round: 5,
@@ -41,7 +38,6 @@ const mockPresets: TriviaPreset[] = [
   },
   {
     id: 'preset-2',
-    user_id: 'user-1',
     name: 'Full Evening',
     rounds_count: 5,
     questions_per_round: 10,
@@ -52,6 +48,13 @@ const mockPresets: TriviaPreset[] = [
   },
 ];
 
+vi.mock('@/stores/preset-store', () => ({
+  useTriviaPresetStore: vi.fn((selector) => {
+    const store = { items: mockPresets };
+    return selector(store);
+  }),
+}));
+
 function renderWithToast(ui: React.ReactElement) {
   return render(<ToastProvider>{ui}</ToastProvider>);
 }
@@ -61,36 +64,17 @@ describe('PresetSelector', () => {
     vi.clearAllMocks();
   });
 
-  it('renders loading state then presets', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockPresets }),
-    });
-
+  it('renders presets from localStorage store', () => {
     renderWithToast(<PresetSelector />);
 
     expect(screen.getByText('Load Preset')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-    });
-
     const select = screen.getByRole('combobox');
     expect(select).toHaveTextContent('Quick Game');
     expect(select).toHaveTextContent('Full Evening');
   });
 
   it('loads settings when preset is selected', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockPresets }),
-    });
-
     renderWithToast(<PresetSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-    });
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'preset-1' } });
 
@@ -104,16 +88,7 @@ describe('PresetSelector', () => {
   });
 
   it('mirrors settings to settings-store (sync race fix)', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockPresets }),
-    });
-
     renderWithToast(<PresetSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-    });
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'preset-1' } });
 
@@ -125,25 +100,15 @@ describe('PresetSelector', () => {
   });
 
   it('shows empty state when no presets', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
+    // Override mock to return empty items
+    const { useTriviaPresetStore } = vi.mocked(await import('@/stores/preset-store'));
+    useTriviaPresetStore.mockImplementation((selector) => {
+      const store = { items: [] as TriviaPresetItem[] };
+      return selector(store as unknown as Parameters<typeof selector>[0]);
     });
 
     renderWithToast(<PresetSelector />);
 
-    await waitFor(() => {
-      expect(screen.getByText('No saved presets. Save your first preset below.')).toBeInTheDocument();
-    });
-  });
-
-  it('handles fetch error gracefully', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
-
-    renderWithToast(<PresetSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to load presets')).toBeInTheDocument();
-    });
+    expect(screen.getByText('No saved presets. Save your first preset below.')).toBeInTheDocument();
   });
 });

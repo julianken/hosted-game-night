@@ -4,6 +4,7 @@ import { useState, useId } from 'react';
 import { Modal } from "@joolie-boolie/ui";
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
+import { useBingoTemplateStore } from '@/stores/template-store';
 import { useToast } from "@joolie-boolie/ui";
 
 export interface SaveTemplateModalProps {
@@ -27,13 +28,16 @@ export function SaveTemplateModal({
   const autoCallSpeed = useGameStore((state) => state.autoCallSpeed);
   const voicePack = useAudioStore((state) => state.voicePack);
 
+  // Template store actions
+  const createTemplate = useBingoTemplateStore((state) => state.create);
+
   // Form state
   const [name, setName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validation
     if (!name.trim()) {
       setError('Template name is required');
@@ -49,25 +53,14 @@ export function SaveTemplateModal({
     setError(null);
 
     try {
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          pattern_id: pattern.id,
-          voice_pack: voicePack,
-          auto_call_enabled: autoCallEnabled,
-          auto_call_interval: autoCallSpeed * 1000, // Convert seconds to milliseconds
-          is_default: isDefault,
-        }),
+      createTemplate({
+        name: name.trim(),
+        pattern_id: pattern.id,
+        voice_pack: voicePack,
+        auto_call_enabled: autoCallEnabled,
+        auto_call_interval: autoCallSpeed * 1000, // Convert seconds to milliseconds
+        is_default: isDefault,
       });
-
-      if (!response || !response.ok) {
-        const data = response ? await response.json() : {};
-        throw new Error(data.error || 'Failed to save template');
-      }
 
       success(`Template "${name.trim()}" saved successfully`);
 

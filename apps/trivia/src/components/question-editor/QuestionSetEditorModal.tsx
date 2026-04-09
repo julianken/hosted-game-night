@@ -5,7 +5,9 @@ import { Modal } from '@joolie-boolie/ui';
 import { useToast } from '@joolie-boolie/ui';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
 import type { QuestionCategory } from '@/types';
-import type { TriviaQuestion, TriviaQuestionSet } from '@joolie-boolie/database/types';
+import type { TriviaQuestion } from '@/types/trivia-question';
+import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
+import type { TriviaQuestionSetItem } from '@/stores/question-set-store';
 import {
   editorReducer,
   createInitialState,
@@ -61,23 +63,29 @@ export function QuestionSetEditorModal({
     }
   }, [isOpen, questionSetId]);
 
+  // Read store for loading/saving
+  const questionSetItems = useTriviaQuestionSetStore((state) => state.items);
+  const questionSetStoreUpdate = useTriviaQuestionSetStore((state) => state.update);
+  const questionSetStoreCreate = useTriviaQuestionSetStore((state) => state.create);
+
   // Load existing question set data when in edit mode
   useEffect(() => {
     if (!isOpen || !questionSetId) {
       return;
     }
 
-    const loadQuestionSet = async () => {
+    const loadQuestionSet = () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/question-sets/${questionSetId}`);
-        if (!response.ok) {
-          throw new Error('Failed to load question set');
-        }
+        const questionSet: TriviaQuestionSetItem | undefined = questionSetItems.find(
+          (item) => item.id === questionSetId
+        );
 
-        const { questionSet }: { questionSet: TriviaQuestionSet } = await response.json();
+        if (!questionSet) {
+          throw new Error('Question set not found');
+        }
 
         // Convert TriviaQuestionSet to EditorState
         const categoriesMap = new Map<QuestionCategory, CategoryFormData>();
@@ -131,7 +139,7 @@ export function QuestionSetEditorModal({
     };
 
     loadQuestionSet();
-  }, [isOpen, questionSetId, errorToast]);
+  }, [isOpen, questionSetId, questionSetItems, errorToast]);
 
   // Browser beforeunload warning when dirty
   useEffect(() => {
@@ -234,23 +242,20 @@ export function QuestionSetEditorModal({
       }
 
       const isEditMode = !!questionSetId;
-      const url = isEditMode ? `/api/question-sets/${questionSetId}` : '/api/question-sets';
-      const method = isEditMode ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (isEditMode) {
+        questionSetStoreUpdate(questionSetId, {
+          name: state.name.trim(),
+          description: state.description.trim() || null,
+          questions: dbQuestions,
+        });
+      } else {
+        questionSetStoreCreate({
           name: state.name.trim(),
           description: state.description.trim() || null,
           questions: dbQuestions,
           is_default: false,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save question set');
+        });
       }
 
       success(`Question set "${state.name.trim()}" ${isEditMode ? 'updated' : 'created'} successfully`);

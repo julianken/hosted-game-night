@@ -6,6 +6,7 @@ import { useToast } from "@joolie-boolie/ui";
 import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 import type { Question, QuestionCategory } from '@/types';
 import { questionsToTriviaQuestions } from '@/lib/questions/conversion';
+import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
 import {
   DEFAULT_CATEGORIES,
   getApiCategoriesForInternal,
@@ -234,7 +235,9 @@ export function TriviaApiImporter({
     }
   }, [questions, importQuestions, success, errorToast, handleReset]);
 
-  const handleSaveToQuestionSets = useCallback(async () => {
+  const questionSetCreate = useTriviaQuestionSetStore((state) => state.create);
+
+  const handleSaveToQuestionSets = useCallback(() => {
     if (questions.length === 0) return;
     if (!saveName.trim()) {
       setSaveError('Please enter a name for the question set');
@@ -245,27 +248,15 @@ export function TriviaApiImporter({
     setSaveError(null);
 
     try {
-      // Convert app-level Question[] -> TriviaQuestion[] for DB storage.
-      // We use POST /api/question-sets (not /import) because the questions
-      // are already validated Question[] objects -- no raw JSON re-parsing needed.
+      // Convert app-level Question[] -> TriviaQuestion[] for localStorage storage.
       const triviaQuestions = questionsToTriviaQuestions(questions);
 
-      const response = await fetch('/api/question-sets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: saveName.trim(),
-          description: saveDescription.trim() || undefined,
-          questions: triviaQuestions,
-        }),
+      questionSetCreate({
+        name: saveName.trim(),
+        description: saveDescription.trim() || null,
+        questions: triviaQuestions,
+        is_default: false,
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error ?? 'Failed to save question set'
-        );
-      }
 
       success(`Saved "${saveName.trim()}" to your question sets`);
       onSaveSuccess?.();
@@ -275,7 +266,7 @@ export function TriviaApiImporter({
       setState('preview');
       setSaveError(err instanceof Error ? err.message : 'Failed to save question set');
     }
-  }, [questions, saveName, saveDescription, success, onSaveSuccess, handleReset]);
+  }, [questions, saveName, saveDescription, questionSetCreate, success, onSaveSuccess, handleReset]);
 
   // ---------------------------------------------------------------------------
   // Derived state

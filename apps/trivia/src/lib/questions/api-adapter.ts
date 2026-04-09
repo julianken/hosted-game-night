@@ -9,7 +9,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Question, QuestionCategory, QuestionId, QuestionType } from '@/types';
-import type { TriviaQuestion } from '@joolie-boolie/database/types';
+import type { TriviaQuestion } from '@/types/trivia-question';
 import type { TriviaApiQuestion } from '@/lib/trivia-api/client';
 import type { ApiAdapterOptions, ApiConversionSummary } from './types';
 import { mapApiCategory } from '@/lib/categories';

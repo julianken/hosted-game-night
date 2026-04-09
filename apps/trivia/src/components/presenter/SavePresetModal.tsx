@@ -3,6 +3,7 @@
 import { useState, useId } from 'react';
 import { Modal } from "@joolie-boolie/ui";
 import { useGameStore } from '@/stores/game-store';
+import { useTriviaPresetStore } from '@/stores/preset-store';
 import { useToast } from "@joolie-boolie/ui";
 
 export interface SavePresetModalProps {
@@ -26,13 +27,16 @@ export function SavePresetModal({
 
   const settings = useGameStore((state) => state.settings);
 
+  // Preset store actions
+  const createPreset = useTriviaPresetStore((state) => state.create);
+
   // Form state
   const [name, setName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!name.trim()) {
       setError('Preset name is required');
       return;
@@ -42,22 +46,13 @@ export function SavePresetModal({
     setError(null);
 
     try {
-      const response = await fetch('/api/presets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          rounds_count: settings.roundsCount,
-          questions_per_round: settings.questionsPerRound,
-          timer_duration: settings.timerDuration,
-          is_default: isDefault,
-        }),
+      createPreset({
+        name: name.trim(),
+        rounds_count: settings.roundsCount,
+        questions_per_round: settings.questionsPerRound,
+        timer_duration: settings.timerDuration,
+        is_default: isDefault,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save preset');
-      }
 
       success(`Preset "${name.trim()}" saved successfully`);
       setName('');

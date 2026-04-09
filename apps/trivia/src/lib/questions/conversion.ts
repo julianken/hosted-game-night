@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Question, QuestionCategory, QuestionId } from '@/types';
-import type { TriviaQuestion } from '@joolie-boolie/database/types';
+import type { TriviaQuestion } from '@/types/trivia-question';
 
 /**
  * Letter-to-index mapping for correctAnswers conversion.

@@ -1,11 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TemplateSelector } from '../TemplateSelector';
 import { ToastProvider } from "@joolie-boolie/ui";
-import type { TriviaTemplate } from '@joolie-boolie/database/types';
-
-// Mock fetch globally
-global.fetch = vi.fn();
+import type { TriviaTemplateItem } from '@/stores/template-store';
 
 // Mock settings-store
 const mockUpdateSetting = vi.fn();
@@ -25,78 +22,16 @@ vi.mock('@/stores/game-store', () => ({
   useGameStore: vi.fn((selector) => {
     const store = {
       status: 'setup' as const,
-      questions: [],
-      selectedQuestionIndex: 0,
-      displayQuestionIndex: null,
-      currentRound: 0,
-      totalRounds: 3,
-      teams: [],
-      teamAnswers: [],
-      timer: {
-        duration: 30,
-        remaining: 30,
-        isRunning: false,
-      },
-      settings: {
-        roundsCount: 3,
-        questionsPerRound: 5,
-        timerDuration: 30,
-        timerAutoStart: false,
-        timerVisible: true,
-        ttsEnabled: false,
-      },
-      showScoreboard: true,
-      emergencyBlank: false,
-      ttsEnabled: false,
-      _isHydrating: false,
-      // Scene fields (BEA-568)
-      audienceScene: 'waiting' as const,
-      sceneBeforePause: null,
-      sceneTimestamp: 0,
-      revealPhase: null,
-      scoreDeltas: [],
-      // Recap sub-state (BEA-587)
-      recapShowingAnswer: null,
-      // Round start score snapshot (BEA-601)
-      questionStartScores: {},
-      roundScoringEntries: {},
-      roundScoringSubmitted: false,
-      startGame: vi.fn(),
-      endGame: vi.fn(),
-      resetGame: vi.fn(),
-      selectQuestion: vi.fn(),
-      setDisplayQuestion: vi.fn(),
-      addTeam: vi.fn(),
-      removeTeam: vi.fn(),
-      renameTeam: vi.fn(),
-      adjustTeamScore: vi.fn(),
-      setTeamScore: vi.fn(),
-      setRoundScores: vi.fn(),
-      completeRound: vi.fn(),
-      nextRound: vi.fn(),
-      tickTimer: vi.fn(),
-      startTimer: vi.fn(),
-      stopTimer: vi.fn(),
-      resetTimer: vi.fn(),
-      toggleEmergencyBlank: vi.fn(),
-      updateSettings: mockUpdateSettings,
-      loadTeamsFromSetup: vi.fn(),
       importQuestions: mockImportQuestions,
-      _hydrate: vi.fn(),
-      // Scene action methods (BEA-587/588)
-      setAudienceScene: vi.fn(),
-      advanceScene: vi.fn().mockReturnValue(true),
-      setRevealPhase: vi.fn(),
-      setScoreDeltasBatch: vi.fn(),
+      updateSettings: mockUpdateSettings,
     };
     return selector ? selector(store) : store;
   }),
 }));
 
-const mockTemplates: TriviaTemplate[] = [
+const mockTemplates: TriviaTemplateItem[] = [
   {
     id: 'template-1',
-    user_id: 'user-123',
     name: 'General Knowledge',
     questions: [
       {
@@ -120,7 +55,6 @@ const mockTemplates: TriviaTemplate[] = [
   },
   {
     id: 'template-2',
-    user_id: 'user-123',
     name: 'Quick Quiz',
     questions: [
       {
@@ -139,21 +73,19 @@ const mockTemplates: TriviaTemplate[] = [
   },
 ];
 
+vi.mock('@/stores/template-store', () => ({
+  useTriviaTemplateStore: vi.fn((selector) => {
+    const store = { items: mockTemplates };
+    return selector(store);
+  }),
+}));
+
 function renderWithProviders(ui: React.ReactElement) {
   return render(<ToastProvider>{ui}</ToastProvider>);
 }
 
 describe('TemplateSelector', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // List endpoint returns data without questions (stripped JSONB)
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: mockTemplates.map(({ questions: _q, ...rest }) => rest) }),
-    } as Response);
-  });
-
-  afterEach(() => {
     vi.clearAllMocks();
   });
 
@@ -164,64 +96,19 @@ describe('TemplateSelector', () => {
     expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
-  it('fetches and displays templates on mount', async () => {
+  it('displays templates from localStorage store', () => {
     renderWithProviders(<TemplateSelector />);
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/templates');
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/General Knowledge.*\(Default\)/)).toBeInTheDocument();
-      expect(screen.getByText(/Quick Quiz/)).toBeInTheDocument();
-    });
-  });
-
-  it('shows empty state when fetch returns non-ok response (BEA-420)', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-    } as Response);
-
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/No saved question sets/i)).toBeInTheDocument();
-    });
-  });
-
-  it('shows empty state when no templates exist', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    } as Response);
-
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/No saved question sets/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/General Knowledge.*\(Default\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Quick Quiz/)).toBeInTheDocument();
   });
 
   it('loads template questions and settings when selected', async () => {
-    // Use fireEvent for testing
     renderWithProviders(<TemplateSelector />);
 
-    // Wait for templates to load
-    await waitFor(() => {
-      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
-    });
-
-    // Mock the detail endpoint fetch for template-1
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ template: mockTemplates[0] }),
-    } as Response);
-
-    // Select template
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
 
-    // Verify store actions called
     await waitFor(() => {
       expect(mockImportQuestions).toHaveBeenCalledWith(
         expect.arrayContaining([
@@ -255,15 +142,6 @@ describe('TemplateSelector', () => {
   it('mirrors settings to settings-store (sync race fix)', async () => {
     renderWithProviders(<TemplateSelector />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
-    });
-
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ template: mockTemplates[0] }),
-    } as Response);
-
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
 
@@ -276,18 +154,7 @@ describe('TemplateSelector', () => {
 
   it('calls onTemplateLoad callback when template is loaded', async () => {
     const mockOnTemplateLoad = vi.fn();
-    // Use fireEvent for testing
     renderWithProviders(<TemplateSelector onTemplateLoad={mockOnTemplateLoad} />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
-    });
-
-    // Mock the detail endpoint fetch
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ template: mockTemplates[0] }),
-    } as Response);
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
@@ -304,107 +171,8 @@ describe('TemplateSelector', () => {
     expect(select).toBeDisabled();
   });
 
-  it('disables select while loading', () => {
-    renderWithProviders(<TemplateSelector />);
-
-    const select = screen.getByRole('combobox');
-    expect(select).toBeDisabled();
-  });
-
-  it('shows warning when game is not in setup status', async () => {
-    // Mock non-setup status
-    vi.mocked(vi.mocked(await import('@/stores/game-store')).useGameStore).mockImplementation((selector) => {
-      const store = {
-          status: 'playing' as const,
-          questions: [],
-        selectedQuestionIndex: 0,
-        displayQuestionIndex: null,
-        currentRound: 0,
-        totalRounds: 3,
-        teams: [],
-        teamAnswers: [],
-        timer: {
-          duration: 30,
-          remaining: 30,
-          isRunning: false,
-        },
-        settings: {
-          roundsCount: 3,
-          questionsPerRound: 5,
-          timerDuration: 30,
-          timerAutoStart: false,
-          timerVisible: true,
-          ttsEnabled: false,
-        },
-        showScoreboard: true,
-        emergencyBlank: false,
-        ttsEnabled: false,
-        _isHydrating: false,
-        // Scene fields (BEA-568)
-        audienceScene: 'waiting' as const,
-        sceneBeforePause: null,
-        sceneTimestamp: 0,
-        revealPhase: null,
-        scoreDeltas: [],
-        // Recap sub-state (BEA-587)
-        recapShowingAnswer: null,
-        // Round start score snapshot (BEA-601)
-        questionStartScores: {},
-        roundScoringEntries: {},
-        roundScoringSubmitted: false,
-        startGame: vi.fn(),
-        endGame: vi.fn(),
-        resetGame: vi.fn(),
-        selectQuestion: vi.fn(),
-        setDisplayQuestion: vi.fn(),
-        addTeam: vi.fn(),
-        removeTeam: vi.fn(),
-        renameTeam: vi.fn(),
-        adjustTeamScore: vi.fn(),
-        setTeamScore: vi.fn(),
-        setRoundScores: vi.fn(),
-        completeRound: vi.fn(),
-        nextRound: vi.fn(),
-        tickTimer: vi.fn(),
-        startTimer: vi.fn(),
-        stopTimer: vi.fn(),
-        resetTimer: vi.fn(),
-        toggleEmergencyBlank: vi.fn(),
-        updateSettings: mockUpdateSettings,
-        loadTeamsFromSetup: vi.fn(),
-        importQuestions: mockImportQuestions,
-        _hydrate: vi.fn(),
-        // Scene action methods (BEA-587/588)
-        setAudienceScene: vi.fn(),
-        advanceScene: vi.fn().mockReturnValue(true),
-        setRevealPhase: vi.fn(),
-        setScoreDeltasBatch: vi.fn(),
-        updateRoundScoringProgress: vi.fn(),
-        redistributeQuestions: vi.fn(),
-      };
-      return selector ? selector(store) : store;
-    });
-
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Templates can only be loaded during setup/i)).toBeInTheDocument();
-    });
-  });
-
   it('converts true/false questions correctly', async () => {
-    // Use fireEvent for testing
     renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/General Knowledge/)).toBeInTheDocument();
-    });
-
-    // Mock the detail endpoint fetch
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ template: mockTemplates[0] }),
-    } as Response);
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-1' } });
@@ -422,43 +190,33 @@ describe('TemplateSelector', () => {
   });
 
   it('assigns correct roundIndex based on questions_per_round', async () => {
-    const templateWithMultipleRounds: TriviaTemplate = {
-      id: 'template-3',
-      user_id: 'user-123',
-      name: 'Multi Round',
-      questions: [
-        { question: 'Q1', options: ['A', 'B'], correctIndex: 0 },
-        { question: 'Q2', options: ['A', 'B'], correctIndex: 1 },
-        { question: 'Q3', options: ['A', 'B'], correctIndex: 0 },
-        { question: 'Q4', options: ['A', 'B'], correctIndex: 1 },
-      ],
-      rounds_count: 2,
-      questions_per_round: 2,
-      timer_duration: 30,
-      is_default: false,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    };
+    const multiRoundTemplates: TriviaTemplateItem[] = [
+      {
+        id: 'template-3',
+        name: 'Multi Round',
+        questions: [
+          { question: 'Q1', options: ['A', 'B'], correctIndex: 0 },
+          { question: 'Q2', options: ['A', 'B'], correctIndex: 1 },
+          { question: 'Q3', options: ['A', 'B'], correctIndex: 0 },
+          { question: 'Q4', options: ['A', 'B'], correctIndex: 1 },
+        ],
+        rounds_count: 2,
+        questions_per_round: 2,
+        timer_duration: 30,
+        is_default: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+    ];
 
-    // List endpoint returns data without questions
-    const { questions: _q, ...listItem } = templateWithMultipleRounds;
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: [listItem] }),
-    } as Response);
-
-    // Use fireEvent for testing
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Multi Round/)).toBeInTheDocument();
+    // Override mock to return multi-round template
+    const { useTriviaTemplateStore } = vi.mocked(await import('@/stores/template-store'));
+    useTriviaTemplateStore.mockImplementation((selector) => {
+      const store = { items: multiRoundTemplates };
+      return selector(store as Parameters<typeof selector>[0]);
     });
 
-    // Mock the detail endpoint fetch
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ template: templateWithMultipleRounds }),
-    } as Response);
+    renderWithProviders(<TemplateSelector />);
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: 'template-3' } });

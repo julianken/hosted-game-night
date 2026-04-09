@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ImportResult } from '@/lib/questions/types';
 import { parseJsonQuestions, readFileContent } from '@/lib/questions/parser';
+import { questionsToTriviaQuestions } from '@/lib/questions/conversion';
+import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
 import { getCategoryBadgeClasses } from '@/lib/categories';
 
 interface QuestionSetImporterProps {
@@ -14,9 +16,9 @@ type ImportState = 'idle' | 'loading' | 'preview' | 'saving' | 'error';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProps) {
+  const questionSetCreate = useTriviaQuestionSetStore((state) => state.create);
   const [state, setState] = useState<ImportState>('idle');
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [rawJson, setRawJson] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteExpanded, setPasteExpanded] = useState(false);
@@ -30,7 +32,6 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
     setState('loading');
     setError(null);
     setResult(null);
-    setRawJson(content);
 
     try {
       // Try to extract wrapper name/description
@@ -115,23 +116,22 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
     processJson(pasteText);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!result || result.questions.length === 0 || !name.trim()) return;
 
     setState('saving');
     setError(null);
 
     try {
-      const response = await fetch('/api/question-sets/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawJson, name: name.trim(), description: description.trim() || undefined }),
-      });
+      // Convert parsed questions to TriviaQuestion format for localStorage
+      const triviaQuestions = questionsToTriviaQuestions(result.questions);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save question set');
-      }
+      questionSetCreate({
+        name: name.trim(),
+        description: description.trim() || null,
+        questions: triviaQuestions,
+        is_default: false,
+      });
 
       setSuccessMessage('Question set saved successfully!');
       handleReset();
@@ -146,7 +146,6 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
   const handleReset = () => {
     setState('idle');
     setResult(null);
-    setRawJson('');
     setError(null);
     setName('');
     setDescription('');

@@ -4,8 +4,9 @@ import { useState, useId } from 'react';
 import { Modal } from "@joolie-boolie/ui";
 import { useGameStore } from '@/stores/game-store';
 import { useToast } from "@joolie-boolie/ui";
+import { useTriviaTemplateStore } from '@/stores/template-store';
 import type { Question } from '@/types';
-import type { TriviaQuestion } from '@joolie-boolie/database/types';
+import type { TriviaQuestion } from '@/types/trivia-question';
 
 export interface SaveTemplateModalProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ export interface SaveTemplateModalProps {
 }
 
 /**
- * Convert app Question to database TriviaQuestion format
+ * Convert app Question to TriviaQuestion format
  */
 function convertQuestionToDb(question: Question): TriviaQuestion {
   // Find the index of the correct answer in the options array
@@ -42,13 +43,16 @@ export function SaveTemplateModal({
   const questions = useGameStore((state) => state.questions);
   const settings = useGameStore((state) => state.settings);
 
+  // Template store actions
+  const createTemplate = useTriviaTemplateStore((state) => state.create);
+
   // Form state
   const [name, setName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validation
     if (!name.trim()) {
       setError('Template name is required');
@@ -64,28 +68,17 @@ export function SaveTemplateModal({
     setError(null);
 
     try {
-      // Convert questions to database format
+      // Convert questions to TriviaQuestion format
       const dbQuestions = questions.map(convertQuestionToDb);
 
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          questions: dbQuestions,
-          rounds_count: settings.roundsCount,
-          questions_per_round: settings.questionsPerRound,
-          timer_duration: settings.timerDuration,
-          is_default: isDefault,
-        }),
+      createTemplate({
+        name: name.trim(),
+        questions: dbQuestions,
+        rounds_count: settings.roundsCount,
+        questions_per_round: settings.questionsPerRound,
+        timer_duration: settings.timerDuration,
+        is_default: isDefault,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save template');
-      }
 
       success(`Template "${name.trim()}" saved successfully`);
 

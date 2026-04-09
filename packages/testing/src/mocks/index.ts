@@ -12,17 +12,6 @@ export {
 } from './audio';
 
 export {
-  createMockSupabaseClient,
-  createMockUser,
-  createMockSession,
-  mockSupabaseSsr,
-  type MockUser,
-  type MockSession,
-  type MockAuthState,
-  type MockSupabaseClient,
-} from './supabase';
-
-export {
   mockSentry,
   type MockScope,
   type MockSentry,

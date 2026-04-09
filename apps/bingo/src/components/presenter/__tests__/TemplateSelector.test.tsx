@@ -1,12 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TemplateSelector } from '../TemplateSelector';
 import { ToastProvider } from "@joolie-boolie/ui";
-import type { BingoTemplate } from '@joolie-boolie/database/types';
-
-// Mock fetch globally
-global.fetch = vi.fn();
+import type { BingoTemplateItem } from '@/stores/template-store';
 
 // Mock stores
 const mockSetPattern = vi.fn();
@@ -52,10 +49,9 @@ vi.mock('@/lib/game/patterns', () => ({
   },
 }));
 
-const mockTemplates: BingoTemplate[] = [
+const mockTemplates: BingoTemplateItem[] = [
   {
     id: 'template-1',
-    user_id: 'user-123',
     name: 'Standard Game',
     pattern_id: 'horizontal-line',
     voice_pack: 'standard',
@@ -67,7 +63,6 @@ const mockTemplates: BingoTemplate[] = [
   },
   {
     id: 'template-2',
-    user_id: 'user-123',
     name: 'Quick Game',
     pattern_id: 'horizontal-line',
     voice_pack: 'british',
@@ -79,6 +74,15 @@ const mockTemplates: BingoTemplate[] = [
   },
 ];
 
+const mockUseBingoTemplateStore = vi.fn((selector: (state: { items: BingoTemplateItem[] }) => unknown) => {
+  const store = { items: mockTemplates };
+  return selector(store);
+});
+
+vi.mock('@/stores/template-store', () => ({
+  useBingoTemplateStore: (...args: unknown[]) => mockUseBingoTemplateStore(...args as Parameters<typeof mockUseBingoTemplateStore>),
+}));
+
 function renderWithProviders(ui: React.ReactElement) {
   return render(<ToastProvider>{ui}</ToastProvider>);
 }
@@ -86,69 +90,30 @@ function renderWithProviders(ui: React.ReactElement) {
 describe('TemplateSelector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: mockTemplates }),
-    } as Response);
+    // Restore default implementation
+    mockUseBingoTemplateStore.mockImplementation((selector) => {
+      const store = { items: mockTemplates };
+      return selector(store);
+    });
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders with loading state initially', () => {
+  it('renders with label and select element', () => {
     renderWithProviders(<TemplateSelector />);
 
     expect(screen.getByText(/Load Template/i)).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
-  it('fetches and displays templates on mount', async () => {
+  it('displays templates from localStorage store', () => {
     renderWithProviders(<TemplateSelector />);
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/templates');
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Standard Game (Default)')).toBeInTheDocument();
-      expect(screen.getByText('Quick Game')).toBeInTheDocument();
-    });
-  });
-
-  it('shows empty state when fetch returns non-ok response (BEA-419)', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: false,
-    } as Response);
-
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/No saved templates/i)).toBeInTheDocument();
-    });
-  });
-
-  it('shows empty state when no templates exist', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    } as Response);
-
-    renderWithProviders(<TemplateSelector />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/No saved templates/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText('Standard Game (Default)')).toBeInTheDocument();
+    expect(screen.getByText('Quick Game')).toBeInTheDocument();
   });
 
   it('loads template settings when selected', async () => {
     const user = userEvent.setup();
     renderWithProviders(<TemplateSelector />);
-
-    // Wait for templates to load
-    await waitFor(() => {
-      expect(screen.getByText('Standard Game (Default)')).toBeInTheDocument();
-    });
 
     // Select template
     const select = screen.getByRole('combobox');
@@ -173,11 +138,6 @@ describe('TemplateSelector', () => {
     const user = userEvent.setup();
     renderWithProviders(<TemplateSelector />);
 
-    // Wait for templates to load
-    await waitFor(() => {
-      expect(screen.getByText('Standard Game (Default)')).toBeInTheDocument();
-    });
-
     // Select template - since autoCallEnabled is false by default in mock,
     // and template has true, toggle will be called once
     const select = screen.getByRole('combobox');
@@ -189,33 +149,40 @@ describe('TemplateSelector', () => {
     });
   });
 
-  it('handles missing pattern gracefully', async () => {
-    const user = userEvent.setup();
-
-    // Create template with non-existent pattern
-    const templatesWithBadPattern: BingoTemplate[] = [{
-      id: 'bad-template',
-      user_id: 'user-123',
-      name: 'Bad Template',
-      pattern_id: 'non-existent-pattern',
-      voice_pack: 'standard',
-      auto_call_enabled: false,
-      auto_call_interval: 5000,
-      is_default: false,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    }];
-
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: templatesWithBadPattern }),
-    } as Response);
+  it('shows empty state when no templates', () => {
+    mockUseBingoTemplateStore.mockImplementation((selector) => {
+      const store = { items: [] as BingoTemplateItem[] };
+      return selector(store);
+    });
 
     renderWithProviders(<TemplateSelector />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Bad Template')).toBeInTheDocument();
+    expect(screen.getByText(/No saved templates/i)).toBeInTheDocument();
+  });
+
+  it('handles missing pattern gracefully', async () => {
+    const user = userEvent.setup();
+
+    mockUseBingoTemplateStore.mockImplementation((selector) => {
+      const store = {
+        items: [{
+          id: 'bad-template',
+          name: 'Bad Template',
+          pattern_id: 'non-existent-pattern',
+          voice_pack: 'standard',
+          auto_call_enabled: false,
+          auto_call_interval: 5000,
+          is_default: false,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        }],
+      };
+      return selector(store);
     });
+
+    renderWithProviders(<TemplateSelector />);
+
+    expect(screen.getByText('Bad Template')).toBeInTheDocument();
 
     const select = screen.getByRole('combobox');
     await user.selectOptions(select, 'bad-template');
@@ -228,13 +195,6 @@ describe('TemplateSelector', () => {
 
   it('disables select when disabled prop is true', () => {
     renderWithProviders(<TemplateSelector disabled />);
-
-    const select = screen.getByRole('combobox');
-    expect(select).toBeDisabled();
-  });
-
-  it('disables select while loading', () => {
-    renderWithProviders(<TemplateSelector />);
 
     const select = screen.getByRole('combobox');
     expect(select).toBeDisabled();

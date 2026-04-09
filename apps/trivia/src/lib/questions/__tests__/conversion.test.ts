@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { Question, QuestionId } from '@/types';
-import type { TriviaQuestion } from '@joolie-boolie/database/types';
+import type { TriviaQuestion } from '@/types/trivia-question';
 
 // Mock uuid
 vi.mock('uuid', () => ({ v4: () => 'test-uuid' }));

@@ -1,18 +1,19 @@
 'use client';
 
-import { useId, useState, useEffect, useCallback } from 'react';
+import { useId, useState, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useToast } from "@joolie-boolie/ui";
-import type { TriviaPreset } from '@joolie-boolie/database/types';
+import { useTriviaPresetStore } from '@/stores/preset-store';
+import type { TriviaPresetItem } from '@/stores/preset-store';
 
 export interface PresetSelectorProps {
   disabled?: boolean;
-  onPresetLoad?: (preset: TriviaPreset) => void;
+  onPresetLoad?: (preset: TriviaPresetItem) => void;
 }
 
 /**
- * Fetches presets from /api/presets and loads ONLY settings
+ * Reads presets from localStorage store and loads ONLY settings
  * (timerDuration, roundsCount, questionsPerRound) into the game store.
  * Does NOT touch questions.
  */
@@ -27,42 +28,14 @@ export function PresetSelector({
   const updateSettings = useGameStore((state) => state.updateSettings);
   const gameStatus = useGameStore((state) => state.status);
 
+  // Read presets from localStorage store
+  const presets = useTriviaPresetStore((state) => state.items);
+
   // Component state
-  const [presets, setPresets] = useState<TriviaPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch presets on mount
-  useEffect(() => {
-    const fetchPresets = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch('/api/presets');
-
-        if (!response.ok) {
-          console.warn('Presets unavailable:', response.status);
-          setPresets([]);
-          return;
-        }
-
-        const data = await response.json();
-        setPresets(data.data || []);
-      } catch (err) {
-        console.error('Error fetching presets:', err);
-        setError('Failed to load presets');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPresets();
-  }, []);
 
   // Load preset settings into store
-  const loadPreset = useCallback(async (presetId: string) => {
+  const loadPreset = useCallback((presetId: string) => {
     const preset = presets.find((p) => p.id === presetId);
 
     if (!preset) {
@@ -91,16 +64,16 @@ export function PresetSelector({
     }
   }, [presets, updateSettings, success, errorToast, onPresetLoad]);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const presetId = e.target.value;
     setSelectedPresetId(presetId);
 
     if (presetId) {
-      await loadPreset(presetId);
+      loadPreset(presetId);
     }
   };
 
-  const isDisabled = disabled || isLoading || gameStatus !== 'setup';
+  const isDisabled = disabled || gameStatus !== 'setup';
 
   return (
     <div className="flex flex-col gap-2">
@@ -125,7 +98,7 @@ export function PresetSelector({
         `}
       >
         <option value="">
-          {isLoading ? 'Loading presets...' : 'Select a preset...'}
+          Select a preset...
         </option>
         {presets.map((preset) => (
           <option key={preset.id} value={preset.id}>
@@ -136,12 +109,7 @@ export function PresetSelector({
           </option>
         ))}
       </select>
-      {error && (
-        <p className="text-base text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      {presets.length === 0 && !isLoading && !error && (
+      {presets.length === 0 && (
         <p className="text-base text-muted-foreground">
           No saved presets. Save your first preset below.
         </p>

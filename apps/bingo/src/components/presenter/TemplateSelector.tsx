@@ -1,11 +1,11 @@
 'use client';
 
-import { useId, useState, useEffect, useCallback } from 'react';
+import { useId, useState, useCallback } from 'react';
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
 import { useToast } from "@joolie-boolie/ui";
 import { patternRegistry } from '@/lib/game/patterns';
-import type { BingoTemplate } from '@joolie-boolie/database/types';
+import { useBingoTemplateStore } from '@/stores/template-store';
 import type { VoicePackId } from '@/types';
 
 export interface TemplateSelectorProps {
@@ -23,45 +23,14 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
   const autoCallEnabled = useGameStore((s) => s.autoCallEnabled);
   const setVoicePack = useAudioStore((state) => state.setVoicePack);
 
+  // Read templates from localStorage store
+  const templates = useBingoTemplateStore((state) => state.items);
+
   // Component state
-  const [templates, setTemplates] = useState<BingoTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch templates on mount
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch('/api/templates');
-
-        if (!response || !response.ok) {
-          // Gracefully handle missing/unavailable template API (BEA-419)
-          // Template API may not be available (e.g., no database connection)
-          console.warn('Templates unavailable:', response?.status);
-          setTemplates([]);
-          return;
-        }
-
-        const data = await response.json();
-        setTemplates(data.data || []);
-      } catch (err) {
-        console.error('Error fetching templates:', err);
-        setError('Failed to load templates');
-        // Toast removed - inline error message is sufficient (BEA-347)
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTemplates();
-  }, [errorToast]);
 
   // Load template into stores
-  const loadTemplate = useCallback(async (templateId: string) => {
+  const loadTemplate = useCallback((templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
 
     if (!template) {
@@ -93,12 +62,12 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
     }
   }, [templates, setPattern, setAutoCallEnabled, setAutoCallSpeed, setVoicePack, autoCallEnabled, success, errorToast]);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const templateId = e.target.value;
     setSelectedTemplateId(templateId);
 
     if (templateId) {
-      await loadTemplate(templateId);
+      loadTemplate(templateId);
     }
   };
 
@@ -114,7 +83,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
         id={id}
         value={selectedTemplateId}
         onChange={handleChange}
-        disabled={disabled || isLoading}
+        disabled={disabled}
         tabIndex={-1}
         className={`
           min-h-[56px] px-4 py-3
@@ -126,7 +95,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
         `}
       >
         <option value="">
-          {isLoading ? 'Loading templates...' : 'Select a template...'}
+          Select a template...
         </option>
         {templates.map((template) => (
           <option key={template.id} value={template.id}>
@@ -134,12 +103,7 @@ export function TemplateSelector({ disabled = false }: TemplateSelectorProps) {
           </option>
         ))}
       </select>
-      {error && (
-        <p className="text-base text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      {templates.length === 0 && !isLoading && !error && (
+      {templates.length === 0 && (
         <p className="text-base text-muted-foreground">
           No saved templates. Save your first template below.
         </p>
