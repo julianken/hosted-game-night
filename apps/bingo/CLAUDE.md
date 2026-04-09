@@ -14,10 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |-------|------------|
 | Framework | Next.js (App Router) |
 | Frontend | React + Tailwind CSS |
-| Backend (BFF) | Next.js API Routes |
-| Database | Supabase (PostgreSQL) |
-| Auth | OAuth 2.1 via Platform Hub (middleware-based JWT verification) |
-| State Management | Zustand |
+| State Management | Zustand (localStorage persistence) |
 | PWA | Serwist (Service Worker) |
 | Hosting | Vercel |
 
@@ -79,8 +76,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `@joolie-boolie/sync` - Dual-screen synchronization
 - `@joolie-boolie/ui` - Shared UI components
 - `@joolie-boolie/theme` - Accessible design tokens
-- `@joolie-boolie/auth` - Auth utilities (token refresh, JWT verification)
-- `@joolie-boolie/database` - Database utilities
+- `@joolie-boolie/audio` - Shared audio utilities
+- `@joolie-boolie/game-stats` - Game statistics types and calculators
 - `@joolie-boolie/types` - Shared TypeScript types
 - `@joolie-boolie/error-tracking` - Error logging
 
@@ -106,20 +103,13 @@ pnpm test:coverage    # Run tests with coverage
 |-------|-------------|
 | `/play` | Presenter view (host controls) |
 | `/display` | Audience view (projector/TV) |
-| `/auth/callback` | OAuth callback handler |
 
 ### API Routes
 
 | Route | Methods | Description |
 |-------|---------|-------------|
 | `/api/csp-report` | POST | CSP violation report endpoint |
-| `/api/health` | GET | Health check endpoint |
 | `/api/monitoring-tunnel` | POST | Sentry/OTel monitoring tunnel |
-| `/api/auth/logout` | POST | Logout and clear session |
-| `/api/auth/token` | POST | Token exchange/refresh |
-| `/api/auth/token-redirect` | GET | Token redirect handler (post-OAuth) |
-| `/api/templates` | GET, POST | Template CRUD |
-| `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
 
 ## Keyboard Shortcuts
 
@@ -133,9 +123,10 @@ pnpm test:coverage    # Run tests with coverage
 
 ## Architecture Notes
 
-- **BFF Pattern:** Frontend never talks directly to Supabase. All requests go through API routes.
+- **Standalone:** No backend or auth. All data (templates, settings) stored in localStorage.
+- **Templates:** Stored in localStorage via `useBingoTemplateStore` (key: `jb-bingo-templates`).
 - **Game Engine:** Pure functions in `lib/game/engine.ts` transform `GameState`. Zustand store wraps these for React integration.
-- **Auth:** OAuth 2.1 via Platform Hub with middleware-based JWT verification. OAuth client utilities in `lib/auth/` (oauth-client.ts, pkce.ts). Middleware uses lazy JWKS initialization to avoid server hang.
+- **Middleware:** Passthrough -- no auth verification (`middleware.ts` returns `NextResponse.next()`).
 - **Audio:** Audio logic lives in `hooks/use-audio.ts` and `stores/audio-store.ts`. The `lib/audio/` directory is a placeholder (`.gitkeep` only).
 - **Sync:** Session ID generation and BroadcastChannel naming in `lib/sync/session.ts`, built on `@joolie-boolie/sync`
 - **Patterns:** 29 patterns defined in `lib/game/patterns/` across 7 category files using `createPattern()`
@@ -163,8 +154,6 @@ pnpm test:coverage    # With coverage
 
 ## Future Work (TODO)
 
-- [x] User authentication (OAuth 2.1 via Platform Hub)
-- [x] Saved game templates
 - [ ] Pattern editor
 - [ ] Voice pack selection UI improvements
 - [ ] Analytics/history tracking

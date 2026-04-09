@@ -14,10 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |-------|------------|
 | Framework | Next.js (App Router) |
 | Frontend | React + Tailwind CSS |
-| Backend (BFF) | Next.js API Routes |
-| Database | Supabase (PostgreSQL) - shared with platform |
-| Auth | OAuth 2.1 via Platform Hub (middleware-based JWT verification) |
-| State Management | Zustand |
+| Backend | Next.js API Routes (trivia-api proxy only) |
+| State Management | Zustand (localStorage persistence) |
 | Dual-Screen Sync | @joolie-boolie/sync |
 | PWA | Serwist (Service Worker) |
 
@@ -98,7 +96,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Cache management
 
 ### Templates
-- Saved game templates with CRUD API
+- Saved game templates in localStorage
 - Template selector UI for quick game setup
 
 ## Shared Packages
@@ -106,8 +104,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `@joolie-boolie/sync` - Dual-screen synchronization
 - `@joolie-boolie/ui` - Shared UI components
 - `@joolie-boolie/theme` - Accessible design tokens
-- `@joolie-boolie/auth` - Auth utilities (token refresh, JWT verification)
-- `@joolie-boolie/database` - Database utilities
+- `@joolie-boolie/audio` - Shared audio utilities
+- `@joolie-boolie/game-stats` - Game statistics types and calculators
 - `@joolie-boolie/types` - Shared TypeScript types
 - `@joolie-boolie/error-tracking` - Error logging
 
@@ -134,28 +132,15 @@ pnpm test:coverage     # Run tests with coverage
 | `/play` | Presenter view (host controls) |
 | `/display` | Audience view (projector/TV) |
 | `/question-sets` | Question set management |
-| `/auth/callback` | OAuth callback handler |
 
 ### API Routes
 
 | Route | Methods | Description |
 |-------|---------|-------------|
 | `/api/csp-report` | POST | CSP violation report endpoint |
-| `/api/health` | GET | Health check endpoint |
 | `/api/monitoring-tunnel` | POST | Sentry/OTel monitoring tunnel |
-| `/api/auth/logout` | POST | Logout and clear session |
-| `/api/auth/token` | POST | Token exchange/refresh |
-| `/api/auth/token-redirect` | GET | Token redirect handler (post-OAuth) |
-| `/api/templates` | GET, POST | Template CRUD |
-| `/api/templates/default` | GET | Returns user's default trivia template |
-| `/api/templates/[id]` | GET, PUT, DELETE | Template by ID |
-| `/api/presets` | GET, POST | Preset CRUD |
-| `/api/presets/[id]` | GET, PUT, DELETE | Preset by ID |
-| `/api/question-sets` | GET, POST | Question set CRUD |
-| `/api/question-sets/[id]` | GET, PATCH, DELETE | Question set by ID |
-| `/api/question-sets/import` | POST | Import questions (CSV/JSON) |
-| `/api/trivia-api/categories` | GET | List trivia question categories |
-| `/api/trivia-api/questions` | GET | Fetch trivia questions |
+| `/api/trivia-api/categories` | GET | List trivia question categories (proxy) |
+| `/api/trivia-api/questions` | GET | Fetch trivia questions (proxy) |
 
 ## Keyboard Shortcuts
 
@@ -186,11 +171,16 @@ pnpm test:coverage     # Run tests with coverage
 
 ## Architecture Notes
 
-- **BFF Pattern:** Frontend never talks directly to Supabase. All requests go through API routes.
+- **Standalone:** No backend or auth. All data stored in localStorage.
+- **localStorage Stores:**
+  - `useTriviaTemplateStore` (key: `jb-trivia-templates`) -- saved game templates
+  - `useTriviaPresetStore` (key: `jb-trivia-presets`) -- game configuration presets
+  - `useQuestionSetStore` (key: `jb-trivia-question-sets`) -- imported question sets
+- **Middleware:** Passthrough -- no auth verification (`middleware.ts` returns `NextResponse.next()`).
 - **Game Engine:** Pure functions in `lib/game/engine.ts` transform `GameState`. Zustand store wraps these for React integration. Engine logic is split across multiple modules in `lib/game/` (engine.ts, scene.ts, etc.) re-exported via barrel pattern.
 - **Timer:** `hooks/use-timer-auto-reveal.ts` manages countdown and auto-reveal behavior
 - **Questions:** `lib/questions/` contains parser, validator, converter, exporter, and types for question import/export
-- **Auth:** OAuth 2.1 via Platform Hub. OAuth client utilities in `lib/auth/` (oauth-client.ts, pkce.ts). Middleware-based JWT verification with lazy JWKS initialization.
+- **Trivia API Proxy:** `/api/trivia-api/*` routes proxy requests to The Trivia API, keeping the API key server-side.
 - **Sync:** Session sync wrapper in `lib/sync/session.ts`, built on `@joolie-boolie/sync`
 
 ### Scene Engine (AudienceScene)
