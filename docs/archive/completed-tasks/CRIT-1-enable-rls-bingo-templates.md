@@ -104,7 +104,7 @@ ORDER BY policyname;
 
 #### Test 3: Verify Unauthenticated Access Denied
 ```bash
-curl -X GET "https://twssbzlkjpfaybaxgccv.supabase.co/rest/v1/bingo_templates" \
+curl -X GET "https://{your-project-ref}.supabase.co/rest/v1/bingo_templates" \
   -H "apikey: YOUR_ANON_KEY" \
   -H "Content-Type: application/json"
 ```
@@ -118,7 +118,7 @@ curl -X GET "https://twssbzlkjpfaybaxgccv.supabase.co/rest/v1/bingo_templates" \
 # First, get user token by logging in
 TOKEN="<user_access_token>"
 
-curl -X GET "https://twssbzlkjpfaybaxgccv.supabase.co/rest/v1/bingo_templates" \
+curl -X GET "https://{your-project-ref}.supabase.co/rest/v1/bingo_templates" \
   -H "apikey: YOUR_ANON_KEY" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json"
@@ -139,7 +139,7 @@ WHERE user_id = 'bbbb-bbbb-bbbb-bbbb';  -- User B's templates
 ```bash
 TOKEN="<user_A_access_token>"  # User A's token
 
-curl -X POST "https://twssbzlkjpfaybaxgccv.supabase.co/rest/v1/bingo_templates" \
+curl -X POST "https://{your-project-ref}.supabase.co/rest/v1/bingo_templates" \
   -H "apikey: YOUR_ANON_KEY" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
