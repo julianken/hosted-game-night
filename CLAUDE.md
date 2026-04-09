@@ -81,8 +81,6 @@ SENTRY_DSN=your-sentry-dsn
 OTEL_EXPORTER_OTLP_ENDPOINT=your-otel-endpoint
 OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic ...
 
-# Feature flags (trivia)
-NEXT_PUBLIC_FEATURE_QUESTION_SETS=false  # Set to 'false' to disable question sets (default: enabled)
 ```
 
 No auth-related env vars are needed. Both apps run as standalone with localStorage-only persistence.

@@ -3,29 +3,28 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ImportResult } from '@/lib/questions/types';
 import { parseJsonQuestions, readFileContent } from '@/lib/questions/parser';
-import { questionsToTriviaQuestions } from '@/lib/questions/conversion';
-import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
+import { useGameStore } from '@/stores/game-store';
+import { useToast } from '@joolie-boolie/ui';
 import { getCategoryBadgeClasses } from '@/lib/categories';
 
 interface QuestionSetImporterProps {
   onImportSuccess: () => void;
 }
 
-type ImportState = 'idle' | 'loading' | 'preview' | 'saving' | 'error';
+type ImportState = 'idle' | 'loading' | 'preview' | 'error';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProps) {
-  const questionSetCreate = useTriviaQuestionSetStore((state) => state.create);
+  const importQuestions = useGameStore((state) => state.importQuestions);
+  const { success, error: errorToast } = useToast();
+
   const [state, setState] = useState<ImportState>('idle');
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteExpanded, setPasteExpanded] = useState(false);
   const [pasteText, setPasteText] = useState('');
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processJson = useCallback((content: string) => {
@@ -34,26 +33,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
     setResult(null);
 
     try {
-      // Try to extract wrapper name/description
-      const trimmed = content.trim();
-      let parsedWrapper: Record<string, unknown> | null = null;
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'questions' in parsed) {
-          parsedWrapper = parsed as Record<string, unknown>;
-        }
-      } catch {
-        // Will be caught by parseJsonQuestions below
-      }
-
       const importResult = parseJsonQuestions(content);
       setResult(importResult);
-
-      // Pre-fill name/description from wrapper
-      if (parsedWrapper) {
-        if (typeof parsedWrapper.name === 'string') setName(parsedWrapper.name);
-        if (typeof parsedWrapper.description === 'string') setDescription(parsedWrapper.description);
-      }
 
       if (importResult.success || importResult.questions.length > 0) {
         setState('preview');
@@ -116,30 +97,25 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
     processJson(pasteText);
   };
 
-  const handleSave = () => {
-    if (!result || result.questions.length === 0 || !name.trim()) return;
-
-    setState('saving');
-    setError(null);
+  const handleLoadIntoGame = () => {
+    if (!result || result.questions.length === 0) return;
 
     try {
-      // Convert parsed questions to TriviaQuestion format for localStorage
-      const triviaQuestions = questionsToTriviaQuestions(result.questions);
+      // Import with roundIndex=0; the redistributeQuestions effect in SetupGate
+      // will assign proper round indices based on settings store config.
+      const questionsWithRounds = result.questions.map((q) => ({
+        ...q,
+        roundIndex: 0,
+      }));
 
-      questionSetCreate({
-        name: name.trim(),
-        description: description.trim() || null,
-        questions: triviaQuestions,
-        is_default: false,
-      });
-
-      setSuccessMessage('Question set saved successfully!');
+      importQuestions(questionsWithRounds, 'replace');
+      success(`Loaded ${result.questions.length} questions into game`);
       handleReset();
       onImportSuccess();
-      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setState('preview');
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : 'Failed to load questions');
+      errorToast('Failed to load questions into game');
     }
   };
 
@@ -147,8 +123,6 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
     setState('idle');
     setResult(null);
     setError(null);
-    setName('');
-    setDescription('');
     setPasteText('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -158,14 +132,8 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
   };
 
   return (
-    <div className="space-y-4" role="region" aria-label="Question set importer">
-      <h3 className="text-lg font-semibold">Import Question Set</h3>
-
-      {successMessage && (
-        <div className="p-4 bg-success/10 border border-success/20 rounded-lg" role="status">
-          <p className="font-medium text-success">{successMessage}</p>
-        </div>
-      )}
+    <div className="space-y-4" role="region" aria-label="Import questions from file">
+      <h3 className="text-lg font-semibold">Import Questions</h3>
 
       {/* Idle state: drag-drop + paste */}
       {state === 'idle' && (
@@ -272,16 +240,6 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
         </div>
       )}
 
-      {/* Saving state */}
-      {state === 'saving' && (
-        <div className="flex items-center justify-center py-8">
-          <div className="text-center space-y-2">
-            <div className="animate-spin motion-reduce:animate-none text-2xl" aria-hidden="true">⏳</div>
-            <p className="text-base text-muted-foreground">Saving question set...</p>
-          </div>
-        </div>
-      )}
-
       {/* Error state (standalone) */}
       {state === 'error' && (
         <div className="space-y-4">
@@ -372,43 +330,12 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
             </div>
           )}
 
-          {/* Inline error from save attempt */}
+          {/* Inline error from load attempt */}
           {error && (
             <div className="p-3 bg-error/10 border border-error/20 rounded-lg" role="alert">
               <p className="text-base text-error"><span className="font-semibold">Error:</span> {error}</p>
             </div>
           )}
-
-          {/* Name input */}
-          <div className="space-y-2">
-            <label htmlFor="qs-name" className="text-lg font-medium block">
-              Name <span className="text-error">*</span>
-            </label>
-            <input
-              id="qs-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
-              placeholder="e.g. History Questions Round 1"
-              required
-            />
-          </div>
-
-          {/* Description input */}
-          <div className="space-y-2">
-            <label htmlFor="qs-description" className="text-lg font-medium block">
-              Description
-            </label>
-            <input
-              id="qs-description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 min-h-[48px] border border-border rounded-lg text-base bg-background"
-              placeholder="Optional description"
-            />
-          </div>
 
           {/* Question preview */}
           {result.questions.length > 0 && (
@@ -449,17 +376,17 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
             </button>
             <button
               type="button"
-              onClick={handleSave}
-              disabled={result.questions.length === 0 || !name.trim()}
+              onClick={handleLoadIntoGame}
+              disabled={result.questions.length === 0}
               className={`
                 flex-1 px-4 min-h-[48px] py-2 rounded-lg text-base font-medium transition-colors
-                ${result.questions.length > 0 && name.trim()
-                  ? 'bg-success hover:bg-success/90 text-white'
+                ${result.questions.length > 0
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
                   : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }
               `}
             >
-              Save Question Set
+              Load into Game
             </button>
           </div>
         </div>

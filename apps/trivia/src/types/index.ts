@@ -345,31 +345,4 @@ export type TriviaSyncMessage =
  */
 export type SyncMessage = TriviaSyncMessage;
 
-// =============================================================================
-// QUESTION SET TYPES (API)
-// =============================================================================
-
-export interface QuestionSet {
-  id: string;
-  name: string;
-  description: string | null;
-  questions: Question[];
-  category: QuestionCategory | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateQuestionSetRequest {
-  name: string;
-  description?: string;
-  questions: Omit<Question, 'id' | 'roundIndex'>[];
-  category?: QuestionCategory;
-}
-
-export interface UpdateQuestionSetRequest {
-  name?: string;
-  description?: string;
-  questions?: Omit<Question, 'id' | 'roundIndex'>[];
-  category?: QuestionCategory;
-}
 

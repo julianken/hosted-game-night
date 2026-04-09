@@ -1,9 +1,13 @@
 'use client';
 
 import { useId, useState, useRef, useCallback, useEffect } from 'react';
+import { useGameStore } from '@/stores/game-store';
+import { useToast } from '@joolie-boolie/ui';
+import { triviaQuestionsToQuestions } from '@/lib/questions/conversion';
 import { TriviaApiImporter } from './TriviaApiImporter';
 import { QuestionSetImporter } from './QuestionSetImporter';
 import { QuestionSetEditorModal } from '@/components/question-editor/QuestionSetEditorModal';
+import type { TriviaQuestion } from '@/types/trivia-question';
 
 type TabId = 'api' | 'upload' | 'manual';
 
@@ -37,6 +41,9 @@ export function AddQuestionsPanel({
   const [showEditor, setShowEditor] = useState(false);
   const tabRefs = useRef<Map<TabId, HTMLButtonElement | null>>(new Map());
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const importQuestions = useGameStore((state) => state.importQuestions);
+  const { success } = useToast();
 
   // Focus first tab on mount
   useEffect(() => {
@@ -74,6 +81,19 @@ export function AddQuestionsPanel({
       }
     },
     [activeTab]
+  );
+
+  const handleEditorSave = useCallback(
+    (questions: TriviaQuestion[]) => {
+      // Convert TriviaQuestion[] -> Question[] and import into game
+      const appQuestions = triviaQuestionsToQuestions(questions);
+      importQuestions(appQuestions, 'replace');
+      success(`Loaded ${questions.length} questions into game`);
+      setShowEditor(false);
+      onSuccess();
+      onClose();
+    },
+    [importQuestions, success, onSuccess, onClose]
   );
 
   return (
@@ -139,8 +159,7 @@ export function AddQuestionsPanel({
         >
           {activeTab === 'api' && (
             <TriviaApiImporter
-              context="management"
-              onSaveSuccess={() => {
+              onLoadSuccess={() => {
                 onSuccess();
                 onClose();
               }}
@@ -175,7 +194,7 @@ export function AddQuestionsPanel({
           {activeTab === 'manual' && (
             <div className="space-y-4">
               <p className="text-base text-muted-foreground">
-                Create a question set from scratch. Write your own trivia questions one by one,
+                Create questions from scratch. Write your own trivia questions one by one,
                 organized into rounds.
               </p>
               <button
@@ -183,22 +202,18 @@ export function AddQuestionsPanel({
                 onClick={() => setShowEditor(true)}
                 className="min-h-[44px] px-5 py-2 text-base font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                Create Question Set
+                Create Questions
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Question Set Editor Modal */}
+      {/* Question Editor Modal */}
       <QuestionSetEditorModal
         isOpen={showEditor}
         onClose={() => setShowEditor(false)}
-        onSuccess={() => {
-          setShowEditor(false);
-          onSuccess();
-          onClose();
-        }}
+        onSave={handleEditorSave}
       />
     </div>
   );
