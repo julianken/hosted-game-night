@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-
-const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
 import {
   editorReducer,
   createInitialState,
@@ -20,7 +18,7 @@ const createQuestion = (partial: Partial<QuestionFormData>): QuestionFormData =>
   explanation: partial.explanation ?? '',
 });
 
-describe.skipIf(skipIfDisabled)('QuestionSetEditorModal.utils', () => {
+describe('QuestionSetEditorModal.utils', () => {
   describe('createInitialState', () => {
     it('should create default initial state', () => {
       const state = createInitialState();

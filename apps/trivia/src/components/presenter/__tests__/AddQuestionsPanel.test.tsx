@@ -2,12 +2,36 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AddQuestionsPanel } from '../AddQuestionsPanel';
 
-const skipIfDisabled = !process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS || process.env.NEXT_PUBLIC_FEATURE_QUESTION_SETS === 'false';
+// Mock game store
+vi.mock('@/stores/game-store', () => ({
+  useGameStore: vi.fn((selector) => {
+    const store = {
+      status: 'setup' as const,
+      importQuestions: vi.fn(),
+    };
+    return selector(store);
+  }),
+}));
+
+// Mock toast
+vi.mock('@joolie-boolie/ui', () => ({
+  useToast: () => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  }),
+}));
+
+// Mock conversion
+vi.mock('@/lib/questions/conversion', () => ({
+  triviaQuestionsToQuestions: vi.fn((qs: unknown[]) => qs),
+}));
 
 // Mock TriviaApiImporter
 vi.mock('../TriviaApiImporter', () => ({
-  TriviaApiImporter: ({ context }: { context?: string }) => (
-    <div data-testid="trivia-api-importer" data-context={context}>
+  TriviaApiImporter: () => (
+    <div data-testid="trivia-api-importer">
       API Importer Content
     </div>
   ),
@@ -27,7 +51,7 @@ vi.mock('@/components/question-editor/QuestionSetEditorModal', () => ({
   ),
 }));
 
-describe.skipIf(skipIfDisabled)('AddQuestionsPanel', () => {
+describe('AddQuestionsPanel', () => {
   const mockOnClose = vi.fn();
   const mockOnSuccess = vi.fn();
 
@@ -49,12 +73,11 @@ describe.skipIf(skipIfDisabled)('AddQuestionsPanel', () => {
     expect(apiTab).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('renders API importer panel by default with management context', () => {
+  it('renders API importer panel by default', () => {
     render(<AddQuestionsPanel onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const importer = screen.getByTestId('trivia-api-importer');
     expect(importer).toBeInTheDocument();
-    expect(importer).toHaveAttribute('data-context', 'management');
   });
 
   it('switches to Upload File tab when clicked', () => {
@@ -76,7 +99,7 @@ describe.skipIf(skipIfDisabled)('AddQuestionsPanel', () => {
     fireEvent.click(manualTab);
 
     expect(manualTab).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('button', { name: /create question set/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create questions/i })).toBeInTheDocument();
   });
 
   it('opens editor modal from Create Manually tab', () => {
@@ -86,7 +109,7 @@ describe.skipIf(skipIfDisabled)('AddQuestionsPanel', () => {
     fireEvent.click(screen.getByRole('tab', { name: /create manually/i }));
 
     // Click create button
-    fireEvent.click(screen.getByRole('button', { name: /create question set/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create questions/i }));
 
     expect(screen.getByTestId('editor-modal')).toBeInTheDocument();
   });

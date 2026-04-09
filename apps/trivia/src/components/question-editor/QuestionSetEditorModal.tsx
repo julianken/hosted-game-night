@@ -6,13 +6,10 @@ import { useToast } from '@joolie-boolie/ui';
 import { DEFAULT_CATEGORIES } from '@/lib/categories';
 import type { QuestionCategory } from '@/types';
 import type { TriviaQuestion } from '@/types/trivia-question';
-import { useTriviaQuestionSetStore } from '@/stores/question-set-store';
-import type { TriviaQuestionSetItem } from '@/stores/question-set-store';
 import {
   editorReducer,
   createInitialState,
   type QuestionFormData,
-  type CategoryFormData,
   type EditorState,
 } from './QuestionSetEditorModal.utils';
 import { DiscardChangesDialog } from './DiscardChangesDialog';
@@ -20,28 +17,23 @@ import { DiscardChangesDialog } from './DiscardChangesDialog';
 export interface QuestionSetEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
-  questionSetId?: string;
+  onSave?: (questions: TriviaQuestion[]) => void;
 }
 
 /**
- * Modal for creating/editing question sets with nested categories and questions.
+ * Modal for creating questions with nested categories and questions.
  * Uses useReducer for complex nested state management.
  * Categories = Rounds (category index = round number).
  */
 export function QuestionSetEditorModal({
   isOpen,
   onClose,
-  onSuccess,
-  questionSetId,
+  onSave,
 }: QuestionSetEditorModalProps) {
-  const nameId = useId();
-  const descriptionId = useId();
   const { success, error: errorToast } = useToast();
 
   const [state, dispatch] = useReducer(editorReducer, createInitialState());
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
@@ -52,94 +44,16 @@ export function QuestionSetEditorModal({
   // Compute dirty state (has changes from initial)
   const isDirty = JSON.stringify(state) !== JSON.stringify(initialStateRef.current);
 
-  // Reset to fresh state when modal opens in create mode
+  // Reset to fresh state when modal opens
   useEffect(() => {
-    if (isOpen && !questionSetId) {
+    if (isOpen) {
       const freshState = createInitialState();
       dispatch({ type: 'RESET', payload: freshState });
       initialStateRef.current = freshState;
       setExpandedCategories(new Set());
       setError(null);
     }
-  }, [isOpen, questionSetId]);
-
-  // Read store for loading/saving
-  const questionSetItems = useTriviaQuestionSetStore((state) => state.items);
-  const questionSetStoreUpdate = useTriviaQuestionSetStore((state) => state.update);
-  const questionSetStoreCreate = useTriviaQuestionSetStore((state) => state.create);
-
-  // Load existing question set data when in edit mode
-  useEffect(() => {
-    if (!isOpen || !questionSetId) {
-      return;
-    }
-
-    const loadQuestionSet = () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const questionSet: TriviaQuestionSetItem | undefined = questionSetItems.find(
-          (item) => item.id === questionSetId
-        );
-
-        if (!questionSet) {
-          throw new Error('Question set not found');
-        }
-
-        // Convert TriviaQuestionSet to EditorState
-        const categoriesMap = new Map<QuestionCategory, CategoryFormData>();
-
-        for (const tq of questionSet.questions) {
-          // Ensure category is a valid QuestionCategory type
-          const rawCategory = tq.category ?? 'general_knowledge';
-          const category = DEFAULT_CATEGORIES.find((c) => c.id === rawCategory);
-          const categoryId: QuestionCategory = category?.id ?? 'general_knowledge';
-
-          if (!categoriesMap.has(categoryId)) {
-            categoriesMap.set(categoryId, {
-              id: categoryId,
-              name: category?.name ?? 'General Knowledge',
-              questions: [],
-            });
-          }
-
-          const questionFormData: QuestionFormData = {
-            id: `q-${Date.now()}-${Math.random()}`,
-            question: tq.question,
-            type: 'multiple_choice',
-            options: [...tq.options],
-            correctIndex: tq.correctIndex,
-            category: categoryId,
-            explanation: tq.explanation ?? '',
-          };
-
-          categoriesMap.get(categoryId)!.questions.push(questionFormData);
-        }
-
-        const loadedState = createInitialState({
-          name: questionSet.name,
-          description: questionSet.description ?? '',
-          categories: Array.from(categoriesMap.values()),
-        });
-
-        dispatch({ type: 'RESET', payload: loadedState });
-        // Store initial state for dirty detection
-        initialStateRef.current = loadedState;
-
-        // Auto-expand all categories
-        setExpandedCategories(new Set(Array.from({ length: categoriesMap.size }, (_, i) => i)));
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load question set';
-        setError(message);
-        errorToast(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadQuestionSet();
-  }, [isOpen, questionSetId, questionSetItems, errorToast]);
+  }, [isOpen]);
 
   // Browser beforeunload warning when dirty
   useEffect(() => {
@@ -189,11 +103,6 @@ export function QuestionSetEditorModal({
 
   const handleSave = async () => {
     // Validation
-    if (!state.name.trim()) {
-      setError('Question set name is required');
-      return;
-    }
-
     if (state.categories.length === 0) {
       setError('At least one category is required');
       return;
@@ -227,11 +136,11 @@ export function QuestionSetEditorModal({
 
     try {
       // Convert to TriviaQuestion[] format
-      const dbQuestions: TriviaQuestion[] = [];
+      const questions: TriviaQuestion[] = [];
 
       for (const category of state.categories) {
         for (const question of category.questions) {
-          dbQuestions.push({
+          questions.push({
             question: question.question.trim(),
             options: question.options.map((opt) => opt.trim()),
             correctIndex: question.correctIndex,
@@ -241,32 +150,16 @@ export function QuestionSetEditorModal({
         }
       }
 
-      const isEditMode = !!questionSetId;
+      onSave?.(questions);
 
-      if (isEditMode) {
-        questionSetStoreUpdate(questionSetId, {
-          name: state.name.trim(),
-          description: state.description.trim() || null,
-          questions: dbQuestions,
-        });
-      } else {
-        questionSetStoreCreate({
-          name: state.name.trim(),
-          description: state.description.trim() || null,
-          questions: dbQuestions,
-          is_default: false,
-        });
-      }
-
-      success(`Question set "${state.name.trim()}" ${isEditMode ? 'updated' : 'created'} successfully`);
+      success(`Created ${questions.length} questions successfully`);
       const freshState = createInitialState();
       dispatch({ type: 'RESET', payload: freshState });
       initialStateRef.current = freshState;
       setExpandedCategories(new Set());
-      onSuccess?.();
       onClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save question set';
+      const message = err instanceof Error ? err.message : 'Failed to create questions';
       setError(message);
       errorToast(message);
     } finally {
@@ -308,6 +201,9 @@ export function QuestionSetEditorModal({
     setShowDiscardDialog(false);
   };
 
+  // Generate a unique ID prefix for error association
+  const errorId = useId();
+
   return (
     <>
       <DiscardChangesDialog
@@ -318,7 +214,7 @@ export function QuestionSetEditorModal({
       <Modal
         isOpen={isOpen}
         onClose={handleClose}
-        title={questionSetId ? 'Edit Question Set' : 'Create Question Set'}
+        title="Create Questions"
         confirmLabel={isSaving ? 'Saving...' : 'Save'}
         cancelLabel="Cancel"
         onConfirm={handleSave}
@@ -326,67 +222,6 @@ export function QuestionSetEditorModal({
         showFooter
       >
       <div className="flex flex-col gap-6">
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex justify-center py-8">
-            <p className="text-lg text-muted-foreground">Loading question set...</p>
-          </div>
-        )}
-
-        {/* Form (hidden when loading) */}
-        {!isLoading && (
-          <>
-            {/* Name Input */}
-            <div className="flex flex-col gap-2">
-          <label htmlFor={nameId} className="text-lg font-medium">
-            Question Set Name
-          </label>
-          <input
-            id={nameId}
-            type="text"
-            value={state.name}
-            onChange={(e) => dispatch({ type: 'SET_NAME', payload: e.target.value })}
-            disabled={isSaving}
-            placeholder="e.g., Science & History Mix"
-            maxLength={100}
-            className={`
-              min-h-[56px] px-4 py-3
-              text-lg rounded-lg
-              bg-background border-2 border-border
-              focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary
-              disabled:opacity-50 disabled:cursor-not-allowed
-              placeholder:text-muted-foreground
-            `}
-            aria-describedby={error ? `${nameId}-error` : undefined}
-            aria-invalid={error ? 'true' : 'false'}
-          />
-        </div>
-
-        {/* Description Input */}
-        <div className="flex flex-col gap-2">
-          <label htmlFor={descriptionId} className="text-lg font-medium">
-            Description <span className="text-muted-foreground font-normal">(optional)</span>
-          </label>
-          <textarea
-            id={descriptionId}
-            value={state.description}
-            onChange={(e) => dispatch({ type: 'SET_DESCRIPTION', payload: e.target.value })}
-            disabled={isSaving}
-            placeholder="Brief description of this question set..."
-            maxLength={500}
-            rows={2}
-            className={`
-              min-h-[56px] px-4 py-3
-              text-lg rounded-lg
-              bg-background border-2 border-border
-              focus:outline-none focus:ring-4 focus:ring-primary/50 focus:border-primary
-              disabled:opacity-50 disabled:cursor-not-allowed
-              placeholder:text-muted-foreground
-              resize-none
-            `}
-          />
-        </div>
-
         {/* Add Category Button */}
         {availableCategories.length > 0 && (
           <div className="flex flex-col gap-2">
@@ -464,15 +299,13 @@ export function QuestionSetEditorModal({
             {/* Error */}
             {error && (
               <div
-                id={`${nameId}-error`}
+                id={`${errorId}-error`}
                 role="alert"
                 className="p-4 bg-destructive/10 border border-destructive rounded-lg"
               >
                 <p className="text-base text-destructive font-medium">{error}</p>
               </div>
             )}
-          </>
-        )}
       </div>
       </Modal>
     </>

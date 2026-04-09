@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { StatsDisplay } from '@/components/stats';
-import { QUESTION_SETS_ENABLED } from '@/lib/feature-flags';
 
 export default function Home() {
   return (
@@ -18,14 +17,6 @@ export default function Home() {
         >
           Play
         </Link>
-        {QUESTION_SETS_ENABLED && (
-          <Link
-            href="/question-sets"
-            className="inline-flex items-center justify-center min-h-[56px] px-8 py-4 text-xl font-semibold rounded-lg border-2 border-primary text-primary hover:bg-primary/10 transition-colors"
-          >
-            Question Sets
-          </Link>
-        )}
       </div>
 
       {/* Statistics Section */}

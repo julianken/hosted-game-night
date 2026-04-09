@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Trivia** - A presenter-controlled trivia system for groups and communities. Part of the Joolie Boolie monorepo.
 
-**Current State:** Fully functional with team management, rounds, scoring, TTS, timer auto-reveal, question sets, presets, themes, and dual-screen sync.
+**Current State:** Fully functional with team management, rounds, scoring, TTS, timer auto-reveal, presets, themes, and dual-screen sync.
 
 ## Tech Stack
 
@@ -46,10 +46,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Presenter timer display (`components/presenter/TimerDisplay.tsx`)
 - Timer hook: `hooks/use-timer-auto-reveal.ts`
 
-### Question Sets & Import
-- Question set management page (`/question-sets`)
-- CRUD API for question sets
-- CSV/JSON import with drag-drop UI
+### Question Import
+- Fetch from Trivia API, upload JSON file, or create manually
+- All import methods load questions directly into the game
 - Question parser, validator, converter, and exporter (`lib/questions/`)
 - 7 predefined categories with filtering
 
@@ -131,7 +130,6 @@ pnpm test:coverage     # Run tests with coverage
 |-------|-------------|
 | `/play` | Presenter view (host controls) |
 | `/display` | Audience view (projector/TV) |
-| `/question-sets` | Question set management |
 
 ### API Routes
 
@@ -165,17 +163,12 @@ pnpm test:coverage     # Run tests with coverage
 | Ctrl/Cmd+Z | Undo last score action | Scoring phases except `round_scoring` (panel owns undo in that scene) |
 | ? | Show help modal | Always |
 
-### Feature Flags
-- `NEXT_PUBLIC_FEATURE_QUESTION_SETS` — Controls question sets feature visibility. Set to `'false'` to disable. Default: enabled (opt-out pattern).
-- Config module: `lib/feature-flags.ts`
-
 ## Architecture Notes
 
 - **Standalone:** No backend or auth. All data stored in localStorage.
 - **localStorage Stores:**
   - `useTriviaTemplateStore` (key: `jb-trivia-templates`) -- saved game templates
   - `useTriviaPresetStore` (key: `jb-trivia-presets`) -- game configuration presets
-  - `useQuestionSetStore` (key: `jb-trivia-question-sets`) -- imported question sets
 - **Middleware:** Passthrough -- no auth verification (`middleware.ts` returns `NextResponse.next()`).
 - **Game Engine:** Pure functions in `lib/game/engine.ts` transform `GameState`. Zustand store wraps these for React integration. Engine logic is split across multiple modules in `lib/game/` (engine.ts, scene.ts, etc.) re-exported via barrel pattern.
 - **Timer:** `hooks/use-timer-auto-reveal.ts` manages countdown and auto-reveal behavior

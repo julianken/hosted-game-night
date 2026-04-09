@@ -31,19 +31,6 @@ vi.mock('@joolie-boolie/ui', () => ({
   }),
 }));
 
-vi.mock('@/lib/questions/conversion', () => ({
-  questionsToTriviaQuestions: vi.fn((qs) =>
-    qs.map(
-      (q: { text: string; optionTexts: string[]; category: string }) => ({
-        question: q.text,
-        options: q.optionTexts,
-        correctIndex: 0,
-        category: q.category,
-      })
-    )
-  ),
-}));
-
 vi.mock('@/lib/categories', async () => {
   const actual = await vi.importActual<
     typeof import('@/lib/categories')
@@ -88,7 +75,7 @@ const MOCK_API_RESPONSE = {
 const originalFetch = global.fetch;
 
 function mockFetchSuccess(data = MOCK_API_RESPONSE) {
-  // Default tests use no category selection → single mixed call → mockResolvedValueOnce
+  // Default tests use no category selection -> single mixed call -> mockResolvedValueOnce
   global.fetch = vi.fn().mockResolvedValueOnce({
     ok: true,
     status: 200,
