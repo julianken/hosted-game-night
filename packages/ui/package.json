@@ -33,7 +33,6 @@
     "vitest": "^4.0.17"
   },
   "dependencies": {
-    "@joolie-boolie/auth": "workspace:*",
     "@joolie-boolie/error-tracking": "workspace:*",
     "@joolie-boolie/sync": "workspace:*",
     "@joolie-boolie/types": "workspace:*",

@@ -83,9 +83,6 @@ export {
   type KeyboardShortcut,
 } from './keyboard-shortcuts-modal';
 
-// LoginButton
-export { LoginButton, type LoginButtonProps } from './login-button';
-
 // ServiceWorkerRegistration
 export {
   ServiceWorkerRegistration,

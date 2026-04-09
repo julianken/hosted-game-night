@@ -619,9 +619,6 @@ importers:
 
   packages/ui:
     dependencies:
-      '@joolie-boolie/auth':
-        specifier: workspace:*
-        version: link:../auth
       '@joolie-boolie/error-tracking':
         specifier: workspace:*
         version: link:../error-tracking
