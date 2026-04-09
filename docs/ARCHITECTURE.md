@@ -1,8 +1,8 @@
 # Architecture
 
-## BFF Pattern
+## Standalone Apps
 
-Apps never talk directly to Supabase. All requests go through Next.js API routes (`app/api/`).
+Both Bingo and Trivia run as standalone apps with no backend database or authentication. All data persistence is via localStorage (Zustand stores with persist middleware). The only server-side API routes are for CSP reports, monitoring tunnels, and the trivia-api proxy (which keeps the API key server-side).
 
 ## Dual-Screen System
 
@@ -17,33 +17,29 @@ The `BroadcastSync` class in `@joolie-boolie/sync` (`packages/sync/src/broadcast
 Pure function-based state management. The engine (`lib/game/engine.ts`) contains pure functions that transform `GameState`. The Zustand store wraps these functions to provide React integration. In trivia, the game engine is augmented by a separate AudienceScene layer (`types/audience-scene.ts`, `lib/game/scene.ts`) that controls audience display routing orthogonally to the 5-state GameStatus.
 
 ```
-GameState (immutable) → engine functions → new GameState
-                              ↓
+GameState (immutable) -> engine functions -> new GameState
+                              |
                     Zustand store (reactive)
-                              ↓
+                              |
                     React components via hooks
 ```
 
 ## Monorepo Structure
 
 ```
-joolie-boolie-platform/
+joolie-boolie/
 ├── apps/
 │   ├── bingo/           # Bingo - 75-ball bingo game (port 3000)
-│   ├── trivia/          # Trivia - Team trivia game (port 3001)
-│   └── platform-hub/    # Central hub - auth, dashboard, game selector (port 3002)
+│   └── trivia/          # Trivia - Team trivia game (port 3001)
 ├── packages/
 │   ├── sync/            # Dual-screen synchronization (BroadcastChannel)
 │   ├── ui/              # Shared UI components (Button, Modal, Toggle, Input, etc.)
 │   ├── theme/           # Accessible design tokens and CSS
-│   ├── auth/            # Supabase authentication wrappers
 │   ├── game-stats/      # Game statistics types, calculators, storage
-│   ├── database/        # Supabase database utilities (268 exports)
 │   ├── types/           # Shared TypeScript type definitions
 │   ├── audio/           # Shared audio utilities (voice packs, sound effects)
 │   ├── error-tracking/  # Error logging and tracking utilities
 │   └── testing/         # Shared test utilities and mocks
-└── supabase/            # Database migrations and functions
 ```
 
 ## App Structure
@@ -53,22 +49,17 @@ Each game app (bingo, trivia) follows this pattern:
 ```
 src/
 ├── app/              # Next.js App Router pages
-│   ├── api/          # BFF routes (auth, templates, sessions)
+│   ├── api/          # Minimal API routes (CSP, monitoring, trivia-api proxy)
 │   ├── play/         # Presenter view
-│   ├── display/      # Audience view
-│   └── auth/callback/# OAuth callback handler
+│   └── display/      # Audience view
 ├── components/
 │   ├── presenter/    # Host control components
 │   ├── audience/     # Display components
 │   └── ui/           # App-specific UI
 ├── lib/
-│   ├── auth/         # OAuth client (PKCE flow utilities)
 │   ├── game/         # Game engine, patterns, state machine
-│   ├── session/      # Session management
 │   └── sync/         # BroadcastChannel session wrapper
-├── stores/           # Zustand stores
+├── stores/           # Zustand stores (localStorage persistence)
 ├── hooks/            # Custom React hooks
 └── types/            # TypeScript types
 ```
-
-Platform Hub uses a different layout (no presenter/audience views, has middleware directory). See [APP_STRUCTURE.md](APP_STRUCTURE.md) for details.

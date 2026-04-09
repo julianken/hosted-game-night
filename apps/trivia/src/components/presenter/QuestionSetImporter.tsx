@@ -459,7 +459,7 @@ export function QuestionSetImporter({ onImportSuccess }: QuestionSetImporterProp
                 }
               `}
             >
-              Save to My Question Sets
+              Save Question Set
             </button>
           </div>
         </div>

@@ -663,7 +663,7 @@ export function TriviaApiImporter({
               </button>
             )}
 
-            {/* Save to My Question Sets (hidden when question sets feature is disabled) */}
+            {/* Save Question Set (hidden when question sets feature is disabled) */}
             {QUESTION_SETS_ENABLED && (
               <button
                 type="button"
@@ -679,7 +679,7 @@ export function TriviaApiImporter({
                   }
                 `}
               >
-                Save to My Question Sets
+                Save Question Set
               </button>
             )}
           </div>

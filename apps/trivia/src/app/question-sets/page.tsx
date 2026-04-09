@@ -101,7 +101,7 @@ export default function QuestionSetsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">
-            {hasQuestionSets ? 'My Question Sets' : 'Question Sets'}
+            Question Sets
           </h1>
           {hasQuestionSets && (
             <span className="text-base font-medium px-2 py-0.5 rounded-full bg-muted">

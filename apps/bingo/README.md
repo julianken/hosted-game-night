@@ -1,31 +1,28 @@
 # Bingo
 
-**Status:** ✅ Production Ready (85% Complete)
+**Status:** Production Ready
 
-A cloud-based, web-accessible Bingo system designed for groups and communities. Replaces USB-based solutions with a modern PWA that works offline, supports dual-screen presentation (presenter controls + audience display), and provides admin accounts for saved configurations.
+A web-accessible Bingo system designed for groups and communities. Replaces USB-based solutions with a modern PWA that works offline, supports dual-screen presentation (presenter controls + audience display), and saves configurations locally.
 
 ## Features
 
-- ✅ **75-Ball Bingo Format** - Standard B-I-N-G-O grid (B: 1-15, I: 16-30, N: 31-45, G: 46-60, O: 61-75)
-- ✅ **29 Built-in Patterns** - Lines, corners, frames, shapes, letters, blackout, and more
-- ✅ **Voice Packs** - 4 voice options (Standard, Standard Hall, British Slang, British Slang Hall)
-- ✅ **Audio System** - Roll sounds (Metal Cage, Tumbler, Lottery Ball) with separate volume controls
-- ✅ **Auto-Call Mode** - Configurable speed (5-30 seconds) for automated gameplay
-- ✅ **Dual-Screen Sync** - BroadcastChannel API synchronizes presenter + audience windows
-- ✅ **Theme System** - Light/Dark/System mode with 10+ color themes
-- ✅ **PWA Support** - Service worker, audio caching, offline-capable gameplay
-- ✅ **Fullscreen Mode** - Optimized for projector/large TV displays
-- ✅ **Room Creation** - Online (Supabase) and offline (localStorage) modes with PIN security
-- ✅ **Keyboard Shortcuts** - Space, P, R, U, M for quick control
-- 🚧 **User Authentication** - Integration with @joolie-boolie/auth (pending)
-- 🚧 **Saved Game Templates** - Store favorite patterns and settings (pending)
+- **75-Ball Bingo Format** - Standard B-I-N-G-O grid (B: 1-15, I: 16-30, N: 31-45, G: 46-60, O: 61-75)
+- **29 Built-in Patterns** - Lines, corners, frames, shapes, letters, blackout, and more
+- **Voice Packs** - 4 voice options (Standard, Standard Hall, British Slang, British Slang Hall)
+- **Audio System** - Roll sounds (Metal Cage, Plastic Cage, Plastic Swirl, Lottery Balls) with separate volume controls
+- **Auto-Call Mode** - Configurable speed (5-30 seconds) for automated gameplay
+- **Dual-Screen Sync** - BroadcastChannel API synchronizes presenter + audience windows
+- **Theme System** - Light/Dark/System mode with 10+ color themes
+- **PWA Support** - Service worker, audio caching, offline-capable gameplay
+- **Fullscreen Mode** - Optimized for projector/large TV displays
+- **Saved Templates** - Store favorite patterns and settings in localStorage
+- **Keyboard Shortcuts** - Space, P, R, U, M for quick control
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+ and pnpm 9.15+
-- Supabase project (for online mode)
 
 ### Installation
 
@@ -56,7 +53,7 @@ pnpm test:coverage     # With coverage report
 
 ### Key Routes
 
-- **`/`** - Home page with room creation/join
+- **`/`** - Home page
 - **`/play`** - Presenter view (game controls, pattern selector, audio settings)
 - **`/display`** - Audience view (large ball display, bingo board, pattern visualization)
 
@@ -65,7 +62,7 @@ pnpm test:coverage     # With coverage report
 1. Create `.env.local` in `apps/bingo` (see Environment Variables below)
 2. Run `pnpm dev:bingo` from root or `pnpm dev` from `apps/bingo`
 3. Open [http://localhost:3000](http://localhost:3000)
-4. Create a room (online or offline mode)
+4. Navigate to `/play` for presenter controls
 5. Open `/display` in a second window for audience view
 
 ## Architecture
@@ -76,61 +73,26 @@ pnpm test:coverage     # With coverage report
 |-------|------------|
 | Framework | Next.js 16 (App Router) |
 | Frontend | React 19 + Tailwind CSS 4 |
-| Backend (BFF) | Next.js API Routes |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (via BFF) |
-| State Management | Zustand 5 |
+| State Management | Zustand 5 (localStorage persistence) |
 | PWA | Serwist (Service Worker) |
 | Testing | Vitest 4 + Testing Library |
-
-### Project Structure
-
-```
-src/
-├── app/
-│   ├── api/health/    # Health check endpoint
-│   ├── play/          # Presenter view (page.tsx)
-│   ├── display/       # Audience view (page.tsx)
-│   └── layout.tsx     # Root layout with theme provider
-├── components/
-│   ├── presenter/     # ControlPanel, PatternSelector, BallDisplay, ThemeSelector
-│   ├── audience/      # AudienceBallDisplay, AudienceBoard
-│   └── ui/            # Button, Modal, Toggle, Card, Toast
-├── hooks/
-│   ├── use-game.ts    # Game state + keyboard shortcuts
-│   ├── use-audio.ts   # Audio playback hook
-│   ├── use-sync.ts    # Dual-screen sync hook
-│   └── use-theme.ts   # Theme management
-├── lib/
-│   ├── game/          # engine.ts, patterns.ts, state-machine.ts, ball-deck.ts
-│   ├── session/       # secure-generation.ts (PIN/session ID), serializer.ts
-│   └── sync/          # broadcast.ts (BroadcastChannel), session.ts, offline-session.ts
-├── stores/
-│   ├── game-store.ts  # Zustand game state
-│   ├── audio-store.ts # Zustand audio state (persisted)
-│   ├── sync-store.ts  # Zustand sync state
-│   └── theme-store.ts # Zustand theme state (persisted)
-├── types/             # TypeScript types
-├── test/              # Test utilities and mocks
-└── sw.ts              # Service worker (Serwist)
-```
 
 ### State Management
 
 Pure function-based game engine wrapped in Zustand stores:
 
 ```
-GameState (immutable) → engine functions → new GameState
-                              ↓
+GameState (immutable) -> engine functions -> new GameState
+                              |
                     Zustand store (reactive)
-                              ↓
+                              |
                     React components via hooks
 ```
 
 **Key Files:**
 - `lib/game/engine.ts` - Pure functions for state transitions
 - `lib/game/patterns.ts` - 29 pattern definitions with validation
-- `lib/game/state-machine.ts` - Game status transitions (idle → ready → active → paused → completed)
+- `lib/game/state-machine.ts` - Game status transitions
 - `stores/game-store.ts` - Zustand store wrapping engine functions
 
 ### Dual-Screen Sync
@@ -139,35 +101,19 @@ Uses BroadcastChannel API for same-device window communication:
 
 - **Presenter window** (`/play`): Game controls, pattern selector, speed control, audio toggle
 - **Audience window** (`/display`): Large ball display, full bingo board, winning pattern
-- **Message types**: `GAME_STATE_UPDATE`, `BALL_CALLED`, `GAME_RESET`, `PATTERN_CHANGED`, `REQUEST_SYNC`
 
-**Implementation:** `lib/sync/broadcast.ts` (BroadcastSync class) + `hooks/use-sync.ts` (React hook)
+**Implementation:** `@joolie-boolie/sync` package + `hooks/use-sync.ts` (React hook)
 
 ## Environment Variables
 
 Create `.env.local` in `apps/bingo`:
 
-### Required Variables
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_APP_URL` | Yes | App URL (default: `http://localhost:3000`) |
+| `NEXT_PUBLIC_FARO_URL` | No | Grafana Faro collector URL for frontend observability |
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | `https://your-project.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
-| `SESSION_TOKEN_SECRET` | Secret key for HMAC-signing session tokens | Generate with `openssl rand -base64 32` |
-
-### Optional Variables
-
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_SERVICE_ROLE_KEY` | For admin operations (optional) |
-
-**Example `.env.local`:**
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SESSION_TOKEN_SECRET=vGOwoWTO69KP5QXIcNYjyHGonXJZh3nFH3oq3XOCSwY=
-```
+No auth or database env vars are needed. The app runs standalone with localStorage-only persistence.
 
 ## Development Workflow
 
@@ -180,17 +126,7 @@ Tests are located alongside code in `__tests__` directories:
 pnpm test             # Watch mode
 pnpm test:run         # Single run
 pnpm test:coverage    # With coverage report
-
-# Run specific test file
-pnpm vitest src/lib/game/__tests__/engine.test.ts
 ```
-
-**Test Locations:**
-- `stores/__tests__/` - Store tests
-- `hooks/__tests__/` - Hook tests
-- `components/**/__tests__/` - Component tests
-- `lib/game/__tests__/` - Engine tests
-- `app/api/**/__tests__/` - API route tests
 
 ### Keyboard Shortcuts
 
@@ -202,7 +138,7 @@ pnpm vitest src/lib/game/__tests__/engine.test.ts
 | **U** | Undo last call |
 | **M** | Mute/unmute audio |
 
-**Implementation:** `hooks/use-game.ts:75`
+**Implementation:** `hooks/use-game.ts`
 
 ## Shared Packages
 
@@ -211,38 +147,22 @@ This app depends on the following shared packages:
 - [`@joolie-boolie/sync`](../../packages/sync/README.md) - BroadcastChannel dual-screen synchronization
 - [`@joolie-boolie/ui`](../../packages/ui/README.md) - Button, Toggle, Slider, Card, Modal, Toast components
 - [`@joolie-boolie/theme`](../../packages/theme/README.md) - Design tokens (10+ themes, typography, spacing)
-- [`@joolie-boolie/database`](../../packages/database/README.md) - Type-safe Supabase client wrappers (268 exports)
-- [`@joolie-boolie/auth`](../../packages/auth/README.md) - Supabase authentication wrappers (34 exports) - *not yet integrated*
 - [`@joolie-boolie/game-stats`](../../packages/game-stats/README.md) - Game statistics types, calculators, storage
 - [`@joolie-boolie/testing`](../../packages/testing/README.md) - BroadcastChannel and Audio mocks for tests
-
-## Integration Status
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| **Database** | ✅ Integrated | Session tokens, CRUD helpers, API factories |
-| **Authentication** | ❌ Not Integrated | @joolie-boolie/auth ready but not wired up |
-| **PWA** | ✅ Complete | Service worker, audio caching, offline gameplay |
-| **Dual-Screen Sync** | ✅ Complete | BroadcastChannel API via @joolie-boolie/sync |
-| **Audio System** | ✅ Complete | Voice packs, roll sounds, volume controls, pooling |
-| **Theme System** | ✅ Complete | 10+ themes, light/dark mode, persistence |
-| **Testing** | ✅ Complete | Vitest, Testing Library, BroadcastChannel mocks |
+- [`@joolie-boolie/types`](../../packages/types/README.md) - Shared TypeScript types
+- [`@joolie-boolie/audio`](../../packages/audio/README.md) - Shared audio utilities
+- [`@joolie-boolie/error-tracking`](../../packages/error-tracking/README.md) - Error logging and tracking
 
 ## Known Issues & Limitations
 
-- **Authentication:** Not yet integrated - all sessions are guest sessions
-- **Saved Templates:** No backend storage for game templates
 - **Pattern Editor:** Patterns are hardcoded in `lib/game/patterns.ts`
 - **Safari Audio:** Web Audio API has limitations on iOS Safari (voice packs may not work)
 
 ## Future Work
 
-- [ ] User authentication via @joolie-boolie/auth
-- [ ] Saved game templates (backend storage)
 - [ ] Pattern editor UI
 - [ ] Voice pack selection UI improvements
 - [ ] Analytics/history tracking
-- [ ] Multi-room support
 
 ## Design Requirements
 
@@ -255,7 +175,6 @@ This app depends on the following shared packages:
 
 - **AI Context:** [`CLAUDE.md`](./CLAUDE.md) - Detailed architecture, game mechanics, state machine
 - **Monorepo:** [`../../README.md`](../../README.md) - Root README with project overview
-- **Pull Request Template:** [`../../.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md)
 
 ## Contributing
 

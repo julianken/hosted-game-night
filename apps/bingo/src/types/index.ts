@@ -56,20 +56,9 @@ export type PatternCategory =
   | 'combo'
   | 'custom';
 
-// User profile (extends Supabase auth.users)
-export interface UserProfile {
-  id: string; // UUID
-  facilityName: string | null;
-  logoUrl: string | null;
-  defaultGameTitle: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // Saved game template
 export interface GameTemplate {
-  id: string; // UUID
-  userId: string;
+  id: string;
   name: string;
   patternId: string;
   autoCallSpeed: number;
@@ -77,45 +66,6 @@ export interface GameTemplate {
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-// API request/response types
-export interface CreateTemplateRequest {
-  name: string;
-  patternId: string;
-  autoCallSpeed: number;
-  audioEnabled: boolean;
-  isDefault?: boolean;
-}
-
-export interface UpdateTemplateRequest {
-  name?: string;
-  patternId?: string;
-  autoCallSpeed?: number;
-  audioEnabled?: boolean;
-  isDefault?: boolean;
-}
-
-export interface UpdateProfileRequest {
-  facilityName?: string;
-  defaultGameTitle?: string;
-}
-
-// Auth types
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  facilityName?: string;
-}
-
-export interface AuthResponse {
-  user: UserProfile | null;
-  error: string | null;
 }
 
 // Voice pack types

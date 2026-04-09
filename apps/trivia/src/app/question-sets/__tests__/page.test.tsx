@@ -46,7 +46,6 @@ vi.mock('uuid', () => ({
 const mockQuestionSets = [
   {
     id: 'qs-1',
-    user_id: 'user-1',
     name: 'History Questions',
     description: 'A collection of history trivia',
     questions: [
@@ -59,7 +58,6 @@ const mockQuestionSets = [
   },
   {
     id: 'qs-2',
-    user_id: 'user-1',
     name: 'Science Quiz',
     description: null,
     questions: [],
@@ -69,29 +67,32 @@ const mockQuestionSets = [
   },
 ];
 
+// Mock the question-set-store to provide test data
+const mockStore = { items: [] as typeof mockQuestionSets, remove: vi.fn(), update: vi.fn() };
+vi.mock('@/stores/question-set-store', () => ({
+  useTriviaQuestionSetStore: (selector: (state: typeof mockStore) => unknown) => selector(mockStore),
+}));
+
 beforeEach(() => {
   vi.restoreAllMocks();
+  mockStore.items = [];
+  mockStore.remove = vi.fn();
+  mockStore.update = vi.fn();
 });
 
 describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   it('renders the page title when sets exist', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockQuestionSets }),
-    });
+    mockStore.items = mockQuestionSets;
 
     render(<QuestionSetsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('My Question Sets')).toBeInTheDocument();
+      expect(screen.getByText('Question Sets')).toBeInTheDocument();
     });
   });
 
   it('renders "Question Sets" title when empty', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    });
+    mockStore.items = [];
 
     render(<QuestionSetsPage />);
 
@@ -101,10 +102,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('shows empty state onboarding when no sets exist', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    });
+    mockStore.items = [];
 
     render(<QuestionSetsPage />);
 
@@ -114,10 +112,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('renders question set cards when data exists', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockQuestionSets }),
-    });
+    mockStore.items = mockQuestionSets;
 
     render(<QuestionSetsPage />);
 
@@ -133,10 +128,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('shows Add Questions button when sets exist', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockQuestionSets }),
-    });
+    mockStore.items = mockQuestionSets;
 
     render(<QuestionSetsPage />);
 
@@ -146,10 +138,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('does not show Add Questions button when empty', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: [] }),
-    });
+    mockStore.items = [];
 
     render(<QuestionSetsPage />);
 
@@ -161,10 +150,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('toggles add questions panel', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockQuestionSets }),
-    });
+    mockStore.items = mockQuestionSets;
 
     render(<QuestionSetsPage />);
 
@@ -181,10 +167,7 @@ describe.skipIf(skipIfDisabled)('QuestionSetsPage', () => {
   });
 
   it('shows set count badge when sets exist', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: mockQuestionSets }),
-    });
+    mockStore.items = mockQuestionSets;
 
     render(<QuestionSetsPage />);
 
