@@ -119,13 +119,17 @@ describe('AudienceBingoBoard', () => {
       expect(ball6.className).not.toContain('cell-flash-audience-animation');
     });
 
+    // Column-specific highlight colors come from CSS custom properties
+    // (--display-called-<col>-bg) so the palette can adapt to light/dark
+    // mode. Each test verifies that the right per-column var is wired up;
+    // the actual color values live in globals.css.
     it('applies column-specific highlight colors for B column', () => {
       const calledBalls = [createBall('B', 3)];
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball3 = screen.getByText('3');
-      // Column colors are applied via inline style (backgroundColor), not CSS classes
-      expect(ball3.style.backgroundColor).toContain('59, 130, 246');
+      expect(ball3.style.backgroundColor).toBe('var(--display-called-b-bg)');
+      expect(ball3.style.color).toBe('var(--display-called-b-text)');
     });
 
     it('applies column-specific highlight colors for I column', () => {
@@ -133,7 +137,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball22 = screen.getByText('22');
-      expect(ball22.style.backgroundColor).toContain('239, 68, 68');
+      expect(ball22.style.backgroundColor).toBe('var(--display-called-i-bg)');
+      expect(ball22.style.color).toBe('var(--display-called-i-text)');
     });
 
     it('applies column-specific highlight colors for N column', () => {
@@ -141,7 +146,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball40 = screen.getByText('40');
-      expect(ball40.style.backgroundColor).toContain('232, 230, 235');
+      expect(ball40.style.backgroundColor).toBe('var(--display-called-n-bg)');
+      expect(ball40.style.color).toBe('var(--display-called-n-text)');
     });
 
     it('applies column-specific highlight colors for G column', () => {
@@ -149,7 +155,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball55 = screen.getByText('55');
-      expect(ball55.style.backgroundColor).toContain('34, 197, 94');
+      expect(ball55.style.backgroundColor).toBe('var(--display-called-g-bg)');
+      expect(ball55.style.color).toBe('var(--display-called-g-text)');
     });
 
     it('applies column-specific highlight colors for O column', () => {
@@ -157,7 +164,8 @@ describe('AudienceBingoBoard', () => {
       render(<AudienceBingoBoard calledBalls={calledBalls} />);
 
       const ball72 = screen.getByText('72');
-      expect(ball72.style.backgroundColor).toContain('245, 158, 11');
+      expect(ball72.style.backgroundColor).toBe('var(--display-called-o-bg)');
+      expect(ball72.style.color).toBe('var(--display-called-o-text)');
     });
   });
 

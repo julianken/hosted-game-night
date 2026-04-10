@@ -35,39 +35,21 @@ const columnGlowColor: Record<BingoColumn, string> = {
 };
 
 /**
- * Called cell styles using per-column bingo token colors.
- * Uses pre-computed values (not OKLCH) for projector/TV compatibility. Issue 3.6.
+ * Called cell styles — delegates to CSS custom properties so the palette
+ * can adapt to light/dark mode. See the --display-called-* tokens in
+ * apps/bingo/src/app/globals.css (both :root and :root.light).
+ *
+ * Previously this was a hardcoded dark-mode-only palette, which made
+ * called cells effectively invisible on the light theme (near-white
+ * text on a near-white background).
  */
 function getCalledCellStyle(column: BingoColumn): React.CSSProperties {
-  const styles: Record<BingoColumn, { bg: string; color: string; boxShadow: string }> = {
-    B: {
-      bg: 'rgba(59, 130, 246, 0.30)',
-      color: '#e8f1fe',
-      boxShadow: 'inset 0 0 0 1.5px rgba(59, 130, 246, 0.95), 0 0 7px rgba(59, 130, 246, 0.42), 0 0 17px rgba(59, 130, 246, 0.20)',
-    },
-    I: {
-      bg: 'rgba(239, 68, 68, 0.30)',
-      color: '#fee0e2',
-      boxShadow: 'inset 0 0 0 1.5px rgba(239, 68, 68, 0.95), 0 0 7px rgba(239, 68, 68, 0.42), 0 0 17px rgba(239, 68, 68, 0.20)',
-    },
-    N: {
-      bg: 'rgba(232, 230, 235, 0.20)',
-      color: '#f6f7f9',
-      boxShadow: 'inset 0 0 0 1.5px rgba(232, 230, 235, 0.80), 0 0 7px rgba(232, 230, 235, 0.25), 0 0 17px rgba(232, 230, 235, 0.10)',
-    },
-    G: {
-      bg: 'rgba(34, 197, 94, 0.30)',
-      color: '#defcf0',
-      boxShadow: 'inset 0 0 0 1.5px rgba(34, 197, 94, 0.95), 0 0 7px rgba(34, 197, 94, 0.42), 0 0 17px rgba(34, 197, 94, 0.20)',
-    },
-    O: {
-      bg: 'rgba(245, 158, 11, 0.30)',
-      color: '#fef7e4',
-      boxShadow: 'inset 0 0 0 1.5px rgba(245, 158, 11, 0.95), 0 0 7px rgba(245, 158, 11, 0.42), 0 0 17px rgba(245, 158, 11, 0.20)',
-    },
+  const key = column.toLowerCase();
+  return {
+    backgroundColor: `var(--display-called-${key}-bg)`,
+    color: `var(--display-called-${key}-text)`,
+    boxShadow: `var(--display-called-${key}-shadow)`,
   };
-  const s = styles[column];
-  return { backgroundColor: s.bg, color: s.color, boxShadow: s.boxShadow };
 }
 
 /**
