@@ -6,6 +6,7 @@ import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useSync } from '@/hooks/use-sync';
 import { useFullscreen } from '@/hooks/use-fullscreen';
 import { isValidSessionId } from '@/lib/sync/session';
+import type { BingoBall } from '@/types';
 import {
   BallReveal,
   AudienceBingoBoard,
@@ -111,12 +112,6 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const { isConnected, connectionError, requestSync } = useSync({
-    role: 'audience',
-    sessionId,
-    displayAudioUnlocked: audioUnlocked,
-  });
-
   const { toggleFullscreen } = useFullscreen();
   const [showHelp, setShowHelp] = useState(false);
   const toggleHelp = useCallback(() => setShowHelp((prev) => !prev), []);
@@ -131,6 +126,11 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
     loadManifest();
   }, [loadManifest]);
 
+  // Audio playback actions for the display-side ball sequence
+  const playRollSoundFn = useAudioStore((state) => state.playRollSound);
+  const playRevealChimeFn = useAudioStore((state) => state.playRevealChime);
+  const playBallVoiceFn = useAudioStore((state) => state.playBallVoice);
+
   const currentBall = useGameStore((state) => state.currentBall);
   const calledBalls = useGameStore((state) => state.calledBalls);
   const pattern = useGameStore((state) => state.pattern);
@@ -138,6 +138,66 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
   const autoCallEnabled = useGameStore((state) => state.autoCallEnabled);
   const autoCallSpeed = useGameStore((state) => state.autoCallSpeed);
   const { ballsCalled, ballsRemaining } = useGameSelectors();
+
+  // Local revealed ball state. During a PLAY_BALL_SEQUENCE handler run, the
+  // sequence handler drives this so the visual reveal lines up with the end
+  // of the roll sound. Outside of a sequence (initial sync, undo, reset),
+  // an effect syncs it from the store's currentBall.
+  const [revealedBall, setRevealedBall] = useState<BingoBall | null>(null);
+  const sequenceRunningRef = useRef(false);
+
+  // Sync revealedBall ← currentBall when no sequence is running (covers
+  // initial sync, undo, reset).
+  useEffect(() => {
+    if (!sequenceRunningRef.current) {
+      setRevealedBall(currentBall);
+    }
+  }, [currentBall]);
+
+  // Ref-indirection for the ball sequence handler. useSync receives a stable
+  // wrapper that dispatches through the ref; the actual handler (which needs
+  // sendBallRevealReady from useSync's return) is assigned below.
+  const handleBallSequenceRef = useRef<((ball: BingoBall) => Promise<void>) | null>(null);
+  const onPlayBallSequence = useCallback(async (ball: BingoBall) => {
+    const handler = handleBallSequenceRef.current;
+    if (!handler) return;
+    await handler(ball);
+  }, []);
+
+  const { isConnected, connectionError, requestSync, sendBallRevealReady } = useSync({
+    role: 'audience',
+    sessionId,
+    displayAudioUnlocked: audioUnlocked,
+    onPlayBallSequence,
+  });
+
+  // Handle an incoming PLAY_BALL_SEQUENCE message: run the full audio sequence
+  // locally and ack reveal mid-sequence so the presenter can commit its state.
+  const handleBallSequence = useCallback(
+    async (ball: BingoBall) => {
+      if (sequenceRunningRef.current) {
+        // Drop overlapping sequences defensively
+        return;
+      }
+      sequenceRunningRef.current = true;
+      try {
+        await playRollSoundFn();
+        setRevealedBall(ball);
+        sendBallRevealReady();
+        await new Promise<void>((r) => setTimeout(r, 400));
+        await playRevealChimeFn();
+        await playBallVoiceFn(ball);
+      } finally {
+        sequenceRunningRef.current = false;
+      }
+    },
+    [playRollSoundFn, playRevealChimeFn, playBallVoiceFn, sendBallRevealReady]
+  );
+
+  // Keep the ref in sync with the latest callback identity
+  useEffect(() => {
+    handleBallSequenceRef.current = handleBallSequence;
+  }, [handleBallSequence]);
 
   // Unlock audio via user click
   const handleAudioUnlock = useCallback(() => {
@@ -326,7 +386,7 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
                 {/* Ball with absolute status badge overlay */}
                 <div className="flex-shrink-0 relative flex items-center justify-center">
                   <BallReveal
-                    ball={currentBall}
+                    ball={revealedBall}
                     autoCallInterval={autoCallSpeed}
                     isAutoCall={autoCallEnabled}
                     size="display"

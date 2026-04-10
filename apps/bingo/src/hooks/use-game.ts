@@ -4,15 +4,19 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
 import { BingoPattern, GameStatus } from '@/types';
-import { getRecentBalls } from '@/lib/game';
+import { getRecentBalls, canCallBall } from '@/lib/game';
 
 /**
  * Audio broadcast functions for routing sound to the display window.
+ * The presenter broadcasts a single PLAY_BALL_SEQUENCE message and then
+ * awaits two acks from the display:
+ *  - BALL_REVEAL_READY (mid-sequence): commit ball locally
+ *  - BALL_SEQUENCE_COMPLETE (end): sequence is done
  */
 interface AudioBroadcast {
-  broadcastPlayRollSound: () => void;
-  broadcastPlayRevealChime: () => void;
-  broadcastPlayBallVoice: (ball: import('@/types').BingoBall) => void;
+  broadcastPlayBallSequence: (ball: import('@/types').BingoBall) => void;
+  waitForReveal: () => Promise<void>;
+  waitForComplete: () => Promise<void>;
 }
 
 /**
@@ -38,23 +42,40 @@ async function executeCallSequence(
 ) {
   const useDisplayAudio = displayAudioActive && audioBroadcast;
 
-  if (audioEnabled) {
-    if (useDisplayAudio) {
-      audioBroadcast.broadcastPlayRollSound();
-    } else {
-      await audioStore.playRollSound();
+  if (useDisplayAudio && audioEnabled) {
+    // Broadcast path: display owns the audio sequence. Peek the next ball
+    // without committing, broadcast PLAY_BALL_SEQUENCE, then wait for the
+    // display to ack BALL_REVEAL_READY before committing state. This keeps
+    // the presenter and display visually in sync — both reveal the ball at
+    // the same moment (end of the roll sound on the display).
+    const state = useGameStore.getState();
+    if (!canCallBall(state) || state.remainingBalls.length === 0) {
+      return null;
     }
+    const nextBall = state.remainingBalls[0];
+
+    // Register ack listeners BEFORE broadcasting to avoid a race where the
+    // ack arrives before we're listening for it.
+    const revealPromise = audioBroadcast.waitForReveal();
+    const completePromise = audioBroadcast.waitForComplete();
+
+    audioBroadcast.broadcastPlayBallSequence(nextBall);
+
+    await revealPromise;
+    const ball = callBallFn();
+    await completePromise;
+    return ball;
   }
-  const ball = callBallFn(); // Ball appears — animation starts slightly before chime
+
+  // Local path (no display audio): presenter plays audio itself.
+  if (audioEnabled) {
+    await audioStore.playRollSound();
+  }
+  const ball = callBallFn();
   if (ball && audioEnabled) {
     await new Promise<void>((r) => setTimeout(r, 400));
-    if (useDisplayAudio) {
-      audioBroadcast.broadcastPlayRevealChime();
-      audioBroadcast.broadcastPlayBallVoice(ball);
-    } else {
-      await audioStore.playRevealChime();
-      await audioStore.playBallVoice(ball);
-    }
+    await audioStore.playRevealChime();
+    await audioStore.playBallVoice(ball);
   }
   return ball;
 }

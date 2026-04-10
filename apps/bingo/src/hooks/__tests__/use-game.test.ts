@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useGame, useGameKeyboard } from '../use-game';
 import { useGameStore } from '@/stores/game-store';
 import { useAudioStore } from '@/stores/audio-store';
-import { BallNumber, BingoPattern } from '@/types';
+import { BallNumber, BingoBall, BingoPattern } from '@/types';
 
 // Mock Audio globally for all tests
 class MockAudio {
@@ -522,6 +522,135 @@ describe('use-game', () => {
 
         expect(result.current.recentBalls).toHaveLength(3);
         expect(result.current.recentBalls[0]).toEqual(result.current.currentBall);
+      });
+    });
+
+    describe('executeCallSequence broadcast path (display audio active)', () => {
+      let broadcastPlayBallSequenceMock: ReturnType<typeof vi.fn<(ball: BingoBall) => void>>;
+      let waitForRevealMock: ReturnType<typeof vi.fn<() => Promise<void>>>;
+      let waitForCompleteMock: ReturnType<typeof vi.fn<() => Promise<void>>>;
+      let resolveReveal: () => void;
+      let resolveComplete: () => void;
+
+      beforeEach(() => {
+        broadcastPlayBallSequenceMock = vi.fn<(ball: BingoBall) => void>();
+        waitForRevealMock = vi.fn<() => Promise<void>>(
+          () =>
+            new Promise<void>((r) => {
+              resolveReveal = r;
+            })
+        );
+        waitForCompleteMock = vi.fn<() => Promise<void>>(
+          () =>
+            new Promise<void>((r) => {
+              resolveComplete = r;
+            })
+        );
+      });
+
+      const buildBroadcast = () => ({
+        broadcastPlayBallSequence: broadcastPlayBallSequenceMock,
+        waitForReveal: waitForRevealMock,
+        waitForComplete: waitForCompleteMock,
+      });
+
+      it('broadcasts PLAY_BALL_SEQUENCE with the next ball BEFORE committing state', async () => {
+        const { result } = renderHook(() =>
+          useGame({
+            audioBroadcast: buildBroadcast(),
+            displayAudioActive: true,
+          })
+        );
+        act(() => {
+          result.current.startGame();
+        });
+        const initialCalled = result.current.calledBalls.length;
+        const expectedNextBall = useGameStore.getState().remainingBalls[0];
+
+        let callPromise!: Promise<
+          ReturnType<typeof result.current.callBall> extends Promise<infer U> ? U : never
+        >;
+        act(() => {
+          callPromise = result.current.callBall() as typeof callPromise;
+        });
+
+        await waitFor(() => {
+          expect(broadcastPlayBallSequenceMock).toHaveBeenCalledWith(expectedNextBall);
+        });
+        // State should NOT have committed yet
+        expect(result.current.calledBalls.length).toBe(initialCalled);
+
+        await act(async () => {
+          resolveReveal();
+          await Promise.resolve();
+        });
+        await waitFor(() => {
+          expect(result.current.calledBalls.length).toBe(initialCalled + 1);
+        });
+
+        await act(async () => {
+          resolveComplete();
+          await callPromise;
+        });
+      });
+
+      it('does not broadcast when audio is disabled (falls through to local commit)', async () => {
+        const { result } = renderHook(() =>
+          useGame({
+            audioBroadcast: buildBroadcast(),
+            displayAudioActive: true,
+          })
+        );
+        act(() => {
+          result.current.startGame();
+          result.current.toggleAudio();
+        });
+
+        await act(async () => {
+          await result.current.callBall();
+        });
+
+        expect(broadcastPlayBallSequenceMock).not.toHaveBeenCalled();
+        expect(result.current.calledBalls.length).toBe(1);
+      });
+
+      it('awaits both reveal and complete acks before resolving callBall', async () => {
+        const { result } = renderHook(() =>
+          useGame({
+            audioBroadcast: buildBroadcast(),
+            displayAudioActive: true,
+          })
+        );
+        act(() => {
+          result.current.startGame();
+        });
+
+        let callResolved = false;
+        act(() => {
+          void result.current.callBall().then(() => {
+            callResolved = true;
+          });
+        });
+
+        await waitFor(() => {
+          expect(waitForRevealMock).toHaveBeenCalled();
+        });
+        expect(waitForCompleteMock).toHaveBeenCalled();
+        expect(callResolved).toBe(false);
+
+        await act(async () => {
+          resolveReveal();
+          await Promise.resolve();
+        });
+        expect(callResolved).toBe(false);
+
+        await act(async () => {
+          resolveComplete();
+          await Promise.resolve();
+        });
+        await waitFor(() => {
+          expect(callResolved).toBe(true);
+        });
       });
     });
   });

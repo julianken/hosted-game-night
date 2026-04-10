@@ -38,17 +38,19 @@ export default function PlayPage() {
   const {
     isConnected,
     displayAudioActive,
-    broadcastPlayRollSound,
-    broadcastPlayRevealChime,
-    broadcastPlayBallVoice,
+    broadcastPlayBallSequence,
+    waitForReveal,
+    waitForComplete,
   } = useSync({ role: 'presenter', sessionId });
 
-  // Memoize audio broadcast object to avoid re-renders
+  // Memoize audio broadcast object to avoid re-renders.
+  // The presenter broadcasts a single PLAY_BALL_SEQUENCE message and
+  // awaits two acks (reveal + complete) from the display.
   const audioBroadcast = useMemo(() => ({
-    broadcastPlayRollSound,
-    broadcastPlayRevealChime,
-    broadcastPlayBallVoice,
-  }), [broadcastPlayRollSound, broadcastPlayRevealChime, broadcastPlayBallVoice]);
+    broadcastPlayBallSequence,
+    waitForReveal,
+    waitForComplete,
+  }), [broadcastPlayBallSequence, waitForReveal, waitForComplete]);
 
   const game = useGameKeyboard({ audioBroadcast, displayAudioActive });
 
