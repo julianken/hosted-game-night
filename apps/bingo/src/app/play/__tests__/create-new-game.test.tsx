@@ -56,9 +56,10 @@ vi.mock('@/hooks/use-sync', () => ({
   useSync: () => ({
     isConnected: true,
     displayAudioActive: false,
-    broadcastPlayRollSound: vi.fn(),
-    broadcastPlayRevealChime: vi.fn(),
-    broadcastPlayBallVoice: vi.fn(),
+    broadcastPlayBallSequence: vi.fn(),
+    waitForReveal: vi.fn(() => Promise.resolve()),
+    waitForComplete: vi.fn(() => Promise.resolve()),
+    sendBallRevealReady: vi.fn(),
   }),
 }));
 

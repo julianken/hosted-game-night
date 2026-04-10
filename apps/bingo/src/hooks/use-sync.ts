@@ -43,18 +43,6 @@ class BingoBroadcastSync extends BroadcastSync<BingoSyncPayload> {
     this.send('DISPLAY_THEME_CHANGED', { theme });
   }
 
-  broadcastPlayRollSound(): void {
-    this.send('PLAY_ROLL_SOUND', null);
-  }
-
-  broadcastPlayRevealChime(): void {
-    this.send('PLAY_REVEAL_CHIME', null);
-  }
-
-  broadcastPlayBallVoice(ball: BingoBall): void {
-    this.send('PLAY_BALL_VOICE', ball);
-  }
-
   broadcastPlayBallSequence(ball: BingoBall): void {
     this.send('PLAY_BALL_SEQUENCE', ball);
   }
@@ -95,9 +83,6 @@ export function createMessageRouter(handlers: Partial<{
   onAudioSettingsChanged: (settings: AudioSettingsPayload) => void;
   onDisplayThemeChanged: (theme: ThemeMode) => void;
   onChannelReady: () => void;
-  onPlayRollSound: () => void;
-  onPlayRevealChime: () => void;
-  onPlayBallVoice: (ball: BingoBall) => void;
   onPlayBallSequence: (ball: BingoBall) => void;
   onBallRevealReady: () => void;
   onBallSequenceComplete: () => void;
@@ -129,15 +114,6 @@ export function createMessageRouter(handlers: Partial<{
         break;
       case 'CHANNEL_READY':
         handlers.onChannelReady?.();
-        break;
-      case 'PLAY_ROLL_SOUND':
-        handlers.onPlayRollSound?.();
-        break;
-      case 'PLAY_REVEAL_CHIME':
-        handlers.onPlayRevealChime?.();
-        break;
-      case 'PLAY_BALL_VOICE':
-        handlers.onPlayBallVoice?.(message.payload);
         break;
       case 'PLAY_BALL_SEQUENCE':
         handlers.onPlayBallSequence?.(message.payload);
@@ -336,22 +312,6 @@ export function useSync({ role, sessionId, displayAudioUnlocked, onPlayBallSeque
         if (role === 'audience') {
           sync.requestSync();
         }
-      },
-      // Audio playback handlers (audience/display receives these from presenter)
-      onPlayRollSound: () => {
-        if (role !== 'audience') return;
-        const audioStore = useAudioStore.getState();
-        audioStore.playRollSound();
-      },
-      onPlayRevealChime: () => {
-        if (role !== 'audience') return;
-        const audioStore = useAudioStore.getState();
-        audioStore.playRevealChime();
-      },
-      onPlayBallVoice: (ball) => {
-        if (role !== 'audience') return;
-        const audioStore = useAudioStore.getState();
-        audioStore.playBallVoice(ball);
       },
       // Audience runs the full audio sequence locally via the onPlayBallSequence callback.
       // After chime+voice finish it acks BALL_SEQUENCE_COMPLETE. The REVEAL ack is sent
@@ -573,22 +533,6 @@ export function useSync({ role, sessionId, displayAudioUnlocked, onPlayBallSeque
     broadcastSyncRef.current.send('AUDIO_UNLOCKED', null);
   }, [role, displayAudioUnlocked]);
 
-  // Broadcast audio event methods (presenter sends these to display)
-  const broadcastPlayRollSound = useCallback(() => {
-    if (role !== 'presenter') return;
-    broadcastSyncRef.current?.broadcastPlayRollSound();
-  }, [role]);
-
-  const broadcastPlayRevealChime = useCallback(() => {
-    if (role !== 'presenter') return;
-    broadcastSyncRef.current?.broadcastPlayRevealChime();
-  }, [role]);
-
-  const broadcastPlayBallVoice = useCallback((ball: BingoBall) => {
-    if (role !== 'presenter') return;
-    broadcastSyncRef.current?.broadcastPlayBallVoice(ball);
-  }, [role]);
-
   const REVEAL_TIMEOUT_MS = 15_000;
   const COMPLETE_TIMEOUT_MS = 15_000;
 
@@ -668,9 +612,6 @@ export function useSync({ role, sessionId, displayAudioUnlocked, onPlayBallSeque
     requestSync: () => broadcastSyncRef.current?.requestSync(),
     // Audio routing
     displayAudioActive,
-    broadcastPlayRollSound,
-    broadcastPlayRevealChime,
-    broadcastPlayBallVoice,
     broadcastPlayBallSequence,
     waitForReveal,
     waitForComplete,
