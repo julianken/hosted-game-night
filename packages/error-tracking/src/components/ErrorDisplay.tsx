@@ -45,7 +45,7 @@ export function ErrorDisplay({
   error,
   title = 'Oops! Something went wrong',
   description,
-  helpText = 'If this keeps happening, please let a staff member know.',
+  helpText = 'If this keeps happening, try reloading the page or clearing your browser cache.',
   onRetry,
   onGoHome,
   showRetry = true,

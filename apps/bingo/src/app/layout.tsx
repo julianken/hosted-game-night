@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Bingo",
-  description: "Cloud-based Bingo system for groups and communities",
+  description: "A modern, browser-based bingo system for groups and communities",
   icons: {
     apple: "/icons/icon-192.svg",
   },
