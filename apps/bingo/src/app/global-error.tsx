@@ -111,7 +111,7 @@ export default function GlobalError({
                 lineHeight: 1.5,
               }}
             >
-              If the problem continues, please contact support or try again later.
+              If the problem continues, try reloading the page or clearing your browser cache.
             </p>
 
             {/* Actions */}

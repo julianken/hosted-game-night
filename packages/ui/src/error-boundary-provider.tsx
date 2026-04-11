@@ -125,7 +125,7 @@ export function ErrorBoundaryProvider({
 
             {/* Help text */}
             <p className="text-lg text-muted-foreground mb-8">
-              If this keeps happening, please let a staff member know.
+              If this keeps happening, try reloading the page or clearing your browser cache.
             </p>
 
             {/* Actions */}

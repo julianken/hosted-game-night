@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Trivia - Joolie Boolie',
+  title: 'Trivia',
   description: 'Presenter-controlled trivia for groups and communities',
   icons: {
     apple: '/icons/icon-192.svg',

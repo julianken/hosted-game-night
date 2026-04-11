@@ -23,7 +23,7 @@ export default function Home() {
 
             {/* Description */}
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A cloud-based, easy-to-use bingo system designed for everyone.
+              A modern, browser-based bingo system designed for everyone.
               Large fonts, high contrast, and audio announcements make every game accessible and fun.
             </p>
 
@@ -191,7 +191,7 @@ export default function Home() {
       <footer className="bg-muted/10 border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-lg text-muted-foreground">
-            Part of <span className="font-semibold">Joolie Boolie</span> — games for groups and communities
+            A modern bingo system for groups and communities.
           </p>
         </div>
       </footer>

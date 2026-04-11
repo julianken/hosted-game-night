@@ -1,7 +1,7 @@
 {
   "name": "Bingo",
   "short_name": "Bingo",
-  "description": "Cloud-based Bingo system for groups and communities",
+  "description": "A modern, browser-based bingo system for groups and communities",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",

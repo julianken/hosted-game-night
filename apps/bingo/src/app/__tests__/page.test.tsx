@@ -72,7 +72,9 @@ describe('Home Page (standalone)', () => {
     it('should render footer', () => {
       render(<Home />);
 
-      expect(screen.getAllByText(/joolie boolie/i).length).toBeGreaterThan(0);
+      expect(
+        screen.getByText(/modern bingo system for groups and communities/i),
+      ).toBeInTheDocument();
     });
   });
 });
