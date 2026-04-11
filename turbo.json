@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalPassThroughEnv": ["E2E_TESTING"],
+  "globalPassThroughEnv": ["E2E_TESTING", "SENTRY_AUTH_TOKEN", "SENTRY_DSN"],
   "globalEnv": [
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_BINGO_URL",
