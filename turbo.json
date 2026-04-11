@@ -16,6 +16,7 @@
         "NEXT_PUBLIC_BINGO_URL",
         "NEXT_PUBLIC_TRIVIA_URL",
         "NEXT_PUBLIC_SENTRY_DSN",
+        "NEXT_PUBLIC_FARO_URL",
         "SENTRY_ORG",
         "SENTRY_PROJECT"
       ]
