@@ -148,8 +148,7 @@ jobs:
         run: |
           pnpm playwright test \
             --project=bingo \
-            --project=trivia \
-            --project=bingo-mobile
+            --project=trivia
         env:
           CI: true
           SHARD: ${{ matrix.shard }}

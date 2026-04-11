@@ -80,13 +80,6 @@ jobs:
 
       - name: Build all apps
         run: pnpm build
-        env:
-          # Stub env vars required at build time (not used at runtime)
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-          SESSION_TOKEN_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
-          NEXT_PUBLIC_PLATFORM_HUB_URL: http://localhost:3002
-          NEXT_PUBLIC_OAUTH_CLIENT_ID: placeholder-oauth-client-id
 
       - name: Run linting
         run: pnpm lint
