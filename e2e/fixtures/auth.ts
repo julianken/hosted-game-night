@@ -43,8 +43,13 @@ export interface GameFixtures {
   /**
    * Navigation timeout for game app pages in milliseconds.
    * Default: 5000ms. Override in project config for mobile: 15000ms.
+   *
+   * NOTE: Named `appNavigationTimeout` (not `navigationTimeout`) to avoid
+   * colliding with Playwright's built-in `navigationTimeout` option, which
+   * lives on `PlaywrightTestOptions` and would prevent us from using the
+   * `{ option: true }` fixture syntax.
    */
-  navigationTimeout: number;
+  appNavigationTimeout: number;
 }
 
 /**
@@ -71,16 +76,16 @@ export const test = base.extend<GameFixtures>({
    * Navigation timeout for game app pages.
    * Default: 5000ms. Override in project config for mobile: 15000ms.
    */
-  navigationTimeout: [5000, { option: true }],
+  appNavigationTimeout: [5000, { option: true }],
 
   /**
    * Bingo page fixture.
    * Navigates directly to Bingo /play (no auth needed in standalone mode).
    */
-  authenticatedBingoPage: async ({ page, navigationTimeout }, use) => {
+  authenticatedBingoPage: async ({ page, appNavigationTimeout }, use) => {
     await page.goto(`${BINGO_URL}/play`, {
       waitUntil: 'load',
-      timeout: navigationTimeout,
+      timeout: appNavigationTimeout,
     });
 
     await use(page);
@@ -99,7 +104,7 @@ export const test = base.extend<GameFixtures>({
    * See e2e/utils/trivia-fixtures.ts and docs/plans/BEA-697-e2e-baseline-fix.md
    * (Part C) for the full rationale.
    */
-  authenticatedTriviaPage: async ({ page, skipSetupDismissal, navigationTimeout }, use) => {
+  authenticatedTriviaPage: async ({ page, skipSetupDismissal, appNavigationTimeout }, use) => {
     // Seed canned trivia questions before navigation so the game store picks
     // them up on create(). addInitScript runs on every frame including popups
     // (so /display inherits the seeded state automatically).
@@ -140,7 +145,7 @@ export const test = base.extend<GameFixtures>({
 
     await page.goto(`${TRIVIA_URL}/play`, {
       waitUntil: 'load',
-      timeout: navigationTimeout,
+      timeout: appNavigationTimeout,
     });
 
     // Start game via setup wizard (unless test opts out)
@@ -153,3 +158,4 @@ export const test = base.extend<GameFixtures>({
 });
 
 export { expect } from '@playwright/test';
+export type { Page } from '@playwright/test';
