@@ -27,6 +27,28 @@ import { SetupGate } from '@/components/presenter/SetupGate';
 export default function PlayPage() {
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
 
+  // BEA-715: Hydration-ready gate.
+  // The SetupGate wizard reads from useSettingsStore (zustand persist). Under
+  // React 19 + AnimatePresence, wizard step buttons exist in the DOM before
+  // their click handlers attach (or before the persisted settings have
+  // hydrated), causing E2E clicks to land but do nothing. Set a data-attribute
+  // once persist has finished hydrating + the component has mounted, so the
+  // E2E helper (e2e/utils/helpers.ts::startGameViaWizard) can gate on it.
+  const [settingsHydrated, setSettingsHydrated] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const hydrated = useSettingsStore.persist?.hasHydrated?.() ?? true;
+      if (hydrated) setSettingsHydrated(true);
+    };
+    check();
+    const unsub = useSettingsStore.persist?.onFinishHydration?.(() => {
+      setSettingsHydrated(true);
+    });
+    return () => {
+      unsub?.();
+    };
+  }, []);
+
   const game = useGameKeyboard({
     onResetRequest: useCallback(() => setShowNewGameConfirm(true), []),
   });
@@ -257,6 +279,7 @@ export default function PlayPage() {
       */}
       <div
         id="main"
+        data-settings-hydrated={settingsHydrated ? 'true' : undefined}
         className="h-screen flex flex-col overflow-hidden bg-background"
         style={{ fontFamily: 'var(--font-sans)' }}
       >

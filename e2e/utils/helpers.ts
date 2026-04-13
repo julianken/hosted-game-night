@@ -350,6 +350,18 @@ export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void
  * @param timeout - Maximum time to wait for transitions (default: 15000ms)
  */
 export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15000): Promise<void> {
+  // BEA-715: Hydration-ready gate.
+  // page.goto(..., { waitUntil: 'load' }) only guarantees the JS bundle loaded —
+  // not that React has hydrated and not that zustand persist has finished
+  // rehydrating from localStorage. Under React 19 + AnimatePresence, the wizard
+  // step buttons exist in the DOM before their event handlers are wired up.
+  // PlayPage sets data-settings-hydrated="true" once useSettingsStore.persist
+  // has finished hydrating AND the component has mounted, so we gate on that
+  // attribute before any wizard interaction.
+  await expect(
+    page.locator('[data-settings-hydrated="true"]')
+  ).toBeVisible({ timeout: 10_000 });
+
   const gate = page.locator('[data-testid="setup-gate"]');
 
   // Check if the setup gate is visible — if not, game may already be started
@@ -369,22 +381,33 @@ export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15
   // questions via window.__triviaE2EQuestions (see e2e/utils/trivia-fixtures.ts);
   // if that seed is missing, the click below will be a no-op and the Add Team
   // button lookup will time out with a cryptic "element not visible" error.
-  // Assert the Teams step actually activated so the failure mode is explicit.
-  await gate.locator('[data-testid="wizard-step-2"]').click();
-
-  const addTeamBtn = gate.getByRole('button', { name: /add team/i });
+  //
+  // Defense-in-depth: even with the hydration gate above, retry the click
+  // until the step button reports aria-current="step" (the SetupWizard
+  // step indicator pattern). This catches any residual race where the click
+  // lands but React hasn't wired the handler yet.
+  const stepButton = gate.locator('[data-testid="wizard-step-2"]');
   try {
-    await expect(addTeamBtn).toBeVisible({ timeout: 5000 });
+    await expect(async () => {
+      await stepButton.click();
+      await expect(stepButton).toHaveAttribute('aria-current', 'step', {
+        timeout: 750,
+      });
+    }).toPass({ timeout: 5000 });
   } catch (err) {
     throw new Error(
       '[startGameViaWizard] Wizard step 2 (Teams) did not activate after click. ' +
-        'Most likely cause: the trivia game store has zero questions, so ' +
-        'SetupWizard.isStepComplete(0) returned false and goToStep(2) was a ' +
-        'no-op. Check that e2e/fixtures/auth.ts calls addInitScript with ' +
-        'buildTriviaSeedInitScript() before navigating. ' +
+        'Most likely causes: (1) hydration race — the click landed before React ' +
+        'attached the handler (BEA-715 gate should prevent this); (2) the trivia ' +
+        'game store has zero questions, so SetupWizard.isStepComplete(0) returned ' +
+        'false and goToStep(2) was a no-op. Check that e2e/fixtures/auth.ts calls ' +
+        'addInitScript with buildTriviaSeedInitScript() before navigating. ' +
         `Underlying error: ${(err as Error).message}`
     );
   }
+
+  const addTeamBtn = gate.getByRole('button', { name: /add team/i });
+  await expect(addTeamBtn).toBeVisible({ timeout: 5000 });
 
   // Add the requested number of teams
   for (let i = 0; i < teamCount; i++) {
