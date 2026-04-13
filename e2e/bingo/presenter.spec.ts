@@ -35,8 +35,9 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('shows pattern selector @high', async ({ authenticatedBingoPage: page }) => {
-    // Look for pattern selection UI - use specific "Pattern" heading or label
-    await expect(page.getByRole('heading', { name: /pattern/i })).toBeVisible();
+    // Pattern selector is a labeled native <select> with label "Winning Pattern"
+    await expect(page.getByText('Winning Pattern')).toBeVisible();
+    await expect(page.getByLabel('Winning Pattern')).toBeVisible();
   });
 
   test('shows settings section with toggles @medium', async ({ authenticatedBingoPage: page }) => {
@@ -46,12 +47,20 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('displays keyboard shortcuts reference @medium', async ({ authenticatedBingoPage: page }) => {
-    await expect(page.getByText(/keyboard shortcuts/i)).toBeVisible();
-    // Look for keyboard shortcuts section using data-testid
-    const shortcutsSection = page.getByTestId('keyboard-shortcuts-section');
-    await expect(shortcutsSection.getByText('Roll', { exact: true })).toBeVisible();
-    await expect(shortcutsSection.getByText(/pause/i)).toBeVisible();
-    await expect(shortcutsSection.getByText(/undo/i)).toBeVisible();
+    // UI drift (BEA-706): the standalone redesign replaced the dedicated
+    // "Keyboard Shortcuts" reference section with inline <kbd> hints on the
+    // control buttons themselves. Verify the inline hints + accessible labels.
+    //
+    // Undo and Reset buttons are visible in the initial idle state and each
+    // expose a visible <kbd> and an aria-label announcing the shortcut.
+    await expect(page.getByRole('button', { name: /undo last call \(u\)/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /reset game \(r\)/i })).toBeVisible();
+
+    // Inline <kbd> shortcut hints are rendered alongside the button labels.
+    const undoButton = page.getByRole('button', { name: /undo last call \(u\)/i });
+    const resetButton = page.getByRole('button', { name: /reset game \(r\)/i });
+    await expect(undoButton.locator('kbd', { hasText: 'U' })).toBeVisible();
+    await expect(resetButton.locator('kbd', { hasText: 'R' })).toBeVisible();
   });
 
   test('shows ball counter at zero initially @high', async ({ authenticatedBingoPage: page }) => {
@@ -62,17 +71,17 @@ test.describe('Bingo Presenter View', () => {
   });
 
   test('can select a pattern @high', async ({ authenticatedBingoPage: page }) => {
-    // Click to open pattern selector - use specific button with "Pattern" text
-    const patternButton = page.getByRole('button', { name: /pattern/i });
-    await expect(patternButton).toBeVisible();
-    await patternButton.click();
+    // Pattern selector is a labeled native <select> (not a button/listbox).
+    // Playwright's selectOption works against native <select> elements.
+    const patternSelect = page.getByLabel('Winning Pattern');
+    await expect(patternSelect).toBeVisible();
 
-    // Select a pattern from dropdown/list - use specific "Single Line" option
-    const linePattern = page.getByRole('option', { name: /single line|horizontal/i });
-    await expect(linePattern).toBeVisible();
-    await linePattern.click();
+    // Select a concrete pattern by its id. "row-top" = "Top Row" in the
+    // Lines category (see apps/bingo/src/lib/game/patterns/definitions/lines.ts).
+    await patternSelect.selectOption('row-top');
 
-    // Pattern should be selected/shown somewhere - use specific label
+    // Verify the select now reports the chosen pattern and the label remains visible.
+    await expect(patternSelect).toHaveValue('row-top');
     await expect(page.getByText('Winning Pattern')).toBeVisible();
   });
 
