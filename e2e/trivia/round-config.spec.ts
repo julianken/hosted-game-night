@@ -21,8 +21,10 @@ import { test, expect } from '../fixtures/auth';
 import { waitForHydration, startGameViaWizard } from '../utils/helpers';
 import type { Page, Locator } from '@playwright/test';
 
-// All tests in this file (except S5) need the setup overlay to remain visible
-test.use({ skipSetupDismissal: true });
+// All tests in this file use the bare `triviaPage` fixture so no questions or
+// settings are pre-seeded. This exercises real production defaults
+// (`isByCategory: true`) and lets tests drive the TriviaApiImporter flow
+// themselves via the mocked BFF endpoint.
 
 // ---------------------------------------------------------------------------
 // Mock question data — 15 questions, 3 rounds of 5 each
@@ -282,11 +284,11 @@ async function navigateToReviewWithTeams(gate: Locator): Promise<Locator> {
 // ---------------------------------------------------------------------------
 
 test.describe('Round Config — Settings Step', () => {
-  test.beforeEach(async ({ authenticatedTriviaPage: page }) => {
+  test.beforeEach(async ({ triviaPage: page }) => {
     await waitForHydration(page);
   });
 
-  test('S1: By Category toggle is ON by default; Rounds slider visible; QPR slider hidden @critical', async ({ authenticatedTriviaPage: page }) => {
+  test('S1: By Category toggle is ON by default; Rounds slider visible; QPR slider hidden @critical', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load questions so we can reach step 1
@@ -313,7 +315,7 @@ test.describe('Round Config — Settings Step', () => {
   // S2 — Toggle OFF reveals QPR slider; Rounds slider stays visible
   // ---------------------------------------------------------------------------
 
-  test('S2: Toggling By Category OFF reveals QPR slider; Rounds slider stays @critical', async ({ authenticatedTriviaPage: page }) => {
+  test('S2: Toggling By Category OFF reveals QPR slider; Rounds slider stays @critical', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load questions and navigate to settings step
@@ -343,7 +345,7 @@ test.describe('Round Config — Settings Step', () => {
   // S8 — Badge pills in settings step show per-category question counts
   // ---------------------------------------------------------------------------
 
-  test('S8: Badge pills in Settings step show per-category question counts @high', async ({ authenticatedTriviaPage: page }) => {
+  test('S8: Badge pills in Settings step show per-category question counts @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions (music: 5, movies: 5, history: 5 across all rounds)
@@ -367,7 +369,7 @@ test.describe('Round Config — Settings Step', () => {
   // S9 — Empty state: without questions, settings step navigation is blocked
   // ---------------------------------------------------------------------------
 
-  test('S9: Without questions, clicking the Settings step button has no effect @high', async ({ authenticatedTriviaPage: page }) => {
+  test('S9: Without questions, clicking the Settings step button has no effect @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Do NOT import questions — store starts with questions: []
@@ -395,11 +397,11 @@ test.describe('Round Config — Settings Step', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Round Config — Review Step', () => {
-  test.beforeEach(async ({ authenticatedTriviaPage: page }) => {
+  test.beforeEach(async ({ triviaPage: page }) => {
     await waitForHydration(page);
   });
 
-  test('S3: Review grid — sum of round counts equals total questions loaded @high', async ({ authenticatedTriviaPage: page }) => {
+  test('S3: Review grid — sum of round counts equals total questions loaded @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions
@@ -428,7 +430,7 @@ test.describe('Round Config — Review Step', () => {
   // S7 — By Category ON with rounds: all round pills green in review
   // ---------------------------------------------------------------------------
 
-  test('S7: By Category ON with correct distribution — all round pills are green @high', async ({ authenticatedTriviaPage: page }) => {
+  test('S7: By Category ON with correct distribution — all round pills are green @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions — by_category mode distributes evenly across 3 rounds
@@ -458,7 +460,7 @@ test.describe('Round Config — Review Step', () => {
   // S6 — Toggle By Category OFF then ON re-distributes questions
   // ---------------------------------------------------------------------------
 
-  test('S6: Toggling By Category OFF then ON re-distributes questions (review reflects change) @high', async ({ authenticatedTriviaPage: page }) => {
+  test('S6: Toggling By Category OFF then ON re-distributes questions (review reflects change) @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions (By Category ON = default)
@@ -494,7 +496,7 @@ test.describe('Round Config — Review Step', () => {
   // S4 — Game starts successfully with By Category ON (default state)
   // ---------------------------------------------------------------------------
 
-  test('S4: Game starts successfully with By Category ON (default) @critical', async ({ authenticatedTriviaPage: page }) => {
+  test('S4: Game starts successfully with By Category ON (default) @critical', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions
@@ -518,16 +520,16 @@ test.describe('Round Config — Review Step', () => {
 });
 
 // ---------------------------------------------------------------------------
-// S5 — startGameViaWizard helper regression (skipSetupDismissal: true)
+// S5 — startGameViaWizard helper regression (bare `triviaPage` fixture)
 // ---------------------------------------------------------------------------
 
 test.describe('startGameViaWizard helper regression', () => {
-  // S5 keeps skipSetupDismissal: true (inherited from file-level test.use).
-  // We manually import questions then call startGameViaWizard to verify the
+  // S5 uses the bare `triviaPage` fixture so we can import questions manually
+  // via the mocked BFF endpoint, then call startGameViaWizard to verify the
   // helper works correctly with By Category ON (the default).
   // This ensures BEA-665 changes did not break the helper.
 
-  test('S5: startGameViaWizard helper works correctly with By Category default @critical', async ({ authenticatedTriviaPage: page }) => {
+  test('S5: startGameViaWizard helper works correctly with By Category default @critical', async ({ triviaPage: page }) => {
     await waitForHydration(page);
 
     const gate = page.locator('[data-testid="setup-gate"]');

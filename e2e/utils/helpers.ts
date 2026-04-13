@@ -342,8 +342,8 @@ export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void
  * unmounts after the game starts (200ms fade-out), leaving the
  * dashboard fully accessible and interactive.
  *
- * The overlay itself is tested in setup-overlay.spec.ts which uses
- * skipSetupDismissal: true to keep it visible.
+ * The overlay itself is tested in setup-overlay.spec.ts which uses the
+ * `triviaPageWithQuestions` fixture to keep it visible.
  *
  * @param page - Playwright page instance
  * @param teamCount - Number of teams to add (default: 2 — step 2 gating requires teams >= 2)
@@ -377,10 +377,11 @@ export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15
 
   // Navigate to Teams step (wizard step index 2).
   // SetupWizard.goToStep silently refuses to advance past step 0 (Questions)
-  // if questions.length === 0. The authenticatedTriviaPage fixture seeds
-  // questions via window.__triviaE2EQuestions (see e2e/utils/trivia-fixtures.ts);
-  // if that seed is missing, the click below will be a no-op and the Add Team
-  // button lookup will time out with a cryptic "element not visible" error.
+  // if questions.length === 0. The `triviaPageWithQuestions` /
+  // `triviaGameStarted` fixtures seed questions via
+  // window.__triviaE2EQuestions (see e2e/utils/trivia-fixtures.ts); if that
+  // seed is missing, the click below will be a no-op and the Add Team button
+  // lookup will time out with a cryptic "element not visible" error.
   //
   // Defense-in-depth: even with the hydration gate above, retry the click
   // until the step button reports aria-current="step" (the SetupWizard

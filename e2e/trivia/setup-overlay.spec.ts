@@ -14,21 +14,22 @@
 import { test, expect } from '../fixtures/auth';
 import { waitForHydration } from '../utils/helpers';
 
-// All tests in this file need the setup overlay to remain visible
-test.use({ skipSetupDismissal: true });
+// All tests in this file need the setup overlay visible with questions already
+// seeded so step 0 (Questions) is pre-satisfied. `triviaPageWithQuestions`
+// gives us exactly that (no game start, no settings override).
 
 test.describe('Trivia Setup Overlay', () => {
-  test.beforeEach(async ({ authenticatedTriviaPage: page }) => {
+  test.beforeEach(async ({ triviaPageWithQuestions: page }) => {
     await waitForHydration(page);
   });
 
   test.describe('Gate Visibility & Layout', () => {
-    test('gate is visible on initial /play load @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('gate is visible on initial /play load @critical', async ({ triviaPageWithQuestions: page }) => {
       const gate = page.locator('[data-testid="setup-gate"]');
       await expect(gate).toBeVisible();
     });
 
-    test('3-column layout has inert attribute during setup @high', async ({ authenticatedTriviaPage: page }) => {
+    test('3-column layout has inert attribute during setup @high', async ({ triviaPageWithQuestions: page }) => {
       // The 3-column layout div is the flex container below the header
       // It has aria-hidden="true" and inert={true} when in setup mode
       const layoutDiv = page.locator('div.flex.flex-1.overflow-hidden');
@@ -36,7 +37,7 @@ test.describe('Trivia Setup Overlay', () => {
       await expect(layoutDiv).toHaveAttribute('inert', '');
     });
 
-    test('inert removed after game starts @high', async ({ authenticatedTriviaPage: page }) => {
+    test('inert removed after game starts @high', async ({ triviaPageWithQuestions: page }) => {
       const gate = page.locator('[data-testid="setup-gate"]');
 
       // Navigate to Teams step and add a team
@@ -63,7 +64,7 @@ test.describe('Trivia Setup Overlay', () => {
   });
 
   test.describe('Header', () => {
-    test('header shows "Trivia" and "Setup" badge @high', async ({ authenticatedTriviaPage: page }) => {
+    test('header shows "Trivia" and "Setup" badge @high', async ({ triviaPageWithQuestions: page }) => {
       const header = page.locator('[data-testid="setup-gate-header"]');
       await expect(header).toBeVisible();
 
@@ -74,12 +75,12 @@ test.describe('Trivia Setup Overlay', () => {
       await expect(header.getByText('Setup')).toBeVisible();
     });
 
-    test('header shows connection indicator @high', async ({ authenticatedTriviaPage: page }) => {
+    test('header shows connection indicator @high', async ({ triviaPageWithQuestions: page }) => {
       const connectionIndicator = page.locator('[data-testid="setup-gate-connection"]');
       await expect(connectionIndicator).toBeVisible();
     });
 
-    test('Open Display button is visible @high', async ({ authenticatedTriviaPage: page }) => {
+    test('Open Display button is visible @high', async ({ triviaPageWithQuestions: page }) => {
       const openDisplayBtn = page.locator('[data-testid="setup-gate-open-display"]');
       await expect(openDisplayBtn).toBeVisible();
       await expect(openDisplayBtn).toHaveText('Open Display');
@@ -87,7 +88,7 @@ test.describe('Trivia Setup Overlay', () => {
   });
 
   test.describe('Wizard Steps', () => {
-    test('step 0 content renders Questions heading inside gate @high', async ({ authenticatedTriviaPage: page }) => {
+    test('step 0 content renders Questions heading inside gate @high', async ({ triviaPageWithQuestions: page }) => {
       const gateContent = page.locator('[data-testid="setup-gate-content"]');
       await expect(gateContent).toBeVisible();
 
@@ -95,7 +96,7 @@ test.describe('Trivia Setup Overlay', () => {
       await expect(gateContent.getByRole('heading', { name: /questions/i })).toBeVisible();
     });
 
-    test('wizard shows 4 step indicators @high', async ({ authenticatedTriviaPage: page }) => {
+    test('wizard shows 4 step indicators @high', async ({ triviaPageWithQuestions: page }) => {
       // Verify all 4 step indicator buttons exist
       for (let i = 0; i < 4; i++) {
         const step = page.locator(`[data-testid="wizard-step-${i}"]`);
@@ -103,7 +104,7 @@ test.describe('Trivia Setup Overlay', () => {
       }
     });
 
-    test('review step shows validation banner @high', async ({ authenticatedTriviaPage: page }) => {
+    test('review step shows validation banner @high', async ({ triviaPageWithQuestions: page }) => {
       // Navigate to the Review step (step 3)
       await page.locator('[data-testid="wizard-step-3"]').click();
 
@@ -118,7 +119,7 @@ test.describe('Trivia Setup Overlay', () => {
   });
 
   test.describe('Start Game Flow', () => {
-    test('Start Game disabled with no teams @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('Start Game disabled with no teams @critical', async ({ triviaPageWithQuestions: page }) => {
       // Navigate to Review step
       await page.locator('[data-testid="wizard-step-3"]').click();
 
@@ -131,7 +132,7 @@ test.describe('Trivia Setup Overlay', () => {
       await expect(startBtn).toBeDisabled();
     });
 
-    test('Start Game enabled with valid state; fade + detach on click @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('Start Game enabled with valid state; fade + detach on click @critical', async ({ triviaPageWithQuestions: page }) => {
       const gate = page.locator('[data-testid="setup-gate"]');
 
       // Add a team via the Teams step

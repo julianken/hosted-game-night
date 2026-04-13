@@ -36,7 +36,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Valid Session Display', () => {
-    test('displays correctly when opened from presenter @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('displays correctly when opened from presenter @critical', async ({ triviaGameStarted: page }) => {
       // First go to presenter view
       await waitForHydration(page);
 
@@ -54,9 +54,9 @@ test.describe('Trivia Audience Display', () => {
     });
 
     test.describe('Pre-game State', () => {
-      test.use({ skipSetupDismissal: true });
+      // Setup overlay stays visible — tests assert waiting state on the display.
 
-      test('shows waiting state when game not started @high', async ({ authenticatedTriviaPage: page }) => {
+      test('shows waiting state when game not started @high', async ({ triviaPageWithQuestions: page }) => {
         await waitForHydration(page);
 
         // Use testid to avoid strict-mode violation (header + overlay both have "Open Display")
@@ -71,7 +71,7 @@ test.describe('Trivia Audience Display', () => {
       });
     });
 
-    test('shows connection status indicator - connected @high', async ({ authenticatedTriviaPage: page }) => {
+    test('shows connection status indicator - connected @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -87,7 +87,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('[data-connected="true"]')).toBeVisible({ timeout: 10000 });
     });
 
-    test('shows sync timestamp when connected @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows sync timestamp when connected @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -104,7 +104,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Question Content Display', () => {
-    test('shows question when displayed by presenter @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('shows question when displayed by presenter @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -127,7 +127,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('region', { name: /question \d+ of \d+, round \d+ of \d+/i })).toBeVisible();
     });
 
-    test('shows round and question number indicator @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows round and question number indicator @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -150,7 +150,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(roundInfoRegion).toBeVisible();
     });
 
-    test('shows category badge for questions @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows category badge for questions @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -174,7 +174,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(questionHeading).toBeVisible();
     });
 
-    test('shows answer options list @high', async ({ authenticatedTriviaPage: page }) => {
+    test('shows answer options list @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -199,7 +199,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('question closes when presenter presses S (close) @high', async ({ authenticatedTriviaPage: page }) => {
+    test('question closes when presenter presses S (close) @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -230,9 +230,10 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Scoreboard Display', () => {
-    test.use({ skipSetupDismissal: true });
+    // Start from the setup overlay so tests can call startGameViaWizard with
+    // the team count each scenario needs.
 
-    test('shows scoreboard between rounds @high', async ({ authenticatedTriviaPage: page }) => {
+    test('shows scoreboard between rounds @high', async ({ triviaPageWithQuestions: page }) => {
       await waitForHydration(page);
 
       await startGameViaWizard(page, 3);
@@ -261,7 +262,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows team names on scoreboard @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows team names on scoreboard @medium', async ({ triviaPageWithQuestions: page }) => {
       await waitForHydration(page);
 
       await startGameViaWizard(page, 2);
@@ -289,7 +290,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows medal rankings (1st, 2nd, 3rd) @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows medal rankings (1st, 2nd, 3rd) @medium', async ({ triviaPageWithQuestions: page }) => {
       await waitForHydration(page);
 
       await startGameViaWizard(page, 4);
@@ -319,7 +320,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('displays team scores on scoreboard @high', async ({ authenticatedTriviaPage: page }) => {
+    test('displays team scores on scoreboard @high', async ({ triviaPageWithQuestions: page }) => {
       await waitForHydration(page);
 
       // Wizard step 2 gate requires teams.length >= 2.
@@ -356,7 +357,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('shows "Next round starting soon" message @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows "Next round starting soon" message @medium', async ({ triviaPageWithQuestions: page }) => {
       await waitForHydration(page);
 
       // Wizard step 2 gate requires teams.length >= 2.
@@ -400,7 +401,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Timer Display', () => {
-    test('timer can be visible on display based on settings @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('timer can be visible on display based on settings @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -420,7 +421,7 @@ test.describe('Trivia Audience Display', () => {
     // Blank (KeyE), which toggles `emergencyBlank` and swaps the display into
     // a full-screen blackout. These tests assert against that behaviour.
 
-    test('shows emergency-blank overlay when toggled by presenter @high', async ({ authenticatedTriviaPage: page }) => {
+    test('shows emergency-blank overlay when toggled by presenter @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -446,7 +447,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('.display-canvas[role="alert"]')).toBeVisible({ timeout: 10000 });
     });
 
-    test('shows blank screen during emergency pause @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('shows blank screen during emergency pause @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -475,7 +476,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('.sr-only', { hasText: /display blanked/i })).toBeAttached();
     });
 
-    test('restores display when emergency blank is cleared @high', async ({ authenticatedTriviaPage: page }) => {
+    test('restores display when emergency blank is cleared @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -506,7 +507,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Game End Display', () => {
-    test('shows game end state when game is complete @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('shows game end state when game is complete @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -521,7 +522,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('UI Elements and Landmarks', () => {
-    test('has proper ARIA landmarks @low', async ({ authenticatedTriviaPage: page }) => {
+    test('has proper ARIA landmarks @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -538,7 +539,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('#display-content')).toBeVisible();
     });
 
-    test('supports keyboard fullscreen via F key @low', async ({ authenticatedTriviaPage: page }) => {
+    test('supports keyboard fullscreen via F key @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -552,7 +553,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('main', { name: /trivia audience display/i })).toBeVisible();
     });
 
-    test('has game display area region @low', async ({ authenticatedTriviaPage: page }) => {
+    test('has game display area region @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -565,7 +566,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('region', { name: /game display area/i })).toBeVisible();
     });
 
-    test('has display-content target region @low', async ({ authenticatedTriviaPage: page }) => {
+    test('has display-content target region @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -582,7 +583,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Animation Support', () => {
-    test('question display has fade-in animation class @low', async ({ authenticatedTriviaPage: page }) => {
+    test('question display has fade-in animation class @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -601,7 +602,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('respects motion-reduce preference @low', async ({ authenticatedTriviaPage: page }) => {
+    test('respects motion-reduce preference @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -619,7 +620,7 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Responsive Design', () => {
-    test('adapts to large viewport (projector) @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('adapts to large viewport (projector) @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -635,7 +636,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.getByRole('main', { name: /trivia audience display/i })).toBeVisible();
     });
 
-    test('adapts to medium viewport @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('adapts to medium viewport @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
