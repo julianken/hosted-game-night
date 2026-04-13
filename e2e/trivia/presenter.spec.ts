@@ -8,6 +8,19 @@
  */
 import { test, expect, type Page } from '../fixtures/auth';
 import { waitForHydration, pressKey } from '../utils/helpers';
+import { buildTriviaSettingsSeedInitScript } from '../utils/trivia-fixtures';
+
+// Presenter specs drive the canned 7-category question seed through the
+// setup wizard. Without pinning `isByCategory: false` / `roundsCount: 3`,
+// SetupGate's by-category auto-rounds effect bumps rounds to 6 and leaves
+// the Review step invalid. Apply the settings seed at file scope so it
+// runs BEFORE the `authenticatedTriviaPage` fixture navigates to /play.
+// This is deliberately local (not in a shared fixture) so specs that
+// assert production defaults — notably `round-config.spec.ts` — are
+// unaffected.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript({ content: buildTriviaSettingsSeedInitScript() });
+});
 
 /**
  * Drive the presenter from the post-startGame `game_intro` scene up to the

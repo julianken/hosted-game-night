@@ -130,19 +130,31 @@ const E2E_TRIVIA_SETTINGS_PERSIST = {
 
 /**
  * Builds an init script string suitable for `page.addInitScript({ content })`
- * that assigns the canned question set to `window.__triviaE2EQuestions` AND
- * pre-populates the `trivia-settings` localStorage entry with deterministic
- * defaults (see E2E_TRIVIA_SETTINGS_PERSIST above). Everything is serialised
- * as JSON so the init script is a single self-contained statement that does
- * not depend on any module imports at runtime.
+ * that assigns the canned question set to `window.__triviaE2EQuestions`.
+ *
+ * NOTE: This helper intentionally does NOT touch `trivia-settings`
+ * localStorage — pinning those defaults globally breaks specs that assert
+ * the real production defaults (e.g. `round-config.spec.ts`, BEA-665). Specs
+ * that need the deterministic settings seed should layer it in locally via
+ * `buildTriviaSettingsSeedInitScript()` in a file-level `test.beforeEach`.
  */
 export function buildTriviaSeedInitScript(): string {
   const serializedQuestions = JSON.stringify(E2E_TRIVIA_QUESTIONS);
+  return `window.__triviaE2EQuestions = ${serializedQuestions};`;
+}
+
+/**
+ * Builds an init script string that pre-populates the `trivia-settings`
+ * Zustand `persist` entry in localStorage with deterministic defaults
+ * (see E2E_TRIVIA_SETTINGS_PERSIST above). Apply this ONLY in specs that
+ * depend on `isByCategory: false` / `roundsCount: 3` — for example
+ * `presenter.spec.ts`, which drives the game past the setup wizard using
+ * the canned 7-category seed. Do not place this in a shared fixture: it
+ * masks the real production default and confuses specs that assert it.
+ */
+export function buildTriviaSettingsSeedInitScript(): string {
   const serializedSettings = JSON.stringify(E2E_TRIVIA_SETTINGS_PERSIST);
-  return [
-    `window.__triviaE2EQuestions = ${serializedQuestions};`,
-    // Wrap in try/catch so the init script never throws on contexts where
-    // localStorage is unavailable (e.g. file:// fallbacks during diagnosis).
-    `try { window.localStorage.setItem('trivia-settings', JSON.stringify(${serializedSettings})); } catch (_e) {}`,
-  ].join('\n');
+  // Wrap in try/catch so the init script never throws on contexts where
+  // localStorage is unavailable (e.g. file:// fallbacks during diagnosis).
+  return `try { window.localStorage.setItem('trivia-settings', JSON.stringify(${serializedSettings})); } catch (_e) {}`;
 }

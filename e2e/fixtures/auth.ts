@@ -103,40 +103,14 @@ export const test = base.extend<GameFixtures>({
     // Seed canned trivia questions before navigation so the game store picks
     // them up on create(). addInitScript runs on every frame including popups
     // (so /display inherits the seeded state automatically).
+    //
+    // NOTE: The shared fixture deliberately does NOT seed `trivia-settings`
+    // localStorage. Pinning `isByCategory: false` here breaks specs that
+    // assert the real production default (notably `round-config.spec.ts`,
+    // BEA-665). Specs that need the deterministic settings seed must apply
+    // it locally via `page.addInitScript(buildTriviaSettingsSeedInitScript())`
+    // in a file-level `test.beforeEach` (see `e2e/trivia/presenter.spec.ts`).
     await page.addInitScript({ content: buildTriviaSeedInitScript() });
-
-    // Pre-seed `trivia-settings` (the Zustand `persist` key) so SetupGate's
-    // "by-category" auto-rounds effect does not bump `roundsCount` up to 6.
-    // The seeded 15-question set spans 7 unique categories across 3 rounds
-    // (roundIndex 0/1/2). If `isByCategory` is left at its default (true),
-    // SetupGate's useEffect fires `updateSetting('roundsCount', min(7, 6))`,
-    // leaving rounds 4–6 with zero questions and `Start Game` disabled.
-    // Forcing `isByCategory: false` and `roundsCount: 3` keeps the fixture
-    // aligned with the question seed. We also guarantee a fresh game store.
-    await page.addInitScript(() => {
-      try {
-        window.localStorage.setItem(
-          'trivia-settings',
-          JSON.stringify({
-            state: {
-              roundsCount: 3,
-              questionsPerRound: 5,
-              timerDuration: 30,
-              timerAutoStart: true,
-              timerVisible: true,
-              timerAutoReveal: true,
-              ttsEnabled: false,
-              isByCategory: false,
-              lastTeamSetup: null,
-            },
-            version: 4,
-          }),
-        );
-        window.localStorage.removeItem('trivia-game');
-      } catch {
-        // Ignore — localStorage may not be available in some contexts.
-      }
-    });
 
     await page.goto(`${TRIVIA_URL}/play`, {
       waitUntil: 'load',

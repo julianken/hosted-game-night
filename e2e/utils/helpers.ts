@@ -149,10 +149,10 @@ export async function checkBasicA11y(page: Page): Promise<{
     const buttons = document.querySelectorAll('button');
 
     const imagesWithoutAlt = Array.from(images).filter(
-      (img) => !img.getAttribute('alt') && !img.getAttribute('aria-label')
+      (img: HTMLImageElement) => !img.getAttribute('alt') && !img.getAttribute('aria-label')
     );
 
-    const buttonsWithoutName = Array.from(buttons).filter((btn) => {
+    const buttonsWithoutName = Array.from(buttons).filter((btn: HTMLButtonElement) => {
       const hasText = btn.textContent?.trim();
       const hasAriaLabel = btn.getAttribute('aria-label');
       const hasAriaLabelledBy = btn.getAttribute('aria-labelledby');
@@ -167,7 +167,7 @@ export async function checkBasicA11y(page: Page): Promise<{
       // 1. aria-label containing Next.js, issue, or collapse keywords
       // 2. Text content containing Next.js or issue keywords
       // 3. Buttons that are children of Next.js dev tools container (look for parent with data-nextjs-toast-wrapper)
-      const parentElement = btn.parentElement;
+      const parentElement: HTMLElement | null = btn.parentElement;
       const isInDevToolsContainer =
         parentElement?.hasAttribute('data-nextjs-toast-wrapper') ||
         parentElement?.className?.includes('nextjs') ||
