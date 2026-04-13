@@ -199,7 +199,7 @@ test.describe('Trivia Audience Display', () => {
       }
     });
 
-    test('question hides when display toggled off @high', async ({ authenticatedTriviaPage: page }) => {
+    test('question closes when presenter presses S (close) @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -209,7 +209,8 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
       await waitForDualScreenSync(displayPage);
 
-      // Display question using D key — retry until question scene appears
+      // Advance to the question_display scene (scenes auto-advance after
+      // their timer; retrying the D-key press just lets the scene progress).
       await expect(async () => {
         await page.keyboard.press('KeyD');
         await expect(
@@ -217,11 +218,14 @@ test.describe('Trivia Audience Display', () => {
         ).toBeVisible({ timeout: 3000 });
       }).toPass({ timeout: 20000 });
 
-      // Hide question by pressing D again
-      await page.keyboard.press('KeyD');
+      // Close the question (KeyS triggers question_closed scene transition).
+      await page.keyboard.press('KeyS');
 
-      // Should show waiting/ready state (WaitingScene shows "Waiting for presenter..." by default)
-      await expect(displayPage.getByText(/waiting for presenter|get ready/i)).toBeVisible({ timeout: 10000 });
+      // question_display region should no longer be visible — display has
+      // advanced to question_closed ("Waiting for the answer...").
+      await expect(
+        displayPage.getByRole('region', { name: /question \d+ of \d+, round \d+ of \d+/i })
+      ).toBeHidden({ timeout: 10000 });
     });
   });
 
@@ -318,32 +322,35 @@ test.describe('Trivia Audience Display', () => {
     test('displays team scores on scoreboard @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
-      await startGameViaWizard(page, 1);
+      // Wizard step 2 gate requires teams.length >= 2.
+      await startGameViaWizard(page, 2);
 
       const popupPromise = page.waitForEvent('popup');
-    await page.getByRole('button', { name: /open display/i }).click();
-    const displayPage = await popupPromise;
+      await page.getByRole('button', { name: /open display/i }).click();
+      const displayPage = await popupPromise;
 
       await waitForHydration(displayPage);
 
-      // Add some points
-      const plusBtn = page.getByRole('button', { name: /add 1 point/i }).first();
-      await plusBtn.click();
-      await plusBtn.click();
+      // Close the current question to enter the scoring flow
+      // (KeyS transitions question_display → question_closed).
+      await page.keyboard.press('KeyS');
+      // Quick-score team 1 twice with the "1" key (Scoring phase shortcut).
+      await page.keyboard.press('Digit1');
+      await page.keyboard.press('Digit1');
 
-      // Complete round
+      // Advance through remaining questions in round 1
       for (let i = 0; i < 4; i++) {
         await page.keyboard.press('ArrowDown');
       }
-
-      // Close question (S) → question_closed scene → click SceneNavButtons "Next"
       await page.keyboard.press('KeyS');
+
       const nextBtn = page.getByRole('button', { name: /^next$/i });
       if (await nextBtn.isVisible()) {
         await nextBtn.click();
-        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible();
+        await expect(displayPage.getByText(/round.*complete/i)).toBeVisible({ timeout: 10000 });
 
-        // Should show scores
+        // Any element marked with a "N points" aria-label counts as a score
+        // readout on the display-side scoreboard.
         const scoreDisplay = displayPage.locator('[aria-label*="points"]');
         await expect(scoreDisplay.first()).toBeVisible();
       }
@@ -352,7 +359,8 @@ test.describe('Trivia Audience Display', () => {
     test('shows "Next round starting soon" message @medium', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
-      await startGameViaWizard(page, 1);
+      // Wizard step 2 gate requires teams.length >= 2.
+      await startGameViaWizard(page, 2);
 
       const popupPromise = page.waitForEvent('popup');
       await page.getByRole('button', { name: /open display/i }).click();
@@ -407,7 +415,12 @@ test.describe('Trivia Audience Display', () => {
   });
 
   test.describe('Pause Overlay', () => {
-    test('shows pause overlay when game is paused @high', async ({ authenticatedTriviaPage: page }) => {
+    // NOTE: Trivia does not have a game-pause mechanism (KeyP = peek answer,
+    // not pause). The canonical "hide the audience" feature is the Emergency
+    // Blank (KeyE), which toggles `emergencyBlank` and swaps the display into
+    // a full-screen blackout. These tests assert against that behaviour.
+
+    test('shows emergency-blank overlay when toggled by presenter @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -417,7 +430,8 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
       await waitForDualScreenSync(displayPage);
 
-      // Display question using D key — retry until question scene appears
+      // Advance display to the question scene so the "restore from blank"
+      // has a meaningful underlying state.
       await expect(async () => {
         await page.keyboard.press('KeyD');
         await expect(
@@ -425,12 +439,11 @@ test.describe('Trivia Audience Display', () => {
         ).toBeVisible({ timeout: 3000 });
       }).toPass({ timeout: 20000 });
 
-      // Pause the game
-      await page.keyboard.press('KeyP');
-      await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible({ timeout: 10000 });
+      // Trigger emergency blank
+      await page.keyboard.press('KeyE');
 
-      // Display should show pause overlay
-      await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible();
+      // Display should render the EmergencyBlankScene (role="alert" canvas).
+      await expect(displayPage.locator('.display-canvas[role="alert"]')).toBeVisible({ timeout: 10000 });
     });
 
     test('shows blank screen during emergency pause @critical', async ({ authenticatedTriviaPage: page }) => {
@@ -455,7 +468,6 @@ test.describe('Trivia Audience Display', () => {
       await page.keyboard.press('KeyE');
 
       // EmergencyBlankScene renders a full-screen black div with role="alert" and sr-only text
-      // Use locator instead of getByRole to avoid accessible name resolution issues
       const emergencyBlank = displayPage.locator('.display-canvas[role="alert"]');
       await expect(emergencyBlank).toBeVisible({ timeout: 10000 });
 
@@ -463,7 +475,7 @@ test.describe('Trivia Audience Display', () => {
       await expect(displayPage.locator('.sr-only', { hasText: /display blanked/i })).toBeAttached();
     });
 
-    test('resumes display when game is resumed @high', async ({ authenticatedTriviaPage: page }) => {
+    test('restores display when emergency blank is cleared @high', async ({ authenticatedTriviaPage: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -473,7 +485,7 @@ test.describe('Trivia Audience Display', () => {
       await waitForHydration(displayPage);
       await waitForDualScreenSync(displayPage);
 
-      // Display question using D key — retry until question scene appears
+      // Advance to question scene
       await expect(async () => {
         await page.keyboard.press('KeyD');
         await expect(
@@ -481,15 +493,15 @@ test.describe('Trivia Audience Display', () => {
         ).toBeVisible({ timeout: 3000 });
       }).toPass({ timeout: 20000 });
 
-      // Pause the game
-      await page.keyboard.press('KeyP');
-      await expect(displayPage.getByRole('heading', { name: /game paused/i })).toBeVisible({ timeout: 10000 });
-
-      // Resume the game
-      await page.keyboard.press('KeyP');
+      // Blank then restore
+      await page.keyboard.press('KeyE');
+      await expect(displayPage.locator('.display-canvas[role="alert"]')).toBeVisible({ timeout: 10000 });
+      await page.keyboard.press('KeyE');
 
       // Should return to normal display with question region
-      await expect(displayPage.getByRole('region', { name: /question \d+ of \d+, round \d+ of \d+/i })).toBeVisible({ timeout: 10000 });
+      await expect(
+        displayPage.getByRole('region', { name: /question \d+ of \d+, round \d+ of \d+/i })
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 

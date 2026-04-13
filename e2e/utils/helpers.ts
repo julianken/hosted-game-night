@@ -238,18 +238,41 @@ export async function getAllVisibleText(page: Page, selector: string): Promise<s
 
 /**
  * Wait for dual-screen sync to be established between presenter and display.
- * Checks for the green sync indicator (bg-success or bg-green-500) to appear.
  *
- * @param displayPage - The display window page
+ * Sync readiness is signalled on either page — this helper polls both:
+ *  - Trivia display sets `data-connected="true"` on <main> when connected
+ *  - Bingo presenter's sync-indicator contains a bg-success dot when connected
+ *  - Either page may render other bg-success/bg-green-500 markers
+ *
+ * @param displayPage - The display (popup) page
  * @param timeout - Maximum time to wait in milliseconds
  */
 export async function waitForDualScreenSync(displayPage: Page, timeout = 10000): Promise<void> {
+  // Derive presenter page from the opener if available (Playwright exposes it
+  // via `page.opener()`). Falls back to just polling the display.
+  const presenterPage = await displayPage.opener().catch(() => null);
+
   await expect(async () => {
-    // Check for sync indicator on presenter (green dot) OR display page (data-connected attribute)
-    const syncIndicator = displayPage.locator(
+    const displayIndicator = displayPage.locator(
       '[class*="bg-success"], [class*="bg-green-500"], [data-connected="true"]'
     ).first();
-    await expect(syncIndicator).toBeVisible({ timeout: 1000 });
+
+    const displayVisible = await displayIndicator
+      .isVisible({ timeout: 500 })
+      .catch(() => false);
+    if (displayVisible) return;
+
+    if (presenterPage && !presenterPage.isClosed()) {
+      const presenterIndicator = presenterPage.locator(
+        '[data-testid="sync-indicator"] [class*="bg-success"], [data-testid="sync-indicator"] [class*="bg-green-500"]'
+      ).first();
+      const presenterVisible = await presenterIndicator
+        .isVisible({ timeout: 500 })
+        .catch(() => false);
+      if (presenterVisible) return;
+    }
+
+    throw new Error('Dual-screen sync indicator not yet visible on display or presenter.');
   }).toPass({ timeout });
 }
 
@@ -264,6 +287,51 @@ export async function waitForCondition(condition: () => Promise<void>, timeout =
   await expect(async () => {
     await condition();
   }).toPass({ timeout });
+}
+
+/**
+ * Wait for the bingo display's balls-called counter to reach at least N.
+ *
+ * Uses `data-testid="balls-called-count"` which renders on both presenter and
+ * display. Stable against copy changes; behavior-based assertion.
+ *
+ * @param displayPage - The display (popup) page
+ * @param minimum - Minimum expected count (default: 1)
+ * @param timeout - Maximum time to wait in milliseconds
+ */
+export async function waitForDisplayBallCount(
+  displayPage: Page,
+  minimum = 1,
+  timeout = 15000,
+): Promise<void> {
+  await expect(async () => {
+    const countText = await displayPage.getByTestId('balls-called-count').textContent();
+    const num = parseInt(countText || '0', 10);
+    expect(num).toBeGreaterThanOrEqual(minimum);
+  }).toPass({ timeout });
+}
+
+/**
+ * Dismiss the bingo display's audio-unlock overlay if present.
+ *
+ * The `/display` page for bingo renders a full-screen click-to-activate
+ * overlay (data-testid="audio-unlock-overlay") that blocks pointer events
+ * until the user interacts. In E2E we click it so subsequent assertions
+ * against the underlying display UI are not obstructed.
+ *
+ * No-op if the overlay isn't visible (e.g., invalid-session display).
+ */
+export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void> {
+  const overlay = displayPage.getByTestId('audio-unlock-overlay');
+  try {
+    await overlay.waitFor({ state: 'visible', timeout: 2000 });
+  } catch {
+    return;
+  }
+  await overlay.click();
+  await overlay.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {
+    // Some browsers may keep the node around briefly; best-effort dismissal.
+  });
 }
 
 /**

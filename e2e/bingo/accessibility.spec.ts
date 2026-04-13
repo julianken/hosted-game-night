@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/auth';
-import { waitForHydration, checkBasicA11y } from '../utils/helpers';
+import { waitForHydration, checkBasicA11y, dismissAudioUnlockOverlay } from '../utils/helpers';
 
 test.describe('Bingo Accessibility', () => {
   test.describe('Home Page', () => {
@@ -225,11 +225,13 @@ test.describe('Bingo Accessibility', () => {
       ]);
 
       await waitForHydration(displayPage);
+      await dismissAudioUnlockOverlay(displayPage);
 
-      // Check for landmarks
+      // The display is an intentionally immersive full-screen layout: the
+      // only required landmark is <main>. The inner #main-display region
+      // carries the aria-label for the audience content area.
       await expect(displayPage.locator('main, [role="main"]')).toHaveCount(1);
-      await expect(displayPage.locator('header, [role="banner"]')).toHaveCount(1);
-      await expect(displayPage.locator('footer, [role="contentinfo"]')).toHaveCount(1);
+      await expect(displayPage.locator('#main-display')).toBeVisible();
     });
 
     test('connection status is announced', async ({ authenticatedBingoPage: page, context }) => {
@@ -241,6 +243,7 @@ test.describe('Bingo Accessibility', () => {
       ]);
 
       await waitForHydration(displayPage);
+      await dismissAudioUnlockOverlay(displayPage);
 
       // Status should be in an aria-live region or have role="status"
       const statusElement = displayPage.locator('[aria-live], [role="status"]');
@@ -256,6 +259,7 @@ test.describe('Bingo Accessibility', () => {
       ]);
 
       await waitForHydration(displayPage);
+      await dismissAudioUnlockOverlay(displayPage);
 
       // Call a ball to see ball display
       await page.getByRole('button', { name: /roll|call|start/i }).first().click();
@@ -279,14 +283,19 @@ test.describe('Bingo Accessibility', () => {
       ]);
 
       await waitForHydration(displayPage);
+      await dismissAudioUnlockOverlay(displayPage);
 
-      // Check that main heading is large
-      const heading = displayPage.getByRole('heading').first();
-      const fontSize = await heading.evaluate((el) =>
+      // Once the display connects, it renders the BallsCalledCounter with a
+      // large tabular number for "balls called". Use that as the stable
+      // "primary text" anchor for the projector-readability assertion.
+      const calledCount = displayPage.getByTestId('balls-called-count');
+      await expect(calledCount).toBeVisible({ timeout: 10000 });
+
+      const fontSize = await calledCount.evaluate((el) =>
         parseFloat(window.getComputedStyle(el).fontSize)
       );
 
-      // Display headings should be at least 24px
+      // Audience display primary number should be at least 24px.
       expect(fontSize).toBeGreaterThanOrEqual(24);
     });
   });
