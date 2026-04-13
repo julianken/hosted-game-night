@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useGameStore, useGameSelectors } from '@/stores/game-store';
-import { useSettingsStore, SETTINGS_RANGES } from '@/stores/settings-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { getUniqueCategories } from '@/lib/categories';
 import { SetupWizard } from '@/components/presenter/SetupWizard';
 import { derivePerRoundBreakdown } from '@/lib/game/selectors';
@@ -32,40 +32,20 @@ export function SetupGate({
   // Computed selectors
   const { canStart, validation } = useGameSelectors();
 
-  // Settings store
+  // Settings store — these reflect persisted *user intent*. We never mutate
+  // them on mount in response to question-derived state (that was the BEA-713
+  // bug). Instead, we compute *effective* values below and pass those to the
+  // wizard / engine sync so the user's saved preferences are preserved.
   const {
-    roundsCount,
+    roundsCount: userRoundsCount,
     lastTeamSetup,
     updateSetting,
   } = useSettingsStore();
-  const isByCategory = useSettingsStore((s) => s.isByCategory);
+  const userIsByCategory = useSettingsStore((s) => s.isByCategory);
 
   // Game store actions
   const redistributeQuestions = useGameStore((s) => s.redistributeQuestions);
   const updateGameSettings = useGameStore((s) => s.updateSettings);
-
-  // Sync settings store → game store so validation reads the current roundsCount.
-  // The settings store is the source of truth during setup; the game store needs
-  // its copy updated for validateGameSetup to work correctly.
-  useEffect(() => {
-    updateGameSettings({ roundsCount });
-  }, [roundsCount, updateGameSettings]);
-
-  // Redistribute questions whenever the question list or distribution settings change.
-  // redistributeQuestions is a Zustand action (stable reference).
-  // The engine's idempotency contract (same-reference return) prevents feedback loops.
-  useEffect(() => {
-    redistributeQuestions(
-      roundsCount,
-      isByCategory ? 'by_category' : 'by_count'
-    );
-  }, [questions, roundsCount, isByCategory, redistributeQuestions]);
-
-  // Derive per-round breakdown for display in settings and review steps.
-  const perRoundBreakdown: PerRoundBreakdown[] = useMemo(
-    () => derivePerRoundBreakdown(questions, roundsCount, isByCategory),
-    [questions, roundsCount, isByCategory]
-  );
 
   // Count unique categories (stable: doesn't change when only roundIndex changes)
   const uniqueCategoryCount = useMemo(
@@ -74,26 +54,52 @@ export function SetupGate({
   );
 
   // By-category mode is only available with ≤ 4 unique categories.
-  // Auto-disable if questions change and now have too many categories.
   const canUseByCategory = uniqueCategoryCount > 0 && uniqueCategoryCount <= 4;
 
-  useEffect(() => {
-    if (isByCategory && !canUseByCategory) {
-      updateSetting('isByCategory', false);
-    }
-  }, [isByCategory, canUseByCategory, updateSetting]);
+  // ---------------------------------------------------------------------------
+  // Effective (derived) values — what the UI and engine actually use.
+  //
+  // `userIsByCategory` and `userRoundsCount` are never mutated by question
+  // changes; we transparently downgrade them at render time when the imported
+  // question set can't satisfy by-category mode (>4 categories) or has fewer
+  // categories than the user's chosen rounds count.
+  //
+  // When the question set later supports the user's original intent again
+  // (e.g. they reduce categories), the effective values automatically restore
+  // — no migration step needed because the persisted state was never touched.
+  // ---------------------------------------------------------------------------
+  const effectiveIsByCategory = userIsByCategory && canUseByCategory;
+  const effectiveRoundsCount = effectiveIsByCategory
+    ? Math.min(uniqueCategoryCount, userRoundsCount)
+    : userRoundsCount;
 
-  // Auto-default roundsCount to category count when in by-category mode.
-  // Fires when toggle changes or question set changes (new import).
-  // Does NOT fire on redistribution (uniqueCategoryCount is stable across roundIndex changes).
+  // Sync settings store → game store so validation reads the *effective*
+  // roundsCount (the value that matches what's actually distributed).
   useEffect(() => {
-    if (isByCategory && uniqueCategoryCount > 0) {
-      const target = Math.min(uniqueCategoryCount, SETTINGS_RANGES.roundsCount.max);
-      updateSetting('roundsCount', target);
-    }
-  }, [isByCategory, uniqueCategoryCount, updateSetting]);
+    updateGameSettings({ roundsCount: effectiveRoundsCount });
+  }, [effectiveRoundsCount, updateGameSettings]);
 
-  // Toggle the isByCategory setting
+  // Redistribute questions whenever the question list or *effective*
+  // distribution settings change. redistributeQuestions is a Zustand action
+  // (stable reference). The engine's idempotency contract (same-reference
+  // return) prevents feedback loops.
+  useEffect(() => {
+    redistributeQuestions(
+      effectiveRoundsCount,
+      effectiveIsByCategory ? 'by_category' : 'by_count'
+    );
+  }, [questions, effectiveRoundsCount, effectiveIsByCategory, redistributeQuestions]);
+
+  // Derive per-round breakdown for display in settings and review steps.
+  // Uses *effective* values so the breakdown matches the actual distribution.
+  const perRoundBreakdown: PerRoundBreakdown[] = useMemo(
+    () => derivePerRoundBreakdown(questions, effectiveRoundsCount, effectiveIsByCategory),
+    [questions, effectiveRoundsCount, effectiveIsByCategory]
+  );
+
+  // Toggle the isByCategory setting — this is a user-initiated mutation and
+  // is the *only* path through which `isByCategory` gets written to settings
+  // from this component.
   const handleToggleByCategory = useCallback(
     (value: boolean) => updateSetting('isByCategory', value),
     [updateSetting]
@@ -147,7 +153,7 @@ export function SetupGate({
         <div className="max-w-2xl mx-auto p-4">
           <SetupWizard
             questions={questions}
-            roundsCount={roundsCount}
+            roundsCount={effectiveRoundsCount}
             lastTeamSetup={lastTeamSetup}
             currentTeams={teams}
             onUpdateSetting={updateSetting}
@@ -158,7 +164,7 @@ export function SetupGate({
             onRenameTeam={renameTeam}
             onLoadTeamsFromSetup={loadTeamsFromSetup}
             onStartGame={handleStartGame}
-            isByCategory={isByCategory}
+            isByCategory={effectiveIsByCategory}
             canUseByCategory={canUseByCategory}
             perRoundBreakdown={perRoundBreakdown}
             onToggleByCategory={handleToggleByCategory}
