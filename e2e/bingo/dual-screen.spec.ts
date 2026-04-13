@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import {
   dismissAudioUnlockOverlay,
   waitForHydration,
@@ -7,7 +7,7 @@ import {
 } from '../utils/helpers';
 
 test.describe('Bingo Dual-Screen Synchronization', () => {
-  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
+  test.beforeEach(async ({ bingoPage: page }) => {
     // Clear any lingering BroadcastChannel state to prevent leakage between tests
     await page.evaluate(() => {
       try {
@@ -19,7 +19,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     });
   });
 
-  test('presenter and display sync on connection', async ({ authenticatedBingoPage: page }) => {
+  test('presenter and display sync on connection', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     // Presenter exposes a sync indicator via data-testid. Before a display is
@@ -43,7 +43,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(syncIndicator.getByText(/synced/i)).toBeVisible({ timeout: 10000 });
   });
 
-  test('ball called on presenter appears on display', async ({ authenticatedBingoPage: page }) => {
+  test('ball called on presenter appears on display', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     // Open display
@@ -75,10 +75,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }).toPass({ timeout: 10000 });
   });
 
-  test('multiple balls sync correctly', async ({ authenticatedBingoPage: page }) => {
+  test('multiple balls sync correctly', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Modal already dismissed by authenticatedBingoPage fixture
+    // Modal already dismissed by bingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -173,10 +173,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await expect(displayPage.getByTestId('called-numbers-board')).toBeVisible();
   });
 
-  test('pattern change syncs to display', async ({ authenticatedBingoPage: page }) => {
+  test('pattern change syncs to display', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Modal already dismissed by authenticatedBingoPage fixture
+    // Modal already dismissed by bingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;
@@ -202,7 +202,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('game reset syncs to display', async ({ authenticatedBingoPage: page }) => {
+  test('game reset syncs to display', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -241,7 +241,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     });
   });
 
-  test('undo syncs to display', async ({ authenticatedBingoPage: page }) => {
+  test('undo syncs to display', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -280,7 +280,7 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     }
   });
 
-  test('display reconnects after visibility change', async ({ authenticatedBingoPage: page }) => {
+  test('display reconnects after visibility change', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -308,10 +308,10 @@ test.describe('Bingo Dual-Screen Synchronization', () => {
     await waitForDualScreenSync(displayPage);
   });
 
-  test('closing display does not affect presenter', async ({ authenticatedBingoPage: page }) => {
+  test('closing display does not affect presenter', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Modal already dismissed by authenticatedBingoPage fixture
+    // Modal already dismissed by bingoPage fixture
     const popupPromise = page.waitForEvent('popup');
     await page.getByRole('button', { name: /open display/i }).click();
     const displayPage = await popupPromise;

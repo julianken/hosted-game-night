@@ -1,8 +1,8 @@
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration, pressKey } from '../utils/helpers';
 
 test.describe('Bingo Keyboard Shortcuts', () => {
-  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
+  test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     // Wait for keyboard event handlers to be registered
@@ -19,7 +19,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     });
   });
 
-  test('Space key calls a ball', async ({ authenticatedBingoPage: page }) => {
+  test('Space key calls a ball', async ({ bingoPage: page }) => {
     // Start the game first - Space only works when canCall is true
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
@@ -42,7 +42,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }).toPass({ timeout: 5000 });
   });
 
-  test('P key toggles pause', async ({ authenticatedBingoPage: page }) => {
+  test('P key toggles pause', async ({ bingoPage: page }) => {
     // Start the game first
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
@@ -79,7 +79,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await expect(pauseButton).toBeVisible({ timeout: 2000 });
   });
 
-  test('U key undoes last call', async ({ authenticatedBingoPage: page }) => {
+  test('U key undoes last call', async ({ bingoPage: page }) => {
     // Start the game first
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
@@ -142,7 +142,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     }).toPass({ timeout: 2000 });
   });
 
-  test('R key resets the game', async ({ authenticatedBingoPage: page }) => {
+  test('R key resets the game', async ({ bingoPage: page }) => {
     // Start the game first
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
@@ -199,7 +199,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await expect(page.getByText(/0\s*called/i)).toBeVisible({ timeout: 2000 });
   });
 
-  test('M key toggles audio', async ({ authenticatedBingoPage: page }) => {
+  test('M key toggles audio', async ({ bingoPage: page }) => {
     // Find audio toggle state
     const audioToggle = page.getByRole('switch').filter({ hasText: /audio/i }).or(
       page.locator('[aria-label*="audio"]')
@@ -233,7 +233,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
   // If text inputs are added in the future, this test can be restored to verify keyboard shortcuts
   // don't trigger while typing in input fields.
 
-  test.fixme('display page F key toggles fullscreen', async ({ authenticatedBingoPage: page, context }) => {
+  test.fixme('display page F key toggles fullscreen', async ({ bingoPage: page, context }) => {
     // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
     // The popup window times out at 30s before we can test keyboard shortcuts
     // Re-enable this test once BEA-333 is resolved
@@ -262,7 +262,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     expect(await fullscreenIndicator.count()).toBeGreaterThanOrEqual(0);
   });
 
-  test.fixme('display page ? key opens help modal', async ({ authenticatedBingoPage: page, context }) => {
+  test.fixme('display page ? key opens help modal', async ({ bingoPage: page, context }) => {
     // FIXME: Display page popup tests are blocked by BEA-333 (dual-screen popup handling)
     // The popup window times out at 30s before we can test keyboard shortcuts
     // Re-enable this test once BEA-333 is resolved
@@ -292,7 +292,7 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     await expect(helpModal).not.toBeVisible();
   });
 
-  test('multiple rapid key presses are handled correctly', async ({ authenticatedBingoPage: page }) => {
+  test('multiple rapid key presses are handled correctly', async ({ bingoPage: page }) => {
     // Start the game first
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {

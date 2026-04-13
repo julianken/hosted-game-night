@@ -17,7 +17,7 @@
  * Categories used: music, movies, history — to validate badge pills in S8.
  */
 
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration, startGameViaWizard } from '../utils/helpers';
 import type { Page, Locator } from '@playwright/test';
 

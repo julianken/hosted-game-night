@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { dismissAudioUnlockOverlay, waitForHydration } from '../utils/helpers';
 
 test.describe('Bingo Display Page', () => {
@@ -17,7 +17,7 @@ test.describe('Bingo Display Page', () => {
     await expect(page.getByText(/invalid session/i)).toBeVisible();
   });
 
-  test('displays correctly when opened from presenter', async ({ authenticatedBingoPage: page }) => {
+  test('displays correctly when opened from presenter', async ({ bingoPage: page }) => {
     // Presenter is already loaded via fixture
     await waitForHydration(page);
 
@@ -35,7 +35,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.locator('#main-display')).toBeVisible();
   });
 
-  test('shows pre-game state when no game started', async ({ authenticatedBingoPage: page }) => {
+  test('shows pre-game state when no game started', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -53,7 +53,7 @@ test.describe('Bingo Display Page', () => {
     await expect(calledCount).toHaveText(/^0$/);
   });
 
-  test('displays current ball when game is active', async ({ authenticatedBingoPage: page }) => {
+  test('displays current ball when game is active', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -73,7 +73,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.locator('#main-display')).toBeVisible();
   });
 
-  test('shows bingo board with called numbers', async ({ authenticatedBingoPage: page }) => {
+  test('shows bingo board with called numbers', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -92,7 +92,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.getByTestId('called-numbers-board')).toBeVisible({ timeout: 10000 });
   });
 
-  test('shows connection status indicator', async ({ authenticatedBingoPage: page }) => {
+  test('shows connection status indicator', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -111,7 +111,7 @@ test.describe('Bingo Display Page', () => {
     await expect(syncDot).toBeVisible({ timeout: 10000 });
   });
 
-  test('displays winning pattern', async ({ authenticatedBingoPage: page }) => {
+  test('displays winning pattern', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -130,7 +130,7 @@ test.describe('Bingo Display Page', () => {
     await expect(patternRegion).toBeVisible({ timeout: 10000 });
   });
 
-  test('display page exposes fullscreen via F key (no visible button)', async ({ authenticatedBingoPage: page }) => {
+  test('display page exposes fullscreen via F key (no visible button)', async ({ bingoPage: page }) => {
     // The display page intentionally has no visible fullscreen button; the F
     // key is the canonical trigger. Verify the page loaded with a <main>
     // landmark and accepts the F keypress without error.
@@ -153,7 +153,7 @@ test.describe('Bingo Display Page', () => {
     await expect(displayPage.getByRole('main')).toBeVisible();
   });
 
-  test('help modal opens via "?" keyboard shortcut', async ({ authenticatedBingoPage: page }) => {
+  test('help modal opens via "?" keyboard shortcut', async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
     const popupPromise = page.waitForEvent('popup');
@@ -171,7 +171,7 @@ test.describe('Bingo Display Page', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 });
   });
 
-  test('display renders without header/footer chrome (immersive layout)', async ({ authenticatedBingoPage: page }) => {
+  test('display renders without header/footer chrome (immersive layout)', async ({ bingoPage: page }) => {
     // The bingo display is intentionally full-screen immersive: no banner
     // header, no contentinfo footer, no marketing copy. Just the game
     // content inside <main> + the inner #main-display region.

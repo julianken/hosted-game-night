@@ -6,25 +6,25 @@
  * - Pattern 2: Wait for state change indicators (e.g., button states, board highlighting)
  * - Pattern 3: Use .toPass() for complex conditions requiring retry logic
  */
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration } from '../utils/helpers';
 
 test.describe('Bingo Presenter View', () => {
-  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
+  test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
   });
 
-  test('displays presenter view header @medium', async ({ authenticatedBingoPage: page }) => {
+  test('displays presenter view header @medium', async ({ bingoPage: page }) => {
     await expect(page.getByRole('heading', { name: /joolie boolie bingo/i })).toBeVisible();
     await expect(page.getByText(/presenter view/i)).toBeVisible();
   });
 
-  test('shows Open Display button @high', async ({ authenticatedBingoPage: page }) => {
+  test('shows Open Display button @high', async ({ bingoPage: page }) => {
     const openDisplayBtn = page.getByRole('button', { name: /open display/i });
     await expect(openDisplayBtn).toBeVisible();
   });
 
-  test('displays bingo board with B-I-N-G-O columns @high', async ({ authenticatedBingoPage: page }) => {
+  test('displays bingo board with B-I-N-G-O columns @high', async ({ bingoPage: page }) => {
     // Check for column headers - scope to the bingo board area
     const bingoBoard = page.locator('[class*="board"], [data-testid*="board"], main').first();
     await expect(bingoBoard.getByText('B', { exact: true })).toBeVisible();
@@ -34,19 +34,19 @@ test.describe('Bingo Presenter View', () => {
     await expect(bingoBoard.getByText('O', { exact: true })).toBeVisible();
   });
 
-  test('shows pattern selector @high', async ({ authenticatedBingoPage: page }) => {
+  test('shows pattern selector @high', async ({ bingoPage: page }) => {
     // Pattern selector is a labeled native <select> with label "Winning Pattern"
     await expect(page.getByText('Winning Pattern')).toBeVisible();
     await expect(page.getByLabel('Winning Pattern')).toBeVisible();
   });
 
-  test('shows settings section with toggles @medium', async ({ authenticatedBingoPage: page }) => {
+  test('shows settings section with toggles @medium', async ({ bingoPage: page }) => {
     await expect(page.getByText(/settings/i)).toBeVisible();
     await expect(page.getByText(/auto-call/i)).toBeVisible();
     await expect(page.getByText(/audio announcements/i)).toBeVisible();
   });
 
-  test('displays keyboard shortcuts reference @medium', async ({ authenticatedBingoPage: page }) => {
+  test('displays keyboard shortcuts reference @medium', async ({ bingoPage: page }) => {
     // UI drift (BEA-706): the standalone redesign replaced the dedicated
     // "Keyboard Shortcuts" reference section with inline <kbd> hints on the
     // control buttons themselves. Verify the inline hints + accessible labels.
@@ -63,14 +63,14 @@ test.describe('Bingo Presenter View', () => {
     await expect(resetButton.locator('kbd', { hasText: 'R' })).toBeVisible();
   });
 
-  test('shows ball counter at zero initially @high', async ({ authenticatedBingoPage: page }) => {
+  test('shows ball counter at zero initially @high', async ({ bingoPage: page }) => {
     // Ball counter shows number and "Called" as separate elements
     // Use exact match to avoid matching "Called Numbers" heading and other text
     await expect(page.getByText('0').first()).toBeVisible();
     await expect(page.getByText('Called', { exact: true })).toBeVisible();
   });
 
-  test('can select a pattern @high', async ({ authenticatedBingoPage: page }) => {
+  test('can select a pattern @high', async ({ bingoPage: page }) => {
     // Pattern selector is a labeled native <select> (not a button/listbox).
     // Playwright's selectOption works against native <select> elements.
     const patternSelect = page.getByLabel('Winning Pattern');
@@ -85,7 +85,7 @@ test.describe('Bingo Presenter View', () => {
     await expect(page.getByText('Winning Pattern')).toBeVisible();
   });
 
-  test('can toggle auto-call setting @medium', async ({ authenticatedBingoPage: page }) => {
+  test('can toggle auto-call setting @medium', async ({ bingoPage: page }) => {
     // Find the auto-call switch by its specific name to avoid matching multiple switches
     const autoCallToggle = page.getByRole('switch', { name: /auto.call/i });
 
@@ -101,13 +101,13 @@ test.describe('Bingo Presenter View', () => {
     }
   });
 
-  test('Start button becomes active @high', async ({ authenticatedBingoPage: page }) => {
+  test('Start button becomes active @high', async ({ bingoPage: page }) => {
     // Button shows "Start Game" initially, then "Roll [Space]" after game starts
     const startButton = page.getByRole('button', { name: /start game|roll/i });
     await expect(startButton).toBeVisible();
   });
 
-  test('can call a ball with button click @high', async ({ authenticatedBingoPage: page }) => {
+  test('can call a ball with button click @high', async ({ bingoPage: page }) => {
     // Find and click the roll/call button - "Start Game" initially, then "Roll [Space]"
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
 
@@ -129,7 +129,7 @@ test.describe('Bingo Presenter View', () => {
     }).toPass({ timeout: 10000 });
   });
 
-  test('displays current ball after calling @high', async ({ authenticatedBingoPage: page }) => {
+  test('displays current ball after calling @high', async ({ bingoPage: page }) => {
     // Call a ball - "Start Game" initially, then "Roll [Space]"
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click(); // Start game
@@ -140,7 +140,7 @@ test.describe('Bingo Presenter View', () => {
     await expect(currentBallSection).toBeVisible({ timeout: 10000 });
   });
 
-  test('board updates when ball is called @high', async ({ authenticatedBingoPage: page }) => {
+  test('board updates when ball is called @high', async ({ bingoPage: page }) => {
     // Get initial state of board (cells with aria-label containing ", called")
     const initialHighlighted = await page.locator('[role="gridcell"][aria-label*=", called"]').count();
 
@@ -156,7 +156,7 @@ test.describe('Bingo Presenter View', () => {
     }).toPass({ timeout: 10000 });
   });
 
-  test('can pause and resume the game @medium', async ({ authenticatedBingoPage: page }) => {
+  test('can pause and resume the game @medium', async ({ bingoPage: page }) => {
     // Start the game first - "Start Game" initially
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click(); // Start game
@@ -185,7 +185,7 @@ test.describe('Bingo Presenter View', () => {
     }
   });
 
-  test('undo removes the last called ball @high', async ({ authenticatedBingoPage: page }) => {
+  test('undo removes the last called ball @high', async ({ bingoPage: page }) => {
     // Call two balls first - "Start Game" initially, then "Roll [Space]"
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
 
@@ -243,7 +243,7 @@ test.describe('Bingo Presenter View', () => {
     }).toPass({ timeout: 5000 });
   });
 
-  test('reset clears all called balls @high', async ({ authenticatedBingoPage: page }) => {
+  test('reset clears all called balls @high', async ({ bingoPage: page }) => {
     // Call some balls first - "Start Game" initially
     const rollButton = page.getByRole('button', { name: /start game|roll/i });
     await rollButton.click(); // Start game

@@ -6,7 +6,7 @@
  * - Pattern 2: Wait for state change indicators (e.g., game status, button states)
  * - Pattern 3: Use .toPass() for complex conditions requiring retry logic
  */
-import { test, expect, type Page } from '../fixtures/auth';
+import { test, expect, type Page } from '../fixtures/game';
 import { waitForHydration, pressKey } from '../utils/helpers';
 
 /**

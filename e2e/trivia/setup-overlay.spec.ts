@@ -11,7 +11,7 @@
  * The game engine starts with SAMPLE_QUESTIONS loaded, so the only missing
  * piece to start a game is adding at least one team.
  */
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration } from '../utils/helpers';
 
 // All tests in this file need the setup overlay visible with questions already
