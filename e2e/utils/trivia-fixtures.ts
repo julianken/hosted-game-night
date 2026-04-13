@@ -94,9 +94,9 @@ export const E2E_TRIVIA_QUESTIONS: readonly E2ETriviaQuestion[] = [
 ];
 
 /**
- * Zustand `persist` payload (version 4) that pins the trivia settings store to
- * deterministic defaults for E2E tests. Writing this to `localStorage` BEFORE
- * the store rehydrates bypasses two sources of test flakiness:
+ * Zustand `persist` payload that pins the trivia settings store to deterministic
+ * E2E defaults. Writing this to `localStorage` BEFORE the store rehydrates
+ * bypasses two sources of test flakiness:
  *
  * 1. `isByCategory` defaults to `true` in production, and SetupGate contains a
  *    `useEffect` that clamps `roundsCount` to `min(uniqueCategoryCount, 6)`
@@ -112,37 +112,127 @@ export const E2E_TRIVIA_QUESTIONS: readonly E2ETriviaQuestion[] = [
  * questions distribute evenly across 3 rounds (5 per round), every round is
  * populated, and `validateGameSetup().canStart` evaluates to true as soon as
  * `startGameViaWizard` adds the two default teams.
+ *
+ * IMPORTANT: This seed is opt-in, NOT applied by default. Tests that exercise
+ * the setup wizard (e.g. `e2e/trivia/round-config.spec.ts`) assert production
+ * defaults like `isByCategory: true`, and applying this override would break
+ * those assertions. Only tests that skip past the wizard via
+ * `startGameViaWizard` should opt in (by calling
+ * `buildTriviaSettingsSeedInitScript()` alongside the questions seed, or by
+ * passing `{ seedSettings: true }` to `buildTriviaSeedInitScript()`).
+ *
+ * The `state` shape mirrors `SETTINGS_DEFAULTS` from
+ * `apps/trivia/src/stores/settings-store.ts`, with only the fields that need
+ * to differ from production defaults overridden. The `version` matches the
+ * current persist version in that store; if the store bumps its version, the
+ * E2E seed should be updated in lockstep.
  */
-const E2E_TRIVIA_SETTINGS_PERSIST = {
-  state: {
-    roundsCount: 3,
-    questionsPerRound: 5,
-    timerDuration: 30,
-    timerAutoStart: false,
-    timerVisible: true,
-    timerAutoReveal: true,
-    ttsEnabled: false,
-    isByCategory: false,
-    lastTeamSetup: null,
-  },
-  version: 4,
+const E2E_TRIVIA_SETTINGS_OVERRIDES = {
+  isByCategory: false,
+  timerAutoStart: false,
 } as const;
+
+const E2E_TRIVIA_SETTINGS_PERSIST_VERSION = 4;
+
+/**
+ * Lazily build the persist payload so we can include every field from the
+ * production defaults without hand-duplicating them. The cost is negligible
+ * (called once per `addInitScript` invocation) and keeps this file in sync
+ * when new settings are added to `SETTINGS_DEFAULTS`.
+ *
+ * We intentionally inline the defaults rather than importing from the app
+ * source tree — the e2e/ folder has no path into `apps/trivia/src/**`, and
+ * cross-boundary imports would drag app-runtime dependencies into the
+ * Playwright config. The fields below must stay structurally aligned with
+ * `SETTINGS_DEFAULTS` in `apps/trivia/src/stores/settings-store.ts`.
+ */
+function buildTriviaSettingsPersistPayload(): {
+  state: Record<string, unknown>;
+  version: number;
+} {
+  return {
+    state: {
+      roundsCount: 3,
+      questionsPerRound: 5,
+      timerDuration: 30,
+      timerAutoStart: true,
+      timerVisible: true,
+      timerAutoReveal: true,
+      ttsEnabled: false,
+      isByCategory: true,
+      lastTeamSetup: null,
+      // Overrides for deterministic E2E behaviour (see doc above).
+      ...E2E_TRIVIA_SETTINGS_OVERRIDES,
+    },
+    version: E2E_TRIVIA_SETTINGS_PERSIST_VERSION,
+  };
+}
+
+export interface BuildTriviaSeedOptions {
+  /**
+   * When true, assign the canned 15-question set to
+   * `window.__triviaE2EQuestions` so the game store picks them up as its
+   * initial `questions` array. Lets `startGameViaWizard` and wizard-driving
+   * tests advance past step 0 (which gates on `questions.length > 0`) without
+   * a network-dependent API fetch.
+   *
+   * Defaults to `false`. Specs that exercise the TriviaApiImporter UI or
+   * assert the empty-questions starting state (e.g. `round-config.spec.ts`
+   * BEA-665) should leave this off.
+   */
+  seedQuestions?: boolean;
+
+  /**
+   * When true, include the `trivia-settings` localStorage seed that pins
+   * `isByCategory: false, roundsCount: 3` so `startGameViaWizard` can reach
+   * a valid Review state with the canned 7-category question set.
+   *
+   * Defaults to `false`. Tests that assert production default settings
+   * (e.g. `round-config.spec.ts`) should leave this off. Tests that skip the
+   * wizard via `startGameViaWizard` should set it to `true`.
+   */
+  seedSettings?: boolean;
+}
 
 /**
  * Builds an init script string suitable for `page.addInitScript({ content })`
- * that assigns the canned question set to `window.__triviaE2EQuestions` AND
- * pre-populates the `trivia-settings` localStorage entry with deterministic
- * defaults (see E2E_TRIVIA_SETTINGS_PERSIST above). Everything is serialised
- * as JSON so the init script is a single self-contained statement that does
- * not depend on any module imports at runtime.
+ * that optionally assigns the canned question set to
+ * `window.__triviaE2EQuestions` and/or pre-populates the `trivia-settings`
+ * localStorage entry with deterministic defaults.
+ *
+ * Both seeds are opt-in; with no options this returns an empty script. The
+ * `e2e/fixtures/auth.ts::authenticatedTriviaPage` fixture enables both by
+ * default and provides per-test opt-outs (`skipTriviaQuestionsSeed`,
+ * `skipTriviaSettingsSeed`). Call this helper directly only when building a
+ * custom fixture.
+ *
+ * Everything is serialised as JSON so the init script is a single
+ * self-contained statement that does not depend on any module imports at
+ * runtime.
  */
-export function buildTriviaSeedInitScript(): string {
-  const serializedQuestions = JSON.stringify(E2E_TRIVIA_QUESTIONS);
-  const serializedSettings = JSON.stringify(E2E_TRIVIA_SETTINGS_PERSIST);
-  return [
-    `window.__triviaE2EQuestions = ${serializedQuestions};`,
-    // Wrap in try/catch so the init script never throws on contexts where
-    // localStorage is unavailable (e.g. file:// fallbacks during diagnosis).
-    `try { window.localStorage.setItem('trivia-settings', JSON.stringify(${serializedSettings})); } catch (_e) {}`,
-  ].join('\n');
+export function buildTriviaSeedInitScript(options: BuildTriviaSeedOptions = {}): string {
+  const { seedQuestions = false, seedSettings = false } = options;
+  const lines: string[] = [];
+  if (seedQuestions) {
+    const serializedQuestions = JSON.stringify(E2E_TRIVIA_QUESTIONS);
+    lines.push(`window.__triviaE2EQuestions = ${serializedQuestions};`);
+  }
+  if (seedSettings) {
+    lines.push(buildTriviaSettingsSeedInitScript());
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Builds just the `trivia-settings` localStorage seed portion of the init
+ * script, suitable for `page.addInitScript({ content })` as a standalone
+ * script. Callers that already have the questions seed in place can layer this
+ * on top to override the store's production defaults.
+ *
+ * Wrapped in try/catch so the init script never throws on contexts where
+ * localStorage is unavailable (e.g. file:// fallbacks during diagnosis).
+ */
+export function buildTriviaSettingsSeedInitScript(): string {
+  const serializedSettings = JSON.stringify(buildTriviaSettingsPersistPayload());
+  return `try { window.localStorage.setItem('trivia-settings', JSON.stringify(${serializedSettings})); } catch (_e) {}`;
 }

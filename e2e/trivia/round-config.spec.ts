@@ -21,8 +21,17 @@ import { test, expect } from '../fixtures/auth';
 import { waitForHydration, startGameViaWizard } from '../utils/helpers';
 import type { Page, Locator } from '@playwright/test';
 
-// All tests in this file (except S5) need the setup overlay to remain visible
-test.use({ skipSetupDismissal: true });
+// All tests in this file (except S5) need the setup overlay to remain visible,
+// start from the production empty-questions state (so the TriviaApiImporter
+// UI renders and `importQuestionsViaApiMock` can inject its canned set), AND
+// use the real production settings defaults — notably `isByCategory: true`,
+// which S1/S2/S6/S7/S8 assert directly. Opt out of both the questions seed
+// and the settings seed.
+test.use({
+  skipSetupDismissal: true,
+  skipTriviaQuestionsSeed: true,
+  skipTriviaSettingsSeed: true,
+});
 
 // ---------------------------------------------------------------------------
 // Mock question data — 15 questions, 3 rounds of 5 each
