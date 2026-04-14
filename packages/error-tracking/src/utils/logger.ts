@@ -105,7 +105,7 @@ function logToConsole(error: TrackedError): void {
         ? 'warn'
         : 'log';
 
-  console[consoleMethod](`[${globalConfig.appName || 'JoolieBoolie'}] ${formatted}`);
+  console[consoleMethod](`[${globalConfig.appName || 'HostedGameNight'}] ${formatted}`);
 
   if (error.stack) {
     console[consoleMethod]('Stack trace:', error.stack);

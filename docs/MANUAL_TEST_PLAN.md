@@ -1,4 +1,4 @@
-# Manual Test Plan — Joolie Boolie
+# Manual Test Plan — Hosted Game Night
 
 The canonical guide for manual QA using **Playwright MCP browser tools**. Covers visual, audio, and interactive flows that automated E2E tests cannot.
 

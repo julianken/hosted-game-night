@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Context
 
-**Joolie Boolie** - A unified gaming platform for groups and communities, featuring Bingo, Trivia, and future games. Built as a Turborepo monorepo with shared packages.
+**Hosted Game Night** - A unified gaming platform for groups and communities, featuring Bingo, Trivia, and future games. Built as a Turborepo monorepo with shared packages.
 
 **Design:** Accessible (min 18px body, high contrast, 44x44px touch targets). Audience display optimized for projector/large TV.
 

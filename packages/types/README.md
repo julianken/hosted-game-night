@@ -2,7 +2,7 @@
 
 **Status:** Production Ready
 
-Shared TypeScript definitions for the Joolie Boolie monorepo. Provides a small, well-scoped surface of theme, sync, and branded types that are used across apps and packages.
+Shared TypeScript definitions for the Hosted Game Night monorepo. Provides a small, well-scoped surface of theme, sync, and branded types that are used across apps and packages.
 
 ## Features
 

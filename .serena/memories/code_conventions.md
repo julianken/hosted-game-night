@@ -38,7 +38,7 @@ src/
 - Prefer named exports over default exports
 
 ## Tailwind CSS 4
-- Use design tokens from `@joolie-boolie/theme`
+- Use design tokens from `@hosted-game-night/theme`
 - Minimum touch targets: 44x44px
 - Minimum body text: 18px
 - High contrast for accessibility

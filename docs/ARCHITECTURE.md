@@ -10,7 +10,7 @@ Each game app has two views synced via BroadcastChannel API:
 - **Presenter window** (`/play`): Game controls for the host
 - **Audience window** (`/display`): Large display optimized for projectors
 
-The `BroadcastSync` class in `@joolie-boolie/sync` (`packages/sync/src/broadcast.ts`) handles same-device window communication. Each app defines its own message types (e.g., bingo uses `GAME_STATE_UPDATE`, `BALL_CALLED`, `GAME_RESET`, `PATTERN_CHANGED`, `REQUEST_SYNC`). The sync package itself provides a generic string-typed message API with `REQUEST_SYNC` as its only built-in type.
+The `BroadcastSync` class in `@hosted-game-night/sync` (`packages/sync/src/broadcast.ts`) handles same-device window communication. Each app defines its own message types (e.g., bingo uses `GAME_STATE_UPDATE`, `BALL_CALLED`, `GAME_RESET`, `PATTERN_CHANGED`, `REQUEST_SYNC`). The sync package itself provides a generic string-typed message API with `REQUEST_SYNC` as its only built-in type.
 
 ## Game Engine Pattern
 
@@ -27,7 +27,7 @@ GameState (immutable) -> engine functions -> new GameState
 ## Monorepo Structure
 
 ```
-joolie-boolie/
+hosted-game-night/
 ├── apps/
 │   ├── bingo/           # Bingo - 75-ball bingo game (port 3000)
 │   └── trivia/          # Trivia - Team trivia game (port 3001)

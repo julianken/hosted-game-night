@@ -1,6 +1,6 @@
 # @hosted-game-night/game-stats
 
-Shared game statistics types, calculators, and localStorage storage for the Joolie Boolie platform. Also exports the base `GameStatus` type used by Bingo.
+Shared game statistics types, calculators, and localStorage storage for the Hosted Game Night platform. Also exports the base `GameStatus` type used by Bingo.
 
 ## Installation
 

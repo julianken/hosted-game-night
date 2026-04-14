@@ -346,12 +346,12 @@ pnpm vitest src/lib/[MODULE]/__tests__/[FILE].test.ts
 
 This app depends on the following shared packages:
 
-- [`@joolie-boolie/sync`](../../packages/sync/README.md) - [Brief description of usage]
-- [`@joolie-boolie/ui`](../../packages/ui/README.md) - [Brief description of usage]
-- [`@joolie-boolie/theme`](../../packages/theme/README.md) - [Brief description of usage]
-- [`@joolie-boolie/database`](../../packages/database/README.md) - [Brief description of usage]
-- [`@joolie-boolie/auth`](../../packages/auth/README.md) - [Brief description of usage]
-- [`@joolie-boolie/[PACKAGE_NAME]`](../../packages/[PACKAGE_NAME]/README.md) - [Brief description of usage]
+- [`@hosted-game-night/sync`](../../packages/sync/README.md) - [Brief description of usage]
+- [`@hosted-game-night/ui`](../../packages/ui/README.md) - [Brief description of usage]
+- [`@hosted-game-night/theme`](../../packages/theme/README.md) - [Brief description of usage]
+- [`@hosted-game-night/database`](../../packages/database/README.md) - [Brief description of usage]
+- [`@hosted-game-night/auth`](../../packages/auth/README.md) - [Brief description of usage]
+- [`@hosted-game-night/[PACKAGE_NAME]`](../../packages/[PACKAGE_NAME]/README.md) - [Brief description of usage]
 
 ## Integration Status
 

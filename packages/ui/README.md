@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (100% Complete)
 
-Shared UI components for the Joolie Boolie. Provides 6 accessible components (Button, Toggle, Slider, Card, Modal, Toast) designed with large touch targets, high contrast, and clear focus states.
+Shared UI components for the Hosted Game Night. Provides 6 accessible components (Button, Toggle, Slider, Card, Modal, Toast) designed with large touch targets, high contrast, and clear focus states.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # @hosted-game-night/error-tracking
 
-Lightweight error tracking abstraction for Joolie Boolie. Provides console logging for development and a pluggable backend system for production (Sentry-compatible).
+Lightweight error tracking abstraction for Hosted Game Night. Provides console logging for development and a pluggable backend system for production (Sentry-compatible).
 
 ## Features
 
