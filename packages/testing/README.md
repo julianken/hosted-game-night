@@ -2,7 +2,7 @@
 
 **Status:** ✅ Production Ready (100% Complete)
 
-Shared test utilities and mocks for the Joolie Boolie. Provides mock implementations for BroadcastChannel and Audio, plus jest-dom matchers. Enables consistent testing patterns across all apps and packages.
+Shared test utilities and mocks for the Hosted Game Night. Provides mock implementations for BroadcastChannel and Audio, plus jest-dom matchers. Enables consistent testing patterns across all apps and packages.
 
 ## Installation
 

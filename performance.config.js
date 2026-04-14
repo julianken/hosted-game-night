@@ -1,7 +1,7 @@
 /**
  * Performance Budget Configuration
  *
- * Defines maximum bundle sizes and Core Web Vitals targets for the Joolie Boolie.
+ * Defines maximum bundle sizes and Core Web Vitals targets for Hosted Game Night.
  * These budgets are designed for accessible applications that need to load quickly
  * on potentially slower connections in group and community environments.
  *

@@ -1,6 +1,6 @@
-# Contributing to Joolie Boolie
+# Contributing to Hosted Game Night
 
-Thank you for your interest in contributing to Joolie Boolie!
+Thank you for your interest in contributing to Hosted Game Night!
 
 ## AI-Agent Development Model
 
@@ -59,7 +59,7 @@ Never include time estimates, effort estimates, team size assumptions, or timeli
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd joolie-boolie
+cd hosted-game-night
 
 # Install dependencies
 pnpm install
@@ -194,12 +194,12 @@ lib/game/
 ### Writing Tests
 
 - Test pure functions directly
-- Mock browser APIs using `@joolie-boolie/testing`
+- Mock browser APIs using `@hosted-game-night/testing`
 - Reset stores between tests
 
 ```typescript
 import { resetAllStores } from '@/test/helpers/store';
-import { mockBroadcastChannel, MockBroadcastChannel } from '@joolie-boolie/testing';
+import { mockBroadcastChannel, MockBroadcastChannel } from '@hosted-game-night/testing';
 
 beforeEach(() => {
   resetAllStores();

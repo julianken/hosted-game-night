@@ -1,6 +1,6 @@
 # CLAUDE.md - game-stats
 
-Shared game statistics module and base types for the Joolie Boolie platform.
+Shared game statistics module and base types for the Hosted Game Night platform.
 
 ## Package Scope
 

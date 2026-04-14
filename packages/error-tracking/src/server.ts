@@ -36,7 +36,7 @@ const defaultConfig: ErrorTrackerConfig = {
   enableConsole: true, // Always -- Vercel captures console for Axiom log drain
   minSeverity: 'low',
   environment: process.env.NODE_ENV ?? 'development',
-  appName: 'JoolieBoolie',
+  appName: 'HostedGameNight',
   debug: false,
 };
 

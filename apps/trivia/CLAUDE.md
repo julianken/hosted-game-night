@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Trivia** - A presenter-controlled trivia system for groups and communities. Part of the Joolie Boolie monorepo.
+**Trivia** - A presenter-controlled trivia system for groups and communities. Part of the Hosted Game Night monorepo.
 
 **Current State:** Fully functional with team management, rounds, scoring, TTS, timer auto-reveal, presets, themes, and dual-screen sync.
 

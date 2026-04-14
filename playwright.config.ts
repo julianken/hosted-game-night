@@ -38,7 +38,7 @@ console.log(`  Trivia: http://localhost:${portConfig.triviaPort}`);
 export { portConfig };
 
 /**
- * Playwright configuration for Joolie Boolie E2E tests.
+ * Playwright configuration for Hosted Game Night E2E tests.
  *
  * Configured with projects for:
  * - Bingo app (dynamic port, default 3000)

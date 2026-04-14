@@ -38,7 +38,7 @@ For each project (`jb-bingo`, `jb-trivia`):
 
 ### API Token Note
 
-The current CI token (`joolie-boolie-ci`, scope `org:ci`) cannot manage alerts.
+The current CI token (`hosted-game-night-ci`, scope `org:ci`) cannot manage alerts.
 To automate alert configuration, create a new token at https://sentry.io/settings/auth-tokens/ with scope `alerts:write`.
 
 ## Grafana Synthetic Monitoring
@@ -49,8 +49,8 @@ HTTP health checks for both apps with downtime alerting.
 
 | Check | URL | Frequency |
 |-------|-----|-----------|
-| `jb-bingo-health` | `https://bingo.joolie-boolie.com/api/health` | 60s |
-| `jb-trivia-health` | `https://trivia.joolie-boolie.com/api/health` | 60s |
+| `jb-bingo-health` | `https://host-bingo.com/api/health` | 60s |
+| `jb-trivia-health` | `https://host-trivia.com/api/health` | 60s |
 
 ### Steps (Grafana UI)
 

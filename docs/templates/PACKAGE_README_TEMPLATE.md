@@ -16,7 +16,7 @@
 │                                                                              │
 │ PLACEHOLDERS TO REPLACE:                                                     │
 │   [PACKAGE_NAME]       - NPM package name without @ (e.g., "database")      │
-│   [@joolie-boolie/FULL]  - Full package name (e.g., "@joolie-boolie/database") │
+│   [@hosted-game-night/FULL]  - Full package name (e.g., "@hosted-game-night/database") │
 │   [STATUS]             - Current status (e.g., "✅ Complete (98%)")         │
 │   [DESCRIPTION]        - 1-2 sentence description of package purpose        │
 │   [EXPORT_NAME]        - Replace with actual export names                   │
@@ -40,7 +40,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 -->
 
-# [@joolie-boolie/FULL]
+# [@hosted-game-night/FULL]
 
 **Status:** [STATUS]
 
@@ -49,7 +49,7 @@
   - Write 1-2 sentences describing what this package does
   - Explain the problem it solves
   - Mention key capabilities or use cases
-  - Example: "Comprehensive type-safe database utilities for the Joolie Boolie.
+  - Example: "Comprehensive type-safe database utilities for Hosted Game Night.
     Provides Supabase client wrappers, CRUD helpers, React hooks, pagination, filtering,
     and table-specific utilities."
 -->
@@ -76,7 +76,7 @@
 ```json
 {
   "dependencies": {
-    "[@joolie-boolie/FULL]": "workspace:*"
+    "[@hosted-game-night/FULL]": "workspace:*"
   }
 }
 ```
@@ -103,7 +103,7 @@
 ### 1. [Common Use Case 1]
 
 ```typescript
-import { [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 // [Brief description of what this example demonstrates]
 const example = [EXPORT_NAME]();
@@ -112,7 +112,7 @@ const example = [EXPORT_NAME]();
 ### 2. [Common Use Case 2]
 
 ```typescript
-import { [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 // [Brief description of what this example demonstrates]
 const result = await [EXPORT_NAME]({
@@ -123,7 +123,7 @@ const result = await [EXPORT_NAME]({
 ### 3. [Common Use Case 3]
 
 ```typescript
-import { [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 // [Brief description of what this example demonstrates]
 function Component() {
@@ -137,7 +137,7 @@ function Component() {
 ### 4. [Common Use Case 4]
 
 ```typescript
-import { [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 // [Brief description of what this example demonstrates]
 const config = {
@@ -171,7 +171,7 @@ import {
   [EXPORT_NAME],           // [Brief description]
   [EXPORT_NAME],           // [Brief description]
   [EXPORT_NAME],           // [Brief description]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 ### [Category 2: e.g., Types]
@@ -191,7 +191,7 @@ import type {
   [TYPE_NAME],              // [Brief description]
   [TYPE_NAME],              // [Brief description]
   [TYPE_NAME],              // [Brief description]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 ### [Category 3: e.g., Core Functions]
@@ -210,7 +210,7 @@ import {
   [FUNCTION_NAME],      // [Brief description]
   [FUNCTION_NAME],      // [Brief description]
   [FUNCTION_NAME],      // [Brief description]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 **Example:**
@@ -233,7 +233,7 @@ import {
   // [Hook category description]
   [EXPORT_NAME],           // [Brief description]
   [EXPORT_NAME],           // [Brief description]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 ### [Category 5: e.g., Constants] (OPTIONAL)
@@ -243,7 +243,7 @@ import {
   [CONSTANT_NAME],         // [Brief description and value]
   [CONSTANT_NAME],         // [Brief description and value]
   [CONSTANT_NAME],         // [Brief description and value]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 ### [Category 6: e.g., Helper Utilities] (OPTIONAL)
@@ -254,7 +254,7 @@ import {
   [EXPORT_NAME],           // [Brief description]
   [EXPORT_NAME],        // [Brief description]
   type [TYPE_NAME],         // [Brief description]
-} from '[@joolie-boolie/FULL]';
+} from '[@hosted-game-night/FULL]';
 ```
 
 **Example:**
@@ -296,7 +296,7 @@ Required environment variables:
 ### Client Components
 
 ```tsx
-import { [EXPORT_NAME], [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME], [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 function ComponentName() {
   // [Brief description of what this component demonstrates]
@@ -317,7 +317,7 @@ function ComponentName() {
 ### Server Components (OPTIONAL)
 
 ```tsx
-import { [EXPORT_NAME], [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME], [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 
 async function ComponentName() {
   // [Brief description of what this component demonstrates]
@@ -338,7 +338,7 @@ async function ComponentName() {
 
 ```tsx
 // app/api/[route]/route.ts
-import { [EXPORT_NAME], [EXPORT_NAME] } from '[@joolie-boolie/FULL]';
+import { [EXPORT_NAME], [EXPORT_NAME] } from '[@hosted-game-night/FULL]';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -402,7 +402,7 @@ export async function POST(request: Request) {
   - Delete this section if there are no closely related packages
 -->
 
-- `[@joolie-boolie/PACKAGE_NAME]` - [Brief description of relationship]
+- `[@hosted-game-night/PACKAGE_NAME]` - [Brief description of relationship]
 - `[external-package-name]` - [Brief description of relationship]
 
 ## Design Philosophy (OPTIONAL)
@@ -439,8 +439,8 @@ export async function POST(request: Request) {
   - Only include if there are relevant related docs
 -->
 
-- **[Doc Name]**: `/Users/j/repos/joolie-boolie-platform/[path]/README.md` - [Brief description]
-- **Main CLAUDE.md**: `/Users/j/repos/joolie-boolie-platform/CLAUDE.md` - [Brief description]
+- **[Doc Name]**: `/Users/j/repos/hosted-game-night/[path]/README.md` - [Brief description]
+- **Main CLAUDE.md**: `/Users/j/repos/hosted-game-night/CLAUDE.md` - [Brief description]
 
 ## Development (OPTIONAL)
 

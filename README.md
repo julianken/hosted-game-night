@@ -1,11 +1,11 @@
-# Joolie Boolie
+# Hosted Game Night
 
 A dual-screen gaming platform for groups and communities. Run trivia nights and bingo games from any browser — one window for the host, another for the projector.
 
-**[Play Bingo](https://bingo.joolie-boolie.com)** · **[Play Trivia](https://trivia.joolie-boolie.com)**
+**[Play Bingo](https://host-bingo.com)** · **[Play Trivia](https://host-trivia.com)**
 
 <p align="center">
-  <img src="./assets/screenshots/bingo-display.png" alt="Joolie Boolie Bingo audience display — a large gold O-72 ball on the left, X-Pattern preview on the right, and a full 75-number bingo board below with called balls highlighted in traditional B-I-N-G-O colors" width="100%" />
+  <img src="./assets/screenshots/bingo-display.png" alt="Hosted Game Night Bingo audience display — a large gold O-72 ball on the left, X-Pattern preview on the right, and a full 75-number bingo board below with called balls highlighted in traditional B-I-N-G-O colors" width="100%" />
 </p>
 
 ---
@@ -26,8 +26,8 @@ Two standalone game apps (Bingo and Trivia) built as a Turborepo monorepo with 8
 ## Getting Started
 
 ```bash
-git clone https://github.com/julianken/joolie-boolie.git
-cd joolie-boolie
+git clone https://github.com/julianken/hosted-game-night.git
+cd hosted-game-night
 pnpm install
 pnpm dev
 ```
@@ -39,7 +39,7 @@ Open [localhost:3000/play](http://localhost:3000/play) (Bingo) or [localhost:300
 ## Architecture
 
 ```
-joolie-boolie/
+hosted-game-night/
 ├── apps/
 │   ├── bingo/              Next.js 16 — 75-ball bingo with audio, 29 patterns
 │   └── trivia/             Next.js 16 — Team trivia with rounds, scoring, TTS
@@ -68,7 +68,7 @@ Both games use this pattern. The trivia engine adds a **16-scene audience displa
 
 ### Dual-Screen Sync
 
-The [`@joolie-boolie/sync`](./packages/sync/) package wraps BroadcastChannel with:
+The [`@hosted-game-night/sync`](./packages/sync/) package wraps BroadcastChannel with:
 
 - **State hash divergence detection** — DJB2 hash on every state update catches silent desync
 - **Message deduplication** — 100ms window prevents echo loops between windows
