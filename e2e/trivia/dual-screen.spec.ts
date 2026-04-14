@@ -1,16 +1,16 @@
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration, waitForDualScreenSync, waitForSyncedContent, startGameViaWizard } from '../utils/helpers';
 
 test.describe('Trivia Dual-Screen Synchronization', () => {
   test.describe('Initial Connection', () => {
-    test('presenter shows sync ready status before display opens @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('presenter shows sync ready status before display opens @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Check presenter shows sync ready status
       await expect(page.getByText(/sync ready|sync active/i)).toBeVisible();
     });
 
-    test('presenter and display sync on connection @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('presenter and display sync on connection @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Open display from presenter
@@ -29,9 +29,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     });
 
     test.describe('Pre-game State', () => {
-      test.use({ skipSetupDismissal: true });
-
-      test('display shows waiting state initially @medium', async ({ authenticatedTriviaPage: page }) => {
+      test('display shows waiting state initially @medium', async ({ triviaPageWithQuestions: page }) => {
         await waitForHydration(page);
 
         const popupPromise = page.waitForEvent('popup');
@@ -47,7 +45,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Changes in Presenter Reflect in Display', () => {
-    test('question displayed on presenter syncs to display @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('question displayed on presenter syncs to display @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Open display
@@ -68,9 +66,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     });
 
     test.describe('State Transitions', () => {
-      test.use({ skipSetupDismissal: true });
-
-      test('game status changes sync to display @critical', async ({ authenticatedTriviaPage: page }) => {
+      test('game status changes sync to display @critical', async ({ triviaPageWithQuestions: page }) => {
         await waitForHydration(page);
 
         // Open display (use testid to avoid strict-mode violation with header button)
@@ -96,7 +92,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       });
     });
 
-    test('question navigation syncs display index @high', async ({ authenticatedTriviaPage: page }) => {
+    test('question navigation syncs display index @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -127,7 +123,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/wizard of oz/i)).toBeVisible();
     });
 
-    test('pause state syncs to display @high', async ({ authenticatedTriviaPage: page }) => {
+    test('pause state syncs to display @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -149,7 +145,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage.getByText(/paused/i).first()).toBeVisible();
     });
 
-    test('emergency pause blanks display @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('emergency pause blanks display @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -179,7 +175,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Score Updates Sync Correctly', () => {
-    test('team scores sync to display scoreboard @high', async ({ authenticatedTriviaPage: page }) => {
+    test('team scores sync to display scoreboard @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Open display
@@ -213,9 +209,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     });
 
     test.describe('Multi-Team Sync', () => {
-      test.use({ skipSetupDismissal: true });
-
-      test('multiple teams score updates sync correctly @high', async ({ authenticatedTriviaPage: page }) => {
+      test('multiple teams score updates sync correctly @high', async ({ triviaPageWithQuestions: page }) => {
         await waitForHydration(page);
 
         // Start game with 3 teams via wizard
@@ -256,7 +250,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Round Completion and Progression', () => {
-    test('round completion syncs scoreboard to display @high', async ({ authenticatedTriviaPage: page }) => {
+    test('round completion syncs scoreboard to display @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -284,7 +278,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       }
     });
 
-    test('next round transition syncs to display @high', async ({ authenticatedTriviaPage: page }) => {
+    test('next round transition syncs to display @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -322,7 +316,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Timer Sync', () => {
-    test('timer state syncs to display @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('timer state syncs to display @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -337,7 +331,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Game Reset Sync', () => {
-    test('game reset syncs to display @high', async ({ authenticatedTriviaPage: page }) => {
+    test('game reset syncs to display @high', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -368,7 +362,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Connection Resilience', () => {
-    test('closing display does not affect presenter @critical', async ({ authenticatedTriviaPage: page }) => {
+    test('closing display does not affect presenter @critical', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -389,7 +383,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       // No error should occur
     });
 
-    test('display reconnects after visibility change @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('display reconnects after visibility change @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -416,7 +410,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(syncIndicator).toBeVisible({ timeout: 5000 });
     });
 
-    test('can reopen display after closing @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('can reopen display after closing @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Open and close display
@@ -441,7 +435,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayPage2.locator('[class*="bg-success"]').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('display receives state on reconnect @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('display receives state on reconnect @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Display question on presenter
@@ -462,7 +456,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Theme Sync', () => {
-    test('theme changes sync from presenter to display @low', async ({ authenticatedTriviaPage: page }) => {
+    test('theme changes sync from presenter to display @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -479,7 +473,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Multiple Display Sessions', () => {
-    test('opening second display works correctly @low', async ({ authenticatedTriviaPage: page }) => {
+    test('opening second display works correctly @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       // Open first display
@@ -500,7 +494,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Sync Message Types', () => {
-    test('STATE_UPDATE message syncs game state @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('STATE_UPDATE message syncs game state @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -515,7 +509,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await expect(displayContent).toBeVisible();
     });
 
-    test('REQUEST_SYNC triggers state refresh @medium', async ({ authenticatedTriviaPage: page }) => {
+    test('REQUEST_SYNC triggers state refresh @medium', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       await page.keyboard.press('KeyD');
@@ -535,7 +529,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
   });
 
   test.describe('Edge Cases', () => {
-    test('rapid state changes sync correctly @low', async ({ authenticatedTriviaPage: page }) => {
+    test('rapid state changes sync correctly @low', async ({ triviaGameStarted: page }) => {
       await waitForHydration(page);
 
       const popupPromise = page.waitForEvent('popup');
@@ -557,9 +551,7 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
     });
 
     test.describe('Pre-Setup Display', () => {
-      test.use({ skipSetupDismissal: true });
-
-      test('handles display opened before teams added @low', async ({ authenticatedTriviaPage: page }) => {
+      test('handles display opened before teams added @low', async ({ triviaPageWithQuestions: page }) => {
         await waitForHydration(page);
 
         // Open display before any setup (use testid to avoid strict-mode violation with header button)

@@ -4,7 +4,7 @@
  * Single source of truth for port assignments used by:
  * - playwright.config.ts (project baseURLs, webServer config)
  * - e2e/global-setup.ts (server health checks)
- * - e2e/fixtures/auth.ts (authentication URLs)
+ * - e2e/fixtures/game.ts (app URLs for page fixtures)
  *
  * Port isolation enables parallel E2E testing across git worktrees.
  * See docs/E2E_TESTING_GUIDE.md for details.

@@ -18,14 +18,20 @@ const BINGO_URL = `http://localhost:${portConfig.bingoPort}`;
 const TRIVIA_URL = `http://localhost:${portConfig.triviaPort}`;
 
 // -----------------------------------------------------------------------------
-// Trivia page fixture composition (BEA-714)
+// Game page fixture composition
 // -----------------------------------------------------------------------------
-// Each fixture builds on the previous so specs can pick the minimum scaffolding
-// they need. No fixture touches `trivia-settings` — SetupGate settings are
-// purely derived after BEA-713, so the previous pre-seed was unnecessary AND
-// actively harmful (it masked the production default `isByCategory: true`).
+// Both apps run in standalone mode (no authentication, localStorage-only).
+// The fixtures below navigate directly to each app's /play route and, for
+// Trivia, compose further layers of setup so specs can pick the minimum
+// scaffolding they need. No fixture touches `trivia-settings` — SetupGate
+// settings are purely derived after BEA-713, so pre-seeding them would mask
+// the production default `isByCategory: true`.
 //
-//   triviaPage             — bare: navigate to /play, nothing seeded.
+//   bingoPage              — navigate to Bingo /play, nothing else. Bingo has
+//                            no setup wizard, so this is the only level the
+//                            app needs.
+//
+//   triviaPage             — bare: navigate to Trivia /play, nothing seeded.
 //                            Use when a spec exercises the production defaults
 //                            or drives the question importer UI itself
 //                            (e.g. round-config.spec.ts).
@@ -41,9 +47,6 @@ const TRIVIA_URL = `http://localhost:${portConfig.triviaPort}`;
 //                            startGameViaWizard so the game is in `playing`
 //                            state before the test begins. Use for gameplay
 //                            specs (presenter, display, dual-screen).
-//
-//   authenticatedTriviaPage — backward-compat alias for triviaGameStarted.
-//                            New specs should prefer the composable fixtures.
 // -----------------------------------------------------------------------------
 
 /**
@@ -54,7 +57,7 @@ export interface GameFixtures {
   /**
    * Page navigated to Bingo /play, ready for testing.
    */
-  authenticatedBingoPage: Page;
+  bingoPage: Page;
 
   /**
    * Level 0 trivia fixture: navigate to /play with NO seeding.
@@ -76,31 +79,6 @@ export interface GameFixtures {
   triviaGameStarted: Page;
 
   /**
-   * Backward-compat alias for `triviaGameStarted`.
-   *
-   * Historically this fixture ALSO pre-seeded `trivia-settings` to force
-   * `isByCategory: false, roundsCount: 3`. That workaround existed to mask the
-   * SetupGate useEffect bug fixed in BEA-713. The seed is gone in BEA-714 —
-   * settings are now driven purely by production defaults.
-   *
-   * Prefer the composable fixtures (`triviaPage`, `triviaPageWithQuestions`,
-   * `triviaGameStarted`) in new code.
-   */
-  authenticatedTriviaPage: Page;
-
-  /**
-   * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
-   * Use this when testing the setup overlay itself.
-   * Defaults to false (overlay IS dismissed automatically).
-   *
-   * NOTE: Only consumed by the backward-compat `authenticatedTriviaPage`
-   * fixture. New specs should pick the explicit level they need instead of
-   * toggling this flag: use `triviaPageWithQuestions` when they want the
-   * overlay visible, or `triviaGameStarted` when they want a started game.
-   */
-  skipSetupDismissal: boolean;
-
-  /**
    * Navigation timeout for game app pages in milliseconds.
    * Default: 5000ms. Override in project config for mobile: 15000ms.
    *
@@ -117,7 +95,7 @@ export interface GameFixtures {
  *
  * Usage:
  * ```typescript
- * import { test, expect } from '../fixtures/auth';
+ * import { test, expect } from '../fixtures/game';
  *
  * test('shows presenter view', async ({ triviaGameStarted: page }) => {
  *   // Game is already started (setup wizard auto-driven).
@@ -130,16 +108,13 @@ export interface GameFixtures {
  * test('production default is isByCategory: true', async ({ triviaPage: page }) => {
  *   // Nothing seeded — assert real defaults or drive the importer UI.
  * });
+ *
+ * test('bingo presenter view loads', async ({ bingoPage: page }) => {
+ *   // Bingo /play with no wizard to drive.
+ * });
  * ```
  */
 export const test = base.extend<GameFixtures>({
-  /**
-   * Skip automatic setup overlay (SetupGate) dismissal for Trivia.
-   * Defaults to false (overlay IS dismissed automatically).
-   * Only consumed by the backward-compat `authenticatedTriviaPage` fixture.
-   */
-  skipSetupDismissal: [false, { option: true }],
-
   /**
    * Navigation timeout for game app pages.
    * Default: 5000ms. Override in project config for mobile: 15000ms.
@@ -150,7 +125,7 @@ export const test = base.extend<GameFixtures>({
    * Bingo page fixture.
    * Navigates directly to Bingo /play (no auth needed in standalone mode).
    */
-  authenticatedBingoPage: async ({ page, appNavigationTimeout }, use) => {
+  bingoPage: async ({ page, appNavigationTimeout }, use) => {
     await page.goto(`${BINGO_URL}/play`, {
       waitUntil: 'load',
       timeout: appNavigationTimeout,
@@ -208,26 +183,6 @@ export const test = base.extend<GameFixtures>({
    */
   triviaGameStarted: async ({ triviaPageWithQuestions: page }, use) => {
     await startGameViaWizard(page);
-    await use(page);
-  },
-
-  /**
-   * Backward-compat alias for `triviaGameStarted` (respects the
-   * `skipSetupDismissal` option for legacy specs).
-   *
-   * New specs should prefer the explicit composable fixtures:
-   *   - `triviaPage` for bare /play
-   *   - `triviaPageWithQuestions` for overlay-visible specs (instead of
-   *     `skipSetupDismissal: true`)
-   *   - `triviaGameStarted` for specs that need a started game
-   */
-  authenticatedTriviaPage: async (
-    { triviaPageWithQuestions: page, skipSetupDismissal },
-    use
-  ) => {
-    if (!skipSetupDismissal) {
-      await startGameViaWizard(page);
-    }
     await use(page);
   },
 });

@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/auth';
+import { test, expect } from '../fixtures/game';
 import { waitForHydration, waitForDualScreenSync, startGameViaWizard } from '../utils/helpers';
 
 test.describe('Trivia Audience Display', () => {

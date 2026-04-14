@@ -118,7 +118,7 @@ export interface GameStore extends TriviaGameState {
  * navigation. Production users never set this global, so the default is `[]`
  * which preserves the standalone-conversion intent (no auto-loaded template).
  *
- * See e2e/fixtures/auth.ts and docs/plans/BEA-697-e2e-baseline-fix.md (Part C).
+ * See e2e/fixtures/game.ts and docs/plans/BEA-697-e2e-baseline-fix.md (Part C).
  */
 function readInitialQuestions(): import('@/types').Question[] {
   if (typeof window === 'undefined') return [];

@@ -401,7 +401,7 @@ export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15
         'Most likely causes: (1) hydration race — the click landed before React ' +
         'attached the handler (BEA-715 gate should prevent this); (2) the trivia ' +
         'game store has zero questions, so SetupWizard.isStepComplete(0) returned ' +
-        'false and goToStep(2) was a no-op. Check that e2e/fixtures/auth.ts calls ' +
+        'false and goToStep(2) was a no-op. Check that e2e/fixtures/game.ts calls ' +
         'addInitScript with buildTriviaSeedInitScript() before navigating. ' +
         `Underlying error: ${(err as Error).message}`
     );

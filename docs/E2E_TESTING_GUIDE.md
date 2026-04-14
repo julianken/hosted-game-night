@@ -144,44 +144,50 @@ await expect(async () => {
 ### Writing a Bingo Test
 
 ```typescript
-import { test } from '../fixtures/auth';
+import { test } from '../fixtures/game';
 
-test('my bingo test', async ({ authenticatedBingoPage: page }) => {
-  // Page is on /play with startup modal dismissed
+test('my bingo test', async ({ bingoPage: page }) => {
+  // Page is on /play, ready for testing.
   await expect(page.getByRole('button', { name: /roll/i })).toBeVisible();
 });
 ```
 
 ### Writing a Trivia Test
 
-```typescript
-import { test } from '../fixtures/auth';
+Trivia has three composable levels — pick the minimum scaffolding you need:
 
-test('my trivia test', async ({ authenticatedTriviaPage: page }) => {
-  // Page is on /play with startup modal dismissed
-  await expect(page.getByRole('button', { name: /start/i })).toBeVisible();
+- `triviaPage` — bare `/play`, nothing seeded. Use when driving the question
+  importer UI or asserting production defaults.
+- `triviaPageWithQuestions` — seeds `window.__triviaE2EQuestions` via
+  `addInitScript` so step 0 of the SetupGate wizard is pre-satisfied. The
+  setup overlay remains visible; use this for setup-overlay specs or when the
+  test drives the wizard manually.
+- `triviaGameStarted` — composes `triviaPageWithQuestions` and runs
+  `startGameViaWizard`. The game is in `playing` state before the test begins.
+  Use for gameplay specs (presenter, display, dual-screen).
+
+```typescript
+import { test } from '../fixtures/game';
+
+test('my trivia gameplay test', async ({ triviaGameStarted: page }) => {
+  // Game is running; setup wizard already completed.
+  await expect(page.getByRole('button', { name: /next/i })).toBeVisible();
 });
 ```
 
-### What the Auth Fixture Does
+### What the Game Fixtures Do
 
-1. Navigates to `/play` on the target app
-2. Auto-dismisses any startup modal (room setup, etc.)
-
-> **Historical note:** The fixture names `authenticatedBingoPage` / `authenticatedTriviaPage` are
-> misleading artifacts from the pre-standalone auth era. No authentication occurs — both apps are
-> standalone after BEA-682–696 and do not require login. The fixture name is preserved only to
-> avoid a large rename across every E2E test file. The name does **not** mean any auth setup
-> happens; treat it as "pre-navigated-to-/play-with-modal-dismissed." Earlier versions of this
-> guide claimed the fixture "retries up to 3x on rate limit errors" — that referred to Supabase
-> auth rate limits which no longer apply.
+Both apps run in standalone mode (no authentication, localStorage-only). The
+fixtures simply navigate to `/play` and, for Trivia, optionally seed questions
+and/or drive the setup wizard. See `e2e/fixtures/game.ts` for the full
+composition.
 
 ### Key Imports
 
 | Import | Use For |
 |--------|---------|
-| `test` from `fixtures/auth` | Tests needing authentication |
-| `test` from `@playwright/test` | Tests that do NOT need auth |
+| `test` from `fixtures/game` | Tests that need a navigated game page |
+| `test` from `@playwright/test` | Tests that do NOT need page setup |
 | `waitForHydration` from `utils/helpers` | Waiting for React hydration |
 | `waitForRoomSetupModal` from `utils/helpers` | Waiting for modal after session recovery |
 | `waitForSyncedContent` from `utils/helpers` | Dual-screen sync verification |
@@ -418,11 +424,11 @@ Before committing ANY code that affects UI or user flows:
 ### Test Structure
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { waitForRoomSetupModal } from '../utils/helpers';
+import { test, expect } from '../fixtures/game';
+import { waitForHydration } from '../utils/helpers';
 
 test.describe('Feature Name', () => {
-  test.beforeEach(async ({ authenticatedBingoPage: page }) => {
+  test.beforeEach(async ({ bingoPage: page }) => {
     // Clear state before each test
     await page.evaluate(() => {
       localStorage.clear();
@@ -432,7 +438,7 @@ test.describe('Feature Name', () => {
     await waitForHydration(page);
   });
 
-  test('should do something', async ({ authenticatedBingoPage: page }) => {
+  test('should do something', async ({ bingoPage: page }) => {
     // Test implementation
     await expect(page.getByRole('button')).toBeVisible();
   });
