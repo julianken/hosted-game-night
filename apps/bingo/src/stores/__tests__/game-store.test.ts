@@ -1,7 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { useGameStore, useGameSelectors } from '../game-store';
 import { renderHook } from '@testing-library/react';
 import { BingoPattern } from '@/types';
+import { patternRegistry, initializePatterns } from '@/lib/game/patterns';
+
+// Ensure patterns are registered before any test runs
+initializePatterns();
+
+/**
+ * Seed localStorage with a persisted game state in the format Zustand persist
+ * middleware expects, then call rehydrate() to trigger the merge callback.
+ */
+async function seedAndRehydrate(persistedState: Record<string, unknown>): Promise<void> {
+  localStorage.setItem(
+    'hgn-bingo-game',
+    JSON.stringify({ state: persistedState, version: 1 })
+  );
+  await useGameStore.persist.rehydrate();
+}
 
 describe('game-store', () => {
   const mockPattern: BingoPattern = {
@@ -12,6 +28,8 @@ describe('game-store', () => {
   };
 
   beforeEach(() => {
+    // Clear localStorage so persist middleware starts fresh each test
+    localStorage.clear();
     useGameStore.getState().resetGame();
     // Re-set to idle since resetGame sets to idle but preserves pattern
     useGameStore.setState({
@@ -24,6 +42,10 @@ describe('game-store', () => {
       audioEnabled: true,
       _isHydrating: false,
     });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   describe('initial state', () => {
@@ -264,6 +286,157 @@ describe('game-store', () => {
     });
 
     it('has _isHydrating false initially', () => {
+      expect(useGameStore.getState()._isHydrating).toBe(false);
+    });
+  });
+
+  describe('persist middleware (BEA-722 session recovery)', () => {
+    it('writes game state to localStorage when state changes', () => {
+      useGameStore.getState().startGame();
+      useGameStore.getState().callBall();
+
+      const stored = localStorage.getItem('hgn-bingo-game');
+      expect(stored).not.toBeNull();
+
+      const parsed = JSON.parse(stored!);
+      expect(parsed.state).toBeDefined();
+      expect(parsed.state.status).toBe('playing');
+      expect(parsed.state.calledBalls).toHaveLength(1);
+    });
+
+    it('persists autoCallEnabled as false regardless of actual value (safety)', () => {
+      useGameStore.getState().startGame();
+      // Toggle auto-call on
+      useGameStore.setState({ autoCallEnabled: true });
+
+      const stored = localStorage.getItem('hgn-bingo-game');
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      // partialize always persists autoCallEnabled=false
+      expect(parsed.state.autoCallEnabled).toBe(false);
+    });
+
+    it('persists patternId (not the full pattern object)', () => {
+      // Use a real registered pattern so the registry can resolve it
+      const allPatterns = patternRegistry.getAll();
+      expect(allPatterns.length).toBeGreaterThan(0);
+      const firstPattern = allPatterns[0];
+
+      useGameStore.getState().setPattern(firstPattern);
+
+      const stored = localStorage.getItem('hgn-bingo-game');
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      // patternId is stored, not the full pattern object
+      expect(parsed.state.patternId).toBe(firstPattern.id);
+      expect(parsed.state.pattern).toBeUndefined();
+    });
+
+    it('rehydrate: restores status and called balls from localStorage', async () => {
+      const allPatterns = patternRegistry.getAll();
+      const targetPattern = allPatterns[0];
+
+      await seedAndRehydrate({
+        status: 'playing',
+        calledBalls: [{ number: 5, column: 'B', label: 'B5' }],
+        currentBall: { number: 5, column: 'B', label: 'B5' },
+        previousBall: null,
+        remainingBalls: [],
+        patternId: targetPattern.id,
+        autoCallEnabled: false,
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      // After rehydration the store should reflect the persisted values
+      expect(useGameStore.getState().status).toBe('playing');
+      expect(useGameStore.getState().calledBalls).toHaveLength(1);
+    });
+
+    it('rehydrate: merge resolves BingoPattern from patternId via patternRegistry', async () => {
+      const allPatterns = patternRegistry.getAll();
+      expect(allPatterns.length).toBeGreaterThan(0);
+      const targetPattern = allPatterns[0];
+
+      await seedAndRehydrate({
+        status: 'playing',
+        calledBalls: [],
+        currentBall: null,
+        previousBall: null,
+        remainingBalls: [],
+        patternId: targetPattern.id,
+        autoCallEnabled: false,
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      // The merge callback must resolve the full pattern object from the registry
+      expect(useGameStore.getState().pattern).toEqual(targetPattern);
+    });
+
+    it('rehydrate: merge sets pattern=null when patternId is null', async () => {
+      await seedAndRehydrate({
+        status: 'idle',
+        calledBalls: [],
+        currentBall: null,
+        previousBall: null,
+        remainingBalls: [],
+        patternId: null,
+        autoCallEnabled: false,
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      expect(useGameStore.getState().pattern).toBeNull();
+    });
+
+    it('rehydrate: merge sets pattern=null for unknown patternId', async () => {
+      await seedAndRehydrate({
+        status: 'playing',
+        calledBalls: [],
+        currentBall: null,
+        previousBall: null,
+        remainingBalls: [],
+        patternId: 'non-existent-pattern-xyz',
+        autoCallEnabled: false,
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      expect(useGameStore.getState().pattern).toBeNull();
+    });
+
+    it('rehydrate: merge forces autoCallEnabled=false even if stored as true', async () => {
+      await seedAndRehydrate({
+        status: 'playing',
+        calledBalls: [],
+        currentBall: null,
+        previousBall: null,
+        remainingBalls: [],
+        patternId: null,
+        autoCallEnabled: true, // persisted incorrectly; merge must override
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      expect(useGameStore.getState().autoCallEnabled).toBe(false);
+    });
+
+    it('rehydrate: _isHydrating is false after rehydration completes', async () => {
+      await seedAndRehydrate({
+        status: 'playing',
+        calledBalls: [],
+        currentBall: null,
+        previousBall: null,
+        remainingBalls: [],
+        patternId: null,
+        autoCallEnabled: false,
+        autoCallSpeed: 10,
+        audioEnabled: true,
+      });
+
+      // After the setTimeout(0) in onRehydrateStorage the flag should clear
+      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(useGameStore.getState()._isHydrating).toBe(false);
     });
   });
