@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 import { createGameLifecycleLogger } from '@hosted-game-night/sync';
 import type { TriviaGameState, GameSettings } from '@/types';
@@ -127,7 +128,9 @@ function readInitialQuestions(): import('@/types').Question[] {
   return Array.isArray(seeded) ? seeded : [];
 }
 
-export const useGameStore = create<GameStore>()((set, get) => ({
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
   // Initial state (start with empty questions — user must fetch/load explicitly,
   // unless an E2E test has pre-seeded window.__triviaE2EQuestions via addInitScript).
   ...createInitialState(),
@@ -321,11 +324,13 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   },
 
   _hydrate: (newState: Partial<TriviaGameState>) => {
+    // Raise _isHydrating so the use-sync.ts broadcast guard is active during
+    // the state merge, symmetric with bingo's _hydrate implementation (BEA-722).
     set((state) => {
       const updatedState: GameStore = {
         ...state,
         ...newState,
-        _isHydrating: false,
+        _isHydrating: true,
       };
 
       // -- Existing array reconstructions (unchanged) -----------------------
@@ -348,6 +353,10 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
       return updatedState;
     });
+    // Clear the flag after the current synchronous execution, symmetric with bingo.
+    setTimeout(() => {
+      set({ _isHydrating: false });
+    }, 0);
   },
 
   // Settings actions
@@ -443,7 +452,86 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     // the caller passes the same array reference across multiple calls.
     set({ scoreDeltas: [...deltas] });
   },
-}));
+}),
+    {
+      name: 'hgn-trivia-game',
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+
+      // Only persist the game state needed for session recovery.
+      // Transient scene-layer, timer running flag, and internal bookkeeping
+      // fields are intentionally excluded.
+      partialize: (s) => ({
+        status: s.status,
+        questions: s.questions,
+        teams: s.teams,
+        teamAnswers: s.teamAnswers,
+        selectedQuestionIndex: s.selectedQuestionIndex,
+        displayQuestionIndex: s.displayQuestionIndex,
+        currentRound: s.currentRound,
+        totalRounds: s.totalRounds,
+        settings: s.settings,
+        showScoreboard: s.showScoreboard,
+        ttsEnabled: s.ttsEnabled,
+        questionStartScores: s.questionStartScores,
+        roundScoringEntries: s.roundScoringEntries,
+        roundScoringSubmitted: s.roundScoringSubmitted,
+        recapShowingAnswer: s.recapShowingAnswer,
+        // Excluded: timer.isRunning (forced false on merge), audienceScene,
+        // sceneBeforePause, sceneTimestamp, revealPhase, scoreDeltas,
+        // emergencyBlank, _isHydrating, and all action functions.
+      }),
+
+      // Merge persisted state back into the freshly-constructed store.
+      // Key responsibilities:
+      //  1. Force timer.isRunning=false so a reloaded game never silently
+      //     resumes a countdown mid-tick.
+      //  2. Keep _isHydrating=true during merge so the sync subscriber
+      //     skips any broadcast triggered by this state change.
+      //  3. Reset transient scene/reveal state to clean defaults.
+      merge: (persisted, current) => {
+        const p = persisted as Record<string, unknown>;
+        return {
+          ...current,
+          ...p,
+          // Restore timer duration/remaining but never resume the countdown.
+          // Use optional chaining defensively: Zustand may call merge with
+          // undefined `current` during store init in test environments.
+          timer: {
+            ...((current as GameStore | undefined)?.timer ?? { duration: 0, remaining: 0 }),
+            ...((p.timer as object | undefined) ?? {}),
+            isRunning: false,
+          },
+          // Reset scene-layer to safe defaults — scene state is ephemeral
+          // and will be re-synced from the presenter on reconnect.
+          audienceScene: 'waiting' as import('@/types').AudienceScene,
+          sceneBeforePause: null,
+          sceneTimestamp: 0,
+          revealPhase: null,
+          scoreDeltas: [],
+          emergencyBlank: false,
+          // Hold the hydrating flag during merge so useSync's subscriber
+          // skips any broadcast triggered by this state change.
+          _isHydrating: true,
+        };
+      },
+
+      // Clear _isHydrating after rehydration completes so normal sync resumes.
+      onRehydrateStorage: () => {
+        return (_state, error) => {
+          if (error) {
+            console.warn('[TriviaGameStore] Failed to rehydrate from localStorage:', error);
+          }
+          // Schedule flag clear after the current tick so React components
+          // that subscribed during rehydration still see _isHydrating=true.
+          setTimeout(() => {
+            useGameStore.setState({ _isHydrating: false });
+          }, 0);
+        };
+      },
+    }
+  )
+);
 
 // Selector hooks for computed values
 // IMPORTANT: This hook subscribes to the entire store, which means the component

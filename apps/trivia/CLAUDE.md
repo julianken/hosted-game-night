@@ -174,6 +174,7 @@ pnpm test:coverage     # Run tests with coverage
 - **Questions:** `lib/questions/` contains parser, validator, converter, exporter, and types for question import/export
 - **Trivia API Proxy:** `/api/trivia-api/*` routes proxy requests to The Trivia API, keeping the API key server-side.
 - **Sync:** Session sync wrapper in `lib/sync/session.ts`, built on `@hosted-game-night/sync`
+- **Session Persistence (BEA-722):** `useGameStore` persists to localStorage key `hgn-trivia-game` (version `1`). Persisted fields: `status`, `teams`, `questions`, `teamAnswers`, `selectedQuestionIndex`, `currentRound`, `totalRounds`, `settings`, `ttsEnabled`, `showScoreboard`, `questionStartScores`, `roundScoringEntries`, `roundScoringSubmitted`, `scoreDeltas`, `recapShowingAnswer`. Transient/display state (`audienceScene`, `revealPhase`, `emergencyBlank`, `_isHydrating`, actions) is excluded. The rehydration race guard (`_isHydrating`) is raised to `true` in both `merge` and `_hydrate`, held so `use-sync.ts` skips any broadcast triggered during the merge, then cleared via `setTimeout(0)` in `onRehydrateStorage`/after `_hydrate`.
 
 ### Scene Engine (AudienceScene)
 

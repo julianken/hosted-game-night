@@ -129,6 +129,7 @@ pnpm test:coverage    # Run tests with coverage
 - **Audio:** Audio logic lives in `hooks/use-audio.ts` and `stores/audio-store.ts`. The `lib/audio/` directory is a placeholder (`.gitkeep` only).
 - **Sync:** Session ID generation and BroadcastChannel naming in `lib/sync/session.ts`, built on `@hosted-game-night/sync`
 - **Patterns:** 29 patterns defined in `lib/game/patterns/` across 7 category files using `createPattern()`
+- **Session Persistence (BEA-722):** `useGameStore` persists to localStorage key `hgn-bingo-game` (version `1`). Persisted fields: `status`, `calledBalls`, `currentBall`, `previousBall`, `remainingBalls`, `patternId` (id only; full object re-resolved from registry on merge), `autoCallEnabled` (always stored as `false`), `autoCallSpeed`, `audioEnabled`. Transient state (`_isHydrating`, actions, selectors) is excluded. The rehydration race guard (`_isHydrating`) is raised to `true` in both `merge` and `_hydrate`, held so `use-sync.ts` skips any broadcast triggered during the merge, then cleared via `setTimeout(0)` in `onRehydrateStorage`/after `_hydrate`.
 
 ## Design Requirements
 
