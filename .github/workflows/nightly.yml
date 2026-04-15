@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Get pnpm store directory
@@ -61,23 +61,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm playwright install chromium --with-deps
-
-      - name: Install Playwright system dependencies only (cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm playwright install-deps chromium
-
       - name: Build all apps
         run: pnpm build
 
@@ -103,24 +86,3 @@ jobs:
           echo "| Lint | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Typecheck | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | Passed |" >> $GITHUB_STEP_SUMMARY
-
-      - name: Create GitHub issue on failure
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          FAIL_DATE=$(date -u '+%Y-%m-%d')
-          FAIL_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
-          gh issue create \
-            --title "Nightly build failed - ${FAIL_DATE}" \
-            --body "## Nightly Build Failure
-
-          The nightly build on \`main\` failed at ${FAIL_TIME}.
-
-          **Run:** ${RUN_URL}
-          **Commit:** ${COMMIT_SHA}
-
-          Please investigate the failing step(s) in the workflow run linked above." \
-            --label "bug"
