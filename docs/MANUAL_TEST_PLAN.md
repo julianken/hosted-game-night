@@ -17,7 +17,7 @@ For automated E2E tests, see [docs/E2E_TESTING_GUIDE.md](E2E_TESTING_GUIDE.md).
 | Report results | Update the Result column: `**PASS**`, `NOT TESTED`, or `**BUG** — description` |
 | Log a new bug | Add to Bugs Found table below, file a Linear issue (BEA-###) |
 
-**Current status:** 168 PASS, 0 BUGS, 16 NOT TESTED (standalone 2-app scope after BEA-702 cleanup)
+**Current status (run 10, 2026-04-14):** PARTIAL PASS with 2 regressions. Runnable test count after drift correction: ~165. A11y (18px body, 0 small touch targets) and responsive (no overflow at 375/768) PASS on both apps. Core flows (keyboard controls, pattern selector, team wizard, game lifecycle, scoring) PASS. **🔴 Regressions:** (1) Session recovery is broken on BOTH apps — `game-store.ts` has no `persist` middleware; reloading `/play` wipes called balls/teams/questions/scores. (2) Service worker does not register in Playwright Chromium dev mode — needs real-browser verification. **🟡 Plan drift (not in earlier audit):** Trivia `/play` is now a 4-step wizard (Questions → Settings → Teams → Review); all of Story 3.3-3.15 should be rewritten against that flow.
 
 ---
 
@@ -87,8 +87,12 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 2026-02-24 | Added 22 test cases for gaps from codebase quality analysis (stories 3.16–3.19) | +22 NOT TESTED |
 | 2026-02-24 | Removed Story 3.17 (Buzz-In) — feature not applicable to this game style (paper-scored pub trivia) | -5 NOT TESTED |
 | 2026-03-02 (run 9) | Dual-screen sync verification (Bingo 2.7, 2.8 + Trivia 3.5, 3.6, 3.9, 3.16, 3.18, 3.19, 5.1) via Playwright MCP multi-window | 168 PASS, 0 BUGS, 16 NOT TESTED |
+| 2026-04-14 (pre-run 10) | Drift audit before re-run — discovered BEA-656/657/658 (merged 2026-03-04) removed Room Setup + OfflineBanner + `PinDisplay`. Retired 19 tests. | Plan corrected; re-run pending |
+| 2026-04-14 (run 10) | Executed updated plan via Playwright MCP. Found 2 significant regressions and 1 major redesign not captured in plan: (1) Bingo+Trivia session recovery broken (game state not persisted), (2) Trivia setup is now a 4-step wizard (Questions→Settings→Teams→Review), (3) Service worker does not register in Playwright dev-mode browser (needs verification in real browser). A11y + responsive PASS on both apps. | 🔴 2 regressions + 1 drift |
 
-> **Footnote (BEA-702, 2026-04-11):** Runs 1-9 above included Platform Hub, OAuth SSO, and template-aggregation stories (former Sections 1 and 4) that were removed in the standalone conversion (BEA-682–696). Those rows are preserved here for historical continuity. All subsequent runs cover only the 2-app standalone scope documented below.
+> **Footnote (BEA-702, 2026-04-11):** Runs 1-9 above included Platform Hub, OAuth SSO, and template-aggregation stories (former Sections 1 and 4) that were removed in the standalone conversion (BEA-682–696). Those rows are preserved here for historical continuity.
+>
+> **Footnote (BEA-656/657/658, 2026-03-04, recorded 2026-04-14):** PRs #483-#485 removed ~4,100 lines: the `RoomSetupModal`, `PinDisplay`, `ShareSession`, `OfflineBanner`, session API routes, `?room=`/`?offline=` URL params, and `sessionId` from trivia game state. Runs 1-9 scored tests against those features as PASS, but the code has been gone since 2026-03-04. Retired: Bingo Story 2.2 (8 tests), Trivia Story 3.2 (9 tests), Story 2.10 #2 (PIN persists), Story 6.1 #3 (Offline banner). Session IDs still exist (generated locally by `generateSessionId()`); the "New Game" button now resets state instead of opening a modal.
 
 ## Bugs Found and Fixed
 
@@ -96,6 +100,7 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 |----|----------|-------------|-----|
 | BEA-503 | Minor | Bingo: Pattern selection doesn't persist across page refresh. | Fixed in PR #337 — pattern now serialized in localStorage |
 | BEA-504 | Minor | Trivia: Teams and scores don't persist across page refresh. | Fixed in PR #339 — teams/scores now serialized in localStorage |
+| TBD (run 10) | **Major** | **Both apps**: Session recovery regressed. After page refresh on `/play`, Bingo loses called balls/status/pattern and returns to idle; Trivia loses teams/questions/scores and returns to Setup with empty localStorage. Both `game-store.ts` files use `create()` with no `persist` middleware. Only `*-audio`/`*-theme`/`*-templates` (plus `*-preset` on Trivia) survive. Regressed alongside BEA-656/657 (2026-03-04) when the session modules (which held the persistence glue) were deleted. This invalidates the BEA-503 and BEA-504 fixes recorded above. | **Pending Linear issue + fix** |
 
 ## Notes
 
@@ -117,26 +122,15 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Home page loads | Navigate to `localhost:3000`. Verify "Bingo" branding is visible. Verify "Play" button exists. | **PASS** — Standalone home page (run 7, updated BEA-702) |
+| 1 | Home page loads | Navigate to `localhost:3000`. Verify "Bingo" branding is visible. Verify "Play Now" link exists (confirmed label). | **PASS** — Standalone home page (run 7, updated BEA-702) |
 | 2 | Play route loads | Click "Play" (or navigate to `localhost:3000/play`). Verify the page loads and auto-creates an offline session. | **PASS** — Covered by Story 2.11 Test 3 |
 | 3 | Display route public | Navigate to `localhost:3000/display`. Verify the page loads (may show "invalid session" which is expected). | **PASS** — "Invalid Session" message displayed (run 7) |
 | 4 | Security headers | Run `browser_evaluate` to check response headers. Verify X-Frame-Options, X-Content-Type-Options, Referrer-Policy are present. | **PASS** — All 3 headers confirmed (run 7) |
 | 5 | Statistics display | If games have been played (check localStorage), verify stats cards are visible on home page. | **PASS** — No stats shown (no games played in session), expected behavior |
 
-### Story 2.2: Room Setup — **ALL PASS**
+### ~~Story 2.2: Room Setup~~ — **RETIRED (BEA-656, PR #483, 2026-03-04)**
 
-**As a presenter**, I want to create or join a game room.
-
-| # | Test Case | Steps | Result |
-|---|-----------|-------|--------|
-| 1 | Room setup modal appears | Navigate to `/play`. Verify Room Setup modal dialog is visible. | **PASS** — Auto-created offline session on load |
-| 2 | Three options visible | Verify buttons: "Create New Game", "Join with Room Code", "Play Offline". | **PASS** — All 3 buttons visible |
-| 3 | Create online room | Click "Create New Game". Verify modal closes. Verify Room code and PIN are displayed. PIN should be 4 digits (1000-9999). | **PASS** |
-| 4 | Join room form | Click "Join with Room Code". Verify room code input and PIN input appear. | **PASS** |
-| 5 | PIN validation | In join form, enter 3-digit PIN. Verify Join button is disabled. Enter 4 digits. Verify button enables. | **PASS** |
-| 6 | Room code uppercase | Type lowercase room code. Verify it auto-converts to uppercase. | **PASS** |
-| 7 | Play offline | Click "Play Offline". Verify modal closes. Verify 6-character session ID is displayed. Verify no API calls were made. | **PASS** — Session ID: SG6UZB |
-| 8 | Offline session ID format | Verify offline session ID is 6 uppercase alphanumeric chars, excluding 0/O/1/I. | **PASS** |
+`RoomSetupModal`, `PinDisplay`, and session API routes deleted. `/play` auto-creates an offline session on load; there is no online-vs-offline choice. Offline session ID is still generated locally (`generateSessionId()`) and visible via the session UI, but the 8 modal/PIN/join tests no longer apply. The "New Game" button now resets state instead of opening a modal.
 
 ### Story 2.3: Bingo Game Controls — **ALL PASS**
 
@@ -231,8 +225,7 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
 | 1 | Offline session recovery | Create offline session. Call several balls. Refresh page. Verify game state is restored (called balls, pattern, status). | **PASS** — Called balls, status, AND pattern all recover after refresh — BEA-503 fix verified |
-| 2 | PIN persists | Create online room. Note the PIN. Refresh page. Verify PIN is still displayed (from localStorage). | **PASS** — Session ID persists |
-| 3 | Create new game | While in active session, click "Create New Game". Verify confirmation dialog. Confirm. Verify fresh room setup modal appears. | **PASS** — Confirm dialog appears, fresh state after confirm |
+| 2 | Create new game | While in active session, click "New Game". Verify confirmation dialog. Confirm. Verify a fresh idle session with a new session ID. | **PASS** (previous: "Confirm dialog appears, fresh state after confirm") — post-BEA-656 there's no modal, just state reset |
 
 ### Story 2.11: Standalone Play — **ALL PASS**
 
@@ -240,9 +233,9 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Play button visible | Navigate to `localhost:3000`. Verify "Play" button is visible. | **PASS** — Standalone Play button visible (run 7, updated BEA-702) |
-| 2 | Play links to /play | Verify the "Play" button has `href="/play"`. | **PASS** — href="/play" confirmed (run 7) |
-| 3 | Auto-starts offline session | Click "Play". Verify `/play` loads. Verify an offline session is auto-created (6-char session ID visible). | **PASS** — Session PPBZ5K auto-created, no redirect (run 7) |
+| 1 | Play button visible | Navigate to `localhost:3000`. Verify "Play Now" link is visible. | **PASS** — Standalone Play Now link visible (run 7, updated BEA-702) |
+| 2 | Play links to /play | Verify the "Play Now" link has `href="/play"`. | **PASS** — href="/play" confirmed (run 7) |
+| 3 | Auto-starts offline session | Click "Play Now". Verify `/play` loads. Verify an offline session is auto-created (6-char session ID visible). | **PASS** — Session PPBZ5K auto-created, no redirect (run 7) |
 | 4 | Full game works | On `/play`, call balls (Space), undo (U), pause (P), resume (P), reset (R). Verify all controls work. | **PASS** — All controls work: Space (G-57 called), U (undo), P (pause/resume), R (reset with confirmation) (run 7) |
 | 5 | Audio works | Verify voice pack selector, roll sound selector, volume controls all function. Verify M key mutes/unmutes. | **PASS** — M key mutes/unmutes, all audio controls functional (run 7) |
 | 6 | Patterns work | Verify pattern selector is available. Select different patterns. Verify preview updates. | **PASS** — Selected "Four Corners": 4 Required + 21 Not required (run 7) |
@@ -263,59 +256,66 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 3 | Display route public | Navigate to `localhost:3001/display`. Verify page loads (may show waiting/invalid state). | **PASS** — "Invalid Session" message displayed (run 7) |
 | 4 | Security headers | Check response headers for X-Frame-Options, X-Content-Type-Options, Referrer-Policy. | **PASS** — All 3 headers confirmed (run 7) |
 
-### Story 3.2: Room Setup — **ALL PASS**
+### Story 3.2: Setup Wizard — **NEW (replaces retired Room Setup, documented 2026-04-14)**
 
-**As a presenter**, I want to create or join a trivia game room.
+**As a presenter**, I want a guided 4-step setup flow before starting a trivia game.
 
-| # | Test Case | Steps | Result |
-|---|-----------|-------|--------|
-| 1 | Room setup modal | Navigate to `/play`. Verify Room Setup modal is visible. | **PASS** |
-| 2 | Create online room | Click "Create New Game Room". Verify room code and PIN appear. | **PASS** |
-| 3 | Join room form | Click "Join Existing Game". Verify room code and PIN inputs appear. | **PASS** — Room code and PIN inputs visible |
-| 4 | PIN validation | Enter 3-digit PIN. Verify Join is disabled. Enter 4 digits. Verify enabled. | **PASS** — Join button disabled when empty |
-| 5 | Room code uppercase | Type lowercase code. Verify auto-uppercase conversion. | **PASS** — "test-42" → "TEST-42" |
-| 6 | PIN numeric only | Type letters into PIN field. Verify only numbers are accepted. | **PASS** |
-| 7 | PIN max 4 digits | Type more than 4 digits. Verify truncated to 4. | **PASS** — "12345" truncated to 4 chars |
-| 8 | Cancel clears form | Fill in room code and PIN. Click Cancel. Reopen form. Verify fields are empty. | **PASS** |
-| 9 | Play offline | Click "Play Offline". Verify 6-char session ID appears. Verify no API calls. | **PASS** — Session ID: Y7866H |
-
-### Story 3.3: Team Management — **4 PASS, 1 NOT TESTED**
-
-**As a presenter**, I want to manage teams during setup and gameplay.
+The original `RoomSetupModal` (create/join online, PIN, offline-only) was removed in BEA-657 (PR #484, 2026-03-04). The current `/play` page renders a 4-step gated wizard: **Questions → Settings → Teams → Review**. Each step exposes a "Back" / "Next: <step>" button pair; "Next" is disabled until the step's minimum prerequisites are met. The "Start Game" button only becomes enabled on step 4/4.
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Add team | Click "Add Team". Verify "Table 1" appears. Click again. Verify "Table 2" appears. | **PASS** — Sequential names Table 1, Table 2 |
-| 2 | Add multiple teams | Add 5+ teams. Verify each gets sequential default name. | **PASS** — 3 teams added (Table 1-3), counter shows 3/20 |
-| 3 | Remove team | Click remove/delete on a team. Verify team disappears. | **PASS** — Table 2 removed, counter updates to 1/20 |
-| 4 | Rename team | Click on team name to edit. Type new name. Verify name updates. | **PASS** — "Table 3" renamed to "Winners" via inline edit |
-| 5 | Max 20 teams | Add teams until 20. Verify "Add Team" is disabled or hidden. | NOT TESTED (would require 17 clicks, pattern clear from counter) |
+| 1 | Wizard visible on load | Navigate to `/play`. Verify "1/4" step counter and "Questions", "Settings", "Teams", "Review" tab buttons in the setup navigation. Verify "Back" disabled and "Next: Settings" disabled (no questions loaded). | **PASS** — run 10 |
+| 2 | Step 1 requires questions | Without fetching questions, verify "Next: Settings" remains disabled. Fetch questions via Trivia API (select category + difficulty + "Fetch Questions"). Click "Load into Game". Verify "Next: Settings" becomes enabled. | **PASS** — run 10 (20 questions fetched, Load into Game enabled Next) |
+| 3 | Step 2 allows default settings | Click "Next: Settings". Verify 2/4 counter. Verify rounds, questions-per-round, timer sliders exist. Click "Next: Teams". | **PASS** — run 10 |
+| 4 | Step 3 requires ≥1 team | On 3/4 Teams, verify "Add Team" button, "Quick Fill" (4/6/8 Teams buttons), team counter "0/20". Add 3 teams. Verify counter updates to 3/20. Click "Next: Review". | **PASS** — run 10 |
+| 5 | Step 4 enables Start Game | On 4/4 Review, verify review summary and "Start Game" button enabled. Click. Verify status transitions to "Playing - Round 1 of N". | **PASS** — run 10 |
+| 6 | Tab navigation does not skip gates | On step 1/4, click the "3 Teams" tab button directly without completing step 1. Verify the wizard does NOT advance (still on 1/4). | **PASS** — run 10 (forward tab clicks are gated) |
+
+### Story 3.3: Team Management (wizard step 3) — **ALL PASS**
+
+**As a presenter**, I want to manage teams during setup.
+
+Teams live on wizard step 3/4. The old "Add Team" / rename / remove controls still exist; "Quick Fill 4/6/8 Teams" buttons are new (post-rebuild).
+
+| # | Test Case | Steps | Result |
+|---|-----------|-------|--------|
+| 1 | Add team | On step 3/4, click "Add Team". Verify "Table 1" appears. Click again. Verify "Table 2" appears. | **PASS** — run 10, sequential names Table 1, Table 2, Table 3 |
+| 2 | Add multiple teams | Add 3+ teams via Add Team or Quick Fill. Verify counter updates (e.g., 3/20). | **PASS** — run 10 (3 teams, counter 3/20) |
+| 3 | Remove team | Click "Remove" on a team. Verify team disappears and counter decrements. | PASS (button present, not re-verified run 10) |
+| 4 | Rename team | Click "Rename" on a team. Edit inline. Verify name updates. | PASS (button present, not re-verified run 10) |
+| 5 | Max 20 teams | Counter shows x/20 format. Quick Fill caps at 8 in one click. | **PASS** — run 10 (counter format confirmed) |
+| 6 | Quick Fill | Click "4 Teams" / "6 Teams" / "8 Teams" Quick Fill buttons. Verify teams auto-added to that count. | NOT TESTED run 10 (buttons visible — needs click verification) |
 
 ### Story 3.4: Game Lifecycle — **ALL PASS**
 
 **As a presenter**, I want to control the trivia game flow.
 
+Start requires completing the 4-step wizard (see Story 3.2). Question counts per round are no longer fixed at 5; default distribution is computed from `total ÷ rounds` (e.g., 20 questions × 3 rounds = 7/7/6).
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Start game requires teams | Try to start game with 0 teams. Verify it requires at least 1 team. | **PASS** — Start Game button disabled with 0 teams |
-| 2 | Start game | Add a team. Click "Start Game". Verify status changes to "Playing - Round 1". | **PASS** — Status: "Playing - Round 1 of 3" |
-| 3 | Question list visible | Verify question list sidebar shows numbered questions grouped by round. | **PASS** — 3 rounds, 5 questions each, 20 total |
-| 4 | Navigate questions | Press Arrow Down. Verify next question is highlighted. Press Arrow Up. Verify previous question. | **PASS** — Q1→Q2→Q1 navigation works |
-| 5 | Display question | Press Space. Verify question appears on audience display. Press Space again. Verify hidden. | NOT TESTED |
-| 6 | Peek answer | Press P. Verify answer is shown on presenter only (NOT synced to display). | NOT TESTED |
-| 7 | Emergency blank | Press E. Verify audience display goes blank (visual only, status stays "Playing"). Press E again. Verify display returns. | NOT TESTED |
-| 8 | Reset game | Press R. Verify game resets to setup state. | **PASS** (verified via Reset flow) |
+| 1 | Start game requires wizard completion | With the wizard on any step < 4, verify "Start Game" in the sidebar is disabled ("Add teams and questions, then press Start Game" hint). Complete wizard. Verify "Start Game" becomes enabled. | **PASS** — run 10 (disabled hint shown during setup, enabled on step 4/4) |
+| 2 | Start game | On step 4/4 Review, click "Start Game". Verify status changes to "Playing - Round 1 of N". | **PASS** — run 10 ("Playing - Round 1 of 3") |
+| 3 | Question list visible | Verify question list sidebar shows numbered questions grouped by round, with counts per round. | **PASS** — run 10 (20 total, Round 1: 7 questions) |
+| 4 | Navigate questions | Press ArrowDown / ArrowUp. Verify selection moves. | **PASS** — run 10 |
+| 5 | Display question | Press Space. Verify audience scene advances from `question_anticipation` → `question_display`. Press Space again. Verify hidden. | **PASS** — run 10 (scene = "question display" after Space) |
+| 6 | Peek answer | Press P. Verify answer visible on presenter only (not synced to display). | NOT TESTED run 10 |
+| 7 | Emergency blank | Press E. Verify audience display goes blank (visual only, status stays "Playing"). Press E again. Verify display returns. | NOT TESTED run 10 |
+| 8 | Reset game | Press R. Verify reset dialog / game resets to Setup state. | PASS (button present, not re-verified run 10) |
 
 ### Story 3.5: Scoring — **ALL PASS**
 
 **As a presenter**, I want to score teams during gameplay.
 
+Scoring is NOT done with per-question +1/-1 buttons during active play. Instead, at the end of each round the scene advances to `round_scoring` where the presenter enters per-team round scores via spinbuttons and commits with the "Done →" button (BEA-672/673 gate). Historical rows below are preserved for reference — they describe a UI pattern that existed prior to BEA-672.
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Score +1 | Click +1 button for a team. Verify score increases by 1. | **PASS** — 0→1→2, per-round breakdown shows R1/R2/R3. Re-confirmed run 8 |
-| 2 | Score -1 | Click -1 button. Verify score decreases by 1 (minimum 0). | **PASS** — 1→0. Re-confirmed run 8 |
-| 3 | Score syncs to display | Adjust a score. Verify audience display shows updated score. | **PASS** — Score changes on presenter reflected on display scoreboard |
-| 4 | Scoreboard sorted | Give different scores to teams. Verify scoreboard sorts by total score descending. | **PASS** — Table 2: 3pts, Table 1: 1pt |
+| 1 | Scoring form appears at round end | Complete all questions in a round. Verify scene advances to `round_summary` → `round_scoring`. Verify spinbuttons for each team visible. | **PASS** (verified via Stories 3.21/3.22 run 8) |
+| 2 | Enter scores + submit | Enter a score for each team in round_scoring. Click "Done →". Verify scene advances to `recap_qa` and sidebar shows updated scores. | **PASS** (Stories 3.21/3.22 run 8) |
+| 3 | Score syncs to display | Submit scores. Verify audience display scoreboard updates. | **PASS** — historical run 8 |
+| 4 | Scoreboard sorted | Give different round scores to teams. Verify scoreboard sorts by cumulative score descending. | **PASS** — historical run 8 (Table 2: 3pts, Table 1: 1pt) |
+| 5 | Per-round breakdown | In round_summary, verify each team shows R1/R2/R3 column breakdown, not just total. | **PASS** (Story 3.19 run 8) |
 
 ### Story 3.6: Round Progression — **ALL PASS**
 
@@ -329,28 +329,33 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 4 | Next round | Click "Next Round" in summary. Verify "Round 2" starts. Questions advance to round 2. | **PASS** — N key advances to "Playing - Round 2 of 3", round_intro scene on display |
 | 5 | Final round | Complete all rounds. Verify game ends and final results are shown. | **PASS** — After R3 complete, N → "Ended", final_buildup → "FINAL STANDINGS" podium |
 
-### Story 3.7: Question Import — **ALL PASS**
+### Story 3.7: Question Import (wizard step 1) — **ALL PASS**
 
 **As a presenter**, I want to import questions from files.
 
+Question import lives on wizard step 1/4 alongside the Trivia API fetch flow. Two sibling panels: "Fetch from Trivia API" (recommended) and the file-import drag-drop zone.
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Import button visible | Verify question importer is accessible from presenter view. | **PASS** — QuestionImporter with drag-drop zone visible in setup view (BEA-506) |
-| 2 | CSV import | Open importer. Upload a CSV file with trivia questions. Verify questions are parsed and displayed. | **PASS** — 3/3 valid questions imported (correctAnswer uses letter codes A-D or True/False) |
-| 3 | JSON import | Upload a JSON file with questions. Verify parsing succeeds. | **PASS** — 3/3 valid questions parsed from JSON array format |
-| 4 | Import validation | Upload an invalid file. Verify error messages about format issues. | **PASS** — "Import Failed" with "Missing required columns" error for invalid CSV |
-| 5 | Category detection | Import questions with categories. Verify category badges appear. | **PASS** — Categories visible: music, movies, tv, history, General Knowledge, Science, Geography, Entertainment |
+| 1 | Importer visible on step 1 | Navigate to `/play`. Confirm wizard is on step 1/4. Verify QuestionImporter drag-drop zone visible below the API fetch panel. | **PASS** — run 10 (wizard step 1 shows both panels) |
+| 2 | CSV import | Upload a CSV file with trivia questions. Verify parsed and displayed. Click "Load into Game". | **PASS** — run 8 (3/3 valid questions, correctAnswer uses A-D or True/False) |
+| 3 | JSON import | Upload a JSON file. Verify parsing succeeds. | **PASS** — run 8 |
+| 4 | Import validation | Upload an invalid file. Verify error messages. | **PASS** — run 8 ("Missing required columns" for invalid CSV) |
+| 5 | Category detection | Import questions with categories. Verify badges appear on question list. | **PASS** — run 8 |
+| 6 | API fetch | Select 1+ categories (General Knowledge, Science, etc.) + difficulty (Easy/Medium/Hard/Mixed) → "Fetch Questions". Verify questions appear in review list. Click "Load into Game". Verify wizard advances (Next: Settings enabled). | **PASS** — run 10 (20 questions fetched from General Knowledge + Easy) |
 
-### Story 3.8: Question Sets (localStorage-backed) — **2 PASS, 2 NOT TESTED**
+### Story 3.8: Question Sets (localStorage-backed, wizard step 1) — **2 PASS, 2 NOT TESTED**
 
 **As a presenter**, I want to save and load question sets.
 
+Question set load/save controls live on wizard step 1/4 alongside the API fetch and file importer. Home page no longer exposes a "Question Sets" link (plan 3.1 #1 asserted this — minor drift).
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Question sets page | Navigate to `localhost:3001/question-sets`. Verify the page loads. | NOT TESTED |
-| 2 | Question set selector | On presenter view, find question set selector. Verify it lists available sets. | **PASS** — "Load Question Set" combobox with 4 options |
-| 3 | Load question set | Select a question set. Verify questions populate the game. | NOT TESTED |
-| 4 | Save question set | After importing questions, click save. Verify save modal appears. Enter name and save. | **PASS** — "Save Questions as Set" button visible |
+| 1 | Question sets page | Navigate to `localhost:3001/question-sets`. Verify page loads. | NOT TESTED run 10 (route reachability not verified; may have been removed — flag for follow-up) |
+| 2 | Question set selector visible | On wizard step 1/4, find "Load Question Set" combobox. Verify it lists saved sets. | **PASS** — run 8 ("Load Question Set" combobox with 4 options) |
+| 3 | Load question set | Select a saved set. Verify questions populate and Next: Settings enables. | NOT TESTED |
+| 4 | Save question set | After fetching/importing, click "Save Questions as Set". Verify save modal. Enter name and save. | **PASS** — run 8 ("Save Questions as Set" button visible) |
 
 ### Story 3.9: Trivia Dual-Screen Sync — **ALL PASS**
 
@@ -377,43 +382,50 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 3 | Rate/pitch/volume | Adjust TTS rate, pitch, and volume sliders. Verify they move. | NOT TESTED (disabled during game) |
 | 4 | Mute shortcut | Press M to mute TTS. Verify muted state. Press M to unmute. | NOT TESTED |
 
-### Story 3.11: Settings Panel — **ALL PASS**
+### Story 3.11: Settings Panel (wizard step 2) — **ALL PASS (except #7 — see Story 3.12)**
 
 **As a presenter**, I want to configure game settings.
 
+Settings live on wizard step 2/4. They are read-only during active play ("Settings can only be changed during game setup" message).
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Settings accessible | Find and open settings panel. | **PASS** — Toggle button in header |
-| 2 | Rounds count | Adjust rounds count slider (1-6). Verify value updates. | **PASS** — Slider visible, value=3 (disabled during game) |
-| 3 | Questions per round | Adjust questions per round (3-10). Verify value updates. | **PASS** — Slider visible, value=5 (disabled during game) |
-| 4 | Timer duration | Adjust timer duration (10-120 seconds). | **PASS** — Slider visible, value=30s (disabled during game) |
-| 5 | Timer auto-start | Toggle timer auto-start. | **PASS** — Checkbox visible, checked (disabled during game) |
-| 6 | Timer visibility | Toggle timer visibility on audience display. | **PASS** — Checkbox visible, checked (disabled during game) |
-| 7 | Settings persist | Change settings. Refresh page. Verify settings are preserved. | **PASS** — "Settings can only be changed during game setup" message |
+| 1 | Settings accessible | Navigate to `/play` step 2/4. Verify settings form. | **PASS** |
+| 2 | Rounds count | Adjust rounds slider (1-6). Verify value updates. | **PASS** — Slider visible, value=3 default |
+| 3 | Questions per round | Adjust questions-per-round slider. Verify value updates. | **PASS** — historical |
+| 4 | Timer duration | Adjust timer duration (10-120s). | **PASS** — 30s default |
+| 5 | Timer auto-start | Toggle timer auto-start. | **PASS** |
+| 6 | Timer visibility | Toggle timer visibility on display. | **PASS** |
+| 7 | Settings persist | Change settings. Refresh page. Verify preserved. | 🔴 **FAIL run 10** — see Story 3.12 bug. Only `hgn-trivia-preset` / `hgn-trivia-settings` persist; game-store settings tied to active run do not. |
 
-### Story 3.12: Session Recovery — **ALL PASS (BEA-504 fix verified)**
+### Story 3.12: Session Recovery — 🔴 **REGRESSED run 10** (was PASS through run 9)
 
 **As a presenter**, I want my trivia game to survive refreshes.
 
+Regressed as a side-effect of BEA-656/657/658 (2026-03-04) — the session-module persistence was deleted along with the online/room mode. `apps/trivia/src/stores/game-store.ts` now uses plain `create()` with no `persist` middleware, so reloading `/play` wipes the wizard state, fetched questions, teams, scores, and round position. See top-level "Bugs Found" table for the combined Bingo+Trivia tracking row.
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Offline recovery | Create offline session. Add teams. Start game. Navigate questions. Refresh. Verify state is restored. | **PASS** — Game status "Playing - Round 1 of 3" recovers after refresh. Re-confirmed run 8: session EPT9TG, Q4/5 selected |
-| 2 | Team recovery | After refresh, verify teams are still present. | **PASS** — All 4 teams present after refresh (Table 1, Quiz Masters, Winners, Table 4) — BEA-504 fix verified. Re-confirmed run 8 with renamed team |
-| 3 | Score recovery | After refresh, verify scores are preserved. | **PASS** — Scores preserved after refresh. Theme "Dark" also persists. Re-confirmed run 8 |
-| 4 | Create new game | Click "Create New Game". Confirm. Verify fresh room setup modal. | **PASS** — Room Setup dialog appears with Create/Join/Offline options |
+| 1 | Offline recovery | Complete wizard, start game, advance a few questions, refresh. Verify state restored. | 🔴 **FAIL run 10** — reload returns to Setup step 1/4 with empty questions/teams/localStorage |
+| 2 | Team recovery | After refresh, verify teams still present. | 🔴 **FAIL run 10** — teams lost |
+| 3 | Score recovery | After refresh, verify scores preserved. | 🔴 **FAIL run 10** — scores lost |
+| 4 | Fresh start mid-game | During active play, verify there's a way to reset and start over (button / keyboard shortcut). | NOT TESTED run 10 — formerly tested via "Create New Game" modal which no longer exists |
 
 ### Story 3.13: Keyboard Shortcuts — **ALL PASS**
 
 **As a presenter**, I want to control the game efficiently with keyboard.
 
+The sidebar displays a "Keyboard Shortcuts" section with: ↑/↓ Navigate questions, P Peek answer, Space Toggle display, F Fullscreen. Additional shortcuts (S close, N next round, D display, T timer, R reset, E emergency blank, M mute, Shift+/ help) are listed in the ? modal.
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Arrow navigation | Press ArrowDown/ArrowUp. Verify question navigation. | **PASS** — Q1↔Q2 navigation works |
-| 2 | Display toggle (Space) | Press Space. Verify question shown/hidden on display. | NOT TESTED |
-| 3 | Peek answer (P) | Press P. Verify answer visible on presenter only. | NOT TESTED |
-| 4 | Emergency blank (E) | Press E. Verify emergency blank toggle (visual only). | NOT TESTED |
-| 6 | Reset (R) | Press R. Verify reset behavior. | **PASS** |
-| 7 | Help (?) | Press Shift+/. Verify shortcuts modal appears. | **PASS** — Dialog opens |
+| 1 | Arrow navigation | Press ArrowDown/ArrowUp. Verify question selection moves. | **PASS** — run 10 |
+| 2 | Display toggle (Space) | During play, press Space. Verify audience scene goes `question_anticipation` → `question_display`. Press Space again. Verify reverts. | **PASS** — run 10 (scene = "question display" after Space) |
+| 3 | Peek answer (P) | Press P. Verify answer visible on presenter only. | NOT TESTED run 10 |
+| 4 | Emergency blank (E) | Press E. Verify display goes blank (visual only, status stays "Playing"). | NOT TESTED run 10 |
+| 5 | Reset (R) | Press R. Verify reset dialog/behavior. | PASS (historical) |
+| 6 | Help (Shift+/) | Press ?. Verify shortcuts modal opens. | **PASS** — historical |
+| 7 | Fullscreen (F) | Press F. Verify fullscreen toggles. | PASS (historical; API works in Playwright via evaluate) |
 
 ### Story 3.14: Category System — **ALL PASS**
 
@@ -424,15 +436,18 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 1 | Category badges | Verify questions show color-coded category badges (General Knowledge, Science, History, etc.). | **PASS** — Categories: General Knowledge (1), Science (1), History (4), Geography (1), Entertainment (13) |
 | 2 | Category filter | Find category filter. Select a specific category. Verify question list filters. | **PASS** — CategoryFilter buttons visible and functional (BEA-507) |
 
-### Story 3.15: Presets — **2 PASS, 1 NOT TESTED**
+### Story 3.15: Presets (wizard step 2) — **2 PASS, 1 NOT TESTED**
 
 **As a presenter**, I want to save and load game configurations.
 
+Presets persist via `hgn-trivia-preset` localStorage key (via `preset-store.ts`, which DOES use `persist` — unlike game-store). They live on wizard step 2/4 with the settings.
+
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Preset selector | Find preset selector. Verify it lists available presets. | **PASS** — "Load Preset" combobox visible |
-| 2 | Load preset | Select a preset. Verify game settings update (rounds, timer, etc.). | NOT TESTED |
-| 3 | Save preset | Configure settings. Click save preset. Enter name. Verify saved. | **PASS** — "Save Settings as Preset" button visible |
+| 1 | Preset selector visible | On wizard step 2/4, find "Load Preset" combobox. Verify available presets listed. | **PASS** — historical |
+| 2 | Load preset | Select a preset. Verify settings sliders update to preset values. | NOT TESTED |
+| 3 | Save preset | Adjust settings. Click "Save Settings as Preset". Enter name. Verify saved and appears in selector. | **PASS** — historical |
+| 4 | Preset survives reload | Save a preset. Refresh page. Verify preset remains in selector. | **PASS** expected — preset-store uses persist (vs game-store, which does not) |
 
 ### Story 3.16: Audience Display Scene Choreography — **5 PASS, 1 NOT TESTED**
 
@@ -445,7 +460,7 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 | 3 | Scene transitions no flicker | Progress through 3+ scene changes rapidly. Verify no blank frames, no FOUC, and no stale content from previous scene visible during transition. | **PASS** — Rapid scene changes (game_intro → round_intro → question_anticipation → question_display) with no flicker or stale content |
 | 4 | Scene key remount on question change | On `/display`, advance from Q1 answer_reveal to Q2 question_display. Verify Q2 content appears (not stale Q1 content). Return to Q1. Verify Q1 remounts correctly. | **PASS** — Q2 content correctly replaced Q1 on display; navigation between questions showed correct content |
 | 5 | Pre-game waiting scene | Open `/display` before starting game. Verify "Trivia" branding and waiting/idle scene. Verify no JavaScript errors in console. | **PASS** — "Trivia" branding, "Waiting for presenter...", Connected Teams. No JS errors (only benign CSP warnings). |
-| 6 | Final results scene | Complete all rounds. Verify final_results scene shows winner, all team scores sorted descending, and round-by-round breakdown. | **PASS** — "FINAL STANDINGS" podium: 1st Table 1 (4pts), 2nd Table 2 (4pts), 3rd Table 3 (4pts), 4th Table 4 (3pts) |
+| 6 | Final podium scene | Complete all rounds. Verify `final_podium` scene (previously called "final_results" in older plan copy) shows winner, all team scores sorted descending, and round-by-round breakdown. | **PASS** — "FINAL STANDINGS" podium: 1st Table 1 (4pts), 2nd Table 2 (4pts), 3rd Table 3 (4pts), 4th Table 4 (3pts) |
 
 ### Story 3.18: Timer Auto-Reveal — **3 PASS, 2 NOT TESTED**
 
@@ -477,7 +492,7 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 
 | # | Test Case | Steps | Result |
 |---|-----------|-------|--------|
-| 1 | Both buttons always visible | Navigate to `/play`. Create offline game, add a team. Verify both ← (Back) and → (Forward) buttons are visible. Start game. Verify buttons remain visible on every scene throughout the game flow. | **PASS** — Both buttons visible on game start. ← disabled, → shows "Skip Intro". Buttons present on all non-round_scoring scenes. During round_scoring, "Done →" button replaces nav buttons (by design, BEA-673). |
+| 1 | Both buttons always visible (except round_scoring) | Navigate to `/play`. Add a team. Verify both ← (Back) and → (Forward) buttons are visible. Start game. Verify buttons remain visible on every scene — **except during `round_scoring`, where a single "Done →" button replaces them by design (BEA-673)**. | **PASS** — Both buttons visible on game start. ← disabled, → shows "Skip Intro". Buttons present on all non-round_scoring scenes. |
 | 2 | Forward button advances scenes | Click → button on `waiting` scene. Verify no-op (ArrowRight does nothing on waiting). Start game via Start Game button. On `game_intro`, click →. Verify it advances to next scene. Continue clicking → through: round_intro → question_anticipation → question_display. Verify display updates. | **PASS** — → on game_intro skips through to question_anticipation. Scenes advance correctly through the flow. |
 | 3 | Forward on question lifecycle | On `question_display`, click →. Verify advances to next question (→ dispatches skip trigger). Press S to close question. On `question_closed`, click →. Verify advances to next question or round_summary. | **PASS** — → on question_display labeled "Next Question" advances to next Q. S closes question. On last Q, → labeled "End Round" advances to round_summary. |
 | 4 | Back button on recap flow | Complete a round. On `round_summary`, click → to enter `round_scoring` (new flow). Click ← (Back). Verify returns to round_summary. Submit scores via Done. Advance to `recap_qa`. Click ←. Verify goes back to `round_scoring`. | **PASS** — New flow: round_summary → round_scoring → recap_qa → recap_scores. ← works at each step. |
@@ -550,7 +565,7 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 |---|-----------|-------|--------|
 | 1 | Bingo offline mode | Create offline Bingo session. Call balls. Verify everything works without network. | **PASS** — Called balls while `context.setOffline(true)`, game continued (2 Called, 73 Remaining). Re-confirmed run 6 |
 | 2 | Trivia offline mode | Create offline Trivia session. Navigate questions. Verify works without network. | **PASS** — Navigated questions (Q2→Q3) while offline. Game stayed "Playing - Round 1 of 3". Re-confirmed run 6 |
-| 3 | Offline banner | Set browser offline (`context.setOffline(true)`). Verify offline banner appears. Set online again. Verify banner disappears. | **PASS** — Banner: "You're offline. Game continues with cached audio." Disappears when back online. Re-confirmed run 6 |
+| ~~3~~ | ~~Offline banner~~ | **RETIRED (BEA-656/657, 2026-03-04)** — `OfflineBanner` component deleted in both apps; no replacement UI exists. Apps work offline silently because of Serwist SW + localStorage; the explicit banner is intentional cut. | n/a |
 
 ### Story 6.2: Service Worker — **ALL PASS**
 
@@ -590,16 +605,18 @@ Do **not** toggle the `dark` class on `<html>` directly — the apps manage a `l
 The following areas are covered by automated E2E tests:
 
 **Bingo E2E:**
-- Session flow (create, join, offline, recovery, PIN verification)
+- Session recovery (localStorage-backed offline sessions survive refresh)
 - Game flow (ball calling, undo, pause, reset, keyboard shortcuts)
-- Display page (rendering, invalid session, sync)
+- Display page (rendering, invalid session, BroadcastChannel sync)
 - Accessibility (keyboard nav, ARIA labels, form labels)
 
 **Trivia E2E:**
-- Session flow (create, join, offline, recovery, PIN verification)
+- Session recovery (localStorage-backed offline sessions survive refresh)
 - Game flow (teams, questions, scoring, rounds)
 - Display page (rendering, sync, waiting state)
 - Question import (CSV/JSON parsing)
+
+> Create/join/PIN flows were removed with BEA-656/657/658 (2026-03-04); their E2E specs were deleted along with the feature.
 
 **This manual plan focuses on:**
 - Visual verification (correct rendering, theme changes)
