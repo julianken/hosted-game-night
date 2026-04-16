@@ -35,12 +35,16 @@ export default function PlayPage() {
   // violating the react-hooks/set-state-in-effect rule, and its initial
   // server snapshot returns `true` so the gate doesn't block the hydration
   // mismatch check during SSR.
-  const gameStoreHydrated = useSyncExternalStore(
+  const persistDone = useSyncExternalStore(
     (onStoreChange) =>
       useGameStore.persist?.onFinishHydration?.(onStoreChange) ?? (() => {}),
     () => useGameStore.persist?.hasHydrated?.() ?? true,
     () => true,
   );
+  // _isHydrating clears via setTimeout(0) AFTER onFinishHydration, so the
+  // gate must also wait for it to settle to avoid a mid-click re-render.
+  const gameStoreSettled = useGameStore((state) => !state._isHydrating);
+  const gameStoreHydrated = persistDone && gameStoreSettled;
 
   // Theme store selectors
   const presenterTheme = useThemeStore((state) => state.presenterTheme);

@@ -45,6 +45,9 @@ export default function PlayPage() {
   const [gameStoreHydrated, setGameStoreHydrated] = useState(
     () => useGameStore.persist?.hasHydrated?.() ?? true,
   );
+  // _isHydrating clears via setTimeout(0) AFTER onFinishHydration, so the
+  // gate must also wait for it to settle to avoid a mid-click re-render.
+  const gameStoreSettled = useGameStore((state) => !state._isHydrating);
   useEffect(() => {
     if (!settingsHydrated && (useSettingsStore.persist?.hasHydrated?.() ?? true)) {
       setSettingsHydrated(true);
@@ -67,7 +70,7 @@ export default function PlayPage() {
       unsub?.();
     };
   }, [gameStoreHydrated]);
-  const playHydrated = settingsHydrated && gameStoreHydrated;
+  const playHydrated = settingsHydrated && gameStoreHydrated && gameStoreSettled;
 
   const game = useGameKeyboard({
     onResetRequest: useCallback(() => setShowNewGameConfirm(true), []),
