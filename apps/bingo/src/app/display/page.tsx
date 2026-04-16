@@ -108,8 +108,18 @@ function DisplayContent() {
  * Keyboard shortcuts (F=fullscreen, ?=help) remain active.
  */
 function AudienceDisplay({ sessionId }: { sessionId: string }) {
-  // Audio unlock state
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  // Audio unlock state.
+  // Under E2E_TESTING, start unlocked so downstream audio code behaves as if
+  // the user had clicked the overlay. The overlay render below is also
+  // elided under the same env check. This avoids a race where the helper's
+  // click on the overlay collides with the presenter's UNLOCK_AUDIO
+  // postMessage arrival, unmounting the overlay mid-click and causing
+  // "element detached from the DOM" retry loops in bingo display/dual-screen
+  // tests. See docs/superpowers/plans/2026-04-15-e2e-baseline-triage.md
+  // §NET NEW 2.
+  const [audioUnlocked, setAudioUnlocked] = useState(
+    () => process.env.E2E_TESTING === 'true',
+  );
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const { toggleFullscreen } = useFullscreen();
@@ -289,8 +299,10 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
 
   return (
     <>
-      {/* Audio unlock overlay — shown until user clicks to activate audio */}
-      {!audioUnlocked && (
+      {/* Audio unlock overlay — shown until user clicks to activate audio.
+          Elided entirely under E2E_TESTING so automated tests never race
+          against the presenter's UNLOCK_AUDIO postMessage dismissal path. */}
+      {!audioUnlocked && process.env.E2E_TESTING !== 'true' && (
         <div
           data-testid="audio-unlock-overlay"
           className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"

@@ -330,17 +330,25 @@ export async function waitForDisplayBallCount(
 /**
  * Dismiss the bingo display's audio-unlock overlay if present.
  *
- * The `/display` page for bingo renders a full-screen click-to-activate
- * overlay (data-testid="audio-unlock-overlay") that blocks pointer events
- * until the user interacts. In E2E we click it so subsequent assertions
- * against the underlying display UI are not obstructed.
+ * The `/display` page for bingo normally renders a full-screen
+ * click-to-activate overlay (data-testid="audio-unlock-overlay") that blocks
+ * pointer events until the user interacts. Under E2E_TESTING, the display
+ * page now skips rendering that overlay entirely (see
+ * apps/bingo/src/app/display/page.tsx) and starts with `audioUnlocked=true`,
+ * so this helper is effectively a no-op in automated runs. It is kept for
+ * backward compatibility with existing callers and will still click the
+ * overlay if for some reason it does appear (e.g., a future non-E2E
+ * regression test, or running against `pnpm dev` without E2E_TESTING set).
  *
- * No-op if the overlay isn't visible (e.g., invalid-session display).
+ * No-op if the overlay isn't visible within a short poll window.
  */
 export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void> {
   const overlay = displayPage.getByTestId('audio-unlock-overlay');
+  // Short poll — under E2E_TESTING=true the overlay never renders, so we
+  // should exit quickly with no wasted wall time. If the overlay is absent
+  // after 500ms, treat as already-dismissed and move on.
   try {
-    await overlay.waitFor({ state: 'visible', timeout: 2000 });
+    await overlay.waitFor({ state: 'visible', timeout: 500 });
   } catch {
     return;
   }
