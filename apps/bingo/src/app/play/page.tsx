@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useSyncExternalStore } from 'react';
 import { useGameKeyboard } from '@/hooks/use-game';
+import { useGameStore } from '@/stores/game-store';
 import { useSync } from '@/hooks/use-sync';
 import { generateSessionId } from '@/lib/sync/session';
 import { BallDisplay, RecentBalls, BallCounter } from '@/components/presenter/BallDisplay';
@@ -22,6 +23,25 @@ import { useThemeStore } from '@/stores/theme-store';
 import { InstallPrompt } from '@hosted-game-night/ui';
 
 export default function PlayPage() {
+  // Post-BEA-722: Hydration-ready gate.
+  // BEA-722 added zustand persist() to useGameStore. Tests that press keys
+  // or click buttons on the presenter view can land before the persist merge
+  // completes, clobbering the just-applied action back to default state.
+  // We expose a data-play-hydrated attribute once the game store reports
+  // hasHydrated() so helpers (and keyboard tests) can gate on it instead of
+  // a fixed waitForTimeout.
+  //
+  // useSyncExternalStore subscribes to persist.onFinishHydration without
+  // violating the react-hooks/set-state-in-effect rule, and its initial
+  // server snapshot returns `true` so the gate doesn't block the hydration
+  // mismatch check during SSR.
+  const gameStoreHydrated = useSyncExternalStore(
+    (onStoreChange) =>
+      useGameStore.persist?.onFinishHydration?.(onStoreChange) ?? (() => {}),
+    () => useGameStore.persist?.hasHydrated?.() ?? true,
+    () => true,
+  );
+
   // Theme store selectors
   const presenterTheme = useThemeStore((state) => state.presenterTheme);
   const displayTheme = useThemeStore((state) => state.displayTheme);
@@ -112,7 +132,11 @@ export default function PlayPage() {
         Skip to main content
       </a>
 
-      <main id="main" className="min-h-screen bg-background p-3 md:p-4">
+      <main
+        id="main"
+        data-play-hydrated={gameStoreHydrated ? 'true' : undefined}
+        className="min-h-screen bg-background p-3 md:p-4"
+      >
         <div className="max-w-[1600px] mx-auto">
 
           {/* Compact single-line header */}

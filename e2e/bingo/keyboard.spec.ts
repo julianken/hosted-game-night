@@ -5,9 +5,15 @@ test.describe('Bingo Keyboard Shortcuts', () => {
   test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Wait for keyboard event handlers to be registered
-    // The useGameKeyboard hook registers listeners in a useEffect
-    await page.waitForTimeout(500);
+    // Post-BEA-722: wait for the game-store persist hydration gate instead of
+    // a fixed 500ms sleep. useGameKeyboard registers listeners in a useEffect,
+    // but the more important thing we were waiting for was the persist merge
+    // completing so key-driven actions aren't clobbered. Use `attached`
+    // (not `visible`) because the host element may be covered by an overlay
+    // or sit inside a flex layout that Playwright can report as "hidden".
+    await page
+      .locator('[data-play-hydrated="true"]')
+      .waitFor({ state: 'attached', timeout: 10_000 });
 
     // Ensure page is focused (not any specific element)
     // This allows keyboard shortcuts to work properly

@@ -25,6 +25,22 @@ export async function waitForHydration(page: Page): Promise<void> {
     const mainContent = page.locator('main').locator(':visible').first();
     await expect(mainContent).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 5000 });
+
+  // Post-BEA-722: The /play pages in both apps expose a data-play-hydrated
+  // attribute that flips to "true" once zustand persist has finished
+  // rehydrating all persisted stores. Tests that act immediately after
+  // navigation to /play can race the persist merge, so wait for the gate on
+  // /play routes. Use `attached` (not `visible`) because the host element
+  // may be covered by a setup-overlay or sit inside a flex layout that
+  // Playwright can report as "hidden" even though it's rendered. We only
+  // need the attribute to be in the DOM — that is sufficient evidence that
+  // persist has finished merging. No-op for non-/play routes (home,
+  // display, etc.) where the attribute never renders.
+  if (page.url().includes('/play')) {
+    await page
+      .locator('[data-play-hydrated="true"]')
+      .waitFor({ state: 'attached', timeout: 10_000 });
+  }
 }
 
 /**
@@ -350,17 +366,21 @@ export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void
  * @param timeout - Maximum time to wait for transitions (default: 15000ms)
  */
 export async function startGameViaWizard(page: Page, teamCount = 2, timeout = 15000): Promise<void> {
-  // BEA-715: Hydration-ready gate.
+  // BEA-715 + post-BEA-722: Hydration-ready gate.
   // page.goto(..., { waitUntil: 'load' }) only guarantees the JS bundle loaded —
   // not that React has hydrated and not that zustand persist has finished
   // rehydrating from localStorage. Under React 19 + AnimatePresence, the wizard
   // step buttons exist in the DOM before their event handlers are wired up.
-  // PlayPage sets data-settings-hydrated="true" once useSettingsStore.persist
-  // has finished hydrating AND the component has mounted, so we gate on that
-  // attribute before any wizard interaction.
-  await expect(
-    page.locator('[data-settings-hydrated="true"]')
-  ).toBeVisible({ timeout: 10_000 });
+  // PlayPage sets data-play-hydrated="true" once BOTH useSettingsStore.persist
+  // AND useGameStore.persist have finished hydrating (BEA-722 added persist to
+  // useGameStore, so the original data-settings-hydrated name was renamed to
+  // data-play-hydrated), so we gate on that attribute before any wizard
+  // interaction. Use `attached` (not `visible`) because the host element may
+  // be covered by the setup-gate overlay — we only need the attribute in the
+  // DOM.
+  await page
+    .locator('[data-play-hydrated="true"]')
+    .waitFor({ state: 'attached', timeout: 10_000 });
 
   const gate = page.locator('[data-testid="setup-gate"]');
 

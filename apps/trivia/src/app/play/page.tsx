@@ -27,27 +27,47 @@ import { SetupGate } from '@/components/presenter/SetupGate';
 export default function PlayPage() {
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
 
-  // BEA-715: Hydration-ready gate.
-  // The SetupGate wizard reads from useSettingsStore (zustand persist). Under
-  // React 19 + AnimatePresence, wizard step buttons exist in the DOM before
-  // their click handlers attach (or before the persisted settings have
-  // hydrated), causing E2E clicks to land but do nothing. Set a data-attribute
-  // once persist has finished hydrating + the component has mounted, so the
-  // E2E helper (e2e/utils/helpers.ts::startGameViaWizard) can gate on it.
-  const [settingsHydrated, setSettingsHydrated] = useState(false);
+  // BEA-715 + post-BEA-722: Hydration-ready gate.
+  // The SetupGate wizard reads from useSettingsStore AND useGameStore (both
+  // zustand persist). Under React 19 + AnimatePresence, wizard step buttons
+  // exist in the DOM before their click handlers attach (or before the
+  // persisted stores have hydrated), causing E2E clicks to land but do
+  // nothing. BEA-722 added persist() to useGameStore without extending this
+  // gate, causing a mid-click re-render race when the game store rehydrates
+  // late. We now compose both stores and expose the combined readiness as
+  // data-play-hydrated. Initial state is a synchronous hasHydrated() check —
+  // if the store already hydrated between render and effect, we don't miss
+  // the onFinishHydration callback. `?? true` is a belt-and-suspenders
+  // fallback for any test that somehow skips persist.
+  const [settingsHydrated, setSettingsHydrated] = useState(
+    () => useSettingsStore.persist?.hasHydrated?.() ?? true,
+  );
+  const [gameStoreHydrated, setGameStoreHydrated] = useState(
+    () => useGameStore.persist?.hasHydrated?.() ?? true,
+  );
   useEffect(() => {
-    const check = () => {
-      const hydrated = useSettingsStore.persist?.hasHydrated?.() ?? true;
-      if (hydrated) setSettingsHydrated(true);
-    };
-    check();
+    if (!settingsHydrated && (useSettingsStore.persist?.hasHydrated?.() ?? true)) {
+      setSettingsHydrated(true);
+    }
     const unsub = useSettingsStore.persist?.onFinishHydration?.(() => {
       setSettingsHydrated(true);
     });
     return () => {
       unsub?.();
     };
-  }, []);
+  }, [settingsHydrated]);
+  useEffect(() => {
+    if (!gameStoreHydrated && (useGameStore.persist?.hasHydrated?.() ?? true)) {
+      setGameStoreHydrated(true);
+    }
+    const unsub = useGameStore.persist?.onFinishHydration?.(() => {
+      setGameStoreHydrated(true);
+    });
+    return () => {
+      unsub?.();
+    };
+  }, [gameStoreHydrated]);
+  const playHydrated = settingsHydrated && gameStoreHydrated;
 
   const game = useGameKeyboard({
     onResetRequest: useCallback(() => setShowNewGameConfirm(true), []),
@@ -279,7 +299,7 @@ export default function PlayPage() {
       */}
       <div
         id="main"
-        data-settings-hydrated={settingsHydrated ? 'true' : undefined}
+        data-play-hydrated={playHydrated ? 'true' : undefined}
         className="h-screen flex flex-col overflow-hidden bg-background"
         style={{ fontFamily: 'var(--font-sans)' }}
       >
