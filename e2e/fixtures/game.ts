@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { getE2EPortConfig } from '../utils/port-config';
 import { startGameViaWizard } from '../utils/helpers';
 import { buildTriviaSeedInitScript } from '../utils/trivia-fixtures';
+import { applyE2ERuntimeFlags } from '../utils/e2e-flags';
 
 // -----------------------------------------------------------------------------
 // Dynamic URL Constants for Worktree Isolation
@@ -126,6 +127,7 @@ export const test = base.extend<GameFixtures>({
    * Navigates directly to Bingo /play (no auth needed in standalone mode).
    */
   bingoPage: async ({ page, appNavigationTimeout }, use) => {
+    await applyE2ERuntimeFlags(page.context());
     await page.goto(`${BINGO_URL}/play`, {
       waitUntil: 'load',
       timeout: appNavigationTimeout,
@@ -140,6 +142,7 @@ export const test = base.extend<GameFixtures>({
    * same initial state a real user would.
    */
   triviaPage: async ({ page, appNavigationTimeout }, use) => {
+    await applyE2ERuntimeFlags(page.context());
     await page.goto(`${TRIVIA_URL}/play`, {
       waitUntil: 'load',
       timeout: appNavigationTimeout,
@@ -162,6 +165,7 @@ export const test = base.extend<GameFixtures>({
    * (Part C) for the full rationale.
    */
   triviaPageWithQuestions: async ({ page, appNavigationTimeout }, use) => {
+    await applyE2ERuntimeFlags(page.context());
     await page.addInitScript({ content: buildTriviaSeedInitScript() });
 
     await page.goto(`${TRIVIA_URL}/play`, {

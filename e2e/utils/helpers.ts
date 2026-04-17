@@ -327,30 +327,30 @@ export async function waitForDisplayBallCount(
  *
  * The `/display` page for bingo normally renders a full-screen
  * click-to-activate overlay (data-testid="audio-unlock-overlay") that blocks
- * pointer events until the user interacts. Under E2E_TESTING, the display
- * page now skips rendering that overlay entirely (see
- * apps/bingo/src/app/display/page.tsx) and starts with `audioUnlocked=true`,
- * so this helper is effectively a no-op in automated runs. It is kept for
- * backward compatibility with existing callers and will still click the
- * overlay if for some reason it does appear (e.g., a future non-E2E
- * regression test, or running against `pnpm dev` without E2E_TESTING set).
+ * pointer events until the user interacts. Under E2E (detected via the
+ * `window.__E2E_TESTING__` global applied by `e2e/utils/e2e-flags.ts` from
+ * each fixture), the display page skips rendering that overlay entirely
+ * (see apps/bingo/src/app/display/page.tsx) and starts with
+ * `audioUnlocked=true`, so this helper is effectively a no-op in automated
+ * runs.
  *
- * No-op if the overlay isn't visible within a short poll window.
+ * Kept for backward compatibility with existing callers. Now genuinely
+ * race-tolerant: polls visibility and swallows the click's "detached
+ * element" error so a lingering overlay that unmounts mid-click (e.g., from
+ * the presenter's UNLOCK_AUDIO postMessage) doesn't bubble as a test
+ * failure.
  */
 export async function dismissAudioUnlockOverlay(displayPage: Page): Promise<void> {
-  const overlay = displayPage.getByTestId('audio-unlock-overlay');
-  // Short poll — under E2E_TESTING=true the overlay never renders, so we
-  // should exit quickly with no wasted wall time. If the overlay is absent
-  // after 500ms, treat as already-dismissed and move on.
-  try {
-    await overlay.waitFor({ state: 'visible', timeout: 500 });
-  } catch {
-    return;
-  }
-  await overlay.click();
-  await overlay.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {
-    // Some browsers may keep the node around briefly; best-effort dismissal.
-  });
+  await expect(async () => {
+    const overlay = displayPage.getByTestId('audio-unlock-overlay');
+    const visible = await overlay.isVisible().catch(() => false);
+    if (!visible) return; // already gone — success
+    // Short per-attempt click timeout plus .catch(): if the overlay unmounts
+    // between isVisible() and click(), the click throws a detached-element
+    // error which we swallow. The outer toPass retries until the locator is
+    // absent.
+    await overlay.click({ timeout: 500 }).catch(() => {});
+  }).toPass({ timeout: 3000 });
 }
 
 /**

@@ -109,17 +109,27 @@ function DisplayContent() {
  */
 function AudienceDisplay({ sessionId }: { sessionId: string }) {
   // Audio unlock state.
-  // Under E2E_TESTING, start unlocked so downstream audio code behaves as if
-  // the user had clicked the overlay. The overlay render below is also
-  // elided under the same env check. This avoids a race where the helper's
-  // click on the overlay collides with the presenter's UNLOCK_AUDIO
-  // postMessage arrival, unmounting the overlay mid-click and causing
-  // "element detached from the DOM" retry loops in bingo display/dual-screen
-  // tests. See docs/superpowers/plans/2026-04-15-e2e-baseline-triage.md
-  // §NET NEW 2.
-  const [audioUnlocked, setAudioUnlocked] = useState(
-    () => process.env.E2E_TESTING === 'true',
-  );
+  //
+  // Under Playwright E2E, the browser context sets `window.__E2E_TESTING__`
+  // via `addInitScript` before this module evaluates. We detect that flag
+  // and start with audio already "unlocked" so downstream audio code behaves
+  // as if the user had clicked the overlay; the overlay render below is also
+  // elided under the same check. This avoids a race where the helper's click
+  // on the overlay collides with the presenter's UNLOCK_AUDIO postMessage
+  // arrival, unmounting the overlay mid-click and causing "element detached
+  // from the DOM" retry loops in bingo display/dual-screen tests.
+  //
+  // Why not `process.env.E2E_TESTING`: Next.js only inlines `NEXT_PUBLIC_*`
+  // env vars into the client bundle; a plain `process.env.X` read in a
+  // Client Component resolves to `undefined` at runtime (via Turbopack's
+  // process polyfill). The window global is set per-context by Playwright
+  // fixtures (see `e2e/utils/e2e-flags.ts`) and never leaks to prod builds.
+  //
+  // See docs/superpowers/plans/2026-04-15-e2e-baseline-triage.md §NET NEW 2.
+  const [audioUnlocked, setAudioUnlocked] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (window as Window & { __E2E_TESTING__?: boolean }).__E2E_TESTING__ === true;
+  });
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const { toggleFullscreen } = useFullscreen();
@@ -300,9 +310,10 @@ function AudienceDisplay({ sessionId }: { sessionId: string }) {
   return (
     <>
       {/* Audio unlock overlay — shown until user clicks to activate audio.
-          Elided entirely under E2E_TESTING so automated tests never race
-          against the presenter's UNLOCK_AUDIO postMessage dismissal path. */}
-      {!audioUnlocked && process.env.E2E_TESTING !== 'true' && (
+          When `audioUnlocked` is seeded `true` (E2E via window.__E2E_TESTING__),
+          this branch never renders, so automated tests never race against the
+          presenter's UNLOCK_AUDIO postMessage dismissal path. */}
+      {!audioUnlocked && (
         <div
           data-testid="audio-unlock-overlay"
           className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
