@@ -38,14 +38,37 @@ export interface UseAudienceSceneReturn {
 // =============================================================================
 
 /**
+ * Under E2E (window.__E2E_TESTING__ set by e2e/utils/e2e-flags.ts), scene
+ * auto-advance durations collapse to 100ms. Real users and unit tests (jsdom
+ * never sets the flag) still see the full production timings.
+ *
+ * This is the single biggest cost in the trivia Playwright suite: each
+ * `triviaGameStarted`-fixture test pays ~12s waiting out the game_intro →
+ * round_intro → question_anticipation chain before it can assert anything
+ * game-related.
+ *
+ * Uses the same `__E2E_TESTING__` flag as BEA-731's audio-unlock bypass in
+ * `apps/bingo/src/app/display/page.tsx`. The shape differs: BEA-731 reads the
+ * flag via `useState(() => ...)` at component mount; this file evaluates at
+ * module load. Both are correct today because Playwright's `addInitScript`
+ * runs before any page script and `'use client'` gates this module to the
+ * browser. If a future consumer ever imports this module from a non-client
+ * boundary (or during streaming SSR), revisit and defer evaluation via
+ * `useMemo` or similar.
+ */
+const E2E = typeof window !== 'undefined'
+  && (window as Window & { __E2E_TESTING__?: boolean }).__E2E_TESTING__ === true;
+const E2E_FAST_MS = 100;
+
+/**
  * Auto-advance durations for timed scenes (milliseconds).
  * Non-listed scenes have no auto-advance (indefinite).
  */
 const TIMED_SCENE_DURATIONS: Partial<Record<AudienceScene, number>> = {
-  game_intro:            SCENE_TIMING.GAME_INTRO_MS,           // 6000ms
-  round_intro:           SCENE_TIMING.ROUND_INTRO_MS,          // 4000ms (5000 for final round)
-  question_anticipation: SCENE_TIMING.QUESTION_ANTICIPATION_MS, // 2000ms
-  final_buildup:         SCENE_TIMING.FINAL_BUILDUP_MS,        // 3000ms
+  game_intro:            E2E ? E2E_FAST_MS : SCENE_TIMING.GAME_INTRO_MS,           // 6000ms
+  round_intro:           E2E ? E2E_FAST_MS : SCENE_TIMING.ROUND_INTRO_MS,          // 4000ms (5000 for final round)
+  question_anticipation: E2E ? E2E_FAST_MS : SCENE_TIMING.QUESTION_ANTICIPATION_MS, // 2000ms
+  final_buildup:         E2E ? E2E_FAST_MS : SCENE_TIMING.FINAL_BUILDUP_MS,        // 3000ms
 } as const;
 
 // =============================================================================
@@ -73,9 +96,9 @@ export function useAudienceScene(
   const getSceneDurationForCurrent = useCallback(
     (s: AudienceScene): number | null => {
       let base = TIMED_SCENE_DURATIONS[s] ?? null;
-      // Final round: extend round_intro to 5s
+      // Final round: extend round_intro to 5s (also bypassed under E2E)
       if (s === 'round_intro' && currentRound >= totalRounds - 1) {
-        base = SCENE_TIMING.ROUND_INTRO_FINAL_MS;
+        base = E2E ? E2E_FAST_MS : SCENE_TIMING.ROUND_INTRO_FINAL_MS;
       }
       return base;
     },

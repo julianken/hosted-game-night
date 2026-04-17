@@ -272,11 +272,18 @@ test.describe('Bingo Presenter View', () => {
     // May have confirmation dialog (legitimately optional UI). Scope the
     // confirm-button locator to the dialog so Playwright's strict mode isn't
     // tripped by the persistent "Reset game (R)" trigger in the header.
-    const confirmButton = page
-      .getByRole('dialog')
-      .getByRole('button', { name: /^(confirm|yes|reset)$/i });
-    if (await confirmButton.isVisible()) {
+    // The modal has a 250-300ms enter animation, so `isVisible()` can race
+    // the fade-in and return false prematurely. Wait for the dialog to attach
+    // before deciding whether to click confirm.
+    const dialog = page.getByRole('dialog');
+    const confirmButton = dialog.getByRole('button', {
+      name: /^(confirm|yes|reset)$/i,
+    });
+    try {
+      await expect(confirmButton).toBeVisible({ timeout: 2000 });
       await confirmButton.click();
+    } catch {
+      // No confirmation dialog — reset was one-click.
     }
 
     // Wait for reset to complete (Pattern 2: counter back to 0) - use data-testid for precise targeting

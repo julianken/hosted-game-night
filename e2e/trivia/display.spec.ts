@@ -221,11 +221,12 @@ test.describe('Trivia Audience Display', () => {
       // Close the question (KeyS triggers question_closed scene transition).
       await page.keyboard.press('KeyS');
 
-      // question_display region should no longer be visible — display has
-      // advanced to question_closed ("Waiting for the answer...").
+      // QuestionClosedScene overlays a "TIME'S UP!" / "Waiting for the answer..."
+      // banner on top of the dimmed question. The question region remains in
+      // the DOM by design (dimmed), so assert the closed-scene overlay text.
       await expect(
-        displayPage.getByRole('region', { name: /question \d+ of \d+, round \d+ of \d+/i })
-      ).toBeHidden({ timeout: 10000 });
+        displayPage.getByText(/waiting for the answer/i),
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 

@@ -1,12 +1,15 @@
 import { test, expect } from '../fixtures/game';
-import { waitForHydration, pressKey } from '../utils/helpers';
+import { waitForHydration } from '../utils/helpers';
 
 test.describe('Bingo Keyboard Shortcuts', () => {
   test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Wait for keyboard event handlers to be registered
-    // The useGameKeyboard hook registers listeners in a useEffect
+    // Wait for keyboard event handlers to be registered. `waitForHydration`
+    // asserts mount, but useGameKeyboard's useEffect attaches window listeners
+    // in a separate microtask chain; without this wait the first keypress in
+    // a test can race the listener attachment. The app does not currently
+    // expose a deterministic "keyboard ready" signal — revisit if added.
     await page.waitForTimeout(500);
 
     // Ensure page is focused (not any specific element)
@@ -24,7 +27,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -47,7 +49,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -84,7 +85,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -147,7 +147,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -208,27 +207,25 @@ test.describe('Bingo Keyboard Shortcuts', () => {
       page.locator('[aria-label*="audio"]')
     ).first();
 
-    let initialState: string | null = null;
-    if (await audioToggle.isVisible()) {
-      initialState = await audioToggle.getAttribute('aria-checked');
-    }
+    // Gate the entire test on toggle presence BEFORE pressing KeyM — the
+    // bingo KeyM handler (apps/bingo/src/hooks/use-game.ts) toggles
+    // audioEnabled in the persisted store unconditionally, so pressing
+    // first + gating the assertions after it leaks state across tests when
+    // the toggle isn't rendered.
+    const initialState = (await audioToggle.isVisible())
+      ? await audioToggle.getAttribute('aria-checked')
+      : null;
+    test.skip(initialState === null, 'audio toggle not present in this build');
 
-    // Press M to toggle audio
+    // Press M to toggle audio — wait for aria-checked to flip rather than a fixed 300ms.
     await page.keyboard.press('KeyM');
-    await page.waitForTimeout(300);
 
-    // State should have changed
-    if (await audioToggle.isVisible()) {
-      const newState = await audioToggle.getAttribute('aria-checked');
-      expect(newState).not.toBe(initialState);
+    const inverted = initialState === 'true' ? 'false' : 'true';
+    await expect(audioToggle).toHaveAttribute('aria-checked', inverted, { timeout: 2000 });
 
-      // Toggle back
-      await page.keyboard.press('KeyM');
-      await page.waitForTimeout(300);
-
-      const finalState = await audioToggle.getAttribute('aria-checked');
-      expect(finalState).toBe(initialState);
-    }
+    // Toggle back — wait for aria-checked to return to initial value.
+    await page.keyboard.press('KeyM');
+    await expect(audioToggle).toHaveAttribute('aria-checked', initialState!, { timeout: 2000 });
   });
 
   // Removed: Test for non-existent feature
@@ -300,7 +297,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial count

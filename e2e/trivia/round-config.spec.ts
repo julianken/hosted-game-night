@@ -312,56 +312,32 @@ test.describe('Round Config — Settings Step', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // S2 — Toggle OFF reveals QPR slider; Rounds slider stays visible
+  // S8 — Per-round breakdown pills in settings step show round + category + count
+  //
+  // Note: The "Questions Per Round" slider no longer exists (WizardStepSettings
+  // renders a plain text hint in by-count mode). A former S2 test that asserted
+  // the QPR slider was deleted when the slider was removed — see
+  // WizardStepSettings.test.tsx's "slider NEVER present" regression guard.
   // ---------------------------------------------------------------------------
 
-  test('S2: Toggling By Category OFF reveals QPR slider; Rounds slider stays @critical', async ({ triviaPage: page }) => {
-    const gate = page.locator('[data-testid="setup-gate"]');
-
-    // Load questions and navigate to settings step
-    await importQuestionsViaApiMock(page, gate);
-    await navigateToSettingsStep(gate);
-
-    // Confirm By Category is ON initially
-    const toggle = gate.getByRole('switch', { name: /by category/i });
-    await expect(toggle).toHaveAttribute('aria-checked', 'true');
-
-    // Toggle By Category OFF
-    await toggle.click();
-
-    // Toggle should now be OFF
-    await expect(toggle).toHaveAttribute('aria-checked', 'false');
-
-    // QPR slider should now be visible (State A: By Count mode)
-    const qprSlider = gate.getByRole('slider', { name: /questions per round/i });
-    await expect(qprSlider).toBeVisible();
-
-    // Rounds slider should still be visible
-    const roundsSlider = gate.getByRole('slider', { name: /number of rounds/i });
-    await expect(roundsSlider).toBeVisible();
-  });
-
-  // ---------------------------------------------------------------------------
-  // S8 — Badge pills in settings step show per-category question counts
-  // ---------------------------------------------------------------------------
-
-  test('S8: Badge pills in Settings step show per-category question counts @high', async ({ triviaPage: page }) => {
+  test('S8: Per-round pills in Settings step show round + category + count @high', async ({ triviaPage: page }) => {
     const gate = page.locator('[data-testid="setup-gate"]');
 
     // Load 15 questions (music: 5, movies: 5, history: 5 across all rounds)
     await importQuestionsViaApiMock(page, gate);
     await navigateToSettingsStep(gate);
 
-    // By Category is ON — category badge pills should be visible (State B)
-    // The settings step aggregates totals across all rounds.
-    // Category badge pills are rendered as <span> elements with the category name and count
-    // formatted as "CategoryName: count" (e.g. "Music: 5")
+    // By Category is ON — per-round breakdown pills should be visible (State B).
+    // Pills render as "Round N — CategoryName" + "N questions" using `rounded-lg`.
     const gateContent = gate.locator('[data-testid="setup-gate-content"]');
 
     await expect(async () => {
-      const badgeText = await gateContent.locator('.rounded-full').allTextContents();
-      const hasBadge = badgeText.some((text) => /:\s*\d+/.test(text));
-      expect(hasBadge).toBe(true);
+      const pillTexts = await gateContent.locator('.rounded-lg').allTextContents();
+      // At least one pill must contain "Round N" and "N question(s)" text.
+      const hasRoundPill = pillTexts.some(
+        (text) => /Round\s+\d+/i.test(text) && /\d+\s+question/i.test(text),
+      );
+      expect(hasRoundPill).toBe(true);
     }).toPass({ timeout: 5000 });
   });
 

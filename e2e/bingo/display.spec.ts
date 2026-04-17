@@ -163,12 +163,19 @@ test.describe('Bingo Display Page', () => {
     await waitForHydration(displayPage);
     await dismissAudioUnlockOverlay(displayPage);
 
-    // Display has no visible "help" button — the shortcut is "?".
-    await displayPage.keyboard.press('?');
+    // Wait for the display's interactive tree to commit before pressing a
+    // keyboard shortcut. Under workers=4 load, `waitForHydration` can return
+    // while the keyboard listener (registered in a useEffect) hasn't attached
+    // yet; the `?` keypress then falls through to <body>. Asserting a
+    // concrete element that only mounts post-hydration eliminates the race.
+    await expect(displayPage.getByRole('main')).toBeVisible();
 
-    // KeyboardShortcutsModal renders in a dialog role when open.
-    const dialog = displayPage.getByRole('dialog');
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    // Display has no visible "help" button — the shortcut is "?". Wrap in
+    // toPass so any residual single-tick race is absorbed by retry.
+    await expect(async () => {
+      await displayPage.keyboard.press('?');
+      await expect(displayPage.getByRole('dialog')).toBeVisible({ timeout: 2000 });
+    }).toPass({ timeout: 8000 });
   });
 
   test('display renders without header/footer chrome (immersive layout)', async ({ bingoPage: page }) => {
