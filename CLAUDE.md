@@ -20,6 +20,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Pre-Commit Hooks:** Husky + lint-staged run `pnpm lint`, `pnpm typecheck`, and `pnpm test:run` on changed packages. **NEVER use `--no-verify`** — if hooks fail, fix the underlying issue before committing.
 
+**Adding a new persisted zustand store:** Each `persist()`-wrapped store in `apps/{bingo,trivia}/src/stores/` must be registered with the `/play` page's hydration gate or E2E tests will flake with "element was detached from the DOM" loops when the new store rehydrates after the gate has flipped. Checklist when you wrap a store in `persist()`:
+
+1. **Merge guard** — the store's `merge(persisted, current)` handles `persisted === undefined` (empty localStorage) with `const p = persisted as Record<string, unknown> | undefined;` then `...(p ?? {})`. See `apps/bingo/src/stores/game-store.ts` for the pattern.
+2. **Hydrating flag** — if the store touches anything `useSync`-broadcast-related or another store subscribes to it, raise `_isHydrating: true` in `merge` and clear it via `setTimeout(0)` in `onRehydrateStorage`. Subscribers that check `_isHydrating` will then correctly skip mid-merge events.
+3. **Play page gate** — add the store to the composed gate in the app's `src/app/play/page.tsx` (look for the `playHydrated` useState + useEffect pair). Specifically:
+   - Add `(useNewStore.persist?.hasHydrated?.() ?? true)` to the initial-state check
+   - Add `useNewStore.persist?.onFinishHydration?.(check)` to the `cleanups` list in the effect
+4. **Verify** — run `pnpm test:e2e:trivia` (or `:bingo`) and confirm no new flakes. The gate fires when all listed stores report `hasHydrated() === true` AND `_isHydrating === false`.
+
+The contract is runtime-enforced; there is no typed helper. See BEA-729 / BEA-734 for the background.
+
 ---
 
 ## Project Context
