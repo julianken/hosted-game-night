@@ -68,6 +68,9 @@ jobs:
             apps/bingo/.next
             apps/trivia/.next
           retention-days: 1
+          # .next is a dot-prefixed directory; upload-artifact@v4 skips hidden
+          # files by default, so opt in or the artifact is empty.
+          include-hidden-files: true
 
   e2e:
     name: E2E — Shard ${{ matrix.shard }}
