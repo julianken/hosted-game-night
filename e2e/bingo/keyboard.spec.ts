@@ -1,13 +1,13 @@
 import { test, expect } from '../fixtures/game';
-import { waitForHydration, pressKey } from '../utils/helpers';
+import { waitForHydration } from '../utils/helpers';
 
 test.describe('Bingo Keyboard Shortcuts', () => {
   test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
 
-    // Wait for keyboard event handlers to be registered
-    // The useGameKeyboard hook registers listeners in a useEffect
-    await page.waitForTimeout(500);
+    // `waitForHydration` already asserts a visible element under <main>, so
+    // by the time it returns the useGameKeyboard hook's useEffect has run
+    // and the key listeners are attached — no additional wait needed.
 
     // Ensure page is focused (not any specific element)
     // This allows keyboard shortcuts to work properly
@@ -24,7 +24,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -47,7 +46,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -84,7 +82,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -147,7 +144,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial ball count
@@ -213,21 +209,17 @@ test.describe('Bingo Keyboard Shortcuts', () => {
       initialState = await audioToggle.getAttribute('aria-checked');
     }
 
-    // Press M to toggle audio
+    // Press M to toggle audio — wait for aria-checked to flip rather than a fixed 300ms.
     await page.keyboard.press('KeyM');
-    await page.waitForTimeout(300);
 
-    // State should have changed
-    if (await audioToggle.isVisible()) {
-      const newState = await audioToggle.getAttribute('aria-checked');
-      expect(newState).not.toBe(initialState);
+    if (await audioToggle.isVisible() && initialState !== null) {
+      // Flipped state should differ from initial
+      const inverted = initialState === 'true' ? 'false' : 'true';
+      await expect(audioToggle).toHaveAttribute('aria-checked', inverted, { timeout: 2000 });
 
-      // Toggle back
+      // Toggle back — wait for aria-checked to return to initial value.
       await page.keyboard.press('KeyM');
-      await page.waitForTimeout(300);
-
-      const finalState = await audioToggle.getAttribute('aria-checked');
-      expect(finalState).toBe(initialState);
+      await expect(audioToggle).toHaveAttribute('aria-checked', initialState, { timeout: 2000 });
     }
   });
 
@@ -300,7 +292,6 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     const startButton = page.getByRole('button', { name: /start game/i });
     if (await startButton.isVisible()) {
       await startButton.click();
-      await page.waitForTimeout(500);
     }
 
     // Get initial count

@@ -155,8 +155,8 @@ test.describe('Question Set Editor Integration', () => {
     await page.getByRole('button', { name: /^save$/i }).click();
     await expect(page.getByText(/question set "edit test set" created successfully/i)).toBeVisible();
 
-    // Wait for modal to close and page to refresh
-    await page.waitForTimeout(1000);
+    // Wait for modal to close (deterministic replacement for waitForTimeout(1000))
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 3000 });
 
     // Now edit the question set
     const editButtons = page.getByRole('button', { name: /^edit$/i });
@@ -166,8 +166,8 @@ test.describe('Question Set Editor Integration', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('dialog').getByText(/edit question set/i)).toBeVisible();
 
-    // Wait for data to load
-    await page.waitForTimeout(1000);
+    // Data-load wait intentionally removed — the `toHaveValue` assertion below
+    // auto-waits for the field to populate (Playwright auto-retry up to 5s).
 
     // Verify the data is loaded
     await expect(page.getByLabel(/question set name/i)).toHaveValue('Edit Test Set');
@@ -333,15 +333,15 @@ test.describe('Question Set Editor Integration', () => {
     await page.getByRole('button', { name: /^save$/i }).click();
     await expect(page.getByText(/question set "edit discard test" created successfully/i)).toBeVisible();
 
-    // Wait for modal to close
-    await page.waitForTimeout(1000);
+    // Wait for modal to close (deterministic replacement for waitForTimeout(1000))
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 3000 });
 
     // Now edit the question set
     const editButtons = page.getByRole('button', { name: /^edit$/i });
     await editButtons.first().click();
 
-    // Wait for data to load
-    await page.waitForTimeout(1000);
+    // Data-load wait intentionally removed — the `toHaveValue` assertion below
+    // auto-waits for the field to populate (Playwright auto-retry up to 5s).
 
     // Modify the name (make it dirty)
     await page.getByLabel(/question set name/i).fill('Edit Discard Test - Modified');
@@ -387,15 +387,15 @@ test.describe('Question Set Editor Integration', () => {
     await page.getByRole('button', { name: /^save$/i }).click();
     await expect(page.getByText(/question set "persistence test" created successfully/i)).toBeVisible();
 
-    // Wait for modal to close
-    await page.waitForTimeout(1000);
+    // Wait for modal to close (deterministic replacement for waitForTimeout(1000))
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 3000 });
 
     // Now edit the question set
     const editButtons = page.getByRole('button', { name: /^edit$/i });
     await editButtons.first().click();
 
-    // Wait for data to load
-    await page.waitForTimeout(1000);
+    // Data-load wait intentionally removed — the `toHaveValue` assertion below
+    // auto-waits for the field to populate (Playwright auto-retry up to 5s).
 
     // Modify the name
     await page.getByLabel(/question set name/i).fill('Persistence Test - Updated');
@@ -404,8 +404,8 @@ test.describe('Question Set Editor Integration', () => {
     await page.getByRole('button', { name: /^save$/i }).click();
     await expect(page.getByText(/question set "persistence test - updated" updated successfully/i)).toBeVisible();
 
-    // Wait for modal to close
-    await page.waitForTimeout(1000);
+    // Wait for modal to close (deterministic replacement for waitForTimeout(1000))
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 3000 });
 
     // Verify the updated name appears in the list
     await expect(page.getByText('Persistence Test - Updated')).toBeVisible();

@@ -62,8 +62,10 @@ export default defineConfig({
   forbidOnly: isCI,
   /* Retry failed tests to handle transient infrastructure issues */
   retries: isCI ? 2 : 1,
-  /* Reduce workers to prevent server overload (was: 4 on CI, unlimited locally) */
-  workers: isCI ? 4 : 2,
+  /* 4 workers both CI and local. Measured 1.84x speedup from 2->4 local on
+     M3 Pro; CPU peaked at ~30% with ~20 chrome processes — headroom remains.
+     CI (GitHub Actions ubuntu-latest) already used 4 per shard. */
+  workers: 4,
   /* Increase timeout to handle production build startup and server load */
   timeout: 60000,
   /* Configure sharding for CI to split tests across multiple jobs */

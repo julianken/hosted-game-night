@@ -91,11 +91,22 @@ export function SetupWizard({
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = STEPS.length;
 
-  /** Whether a step's requirements are met (gates forward navigation). */
+  /**
+   * Whether a step's requirements are met (gates forward navigation).
+   *
+   * Step 0 (Questions) gates on having any questions loaded — without them
+   * the wizard cannot meaningfully proceed.
+   *
+   * Step 2 (Teams) intentionally does NOT gate on team count. The Start Game
+   * button on step 3 (Review) is governed by `canStart` / `validation`, which
+   * is the single source of truth for whether a game can actually begin. That
+   * means a user may browse to the Review step with zero or one team and see
+   * an explanatory disabled-button state, rather than hitting a silent
+   * navigation dead-end on Teams.
+   */
   const isStepComplete = (step: number): boolean => {
     switch (step) {
       case 0: return questions.length > 0;
-      case 2: return currentTeams.length >= 2;
       default: return true;
     }
   };

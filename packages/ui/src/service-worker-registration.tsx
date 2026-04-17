@@ -63,6 +63,14 @@ export function ServiceWorkerRegistration({ appName }: ServiceWorkerRegistration
       return;
     }
 
+    // Skip registration under E2E so tests aren't disrupted by the
+    // controllerchange reload. `__E2E_TESTING__` is injected per browser
+    // context by `e2e/utils/e2e-flags.ts::applyE2ERuntimeFlags` and is never
+    // set in real user sessions.
+    if ((window as Window & { __E2E_TESTING__?: boolean }).__E2E_TESTING__) {
+      return;
+    }
+
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
