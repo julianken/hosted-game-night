@@ -12,11 +12,19 @@ import { waitForHydration } from '../utils/helpers';
 test.describe('Bingo Presenter View', () => {
   test.beforeEach(async ({ bingoPage: page }) => {
     await waitForHydration(page);
+    // Post-BEA-722: wait for the game-store persist hydration gate so actions
+    // (pattern select, start/roll, reset) don't race against the merge.
+    // Use `attached` because the host element may be covered by an overlay.
+    await page
+      .locator('[data-play-hydrated="true"]')
+      .waitFor({ state: 'attached', timeout: 10_000 });
   });
 
   test('displays presenter view header @medium', async ({ bingoPage: page }) => {
-    await expect(page.getByRole('heading', { name: /joolie boolie bingo/i })).toBeVisible();
-    await expect(page.getByText(/presenter view/i)).toBeVisible();
+    // Post-BEA-718 rebrand: heading renders plain "Bingo" (no brand prefix).
+    await expect(page.getByRole('heading', { name: /^bingo$/i })).toBeVisible();
+    // The "Presenter" badge is identified via aria-label="Presenter view".
+    await expect(page.getByLabel('Presenter view')).toBeVisible();
   });
 
   test('shows Open Display button @high', async ({ bingoPage: page }) => {
@@ -261,8 +269,12 @@ test.describe('Bingo Presenter View', () => {
     await expect(resetButton).toBeVisible();
     await resetButton.click();
 
-    // May have confirmation dialog (legitimately optional UI)
-    const confirmButton = page.getByRole('button', { name: /confirm|yes|reset/i });
+    // May have confirmation dialog (legitimately optional UI). Scope the
+    // confirm-button locator to the dialog so Playwright's strict mode isn't
+    // tripped by the persistent "Reset game (R)" trigger in the header.
+    const confirmButton = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(confirm|yes|reset)$/i });
     if (await confirmButton.isVisible()) {
       await confirmButton.click();
     }

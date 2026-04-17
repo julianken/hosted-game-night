@@ -185,12 +185,15 @@ test.describe('Bingo Keyboard Shortcuts', () => {
     // Press R to reset
     await page.keyboard.press('KeyR');
 
-    // May need to confirm reset (dialog may appear)
-    const confirmButton = page.getByRole('button', { name: /confirm|yes/i });
+    // Confirm reset — the dialog renders a "Reset" button (confirmLabel in
+    // ControlPanel). Scope to the dialog to avoid strict-mode violation with
+    // the persistent "Reset game (R)" header button.
+    const confirmButton = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(confirm|yes|reset)$/i });
     try {
-      if (await confirmButton.isVisible({ timeout: 1000 })) {
-        await confirmButton.click();
-      }
+      await confirmButton.waitFor({ state: 'visible', timeout: 2000 });
+      await confirmButton.click();
     } catch {
       // No confirmation dialog - that's fine
     }
