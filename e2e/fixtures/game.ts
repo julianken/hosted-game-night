@@ -1,7 +1,7 @@
 import { test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { getE2EPortConfig } from '../utils/port-config';
-import { startGameViaWizard } from '../utils/helpers';
+import { startGameViaWizard, waitForHydration } from '../utils/helpers';
 import { buildTriviaSeedInitScript } from '../utils/trivia-fixtures';
 import { applyE2ERuntimeFlags } from '../utils/e2e-flags';
 
@@ -132,6 +132,11 @@ export const test = base.extend<GameFixtures>({
       waitUntil: 'load',
       timeout: appNavigationTimeout,
     });
+    // BEA-735: Block until persisted stores have hydrated and the
+    // data-play-hydrated gate is attached. Without this, tests that perform
+    // direct interactions in their body (no own beforeEach hydration wait)
+    // race the React handler attachment under parallel load.
+    await waitForHydration(page);
 
     await use(page);
   },
@@ -147,6 +152,7 @@ export const test = base.extend<GameFixtures>({
       waitUntil: 'load',
       timeout: appNavigationTimeout,
     });
+    await waitForHydration(page);
 
     await use(page);
   },
@@ -172,6 +178,7 @@ export const test = base.extend<GameFixtures>({
       waitUntil: 'load',
       timeout: appNavigationTimeout,
     });
+    await waitForHydration(page);
 
     await use(page);
   },
