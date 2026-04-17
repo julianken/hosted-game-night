@@ -24,23 +24,25 @@ import { useAudioStore } from '@/stores/audio-store';
 import { InstallPrompt } from '@hosted-game-night/ui';
 
 export default function PlayPage() {
-  // BEA-729: Structural hydration gate.
+  // BEA-729: Hydration-ready signal.
   //
   // PlayPage reads from two persisted zustand stores:
   //   - useGameStore (game state: calledBalls, pattern, autoCallEnabled, etc.)
   //   - useAudioStore (audio settings: voice pack, volumes, roll sound, chime)
   //
-  // Both rehydrate asynchronously from localStorage on mount. The game loop
-  // and keyboard handlers read/mutate these stores — if E2E keypresses land
-  // before rehydration finishes, the merge can replace state mid-action and
-  // silently clobber the work (e.g., "Space key calls a ball" sees count=0
+  // Both rehydrate asynchronously from localStorage on mount. If E2E keypresses
+  // land before rehydration finishes, the merge can replace state mid-action
+  // and silently clobber the work (e.g., "Space key calls a ball" sees count=0
   // because persist merge re-hydrated with calledBalls=[] after callBall ran).
   //
-  // The structural fix: return a non-interactive skeleton until all persisted
-  // stores report `hasHydrated()` AND game-store's `_isHydrating` flag has
-  // cleared (it flips false via setTimeout(0) in onRehydrateStorage, one tick
-  // AFTER onFinishHydration). The wizard's interactive children don't exist
-  // in the DOM until `data-play-hydrated="true"` is set.
+  // We gate on ALL THREE signals: both stores' `hasHydrated()` AND the
+  // `_isHydrating` flag (which flips false via setTimeout(0) in
+  // onRehydrateStorage, one microtask AFTER onFinishHydration fires — so
+  // watching only onFinishHydration misses the settle).
+  //
+  // E2E contract: `<main id="main" data-play-hydrated="true">` appears once
+  // all three signals are true; the E2E helper (e2e/utils/helpers.ts)
+  // blocks on this attribute before any interaction.
   const [playHydrated, setPlayHydrated] = useState<boolean>(
     () =>
       (useGameStore.persist?.hasHydrated?.() ?? true) &&
@@ -49,6 +51,11 @@ export default function PlayPage() {
   );
   useEffect(() => {
     let active = true;
+    let cleanups: Array<() => void> = [];
+    const teardown = () => {
+      cleanups.forEach((fn) => fn());
+      cleanups = [];
+    };
     const check = () => {
       if (!active) return;
       const gameOk = useGameStore.persist?.hasHydrated?.() ?? true;
@@ -57,33 +64,30 @@ export default function PlayPage() {
       if (gameOk && audioOk && settled) {
         setPlayHydrated(true);
         active = false;
+        // Stop listening as soon as the gate flips — no need to keep
+        // running `check()` on every game-store mutation for the rest of
+        // the page's lifetime.
+        teardown();
       }
     };
     check();
     if (!active) return;
 
-    const unsubs: Array<(() => void) | undefined> = [
-      useGameStore.persist?.onFinishHydration?.(check),
-      useAudioStore.persist?.onFinishHydration?.(check),
-      // Subscribe to ALL game-store changes — under parallel test load, the
-      // _isHydrating setTimeout(0) may have fired before this effect mounts,
-      // in which case a targeted transition listener would never trigger.
-      // The unconditional subscription re-checks on the next state change.
-      // check() is idempotent once playHydrated flips.
-      useGameStore.subscribe(() => check()),
-    ];
-
-    // Poll fallback: catches the case where all callbacks registered after
-    // hydration completed (CI race). Stops once playHydrated flips.
-    const pollId = window.setInterval(() => {
-      check();
-      if (!active) window.clearInterval(pollId);
-    }, 30);
+    // Register every signal and collect its cleanup callback. Under CI
+    // parallel load, any subset of these may fire AFTER this effect mounts,
+    // so we register all three and poll as a belt-and-suspenders; the first
+    // one to complete triggers teardown() of the rest.
+    const gameUnsub = useGameStore.persist?.onFinishHydration?.(check);
+    if (gameUnsub) cleanups.push(gameUnsub);
+    const audioUnsub = useAudioStore.persist?.onFinishHydration?.(check);
+    if (audioUnsub) cleanups.push(audioUnsub);
+    cleanups.push(useGameStore.subscribe(() => check()));
+    const pollId = window.setInterval(check, 30);
+    cleanups.push(() => window.clearInterval(pollId));
 
     return () => {
       active = false;
-      window.clearInterval(pollId);
-      unsubs.forEach((u) => u?.());
+      teardown();
     };
   }, []);
 

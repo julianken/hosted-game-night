@@ -27,26 +27,26 @@ import { SetupGate } from '@/components/presenter/SetupGate';
 export default function PlayPage() {
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
 
-  // BEA-715 + BEA-729: Structural hydration gate.
+  // BEA-715 + BEA-729: Hydration-ready signal.
   //
   // PlayPage reads from TWO persisted zustand stores:
   //   - useSettingsStore (settings: questionsPerRound, timerDuration, etc.)
   //   - useGameStore (game state: status, teams, questions, scene)
   //
-  // Both rehydrate asynchronously on mount. SetupGate + SetupWizard render
-  // interactive children (Add Team, step buttons) that read from these stores.
-  // If E2E clicks land BEFORE rehydration finishes, the merge can replace the
-  // store mid-click and detach the button from the DOM ("element was detached"
-  // retry loops).
+  // Both rehydrate asynchronously on mount. Before hydration completes, the
+  // store returns its default state; a mid-interaction persist merge can
+  // re-render the wizard and detach buttons from the DOM ("element was
+  // detached" retry loops in Playwright).
   //
-  // The structural fix: don't render interactive children at all until all
-  // persisted stores report `hasHydrated()` AND `_isHydrating` has been cleared
-  // (it flips false via setTimeout(0) in onRehydrateStorage, one tick AFTER
-  // onFinishHydration fires — so we subscribe to the slice directly).
+  // We gate on ALL THREE signals: both stores' `hasHydrated()` AND the
+  // `_isHydrating` flag (which flips false via setTimeout(0) in
+  // onRehydrateStorage, one microtask AFTER onFinishHydration fires — so
+  // watching only onFinishHydration misses the settle).
   //
-  // E2E contract: `<div id="main" data-play-hydrated="true">` is the gate the
-  // helper waits on. While hydrating, we return a skeleton (no wizard, no
-  // buttons), so no interactive target exists until the gate is true.
+  // E2E contract: `<div id="main" data-play-hydrated="true">` appears on
+  // the main container once all three signals are true; the E2E helper
+  // (e2e/utils/helpers.ts::waitForHydration) blocks on this attribute
+  // before any interaction.
   const [playHydrated, setPlayHydrated] = useState<boolean>(
     () =>
       (useSettingsStore.persist?.hasHydrated?.() ?? true) &&
@@ -55,6 +55,11 @@ export default function PlayPage() {
   );
   useEffect(() => {
     let active = true;
+    let cleanups: Array<() => void> = [];
+    const teardown = () => {
+      cleanups.forEach((fn) => fn());
+      cleanups = [];
+    };
     const check = () => {
       if (!active) return;
       const settingsOk = useSettingsStore.persist?.hasHydrated?.() ?? true;
@@ -63,37 +68,30 @@ export default function PlayPage() {
       if (settingsOk && gameOk && settled) {
         setPlayHydrated(true);
         active = false;
+        // Stop listening as soon as the gate flips — no need to keep
+        // running `check()` on every game-store mutation for the rest of
+        // the page's lifetime.
+        teardown();
       }
     };
     check();
-    if (!active) return; // already done
+    if (!active) return;
 
-    const unsubs: Array<(() => void) | undefined> = [
-      useSettingsStore.persist?.onFinishHydration?.(check),
-      useGameStore.persist?.onFinishHydration?.(check),
-      // Subscribe to ALL game-store changes — under CI parallel load, the
-      // _isHydrating setTimeout(0) may have already fired by the time this
-      // effect mounts, in which case the targeted (prev._isHydrating &&
-      // !state._isHydrating) listener would never see a transition. The
-      // unconditional subscription guarantees we re-check on the next state
-      // change. check() is idempotent once playHydrated is true.
-      useGameStore.subscribe(() => check()),
-    ];
-
-    // Belt-and-suspenders poll: catches the case where every onFinishHydration
-    // and subscription callback registered AFTER hydration completed (CI race).
-    // Stops once playHydrated flips. ~30ms cadence is fast enough that the
-    // skeleton flash is imperceptible but slow enough that the poll burns no
-    // measurable CPU.
-    const pollId = window.setInterval(() => {
-      check();
-      if (!active) window.clearInterval(pollId);
-    }, 30);
+    // Register every signal and collect its cleanup callback. Under CI
+    // parallel load, any subset of these may fire AFTER this effect mounts,
+    // so we register all three and poll as a belt-and-suspenders; the first
+    // one to complete triggers teardown() of the rest.
+    const settingsUnsub = useSettingsStore.persist?.onFinishHydration?.(check);
+    if (settingsUnsub) cleanups.push(settingsUnsub);
+    const gameUnsub = useGameStore.persist?.onFinishHydration?.(check);
+    if (gameUnsub) cleanups.push(gameUnsub);
+    cleanups.push(useGameStore.subscribe(() => check()));
+    const pollId = window.setInterval(check, 30);
+    cleanups.push(() => window.clearInterval(pollId));
 
     return () => {
       active = false;
-      window.clearInterval(pollId);
-      unsubs.forEach((u) => u?.());
+      teardown();
     };
   }, []);
 
