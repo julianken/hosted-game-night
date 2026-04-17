@@ -7,8 +7,10 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForHydration(page);
 
       // Presenter shows "Ready" before display opens (connected) or "Synced" after.
-      // Header renders isConnected ? 'Synced' : 'Ready'.
-      await expect(page.getByText(/synced|ready/i).first()).toBeVisible();
+      // Header renders isConnected ? 'Synced' : 'Ready'. Anchor the regex so
+      // it doesn't accidentally match "Ready to start!" from the setup gate's
+      // wizard-step-3 review banner.
+      await expect(page.getByText(/^(Synced|Ready)$/).first()).toBeVisible();
     });
 
     test('presenter and display sync on connection @critical', async ({ triviaGameStarted: page }) => {
@@ -25,8 +27,9 @@ test.describe('Trivia Dual-Screen Synchronization', () => {
       await waitForDualScreenSync(displayPage);
 
       // Both should show connected status — presenter renders "Synced" text,
-      // display sets data-connected="true" on <main>.
-      await expect(page.getByText(/synced/i).first()).toBeVisible({ timeout: 10000 });
+      // display sets data-connected="true" on <main>. Anchor to avoid
+      // matching the setup-gate's "Synced" token if the header render lags.
+      await expect(page.getByText(/^Synced$/).first()).toBeVisible({ timeout: 10000 });
       await expect(displayPage.locator('[data-connected="true"]')).toBeVisible({ timeout: 10000 });
     });
 

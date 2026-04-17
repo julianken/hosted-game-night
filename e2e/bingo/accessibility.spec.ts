@@ -101,12 +101,20 @@ test.describe('Bingo Accessibility', () => {
     });
 
     test('has skip link for keyboard navigation', async ({ bingoPage: page }) => {
+      // Same hydration-race defense as `buttons are keyboard accessible` below:
+      // wait for a concrete post-hydration element before probing focus. Under
+      // parallel worker load, focus can route to <body> before the skeleton
+      // finishes swapping for the real tree.
+      await expect(
+        page.getByRole('button', { name: /open display/i }),
+      ).toBeVisible();
+
       // Skip link may be visually hidden but present in DOM
       const skipLink = page.locator('a[href="#main"], a:text("skip")').first();
       // If skip link exists, it should work
       if (await skipLink.count() > 0) {
         await skipLink.focus();
-        await expect(skipLink).toBeFocused();
+        await expect(skipLink).toBeFocused({ timeout: 2000 });
       }
     });
 
@@ -124,16 +132,31 @@ test.describe('Bingo Accessibility', () => {
         await skipLink.focus();
         await expect(skipLink).toBeFocused();
       } else {
-        // On desktop: verify Tab key navigation works
+        // On desktop: verify Tab key navigation works.
+        //
+        // Under parallel worker load the page can have `data-play-hydrated="true"`
+        // attached (which waitForHydration waits on) while React concurrent rendering
+        // is still swapping the Next.js loading.tsx skeleton for the interactive
+        // tree. Pressing Tab in that window falls through to <body> because none
+        // of the real focusable descendants are keyboard-reachable yet.
+        //
+        // Deterministic gate: wait for a concrete, always-rendered interactive
+        // element from the hydrated PlayPage (Open Display button) to be visible
+        // before probing Tab behavior. Also use Playwright's auto-retrying
+        // assertion (toPass) to tolerate any residual single-tick race between
+        // focusable-DOM commit and the Tab keystroke.
+        await expect(
+          page.getByRole('button', { name: /open display/i }),
+        ).toBeVisible();
+
         await page.keyboard.press('Tab');
 
-        // Some element should have focus
-        const focusedElement = await page.evaluate(() =>
-          document.activeElement?.tagName
-        );
-
-        // Fix inverted assertion logic - check if focusedElement matches expected types
-        expect(focusedElement).toMatch(/^(A|BUTTON|INPUT|SELECT)$/);
+        await expect(async () => {
+          const focusedElement = await page.evaluate(() =>
+            document.activeElement?.tagName,
+          );
+          expect(focusedElement).toMatch(/^(A|BUTTON|INPUT|SELECT)$/);
+        }).toPass({ timeout: 2000 });
       }
     });
 
