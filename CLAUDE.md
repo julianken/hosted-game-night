@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Issue Tracking:** This project uses **Linear** (BEA-### format), NOT GitHub Issues. Use `mcp__linear-server__*` tools for all issue operations. Never use GitHub issue tools.
 
-**E2E Testing:** All code must pass E2E tests locally before committing (GitHub Actions are disabled). Run `pnpm test:e2e` and check `pnpm test:e2e:summary`. See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md).
+**E2E Testing:** E2E tests run in GitHub Actions on every PR and push (`.github/workflows/e2e.yml`). Run `pnpm test:e2e` locally when iterating; `pnpm test:e2e:summary` shows pass/fail counts. See [docs/E2E_TESTING_GUIDE.md](docs/E2E_TESTING_GUIDE.md).
 
 **Manual Testing:** Use Playwright MCP browser tools for visual, audio, and interactive verification. The canonical guide is [docs/MANUAL_TEST_PLAN.md](docs/MANUAL_TEST_PLAN.md). Always launch Playwright MCP in dark mode (`page.emulateMedia({ colorScheme: 'dark' })`). Start servers with `pnpm dev`. **NEVER use `pnpm dev:e2e` or `E2E_TESTING=true` for manual/Playwright MCP testing.**
 

@@ -1,10 +1,8 @@
 # E2E Testing Guide
 
-## ⚠️ CRITICAL: Pre-Commit Requirements
+## Pre-Push Workflow
 
-**ALL CODE CHANGES MUST HAVE PASSING E2E TESTS LOCALLY BEFORE COMMITTING**
-
-GitHub Actions are disabled to avoid billing costs. Local E2E validation is mandatory.
+E2E tests run in CI on every PR and push (`.github/workflows/e2e.yml`). Run them locally first — `pnpm test:e2e` — to catch failures before they hit CI and to iterate faster on regressions.
 
 ---
 
@@ -518,21 +516,16 @@ pnpm dev
 
 ---
 
-## CI/CD Without GitHub Actions
+## CI/CD
 
-Since GitHub Actions are disabled:
+Validation layers, in order:
 
-1. **Local validation is mandatory** (this guide)
-2. **Vercel builds still run** (build-time validation)
-3. **Pre-commit hooks** catch lint/type errors
-4. **E2E tests are developer responsibility**
+1. **Pre-commit hooks** — Husky + lint-staged catch lint/type errors on changed packages
+2. **GitHub Actions E2E** (`.github/workflows/e2e.yml`) — runs build + 4 E2E shards on every PR and push
+3. **Nightly Build** (`.github/workflows/nightly.yml`) — daily smoke test on `main` (build/lint/typecheck/test)
+4. **Vercel builds** — preview + production deploys
 
-### Why No GitHub Actions?
-
-- **Cost**: Avoid billing for CI minutes
-- **Local-first**: Developers run tests on realistic environments
-- **Faster feedback**: No waiting for CI queue
-- **Full control**: Debug issues immediately with headed mode
+Local `pnpm test:e2e` is still the fastest iteration loop when debugging — headed mode and full Playwright tooling are only available locally.
 
 ---
 
